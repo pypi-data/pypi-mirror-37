@@ -1,0 +1,81 @@
+#!/usr/bin/python3
+
+import argparse
+import subprocess
+import numpy as np
+import os
+import sys
+import socket
+from tqdm import tqdm
+
+
+def checkmark():
+    print(u' \u2713')
+
+
+def test_compiler(directory, no_cache, no_build, local):
+
+    image_name = 'compiler/submission'
+    container_name = 'compiler_test_submission'
+
+    subprocess.check_call('compiler-test-setup', shell=True)
+
+    print()
+    print('Building docker image of submission')
+    print('-----------------------------------')
+
+    print('Submission folder: "{}"'.format(directory))
+
+    # build image
+    repo2docker_args = ["--no-run", "--debug"]
+    if no_build:
+        # TODO: Use logger instead of print statements
+        print("WARNING: ", "Not building the docker image and assuming it is built and available at : {}".format(image_name))
+        repo2docker_args.append("--no-build")
+    else:
+        if no_cache:
+            # TODO: need to reset repo2docker cache here...
+            print('Building image (without cache)...')
+        else:
+            print('Building image from cache (if exists)...', end="")
+        repo2docker_args.append(
+            "--image-name {}".format(image_name)
+        )
+        cmd = "crowdai_repo2docker"
+        cmd += " "
+        cmd += " ".join(repo2docker_args)
+        cmd += " "
+        cmd += directory
+        subprocess.check_call(
+            "crowdai-repo2docker --no-run --image-name {} --debug {}".format(
+                image_name, directory), shell=True)
+        checkmark()
+
+    # remove old container if exists
+    containers = str(subprocess.check_output('docker ps -a', shell=True))
+    if container_name in containers:
+        print('Removing existing submission container...', end="")
+        cmd = "docker rm -f {cn}".format(cn=container_name)
+        subprocess.check_call(cmd, shell=True)
+        checkmark()
+
+    # TODO: Start Docker container and test the compiler...
+
+
+if __name__ == '__main__':
+    print('running {}'.format(os.path.basename(__file__)))
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "directory", help="The directory containing the git repository.")
+    parser.add_argument(
+        "--no-cache", action='store_true',
+        help="Disables the cache when building the image.")
+    parser.add_argument(
+        "--no-build", action='store_true',
+        help="Disables building the image, and assumes they exist. ")
+    parser.add_argument(
+        "--local", action='store_true',
+        help="Test the compiler without docker. ")
+    args = parser.parse_args()
+    test_compiler(args.directory, no_cache=args.no_cache,
+                  no_build=args.no_build, local=args.local)
