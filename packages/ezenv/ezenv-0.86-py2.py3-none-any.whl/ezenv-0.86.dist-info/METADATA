@@ -1,0 +1,421 @@
+Metadata-Version: 2.1
+Name: ezenv
+Version: 0.86
+Summary: A more convenient interface to environment variables.
+Home-page: https://github.com/mixmastamyk/env
+Author: Mike Miller
+Author-email: mixmastamyk@bitbucket.org
+License: LGPL
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+
+
+EZ Environment
+================
+
+*"For easy access, baby!  …That's right.'"*
+
+TL; DR:
+
+.. code:: python
+
+    >>> import env
+
+    >>> env.SERVER_PORT.int
+    8080
+
+
+The E.Z.E.nvironment module has its own
+`theme song <https://youtu.be/Igxl7YtS1vQ?t=1m08s>`_:
+
+    *"We want Eazy!"*
+
+    | *EAZY!*
+    | *Everybody come on!*
+    | *EAZY!*
+    | *Who yall came to see?*
+    | *EAZY!*
+    | *A little louder come on!*
+    | *EAZY!*
+    | *Get those hands in the air!*
+    | *EAZY!*
+    | *Come on, come on say it!*
+    | *EAZY!*
+    | *A little louder come on!*
+    | *EAZY!*
+    | *Come on make some noise!*
+    |
+    | *A miracle of modern creation*
+    | *Eazy E's on the set, hyped up with the bass*
+    | *And a little bit of what ya love*
+    | *From a brother who's smooth like a criminal*
+    | *I mean subliminal…*
+
+
+Background
+---------------
+
+It's always been a tad clumsy to access environment variables and combine them
+with other strings in Python,
+compared to shell languages at least.
+For example, look how easy it is in bash:
+
+.. code:: shell
+
+    ⏵ echo "Libraries: $PWD/lib"
+    Libraries: /usr/local/lib
+
+In Python-land however,
+required opposite/escaped quotes and brackets complicate and unfortunately
+add to the visual clutter.
+Even the new-fangled string interpolation doesn't really help:
+
+.. code:: python
+
+    >>> from os import environ
+
+    >>> print(f'Libraries: {environ["PWD"]}/lib')
+    Libraries: /usr/local/lib
+
+    >>> from os.path import join
+    >>> join(environ['PWD'], 'lib')
+    '/usr/local/lib'
+
+
+With that in mind, allow me to introduce the ``env`` module.
+With it I've tried to whittle complexity down,
+primarily through direct attribute access:
+
+.. code:: python
+
+    >>> import env
+
+    >>> join(env.PWD, 'lib')
+    '/usr/local/lib'
+
+    >>> print(f'Libraries: {env.PWD}/lib')
+    Libraries: /usr/local/lib
+
+But wait, there's more!
+
+Install
+---------------
+
+.. code:: shell
+
+    ⏵ pip3 install --user ezenv  # env was taken :-/
+
+LGPL licensed.
+
+
+Options
+-----------
+
+By default the module loads the environment into its namespace,
+so no additional mapping instance has to be created or imported.
+Unless you want to configure the interface further, of course.
+The following options are available to customize:
+
+.. code:: python
+
+    >>> from env import Environment
+
+    >>> env = Environment(environ=os.environ,
+                          blankify=False,
+                          noneify=True,
+                          sensitive=…,
+                          writable=False,
+                         )
+
+Environ
+~~~~~~~~~~~~
+
+A mapping of your own choosing may be optionally passed in as the first argument,
+for testing and/or other purposes.
+Also, recently learned that
+`os.environb <https://docs.python.org/3/library/os.html#os.environb>`_
+is a thing.
+
+
+Noneify
+~~~~~~~~~~~~
+
+Enabled by default,
+this one signals non-existent variables by returning None.
+It allows one to easily test for a variable and not have to worry about
+catching exceptions.
+If the variable is not set,
+None will be returned instead:
+
+.. code:: python
+
+    >>> if env.COLORTERM:   # is not None or ''
+            pass
+
+
+**Default Values**
+
+The one drawback to returning ``None`` is that there is no ``.get()`` method
+to return a default when the variable isn't found.
+That's easily rectified like so:
+
+.. code:: python
+
+    >>> env.FOO or 'bar'
+    'bar'
+
+
+Blankify
+~~~~~~~~~~~~
+
+Off by default,
+this option mimics the behavior of most command-line shells.
+Namely if the variable isn't found,
+it doesn't complain and returns an empty string instead.
+Could be a bug-magnet,
+but here if you need it for compatibility.
+Blankify takes precedence over Noneify if enabled.
+
+
+Writable
+~~~~~~~~~~~~
+
+By default the Environment object does not allow modifications since such
+variables are rarely read after start up.
+This setting helps to remind us of that fact,
+though the object can be easily be changed to writable by enabling this
+option.
+
+
+Sensitivity 😢
+~~~~~~~~~~~~~~~~
+
+Variables are case-sensitive by default on Unix, *not* under Windows.
+
+While sensitivity can be disabled to use variable names in lowercase,
+be aware that variables and dictionary methods are in the same namespace,
+which could potentially be problematic if they are not divided by case.
+For this reason, using variable names such as "keys" and "items"
+are not a good idea while in insensitive mode.
+*shrug*
+
+
+Misc
+~~~~~~~~~~~~~~~~
+
+**Exceptions**
+
+If both ``blankify`` and ``noneify`` are disabled,
+you'll get a lovely AttributeError or KeyError on missing keys,
+depending on how the variable was accessed.
+
+**Get-Item Form**
+
+Get-item [bracketed] form also works,
+for use in cases where the variable name is in a string,
+due to the fact that the module/Environment-instance is still a dictionary
+underneath:
+
+.. code:: python
+
+    varname = 'COLORTERM'
+    env[varname]
+
+
+Entry Objects
+----------------
+
+While using ``env`` at the interactive prompt,
+you may be surprised that a variable entry is not a simple string but rather
+an extended string-like object called an Entry.
+This is most evident at the prompt because it prints a "representation"
+form by default:
+
+.. code:: python
+
+    >>> env.PWD                             # repr()
+    Entry('PWD', '/usr/local')
+
+No matter however,
+as we've seen in the previous sections,
+just about any operation renders the string value as normal.
+(``.value``, ``.name``, and ``str()`` are available for belt & suspenders
+types.)
+
+.. code:: python
+
+    >>> print(env.PWD)
+    /usr/local
+
+    >>> env.PWD.value, str(env.PWD)
+    ('/tmp', '/tmp')
+
+The reason behind this custom object is so that variables can offer additional
+functionality, such as parsing or converting the value to another type,
+which we'll explore below.
+
+Remember the ``env`` module/Environment-instance works as a dictionary,
+while entry values are strings,
+so their full functionality is available:
+
+.. code:: python
+
+    >>> for key, value in env.items():      # it's a dict*
+            print(key, value)
+
+    # output…
+
+    >>> env.USER.title()                    # it's a str*
+    'Fred'
+
+    >>> env.TERM.partition('-')             # a safer split
+    ('xterm', '-', '256color')
+
+*  Sung to the tune, *"It's a Sin,"* by the Pet Shop Boys.
+
+
+Parsing & Conversions
+-----------------------
+
+Another handy feature of Entry objects is convenient type conversion and
+parsing of values from strings.
+Additional properties for this functionality are available.
+For example:
+
+.. code:: python
+
+    >>> env.PI.float
+    3.1416
+
+    >>> env.STATUS.int
+    5150
+
+    >>> env.DATA.from_json
+    {'one': 1, 'two': 2, 'three': 3}
+
+
+Booleans
+~~~~~~~~~~
+
+Variables may contain boolean-*ish* string values,
+such as ``0, 1, yes, no, true, false``, etc.
+To interpret them case-insensitively:
+
+.. code:: python
+
+    >>> env.QT_ACCESSIBILITY
+    Entry('QT_ACCESSIBILITY', '1')
+
+    >>> env.QT_ACCESSIBILITY.truthy
+    True
+
+    >>> env = Environment(writable=True)
+    >>> env.QT_ACCESSIBILITY = '0'          # set to '0'
+
+    >>> env.QT_ACCESSIBILITY.truthy
+    False
+
+As always, standard tests or ``bool()`` on the entry can be done to check for
+string "truthiness."
+Such a test checks if the string is empty or not,
+and would return True on '0'.
+
+
+Paths
+~~~~~~~~
+
+Environment vars often contain a list of filesystem paths.
+To split such path strings on ``os.pathsep``\
+`🔗 <https://docs.python.org/3/library/os.html#os.pathsep>`_,
+with optional conversion to ``pathlib.Path``\
+`🔗² <https://docs.python.org/3/library/pathlib.html>`_
+objects,
+use one or more of the following:
+
+.. code:: python
+
+    >>> env.XDG_DATA_DIRS.list
+    ['/usr/local/share', '/usr/share', ...]
+
+    >>> env.SSH_AUTH_SOCK.path
+    Path('/run/user/1000/keyring/ssh')
+
+    >>> env.XDG_DATA_DIRS.path_list
+    [Path('/usr/local/share'), Path('/usr/share'), ...]
+
+
+Compatibility
+---------------
+
+*"What's the frequency Kenneth?"*
+
+This module attempts compatibility with KR's
+`env <https://github.com/kennethreitz/env>`_
+package by implementing its ``prefix`` and ``map`` functions:
+
+.. code:: python
+
+    >>> env.prefix('XDG_')
+    {'xdg_config_dirs': '/etc/xdg/xdg-mate:/etc/xdg', …}
+
+    >>> env.map(username='USER')
+    {'username': 'fred'}
+
+The lowercase transform can be disabled by passing another false-like value
+as the second argument.
+
+While the package above has the coveted ``env`` namespace on PyPI,
+ezenv uses the simple module name and provides an implementation of the
+interface.
+
+
+Tests
+---------------
+
+Can be run here:
+
+.. code:: shell
+
+    ⏵ python3 -m env -v
+
+Though the module works under Python2,
+several of the tests *don't*,
+because Py2 does Unicode differently or
+doesn't have the facilities available to handle them by default (pathlib).
+Haven't had the urge to work around that due to declining interest.
+
+FYI, a reference to the original module object is kept at ``env._module``
+just in case it is needed for some reason.
+
+**Testing _with_ EZEnv:**
+
+When you've used EZEnv in your module,
+it is very easy to create a custom environment to operate under:
+
+.. code:: python
+
+    def test_foo():
+        import mymodule
+
+        mymodule.env = Environment(environ=dict(NO_COLOR='1'))
+        assert mymodule.color_is_disabled() == True
+
+
+Pricing
+---------------
+
+*"I'd buy THAT for a dollar!" :-D*
+
+
