@@ -1,0 +1,17 @@
+[Unit]
+Description=Authentication Token service
+After=waagent.service network.target
+
+[Service]
+Type=simple
+User=guestshell
+Group=guestshell
+WorkingDirectory=/home/guestshell
+ExecStart=/usr/bin/python /home/guestshell/.local/lib/python2.7/site-packages/csr_cloud/token_svr.py start
+Restart=always
+RestartSec=1
+StandardOutput=null
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
