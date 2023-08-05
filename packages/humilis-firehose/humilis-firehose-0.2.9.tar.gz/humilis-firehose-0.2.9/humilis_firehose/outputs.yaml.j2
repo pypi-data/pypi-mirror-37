@@ -1,0 +1,22 @@
+---
+outputs:
+    {% for stream in streams %}
+    {{stream.name}}:
+        Description:
+            Physical ID of delivery stream '{{stream.name}}'.
+        Value:
+            Ref: {{stream.name}}
+    {{stream.name}}Arn:
+        Description:
+            The Arn of delivery stream '{{stream.name}}'.
+        Value:
+            "Fn::Join":
+              - ""
+              - ["arn:aws:firehose:",
+                {"Ref": "AWS::Region"},
+                ":",
+                {"Ref": "AWS::AccountId"},
+                ":",
+                "deliverystream/",
+                {"Ref": {{stream.name}}}]
+    {% endfor %}

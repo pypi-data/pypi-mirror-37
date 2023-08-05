@@ -1,0 +1,411 @@
+---
+resources:
+    {% if create_glue_table %}
+    # AWS Glue resources
+    CrawlerRole:
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Principal:
+                  Service:
+                    - "glue.amazonaws.com"
+                Action:
+                  - "sts:AssumeRole"
+          Path: "/"
+          Policies:
+            -
+              PolicyName: "root"
+              PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                  -
+                    Effect: "Allow"
+                    Action: "*"
+                    Resource: "*"
+
+    GlueDatabase:
+        Type: "AWS::Glue::Database"
+        Properties:
+            CatalogId: {Ref: "AWS::AccountId"}
+            DatabaseInput:
+                Name: {{glue_database_name.lower()}}
+
+    InputCrawler:
+        Type: "AWS::Glue::Crawler"
+        Properties:
+            Role: {Ref: CrawlerRole}
+            DatabaseName: {Ref: GlueDatabase}
+            Schedule:
+                ScheduleExpression: "{{crawler_schedule}}"
+            TablePrefix:
+                {{_env.name.replace('-', '').lower()}}_{{_env.stage.lower()}}_
+            Targets:
+                S3Targets:
+                    {% for stream in streams %}
+                    - Path: "{{s3_bucket_name}}/{{_env.name}}/{{_env.stage}}/{{_layer.name}}/{{stream.s3_prefix}}"
+                      {% if stream.crawler_exclusions %}
+                      Exclusions:
+                      {% for exc in stream.crawler_exclusions %}
+                        - "{{exc}}"
+                      {% endfor %}
+                      {% else %}
+                      Exclusions:
+                        - "processing-failed**"
+                      {% endif %}
+                    {% endfor %}
+
+    {% endif %}
+
+    {% if decrypt_arn %}
+    DbPasswordDecrypt:
+        Type: "Custom::KMSDecrypt"
+        Properties:
+            ServiceToken: "{{decrypt_arn}}"
+            Ciphertext: "{{redshift_password}}"
+    {% endif %}
+    {% if not sns_topic.startswith("arn:") %}
+    SnsTopic:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        TopicName: {{sns_topic}}
+        {% if alert_subscribers %}
+        Subscription:
+            {% for subscriber in alert_subscribers %}
+            - Endpoint: "{{subscriber}}"
+              Protocol: "email"
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+    {% for stream in streams %}
+    {% if stream.es_type %}
+    {{stream.name}}DeliveryToElasticSearchAlarm:
+      Type: "AWS::CloudWatch::Alarm"
+      Properties:
+        AlarmDescription: "{{stream.name}} failed to deliver to Elastic Search"
+        AlarmActions:
+          {% if not sns_topic.startswith("arn:") %}
+          - Ref:
+              SnsTopic
+          {% else %}
+          - {{sns_topic}}
+          {% endif %}
+        MetricName: DeliveryToElasticSearch.Success
+        Namespace: AWS/Firehose
+        Statistic: Minimum
+        Period: 600
+        EvaluationPeriods: 2
+        Threshold: 0.95
+        ComparisonOperator: LessThanThreshold
+        Dimensions:
+          - Name: DeliveryStreamName
+            Value:
+              Ref: {{stream.name}}
+    {% endif %}
+    {% if stream.redshift_table %}
+    # Alarm if DeliveryToRedshift.Success is less than 1 for 20 mins. This is
+    # a reasonable default because Firehose will retry every 5 mins for a
+    # maximum of 60 mins. So a period of 20 mins should involve at least 3
+    # failed attempts which deserves raising an alarm.
+    {{stream.name}}DeliveryToRedshiftAlarm:
+      Type: "AWS::CloudWatch::Alarm"
+      Properties:
+        AlarmDescription: "{{stream.name}} failed to deliver to Redshift"
+        AlarmActions:
+          {% if not sns_topic.startswith("arn:") %}
+          - Ref:
+              SnsTopic
+          {% else %}
+          - {{sns_topic}}
+          {% endif %}
+        MetricName: DeliveryToRedshift.Success
+        Namespace: AWS/Firehose
+        Statistic: Minimum
+        Period: 600
+        EvaluationPeriods: 2
+        Threshold: 1
+        ComparisonOperator: LessThanThreshold
+        Dimensions:
+          - Name: DeliveryStreamName
+            Value:
+              Ref: {{stream.name}}
+    {% endif %}
+    {{stream.name}}DeliveryToS3Alarm:
+      Type: "AWS::CloudWatch::Alarm"
+      Properties:
+        AlarmDescription: "{{stream.name}} failed to deliver to S3"
+        AlarmActions:
+          {% if not sns_topic.startswith("arn:") %}
+          - Ref:
+              SnsTopic
+          {% else %}
+          - {{sns_topic}}
+          {% endif %}
+        MetricName: DeliveryToS3.Success
+        Namespace: AWS/Firehose
+        Statistic: Minimum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: LessThanThreshold
+        Dimensions:
+          - Name: DeliveryStreamName
+            Value:
+              Ref: {{stream.name}}
+    {% if log_group %}
+    LogStream{{stream.name}}:
+      Type: "AWS::Logs::LogStream"
+      Properties:
+        LogGroupName: {{log_group}}
+        LogStreamName: {{_layer.name}}-{{stream.name}}
+    {% endif %}
+    {{stream.name}}:
+      Type: 'AWS::KinesisFirehose::DeliveryStream'
+      Properties:
+        DeliveryStreamName: {{_env.name}}-{{_env.stage}}-{{_layer.name}}-{{stream.name}}
+        {% if stream.s3_prefix and not stream.redshift_table and not stream.es_type %}
+        # If Redshift delivery is active then there is no need for an
+        # additional S3 delivery configuration.
+        ExtendedS3DestinationConfiguration:
+          BucketARN:
+            "Fn::Join":
+              - ""
+              - ["arn:aws:s3:::", "{{s3_bucket_name}}"]
+          BufferingHints:
+            SizeInMBs: {{stream.s3_buffer_mbs or s3_buffer_mbs}}
+            IntervalInSeconds: {{stream.s3_buffer_seconds or s3_buffer_seconds}}
+          {% if processor_arn %}
+          ProcessingConfiguration:
+            Enabled: yes
+            Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: "{{processor_arn}}"
+                    - ParameterName: NumberOfRetries
+                      ParameterValue: "{{processor_retries}}"
+                    - ParameterName: BufferSizeInMBs
+                      ParameterValue: "{{processor_buffer_size_in_mbs}}"
+                    - ParameterName: BufferIntervalInSeconds
+                      ParameterValue: "{{processor_buffer_interval_in_seconds}}"
+          {% endif %}
+          {% if log_group %}
+          CloudWatchLoggingOptions:
+            Enabled: True
+            LogGroupName: {{log_group}}
+            LogStreamName: {"Ref": "LogStream{{stream.name}}"}
+          {% endif %}
+          CompressionFormat: "{{stream.s3_compression or s3_compression}}"
+          Prefix: "{{_env.name}}/{{_env.stage}}/{{_layer.name}}/{{stream.s3_prefix}}"
+          RoleARN:
+            "Fn::GetAtt":
+              - DeliveryStreamRole
+              - Arn
+        {% endif %}
+        {% if stream.redshift_table %}
+        RedshiftDestinationConfiguration:
+          S3Configuration:
+            BucketARN:
+              "Fn::Join":
+                - ""
+                - ["arn:aws:s3:::", "{{stream.s3_bucket_name or s3_bucket_name}}"]
+            BufferingHints:
+              SizeInMBs: {{s3_buffer_mbs}}
+              IntervalInSeconds: {{stream.s3_buffer_seconds or s3_buffer_seconds}}
+            {% if log_group %}
+            CloudWatchLoggingOptions:
+              Enabled: True
+              LogGroupName: {{log_group}}
+              LogStreamName: {"Ref": "LogStream{{stream.name}}"}
+            {% endif %}
+            CompressionFormat: "{{stream.s3_compression or s3_compression}}"
+            Prefix: "{{_env.name}}/{{_env.stage}}/{{_layer.name}}/{{stream.s3_prefix}}"
+            RoleARN:
+              "Fn::GetAtt":
+                - DeliveryStreamRole
+                - Arn
+          {% if log_group %}
+          CloudWatchLoggingOptions:
+            Enabled: True
+            LogGroupName: {{log_group}}
+            LogStreamName: {"Ref": "LogStream{{stream.name}}"}
+          {% endif %}
+          ClusterJDBCURL: "jdbc:redshift://{{redshift_host}}:{{redshift_port}}/{{redshift_database}}"
+          CopyCommand:
+            DataTableName: "{{stream.redshift_table}}"
+            CopyOptions: "{{redshift_copy_options}}"
+          Username: "{{redshift_username}}"
+          Password:
+            {% if decrypt_arn %}
+            Fn::Sub: ${DbPasswordDecrypt.Plaintext}
+            {% else %}
+            "{{redshift_password}}"
+            {% endif %}
+          RoleARN:
+            "Fn::GetAtt":
+              - DeliveryStreamRole
+              - Arn
+        {% endif %}
+        {% if stream.es_type %}
+        ElasticsearchDestinationConfiguration:
+          S3BackupMode:
+            {{stream.es_s3_backup_mode or es_s3_backup_mode}}
+          S3Configuration:
+            BufferingHints:
+              SizeInMBs: {{stream.s3_buffer_mbs or s3_buffer_mbs}}
+              IntervalInSeconds: {{stream.s3_buffer_seconds or s3_buffer_seconds}}
+            BucketARN:
+              "Fn::Join":
+                - ""
+                - ["arn:aws:s3:::", "{{stream.s3_bucket_name or s3_bucket_name}}"]
+            {% if log_group %}
+            CloudWatchLoggingOptions:
+              Enabled: True
+              LogGroupName: {{stream.log_group or log_group}}
+              LogStreamName: {"Ref": "LogStream{{stream.name}}"}
+            {% endif %}
+            CompressionFormat: "{{stream.s3_compression or s3_compression}}"
+            Prefix: "{{_env.name}}/{{_env.stage}}/{{_layer.name}}/{{stream.s3_prefix}}"
+            RoleARN:
+              "Fn::GetAtt":
+                - DeliveryStreamRole
+                - Arn
+          BufferingHints:
+            IntervalInSeconds: {{stream.es_buffer_seconds or es_buffer_seconds}}
+            SizeInMBs: {{stream.es_buffer_mbs or s3_buffer_mbs}}
+          {% if log_group %}
+          CloudWatchLoggingOptions:
+            Enabled: True
+            LogGroupName: {{log_group}}
+            LogStreamName: {"Ref": "LogStream{{stream.name}}"}
+          {% endif %}
+          DomainARN:
+            {% if es_domain_arn %}
+            {{es_domain_arn}}
+            {% else %}
+            "Fn::Join":
+              - ""
+              - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                 {"Ref": "AWS::AccountId"}, ":", "domain/", "{{es_domain_name}}"]
+            {% endif %}
+          IndexName:
+            {{stream.es_index_name or es_index_name}}
+          IndexRotationPeriod:
+            {{stream.es_index_rotation_period or es_index_rotation_period}}
+          RetryOptions:
+            DurationInSeconds:
+                {{stream.es_retry_seconds or es_retry_seconds}}
+          RoleARN:
+            "Fn::GetAtt":
+              - DeliveryStreamRole
+              - Arn
+          TypeName:
+            {{stream.es_type}}
+        {% endif %}
+    DeliveryStreamRole:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Sid: ""
+              Principal:
+                  Service: 'firehose.amazonaws.com'
+              Action: 'sts:AssumeRole'
+              Condition:
+                StringEquals:
+                  "sts:ExternalId": {"Ref": "AWS::AccountId"}
+        {# Keep all environment roles under the same path #}
+        Path: {{ "/{}/".format(_env.name) }}
+        Policies:
+          - PolicyName: root
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                {% if processor_arn %}
+                - Effect: "Allow"
+                  Sid: ""
+                  Action:
+                    - "lambda:*"
+                  Resource:
+                    - "{{processor_arn}}:*"
+                    - "{{processor_arn}}"
+                {% endif %}
+                {% if log_group %}
+                - Effect: "Allow"
+                  Sid: ""
+                  Action:
+                    - "logs:PutLogEvents"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:logs:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":log-group:",
+                         "{{log_group}}", ":log-stream:",
+                         {"Ref": "LogStream{{stream.name}}"}]
+                {% endif %}
+                - Effect: Allow
+                  Sid: ""
+                  Action:
+                    - "s3:AbortMultipartUpload"
+                    - "s3:GetBucketLocation"
+                    - "s3:GetObject"
+                    - "s3:ListBucket"
+                    - "s3:ListBucketMultipartUploads"
+                    - "s3:PutObject"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:s3:::", "{{s3_bucket_name}}/*"]
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:s3:::", "{{s3_bucket_name}}"]
+                - Effect: Allow
+                  Sid: ""
+                  Action:
+                    - "es:DescribeElasticsearchDomain"
+                    - "es:DescribeElasticsearchDomains"
+                    - "es:DescribeElasticsearchDomainConfig"
+                    - "es:ESHttpPost"
+                    - "es:ESHttpPut"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "{{es_domain_name}}"]
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "{{es_domain_name}}/*"]
+                - Effect: Allow
+                  Sid: ""
+                  Action:
+                    - "es:*"
+                  Resource: "*"
+                - Effect: Allow
+                  Sid: ""
+                  Action:
+                    - "es:ESHttpGet"
+                  Resource:
+                    {% for endpoint in ['_all/_settings', '_cluster/stats', '_nodes', '_nodes/stats', '_nodes/*/stats', '_stats'] %}
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "{{es_domain_name}}/",
+                         "{{endpoint}}"]
+                    {% endfor %}
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "{{es_domain_name}}/",
+                         "{{es_index_name}}/_mapping/{{stream.es_type}}"]
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:es:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "{{es_domain_name}}/",
+                         "{{es_index_name}}/_stats"]
+    {% endfor %}

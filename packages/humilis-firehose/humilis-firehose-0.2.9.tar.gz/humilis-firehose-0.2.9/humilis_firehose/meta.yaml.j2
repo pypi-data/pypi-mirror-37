@@ -1,0 +1,216 @@
+---
+# Layer meta-parameters:
+#
+# * keyring_group: if provided the Redshift host, port, username, and password
+#   will be obtained from the provided S3 keyring group (by reading the keys
+#   host, port, username, and password).
+#
+# Conventions used by this layer:
+#
+# * If the s3_bucket_name parameter is not provided, the bucket name will be
+#   taken from output BucketName from a layer named storage within the current
+#   humilis environment.
+meta:
+    description:
+        Firehose delivery streams
+
+    parameters:
+        create_glue_table:
+            description: Should a Glue table be created?
+            value: no
+
+        glue_database_name:
+            description: The name of the Glue database to be created
+            value: {{__context.environment.name + '-' + __context.stage.lower()}}
+
+        crawler_schedule:
+            description: The schedule of the Glue crawler
+            value: "cron(* 0/1 * * ? *)"
+
+        processor_retries:
+            description: Number of retries for the Firehose processor
+            value: 2
+
+        processor_arn:
+            description: ARN of the Lambda transform
+            value:
+
+        processor_buffer_size_in_mbs:
+            description: The buffer size for the transform processor
+            value: 3
+
+        processor_buffer_interval_in_seconds:
+            description: The buffer interval in seconds
+            value: 600
+
+        decrypt_arn:
+            description: The ARN of the custom resource providing KMS decryption
+            value:
+
+        log_group:
+            description:
+                The name of the log group. If not provided, logging will be off.
+            value:
+
+        sns_topic:
+            description:
+                The SNS topic where alarm notifications will be posted. This
+                can be either an ARN of an existing topic, or the name of a
+                topic to be created during the creation of this layer.
+            value:
+                {{_env.name}}-{{_env.stage}}-{{_layer.name}}
+
+        alert_subscribers:
+            description:
+                A list of emails to suscribe to the alarms that will be pushed
+                to the sns topic of this environment
+            value:
+                []
+
+        # S3 configuration options
+        s3_bucket_name:
+            description:
+                Name of the target S3 bucket.
+            value:
+
+        s3_buffer_mbs:
+            description:
+                The amount of buffering in MBs.
+            value:
+                # Minimum: 1, Maximum: 100
+                100
+
+        s3_buffer_seconds:
+            description:
+                The ammount of buffering in seconds.
+            value:
+                # Minimum: 60, Maximum: 900
+                900
+
+        s3_compression:
+            description:
+                The compression type.
+            value:
+               # Values: UNCOMPRESSED, GZIP, ZIP, Snappy
+                GZIP
+
+
+        # Elastic search delivery options
+        es_s3_backup_mode:
+            description:
+                Defines how documents should be delivered to Amazon S3
+            value:
+                FailedDocumentsOnly
+
+        es_buffer_mbs:
+            description:
+                The amount of buffering in MBs.
+            value:
+                # Minimum: 1, Maximum: 100
+                5
+
+        es_buffer_seconds:
+            description:
+                The ammount of buffering in seconds.
+            value:
+                # Minimum: 60, Maximum: 900
+                60
+
+        es_domain_name:
+            description:
+                The ES domain name
+            value:
+                {{_env.name}}-{{_env.stage}}
+
+        es_domain_arn:
+            description:
+                Overrides es_domain_name
+            value:
+
+        es_index_name:
+            description:
+                The name of the target index.
+            value:
+                {{_layer.name}}
+
+        es_index_rotation_period:
+            description:
+                The frequency of ES index rotation.
+            value:
+                NoRotation
+
+        es_retry_seconds:
+            description:
+                The amount of time Firehose will keep retrying to deliver
+                records to ES.
+            value:
+                7200
+
+        redshift_copy_options:
+            description:
+                Options for Redshift copy command
+            value:
+                EMPTYASNULL CSV GZIP
+
+        redshift_host:
+            description: The hostname or IP address of the Redshift endpoint
+            value:
+                {% if keyring_group %}
+                ref:
+                    parser: secret
+                    parameters:
+                        service: "{{keyring_group}}"
+                        key: host
+                {% endif %}
+
+        redshift_port:
+            description: The port of the Redshift endpoint
+            value:
+                {% if keyring_group %}
+                ref:
+                    parser: secret
+                    parameters:
+                        service: "{{keyring_group}}"
+                        key: port
+                {% endif %}
+
+        redshift_database:
+            description: The name of the Redshift database
+            value:
+                {% if keyring_group %}
+                ref:
+                    parser: secret
+                    parameters:
+                        service: "{{keyring_group}}"
+                        key: database
+                {% endif %}
+
+        redshift_username:
+            description: Redshift username
+            value:
+                {% if keyring_group %}
+                ref:
+                    parser: secret
+                    parameters:
+                        service: "{{keyring_group}}"
+                        key: username
+                {% endif %}
+
+        redshift_password:
+            description: Redshift password
+            value:
+                {% if keyring_group %}
+                ref:
+                    parser: secret
+                    parameters:
+                        service: "{{keyring_group}}"
+                        key: password
+                {% endif %}
+
+        streams:
+            description:
+                The names of the streams and the associated S3 prefixes and,
+                optionally, Redshift tables.
+            # For backwards compatibility. New environments should use
+            # delivery_streams
+            value: {{delivery_streams}}
