@@ -1,0 +1,46 @@
+{% extends "gourde/base.html" %}
+
+{% block title %}Workers{% endblock %}
+
+{% block content %}
+    <h1>Workers</h1>
+    <ul class="list-group">
+    {% for i, task in tasks %}
+        <li class="list-group-item">
+            {{task.started_on|datetime}} - <code>{{ task.label }}</code> <span class="badge badge-secondary pull-right">{{task.status.value}}</span>
+        <button class="btn btn-link"
+                type="button"
+                data-toggle="collapse"
+                data-target="#collapse-detail{{i}}"
+                aria-expanded="false"
+                aria-controls="collapse-detail{{i}}">
+            Details
+        </button>
+        <div class="collapse" id="collapse-detail{{i}}">
+            <div class="card card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Submitted on</th>
+                            <th>Started on</th>
+                            <th>Completed on</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-secondary">{{task.status.value}}</span></td>
+                            <td>{{task.submitted_on|datetime}}</td>
+                            <td>{{task.started_on|datetime}}</td>
+                            <td>{{task.completed_on|datetime}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <pre>{{task.result}}</pre>
+            </div>
+        </div>
+        </li>
+    {% endfor %}
+    </ul>
+
+{% endblock %}
