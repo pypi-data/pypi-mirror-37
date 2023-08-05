@@ -1,0 +1,66 @@
+Metadata-Version: 2.1
+Name: quicknn
+Version: 1.0.9
+Summary: An implementation of Feedforward Neural Networks for quick applications.
+Home-page: https://gitlab.com/deeplego/quicknn
+Author: Lorenzo Palloni
+Author-email: palloni.lorenzo@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+
+# QuickNN
+
+The *quicknn* is a Tensorflow-based package that aims to simplify the application of the feedforward neural networks in classification and regression problems.
+The main features of the *quicknn* package are:
+
+* internally management of the categorical variables with one-hot-encoding(OHE) method batch-wise, just you have to feed it with pandas object;
+* internally management of the validation of the data while training;
+* possibility to stop the training phase, change some parameters and then resume the training from where it had remained;
+* allows easy visualization of the learning curves using [Tensorboard](https://www.tensorflow.org/guide/summaries_and_tensorboard);
+
+## Example
+
+```python
+from quicknn import QuickNN
+from sklearn.datasets import load_boston
+from sklearn.model_selection import train_test_split
+
+X, y = load_boston(return_X_y=True)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25)
+
+qnn = QuickNN(list_neurons=[100, 200, 1])
+qnn.fit(X_train, y_train, n_epochs=10) ## In IPython session you can stop-change-resume the training.
+qnn.fit(X_train, y_train, n_epochs=20) ## Just increasing the n_epochs.
+qnn.fit(X_train, y_train, n_epochs=30,
+        learning_rate=0.01) ## You can change e.g., the learning_rate param while training
+y_pred = qnn.predict(X_val)
+
+```
+
+## Installing
+The dependencies are showed in [requirements.txt](requirements.txt), which can be installed with the command:
+```bash
+$ pip install -r requirements.txt
+```
+Then the library can easily downloaded through pip:
+```bash
+$ pip install quicknn
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## References
+* [IPython](https://ipython.org/)
+* [Tensor](https://www.tensorflow.org/)
+* [pandas](https://pandas.pydata.org/)
+* [scikit-learn](http://scikit-learn.org/stable/)
+* [path.py](https://github.com/jaraco/path.py)
+
+
