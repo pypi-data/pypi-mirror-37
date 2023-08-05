@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/utils.html" as util %}
+
+{% block title %}ComPath{% endblock %}
+
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href='https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css'/>
+
+    <style>
+        #autocompletion-box {
+            padding-top: 15px;
+            padding-left: 0px;
+        }
+    </style>
+{% endblock %}
+
+
+{% block scripts %}
+
+    {{ super() }}
+    {% include "dependencies/common.html" %}
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+    {% if current_user.is_admin %}
+        <script src="{{ url_for('static', filename='js/bootstrap-confirmation.min.js') }}"></script>
+        <script>
+            $('[data-toggle=confirmation]').confirmation({
+                rootSelector: '[data-toggle=confirmation]'
+                // other options
+            });
+        </script>
+    {% endif %}
+
+    <script type="text/javascript">
+        var maxHeight = 0;
+        $(".panel-body").find(".row").find(".col-sm-6").find(".thumbnail").each(function (idx, item) {
+            var height = $(item).height();
+            maxHeight = maxHeight > height ? maxHeight : height;
+        });
+        $(".panel-body").find(".row").find(".col-sm-6").find(".thumbnail").height(maxHeight);
+
+        // Initialize popover in buttons
+        $(function () {
+            $('[data-toggle="popover"]').popover({
+                placement: 'top',
+                trigger: 'hover'
+            })
+        });
+
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        });
+
+        var databaseNames = {
+            'kegg': 'KEGG',
+            'reactome': 'Reactome',
+            'wikipathways': 'WikiPathways',
+            'compath_neurommsig_ad': 'NeuroMMSig AD',
+            'compath_neurommsig_pd': 'NeuroMMSig PD'
+        };
+        /////////////////////
+        // Pathway Search //
+        ////////////////////
+        $('#pathway-autocompletion').autocomplete({
+            source: function (request, response) {
+                $.getJSON("/api/autocompletion/pathway/" + request.term, function (data) {
+                    response($.map(data, function (pathwayInfo, key) {
+                        if (pathwayInfo[0] in databaseNames) {
+                            databaseName = databaseNames[pathwayInfo[0]]
+                        }
+                        else {
+                            databaseName = pathwayInfo[0]
+                        }
+
+                        return {
+                            label: pathwayInfo[1] + " (" + databaseName + ")",
+                            value: "/pathway/" + pathwayInfo[0] + "/" + pathwayInfo[2]
+                        }
+                    }));
+                });
+            },
+            select: function (e, ui) {
+                window.location.href = ui.item.value;
+            },
+            minLength: 3,
+            delay: 100
+        });
+
+        /// Clear autocompletion when coming back
+
+        $(window).bind("pageshow", function () {
+            $("#pathway-autocompletion").val("");
+        });
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="container" style="margin-top: 50px">
+        {{ util.flashed_messages(dismissible=True, container=False) }}
+
+        <div class="jumbotron">
+            <h1>ComPath</h1>
+            <h4>An integrative and extensible web application for exploring, comparing,
+                and curating pathway databases.
+            </h4>
+
+            <div class="input-group" id="autocompletion-box">
+                <span class="input-group-addon" id="addon" style="background-color: white;">
+                    <span class="glyphicon glyphicon-search"></span>
+                </span>
+                <input placeholder="Explore your favorite pathway..." id="pathway-autocompletion"
+                       class="wide form-control" aria-describedby="addon" type="text"
+                       style="max-width: 500px; min-width: 300px">
+
+            </div>
+
+            <span>Examples: <a class="nounderline" href="/pathway/kegg/path:hsa04010">MAPK signaling pathway</a>,
+                <a class="nounderline" href="/pathway/wikipathways/WP534">Glycolysis and Gluconeogenesis</a>
+            </span>
+        </div>
+
+        {% if current_user.is_admin %}
+            <div class="panel panel-info" id="admin-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Admin
+                        <button type="button" class="close" data-target="#admin-panel" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <a class="btn btn-info" href="{{ url_for('admin.index') }}" role="button">
+                        Flask Admin
+                    </a>
+                    <a class="btn btn-info" href="{{ url_for('db.view_config') }}" role="button">
+                        Configuration
+                    </a>
+                    <a class="btn btn-info" href="{{ url_for('db.view_users') }}" role="button">
+                        View Users
+                    </a>
+                    <a class="btn btn-warning" href="{{ url_for('db.delete_mappings') }}"
+                       role="button" data-toggle="confirmation" data-btn-ok-icon="glyphicon glyphicon-share-alt"
+                       data-btn-ok-class="btn-success" data-btn-cancel-icon="glyphicon glyphicon-ban-circle"
+                       data-btn-cancel-class="btn-danger">
+                        Drop All Mappings
+                    </a>
+                    <a class="btn btn-info" href="{{ url_for('api.installed_plugins') }}"
+                       role="button">
+                        Installed Plugins
+                    </a>
+                    <a class="btn btn-info" href="{{ url_for('api.plugins_populated') }}"
+                       role="button">
+                        Populated Plugins
+                    </a>
+                    <a class="btn btn-danger" href="{{ url_for('db.delete_db') }}" role="button"
+                       data-toggle="confirmation" data-btn-ok-icon="glyphicon glyphicon-share-alt"
+                       data-btn-ok-class="btn-success" data-btn-cancel-icon="glyphicon glyphicon-ban-circle"
+                       data-btn-cancel-class="btn-danger">
+                        Nuke Database
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>ComPath Overview</h3>
+                                <p>Discover the different pathway databases loaded in ComPath.</p>
+                                <p>
+                                    <a href="{{ url_for('ui.overview') }}" class="btn btn-primary btn-block">
+                                        Overview
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>Pathway Similarity</h3>
+                                <p>
+                                    Explore, visualize, and cluster pathways according to their gene set similarity.
+                                </p>
+                                <p>
+                                    <a href="{{ url_for('ui.similarity') }}"
+                                       class="btn btn-primary btn-block">
+                                        Explore
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>Pathway Overlap</h3>
+                                <p>Explore and visualize the overlap between different pathways.</p>
+                                <p>
+                                    <a href="{{ url_for('analysis.pathway_overlap') }}"
+                                       class="btn btn-primary btn-block">
+                                        Explore Overlaps
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>Pathway Enrichment</h3>
+                                <p>Submit a geneset and analyze its enriched pathways.</p>
+                                <p>
+                                    <a href="{{ url_for('analysis.query') }}" class="btn btn-primary btn-block">
+                                        Query
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>Curate</h3>
+                                <p>
+                                    Curate, propose, and establish new mappings between pathways.
+                                </p>
+                                <p>
+                                    <a href="{{ url_for('curation.create_mapping') }}"
+                                       class="btn btn-primary btn-block">
+                                        Curate
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="thumbnail home-link">
+                            <div class="caption">
+                                <h3>Pathway Mappings</h3>
+                                <p>
+                                    Explore the mapping catalog. A collection of mappings between and across databases.
+                                </p>
+                                <p>
+                                    <a href="{{ url_for('curation.catalog') }}" class="btn btn-primary btn-block">
+                                        Catalog
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "meta/footer.html" %}
+{% endblock %}
