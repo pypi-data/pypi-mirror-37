@@ -1,0 +1,249 @@
+Metadata-Version: 2.1
+Name: collective.js.leaflet
+Version: 0.7.2
+Summary: Leaflet maps integration for Plone
+Home-page: http://pypi.python.org/pypi/collective.js.leaflet
+Author: kiorky
+Author-email: kiorky@cryptelium.net
+License: GPL
+Description: ============
+        Introduction
+        ============
+        
+        .. contents::
+        
+        Description
+        ===========
+        
+        Enrich your Plone site with the power of Leaflet maps. Leaflet version of this package is 0.7.3.
+        
+        https://github.com/Leaflet/Leaflet
+        
+        This addon registers the Leaflet base Javascript and CSS resources and
+        optionally some interesting Leaflet plugins. By installing this addon, the base
+        Leaflet mapping resources are automatically integrated. To activate some of the
+        Plugins, you have to add one of these resource bundles to your registry.xml
+        Registration:
+        
+            - leaflet.markercluster - https://github.com/Leaflet/Leaflet.markercluster
+            - leaflet.fullscreen - https://github.com/brunob/leaflet.fullscreen
+            - leaflet.zoomfs - https://github.com/elidupuis/leaflet.zoomfs
+            - leaflet.geosearch - https://github.com/smeijer/L.GeoSearch
+            - leaflet.geosearch.openstreetmap
+            - leaflet.geosearch.bing
+            - leaflet.geosearch.esri
+            - leaflet.geosearch.google
+            - leaflet.geosearch.nokia
+            - leaflet.draw - https://github.com/Leaflet/Leaflet.draw
+            - leaflet.stamen - http://maps.stamen.com/
+            - leaflet.locatecontrol - https://github.com/domoritz/leaflet-locatecontrol
+            - leaflet.MiniMap - https://github.com/Norkart/Leaflet-MiniMap
+            - leaflet.providers - https://github.com/leaflet-extras/leaflet-providers
+              leaflet.awesome-markers - https://github.com/lvoogdt/Leaflet.awesome-markers
+        
+        Since this addon only provides Leaflet resources, you have finally provide some
+        HTML markup for the map and write your custom Javascript integration code for
+        Leaflet maps to work.
+        
+        You have an example view at /@@LeafletMapView.
+        
+        You can watch a demo video here: `Youtube DEMO
+        <http://www.youtube.com/watch?v=cVOQkhmUffg>`_.
+        
+        
+        TODO
+        ====
+        
+        * Write proper tests.
+        
+        
+        Credits
+        =======
+        
+        Companies
+        ---------
+        |makinacom|_
+        
+          * `Planet Makina Corpus <http://www.makina-corpus.org>`_
+          * `Contact us <mailto:python@makina-corpus.org>`_
+        
+        .. |makinacom| image:: http://depot.makina-corpus.org/public/logo.gif
+        .. _makinacom:  http://www.makina-corpus.com
+        
+        
+        Authors
+        -------
+        
+        - kiorky  <kiorky@cryptelium.net>
+        
+        
+        Contributors
+        ------------
+        
+        - Eric BREHAULT <eric.brehault@makina-corpus.com>
+        
+        - Johannes Raggam <dev@programmatic.pro>
+        
+        
+        collective.js.leaflet Installation
+        =================================================================================
+        
+        To install collective.js.leaflet into the global Python environment (or a workingenv),
+        using a traditional Zope 2 instance, you can do this:
+        
+         * When you're reading this you have probably already run ::
+        
+           ``easy_install collective.js.leaflet``.
+        
+           Find out how to install setuptools (and EasyInstall) here: http://peak.telecommunity.com/DevCenter/EasyInstall
+        
+         * If you are using Zope 2.9 (not 2.10), get `pythonproducts`_ and install it
+           via::
+        
+               python setup.py install --home /path/to/instance
+        
+           into your Zope instance.
+        
+         * Create a file called ``collective.js.leaflet-configure.zcml`` in the
+           ``/path/to/instance/etc/package-includes`` directory.  The file
+           should only contain this::
+        
+               <include package="collective.js.leaflet" />
+        
+        .. _pythonproducts: http://plone.org/products/pythonproducts
+        
+        
+        Alternatively, if you are using zc.buildout and the plone.recipe.zope2instance
+        recipe to manage your project, you can do this:
+        
+         * Add ``collective.js.leaflet`` to the list of eggs to install, e.g.::
+        
+            [buildout]
+            ...
+            eggs =
+                ...
+                collective.js.leaflet
+        
+         * Tell the plone.recipe.zope2instance recipe to install a ZCML slug::
+        
+            [instance]
+            recipe = plone.recipe.zope2instance
+            ...
+            zcml =
+                collective.js.leaflet
+        
+         * Re-run buildout, e.g. with::
+        
+            $ ./bin/buildout
+        
+        You can skip the ZCML slug if you are going to explicitly include the package
+        from another package's configure.zcml file.
+        
+        
+        Changelog
+        =========
+        
+        0.7.2 (2018-10-11)
+        ------------------
+        
+        - Fix url for search on openstreetmap .
+          [bsuttor]
+        
+        
+        0.7.1 (2015-06-25)
+        ------------------
+        
+        - Set all JavaScript registrations to cachable and cookable True.
+          [thet]
+        
+        - Remove leaflet.ie.css, as it was removed from Leaflet.
+          [thet]
+        
+        
+        0.7 (2014-08-26)
+        ----------------
+        
+        - Update Leaflet version of this package (now 0.7.3).
+          [bsuttor]
+        
+        
+        0.6 (2014-04-30)
+        ----------------
+        
+        - Laflet + Plugins update from 2013-06-24.
+          [thet]
+        
+        
+        0.5 (2013-06-11)
+        ----------------
+        
+        - Add some interesting plugins and introduce bundle concept to enable
+          individual plugins.
+          [thet]
+        
+        - New Leaflet resource structure: Get source directly from Github and adapt the
+          resource directory to use the new subdirectory. This change is backwards
+          compatible.
+          [thet]
+        
+        - PEP8 Cleanup.
+          [thet]
+        
+        
+        0.4.4.1 (2012-09-24)
+        --------------------
+        
+        - Fix CSS images urls [ebrehault]
+        
+        0.4.4 (2012-09-13)
+        ------------------
+        
+        - Upgrade to Leaflet 0.4.4 [ebrehault]
+        - Note: we now use the Leaflet lib version as egg version.
+        
+        0.3.3 (2012-09-03)
+        ------------------
+        
+        - Fix egg [ebrehault]
+        
+        0.3.2 (2012-08-02)
+        ------------------
+        
+        - Upgrade to Leaflet 0.4 [ebrehault]
+        
+        0.3.1.5 (unreleased)
+        --------------------
+        
+        - Nothing changed yet.
+        
+        
+        0.3.1.4 (2012-02-24)
+        --------------------
+        
+        - Fix background urls
+        
+        
+        0.3.1.3 (2012-02-24)
+        --------------------
+        - FIX: Enable ie css only on ie [kiorky]
+        
+        0.3.1.2 (2012-02-24)
+        --------------------
+        
+        - Fix for plone < 41 [kiorky]
+        
+        
+        0.3.1 (2012-02-23)
+        ------------------
+        
+        - Initial release [kiorky]
+        
+        
+Keywords: plone leaflet gis geo
+Platform: UNKNOWN
+Classifier: Framework :: Plone
+Classifier: Framework :: Plone :: 4.2
+Classifier: Framework :: Plone :: 4.3
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development
+Provides-Extra: test
