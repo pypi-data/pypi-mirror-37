@@ -1,0 +1,216 @@
+Metadata-Version: 2.1
+Name: harpo
+Version: 0.5.8
+Summary: A GPG-based secret storing/sharing library
+Home-page: https://behavox.com/
+Author: Behavox
+Author-email: devops@behavox.com
+License: Apache-2
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Programming Language :: Python
+Classifier: Topic :: Security :: Cryptography
+Requires-Python: >=2.7
+Description-Content-Type: text/markdown
+Requires-Dist: pbr
+Requires-Dist: PyYAML
+Requires-Dist: python-gnupg
+Requires-Dist: GitPython
+
+Harpo
+=====
+
+Description
+-----------
+
+> Harpocrates (Ancient Greek: Ἁρποκράτης) was the god of silence, secrets and confidentiality.
+
+**Harpo** is GPG-based secret storage/sharing library.
+
+It is aims to be a convenient wrapper around GPG and tries to solve following problems:
+
+* Store secrets in a repository (currently only git is supported) in a secure manner
+* Provide role-based access to the stored secrets
+* Provide an easy way to reencrypt secrets
+
+It was inspired by [blackbox](https://github.com/StackExchange/blackbox) by StackExchange.
+
+Installation
+------------
+
+**Harpo** is available at pypi.org and can be installed with pip:
+
+```bash
+pip install harpo
+```
+
+Quick start
+-----------
+
+### Initialization
+
+Suppose we have some git repository:
+
+```bash
+$ git rev-parse --is-inside-work-tree
+true
+```
+
+Then we can initialize harpo right away with:
+
+```bash
+harpo initialize
+```
+This command will create necessary directory structure and bootstrap it with some default groups and domains:
+
+```bash
+[INFO] Initializing at /home/set/PycharmProjects/beholder/.harpo
+[INFO] Add domain: all
+[INFO] Create group: all
+[INFO] Create group: adm
+[INFO] OK
+```
+
+### Add users
+
+Now it's time to add the first users. Harpo will look into your GPG public keyring and will try importing
+public keys from there.
+```bash
+harpo add user <Key ID> -g adm
+```
+
+Key ID can be any string, that identifies your key: email, surname, id, etc.
+
+Let's say you have a key with email `mr.robot@example.com`:
+
+```bash
+harpo add user mr.robot -g adm
+```
+
+```bash
+[INFO] Importing key A8.....0 - Mister Robot <mr.robot@example.com>
+[INFO] Add user 'Mister Robot <mr.robot@example.com>' to group 'adm'
+[INFO] Add user 'Mister Robot <mr.robot@example.com>' to group 'all'
+[INFO] Reencrypting everything!
+```
+
+Note, that we also indicated, that we want this user to be added to the `adm` group.
+Also every user belongs to group `all`
+
+
+### Encrypt some stuff
+
+```bash
+harpo encrypt all/my_password hunter2
+```
+
+This will create a new GPG encrypted file at `.harpo/domains/all/my_password`.
+
+**Note:**
+
+You can also encrypt entire files with `encrypt-file`:
+
+```bash
+harpo encrypt-file all/bobs_password /home/alice/Downloads/bobs_password
+```
+
+
+### Decryption
+
+```bash
+harpo decrypt all/my_password
+```
+
+It will print the secret's contents to the STDOUT:
+```bash
+$ harpo decrypt all/my_password
+hunter2
+```
+
+
+### Add domains
+
+Let's create another domain for our development-related secrets and another for production.
+
+```bash
+harpo add domain dev
+```
+
+```bash
+harpo add domain prod
+```
+
+This will create `.harpo/domains/dev` and `.harpo/domains/prod`.
+
+### Add groups
+
+```bash
+harpo add group developers
+```
+
+### Granting access
+
+Currently only group `adm` has access to both `dev` and `prod` domains.
+Lets change this by allowing group `developers` to read secrets in domain `dev`:
+
+```bash
+harpo allow -g developers dev
+```
+
+Now if you add users to `developers` group, they all will be able
+to decrypt secrets in `dev` domain:
+
+```bash
+harpo add user mr.developer -g developers
+```
+
+### Reencrypting
+
+**Harpo** automatically reencrypts secrets when it's appropriate.
+If you want to trigger reencryption manually, run:
+
+```bash
+harpo reencrypt
+```
+
+Terminology
+-----------
+
+### Secret
+
+**Secret** — is a GPG encrypted file, stored inside a domain.
+
+Its recipients list always contains users from group `adm` and other recipients that are allowed to read secrets in its domain.
+
+
+### Domain
+
+**Domains** provide a way to group secrets: all secrets inside a given domain have the same list of recipients. User can specify which groups/users can read secrets in a given domain.
+
+There is one system domain created by default: `all`.
+Its purpose is to store secrets, that can be decrypted by any existing user.
+
+Group `adm` can decrypt any secrets in any domain.
+
+
+### User
+
+Basically it's just a GPG recipient. Harpo identifies users by looking into its GPG public keyring located at `.harpo/keychain/pubkeyring.gpg`
+
+
+### Group
+
+**Group** — is a list of users. There are two special system groups: `all` and `adm`. They have following properties:
+
+* Every user belongs to `all`, hence can decrypt any secret in `all` special domain,
+* And `adm` can decrypt any secret in any domain
+
+
+
