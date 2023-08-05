@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<object name="ArchivioFolder" meta_type="Dexterity FTI" i18n:domain="plone"
+   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+ <property name="title" i18n:translate="">Archivio</property>
+ <property name="description" i18n:translate=""></property>
+ <property name="icon_expr">string:${portal_url}/++resource++cciaapd.contenttypes/archivio.png</property>
+ <property name="factory">ArchivioFolder</property>
+ <property name="add_view_expr">string:${folder_url}/++add++ArchivioFolder</property>
+ <property name="link_target"></property>
+ <property name="immediate_view">view</property>
+ <property name="global_allow">False</property>
+ <property name="filter_content_types">True</property>
+ <property name="allowed_content_types" purge="False">
+   <element value="Link"/>
+   <element value="File"/>
+   <element value="ArchivioFolder"/>
+ </property>
+ <property name="allow_discussion">False</property>
+ <property name="default_view">archivio_view</property>
+ <property name="view_methods"></property>
+ <property name="default_view_fallback">False</property>
+ <property name="add_permission">cciaapd.contenttypes.addArchivioFolder</property>
+ <property name="klass">plone.dexterity.content.Container</property>
+ <property name="schema">cciaapd.contenttypes.interfaces.IArchivioFolderSchema</property>
+ <property name="model_source"></property>
+ <property name="behaviors" purge="false">
+  <element value="plone.app.dexterity.behaviors.metadata.IDublinCore"/>
+  <element value="plone.app.content.interfaces.INameFromTitle"/>
+  <element value="plone.app.dexterity.behaviors.discussion.IAllowDiscussion"/>
+  <element value="plone.app.dexterity.behaviors.exclfromnav.IExcludeFromNavigation"/>
+  <element value="Products.CMFPlone.interfaces.constrains.ISelectableConstrainTypes"/>
+  <element value="plone.app.relationfield.behavior.IRelatedItems"/>
+  <element value="plone.app.referenceablebehavior.referenceable.IReferenceable" />
+  <element value="plone.app.dexterity.behaviors.nextprevious.INextPreviousToggle"/>
+ </property>
+ <alias from="(Default)" to="(dynamic view)"/>
+ <alias from="edit" to="@@edit"/>
+ <alias from="sharing" to="@@sharing"/>
+ <alias from="view" to="(selected layout)"/>
+ <action title="View" action_id="view" category="object" condition_expr=""
+    icon_expr="" link_target="" url_expr="string:${object_url}"
+    visible="True" i18n:attributes="title">
+  <permission value="View"/>
+ </action>
+ <action title="Edit" action_id="edit" category="object" condition_expr=""
+    icon_expr="" link_target="" url_expr="string:${object_url}/edit"
+    visible="True" i18n:attributes="title">
+  <permission value="Modify portal content"/>
+ </action>
+</object>

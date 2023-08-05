@@ -1,0 +1,40 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="cciaapd.contenttypes">
+
+  <includeDependencies package="." />
+
+  <i18n:registerTranslations directory="locales" />
+
+  <include file="permissions.zcml" />
+  <include package=".browser" />
+  <include package=".behaviors" />
+  <include package=".portlets" />
+  <include package=".adapters" />
+  <include package=".upgrades" />
+
+  <genericsetup:registerProfile
+      name="default"
+      title="CCIAPD: Content Types"
+      directory="profiles/default"
+      description="Installs the cciaapd.contenttypes add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:importStep
+      name="cciaapd.contenttypes-postInstall"
+      title="CCIAPD: Content Types post install import step"
+      description="Post install import step from cciaapd.contenttypes"
+      handler=".setuphandlers.post_install">
+  </genericsetup:importStep>
+
+  <subscriber
+    for=".interfaces.ISchedaSchema Products.CMFCore.interfaces.IActionSucceededEvent"
+    handler=".events.events_state.notify_state_change"
+    />
+
+  <adapter name="SearchableText" factory=".indexers.SearchableText_scheda" />
+</configure>

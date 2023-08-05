@@ -1,0 +1,55 @@
+<div tal:attributes="class view/getPortletClass"
+     i18n:domain="plone"
+     tal:define="results view/results">
+
+    <h4 class="boxHeader" tal:content="view/data/portlet_title"></h4>
+
+    <div class="boxContent">
+
+      <tal:office repeat="result results">
+        <h5 class="officeTitle" tal:condition="python:result.Title">
+          <a href=""
+             tal:attributes="href string:${result/absolute_url}/view;
+                       title result/Description">
+            <span tal:replace="result/Title"/>
+          </a>
+        </h5>
+
+        <div class="officeAddress" tal:condition="result/location"
+           tal:define="formatted_location python: view.format_text_field(result,'location')" tal:content="structure formatted_location">
+            text here
+        </div>
+        <tal:timetable condition="result/office_timetable">
+          <div class="officeTime" tal:define="timetable result/office_timetable/output"
+             tal:condition="timetable">
+            <h6>Orari</h6>
+            <div class="timetableDetails" tal:content="structure timetable" />
+          </div>
+        </tal:timetable>
+        <div class="officePhone" tal:condition="python:result.phone"
+                                 tal:define="formatted_phone_numbers python: view.format_text_field(result,'phone')">
+          <h6>Telefono</h6>
+          <p tal:content="structure formatted_phone_numbers"></p>
+        </div>
+
+        <div class="officeFax" tal:condition="python:result.fax">
+          <h6>Fax</h6>
+          <p tal:content="result/fax"></p>
+        </div>
+         <tal:mail define="email python:view.generate_mail_tag(result.email);
+                           pec python:view.generate_mail_tag(result.pec)"
+                   condition="python:email or pec">
+            <div tal:condition="email" class="officeEmail">
+              <h6>E-mail</h6>
+              <p><a tal:replace="structure email" /></p>
+            </div>
+
+            <div class="officePec" tal:condition="pec">
+              <h6>Pec</h6>
+              <p><a tal:replace="structure pec" /></p>
+            </div>
+        </tal:mail>
+    </tal:office>
+  </div>
+
+</div>

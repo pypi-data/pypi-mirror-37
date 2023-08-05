@@ -1,0 +1,116 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="cciaapd.contenttypes"
+    xmlns:zcml="http://namespaces.zope.org/zcml">
+
+  <!-- Set overrides folder for Just-a-Bunch-Of-Templates product -->
+  <include package="z3c.jbot" file="meta.zcml" />
+  <browser:jbot
+      directory="overrides"
+      layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+      />
+
+  <!-- Publish static files -->
+  <browser:resourceDirectory
+      name="cciaapd.contenttypes"
+      directory="static"
+      />
+
+  <browser:menuItems
+      for="cciaapd.contenttypes.interfaces.IScheda"
+      menu="plone_displayviews">
+      <browser:menuItem
+        title="Scheda View"
+        action="scheda_view"
+      />
+  </browser:menuItems>
+
+  <browser:menuItems
+      for="cciaapd.contenttypes.interfaces.IUfficio"
+      menu="plone_displayviews">
+      <browser:menuItem
+        title="Ufficio View"
+        action="ufficio_view"
+      />
+  </browser:menuItems>
+
+   <browser:page
+        name="schede_content_view"
+        for="*"
+        class=".schede_content_view.SchedeContentView"
+        layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+        permission="zope2.View"
+        />
+
+  <browser:page
+        name="scheda_view"
+        template="templates/scheda.pt"
+        class=".scheda_view.SchedaTilesView"
+        for="cciaapd.contenttypes.interfaces.IScheda"
+        layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+        permission="zope2.View"
+        />
+
+  <browser:page
+        name="ufficio_helper_view"
+        for="*"
+        class=".ufficio_helper_view.UfficioHelperView"
+        layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+        permission="zope2.View"
+        />
+
+  <browser:page
+        name="ufficio_view"
+        template="templates/ufficio.pt"
+        class=".ufficio_view.UfficioView"
+        for="cciaapd.contenttypes.interfaces.IUfficio"
+        layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+        permission="zope2.View"
+        />
+  <!-- Custom add and edit form for Ufficio -->
+  <adapter
+    for="Products.CMFCore.interfaces.IFolderish
+         zope.publisher.interfaces.browser.IDefaultBrowserLayer
+         plone.dexterity.interfaces.IDexterityFTI"
+    provides="zope.publisher.interfaces.browser.IBrowserPage"
+    factory=".ufficio_form.AddView"
+    name="Ufficio"
+    />
+  <browser:page
+    for="cciaapd.contenttypes.interfaces.IUfficio"
+    name="edit"
+    class=".ufficio_form.EditView"
+    permission="cmf.ModifyPortalContent"
+    />
+
+  <browser:page
+    name="archivio_view"
+    class=".archivio_view.ArchivioView"
+    template="templates/archivio_view.pt"
+    for="*"
+    layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+    permission="zope2.View"
+    />
+
+  <!-- Render table of contents for rer.bandi-->
+  <browser:viewlet
+      zcml:condition="installed rer.bandi"
+      name="plone.tableofcontents"
+      for="rer.bandi.interfaces.IBando"
+      manager="plone.app.layout.viewlets.interfaces.IAboveContentBody"
+      class="plone.app.layout.viewlets.common.TableOfContentsViewlet"
+      permission="zope2.View"
+      layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+      />
+  <!-- custom breadcrumbs view to fix the problem for Schede set as default views -->
+  <browser:page
+      for="*"
+      name="breadcrumbs_view"
+      class=".custom_breadcrumbs_view.CustomBreadcrumbsView"
+      permission="zope.Public"
+      allowed_attributes="breadcrumbs"
+      layer="cciaapd.contenttypes.interfaces.ICciaapdContenttypesLayer"
+      />
+</configure>

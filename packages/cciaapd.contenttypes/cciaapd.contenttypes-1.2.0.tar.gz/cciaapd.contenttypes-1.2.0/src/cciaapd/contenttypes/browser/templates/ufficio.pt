@@ -1,0 +1,86 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="cciaapd.contenttypes">
+
+    <metal:block fill-slot="content-title">
+        <div class="officeTag">Ufficio</div>
+        <h1 tal:content="context/Title" class="documentFirstHeading">Nome Ufficio</h1>
+    </metal:block>
+    <metal:block fill-slot="content-core">
+    	<div class="officeContactsWrapper"
+    		 tal:define="location python: view.html_to_text(view.get_field_value('location'));
+    		 			 timetable python: view.get_field_value('office_timetable');
+    		 			 phone python: view.html_to_text(view.get_field_value('phone'));
+    		 			 fax python: view.get_field_value('fax');
+               email python:view.generate_mail_tag(view.get_field_value('email'));
+               pec python:view.generate_mail_tag(view.get_field_value('pec'));
+    		 			 executive python: view.get_field_value('executive')">
+    		<h4 i18n:translate="contacts_references_label">Contacts and references</h4>
+            <div class="officeContactsContent">
+        		<div class="officeLocation" tal:condition="python: location or timetable">
+        			<div class="officeLoc" tal:condition="location">
+        				<h5 i18n:translate="office_location_label">Location</h5>
+        				<div tal:replace="structure location"></div>
+        			</div>
+        			<div class="officeTime" tal:condition="timetable">
+        				<h5 i18n:translate="office_timetable_label">Timetable</h5>
+        				<div class="timetableDetails" tal:content="structure timetable/output" />
+        			</div>
+        		</div>
+
+        		<div class="officeContacts" tal:condition="python: phone or fax or email or pec">
+                    <h5>Recapiti</h5>
+        			<div tal:condition="phone" class="officePhone">
+        				<h6 i18n:translate="office_phone_label">Tel</h6>
+                <tal:text tal:content="structure phone"></tal:text>
+        			</div>
+        			<div tal:condition="fax" class="officeFax">
+        				<h6 i18n:translate="office_fax_label">Fax</h6>
+        				<p tal:content="fax"></p>
+        			</div>
+        			<div tal:condition="email" class="officeEmail">
+        				<h6 i18n:translate="office_email_label">E-mail</h6>
+        				<p><a tal:replace="structure email" /></p>
+        			</div>
+        			<div tal:condition="pec" class="officePec">
+        				<h6 i18n:translate="office_pec_label">Pec</h6>
+        				<p><a tal:replace="structure pec" /></p>
+        			</div>
+        		</div>
+
+        		<div class="officeExecutive" tal:condition="python: executive">
+    				<h5 i18n:translate="office_executive_label">Executive</h5>
+    				<p tal:content="executive"></p>
+
+        		</div>
+            </div>
+        </div>
+
+        <div class="officeDuties" tal:condition="duties" tal:define="duties python: view.get_field_value('duties');">
+          <h4 i18n:translate="office_duties_label">Duties</h4>
+          <div id="duties-text"
+              tal:replace="structure python:duties.output_relative_to(view.context)"
+          />
+        </div>
+        <div class="proceedingsList" tal:define="schede view/back_references"
+        	 tal:condition="schede">
+        	 <h2 i18n:translate="proceedings_label">List of proceedings managed by this office</h2>
+            <dl>
+            	<tal:scheda repeat="scheda schede">
+            		<dt>
+                        <a tal:attributes="href scheda/absolute_url;
+            		   				   title scheda/Title"
+                		   tal:content="scheda/Title">
+                		</a>
+                    </dt>
+                    <dd tal:content="scheda/Description">
+                        Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Sed posuere consectetur est at lobortis.
+                    </dd>
+            	</tal:scheda>
+            </dl>
+        </div>
+    </metal:block>
+
+</html>
