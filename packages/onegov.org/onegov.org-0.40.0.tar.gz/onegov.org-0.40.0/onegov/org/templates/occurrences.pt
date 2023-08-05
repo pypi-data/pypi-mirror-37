@@ -1,0 +1,70 @@
+<div metal:use-macro="layout.base" i18n:domain="onegov.org">
+    <tal:b metal:fill-slot="title">
+        ${title}
+    </tal:b>
+    <tal:b metal:fill-slot="content">
+        <div class="row">
+
+            <div class="large-8 medium-8 columns">
+                <div class="row">
+                    <div class="large-12 columns">
+                        <div metal:use-macro="layout.macros['occurrences']" />
+                    </div>
+                </div>
+
+                <div class="pagination-centered">
+                    <div metal:use-macro="layout.macros['pagination']" tal:define="collection layout.model; current_page layout.model;" />
+                </div>
+
+            </div>
+
+            <div class="large-4 medium-4 columns">
+
+                <div class="filter-panel">
+                    <div class="date-range-selector-results">
+                        <div class="date-range-selector-result">
+                            <span>${number_of_occurrences}</span>
+                            <span i18n:translate="">Events</span>
+                        </div>
+                    </div>
+
+                    <div class="occurrences-filter-tags">
+                        <tal:b tal:repeat="tag tags">
+                            <span class="blank-label ${tag.active and 'active' or ''}">
+                                <tal:b replace="structure tag(request)"></tal:b>
+                            </span>
+                        </tal:b>
+                    </div>
+
+                    <metal:b use-macro="layout.macros['date-range-selector']">
+                        <tal:b metal:fill-slot="before-date-range">
+                            <tal:b tal:repeat="tag active_tags">
+                                <input type="hidden" name="tags" value="${tag}">
+                            </tal:b>
+                        </tal:b>
+                    </metal:b>
+                </div>
+
+                <div class="occurrence-exports">
+                    <h2>
+                        <a href="${request.link(layout.model, name='ical')}">
+                            <i class="fa fa-chevron-right"></i> <tal:b i18n:translate="">Export this events</tal:b>
+                        </a>
+                    </h2>
+                </div>
+
+                <div class="submit-yours">
+                    <dl>
+                        <dt>
+                            <a href="${add_link}">
+                                <h2 i18n:translate="">Submit your event</h2>
+                            </a>
+                        </dt>
+                        <dd i18n:translate="">Submit your own event</dd>
+                    </dl>
+                </div>
+          </div>
+
+        </div>
+    </tal:b>
+</div>
