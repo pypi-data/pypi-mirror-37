@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <style>{% include 'handsontable.full.css' %}</style>
+    <style>
+#hotArea {
+  {% if width is defined %}
+    width: {{ width }}px;
+  {% endif %}
+
+  {% if height is defined %}
+    height: {{ height }}px;
+  {% endif %}
+
+  {% if width is defined or height is defined %}
+  overflow: hidden;
+  {% endif %}
+}
+
+.cell {
+  word-break: break-word;
+}
+.wrapper {
+  overflow: scroll;
+  max-height: {{ maxRowHeight|default('500') }}px;
+}
+    </style>
+
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div id="hotArea"></div>
+
+    <script>
+    {% include 'handsontable.full.js' %}
+    </script>
+
+    <script>var data = {{ data|tojson }};</script>
+    <script>var config = {{ config|default({})|tojson }};</script>
+    <script>var maxColWidth = {{ maxColWidth|default('200') }};</script>
+    <script>var columns = {{ columns|tojson }};</script>
+
+    <script>{% include 'sheet.js' %}</script>
+  </body>
+</html>
