@@ -1,0 +1,60 @@
+<nav id="universal-nav" class="navbar navbar-fixed-top">
+  {% if pagename == 'index' %}
+    <div id="landing-page-nav-container" class="nav-container">
+  {% else %}
+    <div class="nav-container">
+  {% endif %}
+      <a class="navbar-brand" href="https://www.skuid.com/">
+          <img src="{{ pathto('_static' ~ theme_logo, 1) }}" alt="{{ theme_logo_alt }}">
+          {% if theme_navbar_text %}
+              <div class="navbar-text">{{ theme_navbar_text }}</div>
+          {% endif %}
+      </a>
+
+      <div id="apps-container">
+          <ul id="universal-nav">
+            <li role="toolbar" aria-haspopup="true" class="nav-dropdown" tabindex="0"> <svg id="ink-apps" viewBox="0 0 34 34" width="100%" height="100%"><title>apps</title><path d="M12 28h4v-4h-4zm0-6h4v-4h-4zM6 10h4V6H6zm6 6h4v-4h-4zm-6 6h4v-4H6zm0 6h4v-4H6zm0-12h4v-4H6zm6-6h4V6h-4zm12 12h4v-4h-4zm0-6h4v-4h-4zm0 12h4v-4h-4zm0-22v4h4V6zm-6 4h4V6h-4zm0 12h4v-4h-4zm0-6h4v-4h-4zm0 12h4v-4h-4z"></path></svg>
+              <ul aria-hidden="true" aria-label="submenu" id="guides" class="nav-sub-menu">
+                <li><a href="https://docs.skuid.com">Documentation</a></li>
+                <li><a href="https://portal.skuidsite.com/learning">Learn</a></li>
+                <li><a href="https://community.skuid.com/skuid">Community</a></li>
+              </ul>
+            </li>
+      </div>
+
+    </div>
+    <div id="verNum" style="display:none">v{{ theme_version }}</div>
+    <div id="prerelease" style="display:none">{{ theme_prerelease }}</div>
+  </nav>
+  <nav id="site-nav">
+    {% if pagename == 'index' %}
+    {% else %}
+    <div id="docs-and-search-bar" class="universal-header-gray">
+        <div class="nav-container">
+        <div class="site-title"><a href="/">Documentation</a></div>
+        <div id="docs-site-nav">
+          <ul id="docs-site-nav-list">
+            {% if theme_navbar_links %}
+                {%- for link in theme_navbar_links %}<li><a href="{{ pathto(*link[1:]) }}">{{ link[0] }}</a></li>{%- endfor %}
+            {% endif %}
+          </ul>
+
+          <ul id="docs-site-nav-list-dropdown">
+            <li role="toolbar" aria-haspopup="true" class="nav-dropdown" tabindex="0"> Resources
+              <ul aria-hidden="true" aria-label="submenu" id="guides" class="nav-sub-menu">
+                {% if theme_navbar_links %}
+                    {%- for link in theme_navbar_links %}<li><a href="{{ pathto(*link[1:]) }}">{{ link[0] }}</a></li>{%- endfor %}
+                {% endif %}
+              </ul>
+            </li>
+          </ul>
+      </div>
+
+      {% block navbarsearch %}
+        {% include "navbarsearchbox.html" %}
+      {% endblock %}
+
+      </div>
+    </div>
+    {% endif %}
+  </nav>
