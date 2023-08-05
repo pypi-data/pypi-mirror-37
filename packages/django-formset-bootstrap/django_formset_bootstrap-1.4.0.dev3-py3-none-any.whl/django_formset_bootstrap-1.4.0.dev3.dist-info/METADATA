@@ -1,0 +1,137 @@
+Metadata-Version: 2.1
+Name: django-formset-bootstrap
+Version: 1.4.0.dev3
+Summary: A jQuery plugin that allows you to dynamically add new forms to a rendered django formset.
+Home-page: https://github.com/mbourqui/django-formset-bootstrap/
+Author: Marc Bourqui
+Author-email: pypi.kemar@bourqui.org
+License: BSD License
+Download-URL: https://github.com/mbourqui/django-formset-bootstrap/releases/tag/v1.4.0.dev3
+Keywords: django formset
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.8
+Classifier: Framework :: Django :: 1.9
+Classifier: Framework :: Django :: 1.10
+Classifier: Framework :: Django :: 1.11
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Requires-Dist: Django (>=1.9.13)
+
+|Python| |Django| |License| |PyPIv| |PyPIs|
+
+A jQuery plugin for managing Django formsets
+============================================
+
+This `jQuery <http://jquery.com/>`__ plugin helps you create more usable
+`Django <https://www.djangoproject.com/>`__ formsets by allowing clients
+add and remove forms on the client-side.
+
+The latest versions of these documents can be found on the Github web
+site for this application, which is located at
+``https://github.com/mbourqui/django-dynamic-formset``.
+
+Requirements
+------------
+
+-  `Python <https://www.python.org/>`__ >= 3.4
+-  `Django <https://www.djangoproject.com/>`__ >= 1.8
+-  `jQuery <http://jquery.com/>`__ >= 1.2.6
+
+Installation
+------------
+
+Using PyPI
+~~~~~~~~~~
+
+1. Run ``pip install django-formset-bootstrap``
+
+Using the source code
+~~~~~~~~~~~~~~~~~~~~~
+
+1. Make sure `Pandoc <http://pandoc.org/index.html>`__ is installed
+2. Run ``./pypi_packager.sh``
+3. Run ``pip install dist/django_formset_bootstrap-x.y.z-[...].wheel``,
+   where ``x.y.z`` must be replaced by the actual version number and
+   ``[...]`` depends on your packaging configuration
+
+Configuration
+-------------
+
+1. Add ``formset-bootstrap`` to the ``INSTALLED_APPS`` in your project's
+   settings (usually ``settings.py``). This is required in order to be
+   able to load the script from the static files of your project.
+
+Usage
+-----
+
+In your templates using formsets, be sure to load the static files:
+
+.. code:: Django
+
+    {% load static %}
+
+Then include the script:
+
+.. code:: Django
+
+    <script src="{% static 'formset_bootstrap/js/jquery.formset.js' %}" type="text/javascript"></script>
+
+Finally, set up your dynamic formset:
+
+.. code:: Django
+
+    <script type="text/javascript">
+        $(function () {
+            $('#formset-id fieldset').formset();
+        });
+    </script>
+
+Setting up the demo project
+===========================
+
+Once you've got the source code, run the following commands to set up
+the SQLite3 database and start the development server::
+
+::
+
+    cd demo
+    virtualenv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    chmod a+x manage.py
+    ./manage.py syncdb
+    ./manage.py runserver
+
+You can now browse to ``http://localhost:8000/`` and view the examples.
+
+Credits
+
+This is a fork of
+`django-dynamic-formset <https://github.com/elo80ka/django-dynamic-formset>`__
+from `elo80ka <https://github.com/elo80ka>`__.
+
+.. |Python| image:: https://img.shields.io/badge/Python-3.4,3.5,3.6-blue.svg?style=flat-square
+   :target: /
+.. |Django| image:: https://img.shields.io/badge/Django-1.8,1.9,1.10,1.11-blue.svg?style=flat-square
+   :target: /
+.. |License| image:: https://img.shields.io/badge/License-BSD-blue.svg?style=flat-square
+   :target: /LICENSE
+.. |PyPIv| image:: https://img.shields.io/pypi/v/django-formset-bootstrap.svg?style=flat-square
+   :target: https://pypi.org/project/django-formset-bootstrap
+.. |PyPIs| image:: https://img.shields.io/pypi/status/django-formset-bootstrap.svg
+   :target: https://pypi.org/project/django-formset-bootstrap
+
+
