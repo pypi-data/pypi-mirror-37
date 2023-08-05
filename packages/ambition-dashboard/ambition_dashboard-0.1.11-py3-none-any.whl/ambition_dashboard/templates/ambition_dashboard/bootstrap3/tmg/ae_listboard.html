@@ -1,0 +1,54 @@
+{% extends edc_listboard_template %}
+{% load edc_dashboard_extras %}
+{% load tz %}
+{% load static %}
+{% load edc_base_extras %}
+{% load ambition_dashboard_extras %}
+
+
+{% block main %}
+
+<div id="loader"></div>
+
+<div class="panel panel-{{ listboard_panel_style}}">
+<div class="panel-heading">
+
+<i class="{{ listboard_fa_icon }} fa-2x"></i>
+                    
+<span class="pull-right">
+    {% include 'edc_dashboard/bootstrap3/search_form.html' %}
+</span>
+
+</div> <!--end panel heading -->
+</div>
+
+<div class="row">
+
+<ul class="nav nav-tabs">
+  <li {% if not status or status == NEW %}class="active"{% endif %}><a data-toggle="tab" href="#{{ NEW }}-tab">New {% if results_new|length > 0 %}<span class="label label-danger">{{ results_new|length }}</span>{% endif %}</a></li>
+  <li {% if status == OPEN %}class="active"{% endif %}><a data-toggle="tab" href="#{{ OPEN }}-tab">Open {% if results_open|length > 0 %}<span class="label label-danger">{{ results_open|length }}</span>{% endif %}</a></li>
+  <li {% if status == CLOSED %}class="active"{% endif %}><a data-toggle="tab" href="#{{ CLOSED }}-tab">Closed {% if results_closed|length > 0 %}<span class="label label-success">{{ results_closed|length }}</span>{% endif %}</a></li>
+</ul>
+
+<div class="tab-content">
+  <div id="{{ NEW }}-tab" class="tab-pane fade in {% if status == NEW %}active{% endif %}">
+<!-- begin new tab -->
+    {% tmg_listboard_results results_new "There are no new reports to submit for this site." %}
+<!-- end new tab -->
+  </div>
+  <div id="{{ OPEN }}-tab" class="tab-pane fade in {% if status == OPEN %}active{% endif %}">
+<!-- begin open tab -->
+    {% tmg_listboard_results results_open "There are no open reports for this site." %}
+<!-- end open tab -->
+  </div>
+  <div id="{{ CLOSED }}-tab" class="tab-pane fade in {% if status == CLOSED %}active{% endif %}">
+<!-- begin closed tab -->
+    {% tmg_listboard_results results_closed "There are no closed reports for this site." %}
+<!-- end closed tab -->
+  </div>
+</div>
+
+</div>
+{% endblock main %}
+
+
