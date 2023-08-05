@@ -1,0 +1,204 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>csnake &#8212; csnake  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Interface (API)" href="api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="csnake">
+<h1>csnake<a class="headerlink" href="#csnake" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://gitlab.com/andrejr/csnake/pipelines"><img alt="pipeline status" src="https://gitlab.com/andrejr/csnake/badges/master/pipeline.svg" /></a>
+<a class="reference external image-reference" href="https://andrejr.gitlab.io/csnake/coverage/index.html"><img alt="coverage report" src="https://gitlab.com/andrejr/csnake/badges/master/coverage.svg" /></a>
+<p>Csnake is a Python 3 package that helps you generate C code from Python.</p>
+<p>Csnake provides you with a consistent and opinionated API that helps you
+structure your C-generating Python code.
+It does so by providing classes and functions for generating every C language
+construct.</p>
+<p>Probably the most important feature is the ability to initialize a value to
+<code class="docutils literal notranslate"><span class="pre">struct</span></code> and <em>array</em> initializers from Python dicts and lists (actually,
+<code class="docutils literal notranslate"><span class="pre">Map</span></code>s and <code class="docutils literal notranslate"><span class="pre">Collection</span></code>s), nested to an arbitrary level.</p>
+<p>Here’s a taste:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">csnake</span> <span class="kn">import</span> <span class="n">CodeWriter</span><span class="p">,</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">FormattedLiteral</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">var</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span>
+    <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+    <span class="n">primitive</span><span class="o">=</span><span class="s2">&quot;struct whatever&quot;</span><span class="p">,</span>
+    <span class="n">value</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;field1&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">num</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="o">-</span><span class="n">num</span><span class="p">}</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)],</span>
+        <span class="s2">&quot;field2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;test&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s1">&#39;field&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)},</span>
+        <span class="s2">&quot;field3&quot;</span><span class="p">:</span> <span class="n">FormattedLiteral</span><span class="p">([</span><span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="n">int_formatter</span><span class="o">=</span><span class="nb">hex</span><span class="p">),</span>
+        <span class="s2">&quot;field4&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="n">cw</span> <span class="o">=</span> <span class="n">CodeWriter</span><span class="p">()</span>
+<span class="n">cw</span><span class="o">.</span><span class="n">add_variable_initialization</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">cw</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This yields:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">whatever</span> <span class="n">test</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">.</span><span class="n">field1</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">{</span>
+            <span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="p">},{</span>
+            <span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">9</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">.</span><span class="n">field2</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">.</span><span class="n">test</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="p">.</span><span class="n">field</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">},</span>
+            <span class="p">{</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="p">},</span>
+    <span class="p">.</span><span class="n">field3</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x1e</span><span class="p">,</span> <span class="mh">0x1f</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">},</span>
+    <span class="p">.</span><span class="n">field4</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>As shown, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> arrays are supported as values (so are <code class="docutils literal notranslate"><span class="pre">sympy</span></code> arrays),
+and values can be formatted by arbitrary functions (here we’re using <code class="docutils literal notranslate"><span class="pre">hex</span></code> to
+output ints as hex literals for member <cite>field3</cite>).</p>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p>Csnake’s varable generation was motivated by a common embedded development
+task: inputting data into C code.</p>
+<p>Csnake should be of help when generating C code for representing data like
+bitmaps, fonts, statemachines, lookup tables - as arrays and structs.
+It can also be used for loop unrolling, templating, …</p>
+<p>Csnake  can be easily incorporated into a build system (Make, CMake,
+Scons,…), and also goes along great with
+<a class="reference external" href="https://nedbatchelder.com/code/cog/">Ned Batcher’s cog</a>.</p>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>Documentation (Sphinx) can be viewed on
+<a class="reference external" href="https://andrejr.gitlab.io/csnake/">GitLab pages for this package</a>.</p>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Csnake is used on several of my yet-to-be-released open source embedded
+projects. I’ll be adding those (and other) examples along the way.</p>
+</div>
+<div class="section" id="credits">
+<h2>Credits<a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
+<p>Csnake is a major re-implementation (and improvement) of
+<a class="reference external" href="https://github.com/SchrodingersGat/C-Snake">C-Snake</a>
+by
+<a class="reference external" href="https://github.com/SchrodingersGat">Oliver</a>
+(original idea) and Andrej (variable initialization idea and implementation,
+author of this package).</p>
+<p>It’s provided under the MIT license.</p>
+</div>
+<div class="section" id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h2>
+<p>The changelog can be found within the documentation,
+<a class="reference external" href="https://andrejr.gitlab.io/csnake/changes.html">here</a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">csnake</a></h1>
+
+
+
+<p class="blurb">C code generation package</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer Interface (API)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="api.html" title="next chapter">Developer Interface (API)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Andrej Radović.
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
