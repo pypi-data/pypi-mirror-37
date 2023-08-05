@@ -1,0 +1,48 @@
+<configure
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:grok="http://namespaces.zope.org/grok"
+   i18n_domain="icemac.addressbook">
+
+  <include package="zope.security" file="meta.zcml" />
+  <include package="zope.component" file="meta.zcml" />
+
+  <include package="grokcore.component" file="meta.zcml"/>
+  <grok:grok package="."
+             exclude="generations
+                      conftest
+                      test_*" />
+
+  <permission
+     id="icemac.addressbook.Import"
+     title="Import"
+     />
+
+  <!-- Administrator -->
+  <grant
+     role="icemac.addressbook.global.Administrator"
+     permissions="
+        icemac.addressbook.Import
+     " />
+
+  <!-- Importer -->
+  <class class=".importer.Importer">
+    <implements
+       interface=".interfaces.IImportFileContainer"
+       />
+    <require
+       permission="icemac.addressbook.Import"
+       interface=".interfaces.IImporter"
+       />
+    <require
+       permission="icemac.addressbook.Import"
+       interface="zope.container.interfaces.IContainer"
+       />
+  </class>
+
+  <subscriber handler=".install.install_importer" />
+
+  <include package=".browser" />
+  <include package=".generations" />
+  <include package=".reader" />
+
+</configure>
