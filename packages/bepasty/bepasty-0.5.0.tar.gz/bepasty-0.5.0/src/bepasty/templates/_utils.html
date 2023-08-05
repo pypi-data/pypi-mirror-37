@@ -1,0 +1,88 @@
+{% macro filelist(files) %}
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                Filename
+                <br />
+                Type
+            </th>
+            <th class="text-right">
+                Size [B]
+            </th>
+            <th>
+                Upload [UTC]
+                <br />
+                Download [UTC]
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('bepasty.display', name=file['id']) }}">{{ file['filename'] }}</a>
+                    <br />
+                    {{ file['type'] }}
+                </td>
+                <td class="text-right">
+                    {{ file['size'] }}
+                </td>
+                <td>
+                    {{ file['timestamp-upload'] | datetime }}
+                    <br />
+                    {% if file['timestamp-download'] %}
+                    {{ file['timestamp-download'] | datetime }}
+                    {% else %}
+                    never
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <form action="{{ url_for('bepasty.display', name=file['id']) }}" method="get" class="btn-group">
+                            <button type="submit" class="btn btn-xs btn-info">
+                                display
+                            </button>
+                        </form>
+                        <form action="{{ url_for('bepasty.download', name=file['id']) }}" method="get" class="btn-group">
+                            <button type="submit" class="btn btn-xs btn-info">
+                                download
+                            </button>
+                        </form>
+                        <form action="{{ url_for('bepasty.inline', name=file['id']) }}" method="get" class="btn-group">
+                            <button type="submit" class="btn btn-xs btn-info">
+                                inline
+                            </button>
+                        </form>
+                        {% if may(DELETE) %}
+                            <form action="{{ url_for('bepasty.delete', name=file['id']) }}" method="post" class="btn-group">
+                                <button type="submit" class="btn btn-xs btn-danger">
+                                    delete
+                                </button>
+                            </form>
+                        {% endif %}
+                        {% if may(ADMIN) %}
+                        {% if not file['locked'] %}
+                            <form action="{{ url_for('bepasty.lock', name=file['id']) }}" method="post" class="btn-group">
+                                <button type="submit" class="btn btn-xs btn-danger">
+                                    lock
+                                </button>
+                            </form>
+                        {% else %}
+                            <form action="{{ url_for('bepasty.unlock', name=file['id']) }}" method="post" class="btn-group">
+                                <button type="submit" class="btn btn-xs btn-info">
+                                    unlock
+                                </button>
+                            </form>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}

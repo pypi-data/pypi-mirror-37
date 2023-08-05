@@ -1,0 +1,77 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h1>
+            {{ item.meta['filename'] }}
+        </h1>
+        <div class="btn-group">
+            {% if not item.meta['locked'] or may(ADMIN) %}
+                <form id="download-frm" action="{{ url_for('bepasty.download', name=name) }}" method="get" class="btn-group">
+                    <button id="download-btn" type="submit" class="btn btn-info">
+                        <span class="glyphicon glyphicon-download-alt"></span> Download
+                    </button>
+                </form>
+                <form id="inline-frm" action="{{ url_for('bepasty.inline', name=name) }}" method="get" class="btn-group">
+                    <button id="inline-btn" type="submit" class="btn btn-info">
+                        <span class="glyphicon glyphicon-asterisk"></span> Inline
+                    </button>
+                </form>
+            {% endif %}
+            {% if may(DELETE) %}
+                <form id="del-frm" action="{{ url_for('bepasty.delete', name=name) }}" method="post" class="btn-group">
+                    <input type="hidden" name="next" value="{{ url_for('bepasty.index') }}">
+                    <button id="del-btn" type="button" class="btn btn-danger">
+                        <span class="glyphicon glyphicon-remove"></span> Delete
+                    </button>
+                </form>
+            {% endif %}
+            {% if may(ADMIN) %}
+            {% if not item.meta['locked'] %}
+                <form id="lock-frm" action="{{ url_for('bepasty.lock', name=name) }}" method="post" class="btn-group">
+                    <button id="lock-btn" type="submit" class="btn btn-danger">
+                        <span class="glyphicon glyphicon-lock"></span> Lock
+                    </button>
+                </form>
+            {% else %}
+                <form id="unlock-frm" action="{{ url_for('bepasty.unlock', name=name) }}" method="post" class="btn-group">
+                    <button id="unlock-btn" type="submit" class="btn btn-info">
+                        <span class="glyphicon glyphicon-heart"></span> Unlock
+                    </button>
+                </form>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="panel-body">
+        <p>
+        Type: {{ item.meta['type'] }},
+        Size: {{ item.meta['size'] }} bytes,
+        SHA256: <code>{{ item.meta['hash'] }}</code>.
+        <br/>
+        UTC timestamps:
+        upload: {{ item.meta['timestamp-upload'] | datetime }},
+        download: {{ item.meta['timestamp-download'] | datetime }},
+        {% if item.meta['timestamp-max-life'] > 0 %}
+        max lifetime: {{ item.meta['timestamp-max-life'] | datetime }}.
+        {% else %}
+        max lifetime: forever.
+        {% endif %}
+        </p>
+        <div class="data">
+            {{ rendered_content }}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_link %}
+<!-- Pygments styles -->
+<link rel="stylesheet" href="{{ url_for('bepasty.xstatic', name='pygments', filename='css/colorful.css') }}" type="text/css">
+{% endblock %}
+
+{% block extra_script %}
+<script src="{{ url_for('bepasty.xstatic', name='bootbox', filename='bootbox.min.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='app/js/utils.js') }}" type="text/javascript"></script>
+{% endblock extra_script %}
