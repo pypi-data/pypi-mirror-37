@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# py.test --cov pyansys --cov-report html
+# xdg-open htmlcov/index.html
+
+rm -rf __pycache__
+python3 -m pytest
+python -m pytest
