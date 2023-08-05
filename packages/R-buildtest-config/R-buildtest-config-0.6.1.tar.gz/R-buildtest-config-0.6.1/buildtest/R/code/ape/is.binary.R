@@ -1,0 +1,6 @@
+library(ape)
+is.binary(rtree(10))
+is.binary(rtree(10, rooted = FALSE))
+is.binary(stree(10))
+x <- setNames(rmtree(10, 10), LETTERS[1:10])
+is.binary(x)

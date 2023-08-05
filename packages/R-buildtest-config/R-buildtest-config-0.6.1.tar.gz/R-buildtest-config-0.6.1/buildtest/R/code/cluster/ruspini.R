@@ -1,0 +1,6 @@
+library(cluster)
+data(ruspini)
+## Plot similar to Figure 4 in Stryuf et al (1996)
+## Not run: plot(pam(ruspini, 4), ask = TRUE)
+## Plot similar to Figure 6 in Stryuf et al (1996)
+plot(fanny(ruspini, 5))

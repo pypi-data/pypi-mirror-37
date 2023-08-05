@@ -1,0 +1,12 @@
+library(gdata)
+ll()
+ll(all=TRUE)
+ll("package:base")
+ll("package:base", class="function", invert=TRUE)
+data(infert)
+ll(infert)
+model <- glm(case~spontaneous+induced, family=binomial, data=infert)
+ll(model, dim=TRUE)
+ll(model, sort=TRUE)
+ll(model$family)
+
