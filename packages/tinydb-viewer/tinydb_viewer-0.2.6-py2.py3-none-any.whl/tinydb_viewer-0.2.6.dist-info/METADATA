@@ -1,0 +1,84 @@
+Metadata-Version: 2.1
+Name: tinydb-viewer
+Version: 0.2.6
+Summary: View records generated from TinyDB and alike (e.g. list of dictionaries.)
+Home-page: https://github.com/patarapolw/tinydb-viewer
+License: MIT
+Keywords: TinyDB,HandsOnTable
+Author: Pacharapol Withyasakpunt
+Author-email: patarapolw@gmail.com
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: flask (>=1.0,<2.0)
+Requires-Dist: pyexcel (>=0.5.9,<0.6.0)
+Requires-Dist: pyexcel-text (>=0.2.7,<0.3.0)
+Requires-Dist: python-dateutil (>=2.7,<3.0)
+Requires-Dist: requests (>=2.19,<3.0)
+Requires-Dist: tinydb (>=3.11,<4.0)
+Description-Content-Type: text/markdown
+
+# tinydb-viewer
+
+[![PyPI version shields.io](https://img.shields.io/pypi/v/tinydb-viewer.svg)](https://pypi.python.org/pypi/tinydb-viewer/)
+[![PyPI license](https://img.shields.io/pypi/l/tinydb-viewer.svg)](https://pypi.python.org/pypi/tinydb-viewer/)
+
+View records generated from [TinyDB](https://tinydb.readthedocs.io/en/latest/index.html) and alike (e.g. list of dictionaries.)
+
+## Installation
+
+Method 1:
+
+```commandline
+$ pip install tinydb-viewer
+```
+
+Method 2:
+
+- Clone the project from GitHub
+- [Get poetry](https://github.com/sdispater/poetry) and `poetry install tinydb-viewer --path PATH/TO/TINYDB/VIEWER`
+
+## Usage
+
+Run a server initiation script first. This will allow you to edit the data as well.
+
+```python
+from tinydb_viewer import TinyDB
+TinyDB('db.json').runserver()
+```
+
+Then, in IPython or in Jupyter Notebook,
+
+```python
+>>> from tinydb_viewer import TinyDB
+>>> tdb = TinyDB('db.json')
+>>> tdb.search(tdb.query['foo'] == 'bar', sort_func=lambda x: x['baz'])
+>>> tdb.view()
+'The first page is shown.'
+>>> tdb.view(-1)
+'The last page is shown.'
+>>> tdb.previous()
+'The previous page (i-1) is shown.'
+>>> tdb.next()
+'The next page (i+1) is shown.'
+```
+
+## Bonus
+
+I extended TinyDB a little. My TinyDB is `'ensure_ascii' = False` by default, so that the file is a little smaller.
+
+Also, it will use [tinydb-constraint](https://github.com/patarapolw/tinydb-constraint) by default, if it is installed.
+
+## Screenshots
+
+![](/screenshots/jupyter0.png?raw=true)
+
+## Related projects
+
+- [tinydb-constraint](https://github.com/patarapolw/tinydb-constraint) - Apply constraints before inserting and updating TinyDB records.
+
