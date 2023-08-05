@@ -1,0 +1,128 @@
+Metadata-Version: 2.1
+Name: sqla-filters-json
+Version: 0.0.1
+Summary: JSON parser for sqla-filters.
+Home-page: https://github.com/MarcAureleCoste/sqla-filters-json
+Author: Marc-Aurele Coste
+License: MIT
+Description: # Sqla-filters-json
+        
+        Add json parser to the sqla-filters package.
+        
+        ## Introduction 
+        
+        This package 
+        
+        ## Installation
+        
+        ```bash
+        pip install sqla-filter-json
+        ```
+        
+        ## Getting Started
+        
+        ### JSON format
+        
+        ```json
+        {
+            "type": "and",
+            "data": [
+                {
+                    "type": "or",
+                    "data": [
+                        {
+                            "type": "operator",
+                            "data": {
+                                "attribute": "name",
+                                "operator": "eq",
+                                "value": "toto"
+                            }
+                        },
+                        {
+                            "type": "operator",
+                            "data":{
+                                "attribute": "name",
+                                "operator": "eq",
+                                "value": "tata"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "operator",
+                    "data": {
+                        "attribute": "age",
+                        "operator": "eq",
+                        "value": 21
+                    }
+                }
+            ]
+        }
+        ```
+        :warning: Json format can change in the futur. :warning:
+        
+        
+        
+        Create an instance of the JSONFilterParser with the json string.
+        
+        Example:
+        ```python
+        # Sqlalchemy setup ... + model definition
+        
+        # Create a JSON parser instance
+        parser = JSONFiltersParser(raw_json_string)
+        
+        # you now have a tree available as a property in the parser
+        print(parser.tree)
+        
+        # You can finaly filter your query
+        query = session.query(Post)
+        filtered_query = parser.tree.filter(query)
+        
+        # Get the results
+        query.all()
+        ```
+        
+        ### Result tree
+        
+        ```
+                                              +----------------------+
+                                              |                      |
+                                              |          and         |
+                                              |                      |
+                                              -----------------------+
+                                                         ||
+                                                         ||
+                                                         ||
+                            +----------------------+     ||     +----------------------+
+                            |                      |     ||     |                      |
+                            |          or          <------------>      age == 21       |
+                            |                      |            |                      |
+                            +----------------------+            +----------------------+
+                                       ||
+                                       ||
+                                       ||
+        +----------------------+       ||       +----------------------+
+        |                      |       ||       |                      |
+        |     name == toto     <---------------->     name == tata     |
+        |                      |                |                      |
+        +----------------------+                +----------------------+
+        ```
+        
+        # Contribute
+        
+        Fork the repository and run the following command to install the dependencies and the dev dependencies.
+        
+        `pip install -e '.[dev]'`
+        
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Description-Content-Type: text/markdown
+Provides-Extra: dev
