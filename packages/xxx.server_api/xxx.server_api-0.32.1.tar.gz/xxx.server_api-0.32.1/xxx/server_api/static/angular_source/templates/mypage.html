@@ -1,0 +1,82 @@
+<div class="container-fluid">
+<div class="card mb-3">
+    <div class="card-header">
+      <i class="fa fa-area-chart"></i> Activity last 30 days
+    </div>
+    <div class="card-body">
+        <canvas id="line" class="chart chart-line" chart-data="data" chart-labels="labels"
+              chart-series="series" chart-options="options" chart-dataset-override="datasetOverride"
+              chart-click="onClick" width="100%" height="30">
+        </canvas>
+    </div>
+        <div class="card-footer small text-muted">Updated {{ number.last_post_date | limitTo:10}}</div>
+</div>
+</div>
+<div class="container-fluid">
+    <div class="card mb-4"
+         ng-repeat="post in number.posts  | orderBy:'':true | startFrom:currentPage*pageSize | limitTo:pageSize">
+
+        <!--Start images logic-->
+        <div class="row-fluid">
+            <div ng-repeat="image in post.images" ng-if="image.link" class="col-sm-6 col-md-2 d-inline-block">
+                <a data-fancybox="gallery" href="images/{{image.link}}" target="_self">
+                    <img class="img-responsive img-thumbnail" ng-src="images/{{image.link}}">
+                </a>            &nbsp;
+            </div>
+        </div>
+        <!--End images logic-->
+
+        <div class="card-body row">
+            <div class="col-md-8">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">{{ post.description }}
+            </div>
+            <div class="col-md-4">
+                <p class="btn btn-primary d-inline-block">{{ post.city}}</p>
+                <p class="btn btn-primary d-inline-block">{{ post.age}} years</p>
+                <p class="btn btn-primary d-inline-block">{{ post.weight}} kg</p>
+                <p class="btn btn-primary d-inline-block">{{ post.height}} cm</p></p>
+            </div>
+        </div>
+        <div class="card-footer text-muted">
+            Posted on {{ post.date_post.slice(0, 21) | date : "yyyy-MM-dd HH:mm" }}
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-12 col-md-7">
+        <div class="dataTables_paginate paging_simple_numbers" id="dataTable_paginate">
+          <ul class="pagination">
+            <li class="paginate_button page-item previous" id="dataTable_previous"
+                ng-class="{'disabled': currentPage == 0}">
+              <a href="#"  aria-controls="dataTable" data-dt-idx="0" tabindex="0" class="page-link"
+                 ng-click="currentPage=currentPage-1">Previous</a>
+            </li>
+            <li class="paginate_button page-item" ng-show="currentPage > 4">
+              <a href="#" aria-controls="dataTable" data-dt-idx="6" tabindex="0" class="page-link"
+                 ng-click="currentPage=currentPage-5">
+                {{ currentPage - 4}}
+              </a>
+            </li>
+            <li class="paginate_button page-item active">
+              <a href="#" aria-controls="dataTable" data-dt-idx="1" tabindex="0" class="page-link">
+                  {{ currentPage + 1 }}</a>
+            </li>
+            <li class="paginate_button page-item " ng-hide="currentPage + 5 >= numberOfPages"
+                ng-class="{'disabled': currentPage + 5 >= numberOfPages}">
+              <a href="#" aria-controls="dataTable" data-dt-idx="6" tabindex="0" class="page-link"
+                 ng-click="currentPage=currentPage+5">
+                {{ currentPage + 6}}
+              </a>
+            </li>
+            <li class="paginate_button page-item next" id="dataTable_next"
+                ng-class="{'disabled': currentPage >= number.posts.length/pageSize - 1}">
+              <a href="#" aria-controls="dataTable" data-dt-idx="7" tabindex="0" class="page-link"
+                 ng-click="currentPage=currentPage+1">Next</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+</div>
