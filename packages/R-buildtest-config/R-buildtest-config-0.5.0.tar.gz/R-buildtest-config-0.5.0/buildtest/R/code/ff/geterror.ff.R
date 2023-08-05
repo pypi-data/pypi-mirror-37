@@ -1,0 +1,5 @@
+library(ff)
+x <- ff(1:12)
+geterror.ff(x)
+geterrstr.ff(x)
+rm(x); gc()

@@ -1,0 +1,3 @@
+library(ff)
+ffxtensions()
+ffsymmxtensions()
