@@ -1,0 +1,48 @@
+{% extends "fakenews/web-react.html" %}
+
+{% block api %}
+{{ block.super }}
+<meta name="ARTICLE_SLUG" content="{{ ARTICLE_SLUG }}">
+{% endblock %}
+
+{% block page-meta %}
+{{ block.super }}
+{% include "fakenews/web-claim-review.html" %}
+{% endblock %}
+
+{% block preload %}
+<div class="site-heading">
+  <div>
+    <h1>Is This True?</h1>
+    <h2>A Fake News Database</h2>
+  </div>
+</div>
+
+
+
+<div class="feed-item" data-slug="{{ data.slug }}">
+  <span class="type-label">{{ data.disinformation_type.label }}</span>
+  <p class="dateline">{{ data.publish_date }}</p>
+  <div class="primary-source">
+    <h5 class="primary-source-pre">Primary Source</h5>
+    {% if data.claim_reviewed.share_set %}
+      <p class="primary-source-name">{{ data.claim_reviewed.share_set.0.source }}</p>
+    {% endif %}
+  </div>
+  <h3 class="headline">{{ data.headline }}</h3>
+  <p class="subhead">{{ data.deck }}.</p>
+
+  <div class="item-expansion row">
+    <div>
+      <div class="explanation">
+        {{ data.explanation | safe }}
+      </div>
+      <div class="tags">
+        {% for tag in data.tags %}
+        <a href=""><h5 class="tag outline">tag</h5></a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
