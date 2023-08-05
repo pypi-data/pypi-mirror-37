@@ -1,0 +1,53 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en">
+    <body tal:define="data view/data;
+                      show_description python: data.get('show_description', True)">
+        <div class="tile contextualsearch-tile">
+            <div class="tile-container">
+
+                <h1 class="documentFirstHeading"
+                    tal:define="title view/data/tile_title"
+                    tal:content="title">Tile title</h1>
+
+
+                <div class="tileItem">
+                    <form name="searchform"
+                          action="search"
+                          tal:attributes="action string:${context/portal_url}/@@search">
+                        <div class="LSBox">
+                            <input class="searchField inputLabel"
+                                   name="SearchableText"
+                                   type="text"
+                                   size="15"
+                                   title="Search Site"
+                                   placeholder="Search Site"
+                                   i18n:domain="plone"
+                                   i18n:attributes="title title_search_title;"
+                                   i18n:attributes="placeholder title_search_title;"
+                                   value="${request/SearchableText|nothing}"
+                                   />
+                            <input name="path"
+                                   type="hidden"
+                                   value="${view/getPosition}"
+                                   />
+                            <button class="search-button"
+                                    type="submit"
+                                    i18n:domain="plone">
+                                <span i18n:translate="label_search">
+                                    Search
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="visualClear"><!-- --></div>
+                </div>
+
+            </div>
+        </div>
+    </body>
+</html>
