@@ -1,0 +1,51 @@
+{% load bee_django_message_filter %}
+<style>
+    .bold {
+        font-weight: 900;
+        color: #CC3434;
+    }
+</style>
+
+<div class="text-center"><h3>{{ user|get_name_detail:False }}的消息记录</h3></div>
+<div style="margin: 10px auto;">
+    <button class="btn btn-default" onclick="click_all()">全部标记为已读</button>
+</div>
+<hr style="margin: 10px auto;">
+{% for record in record_list %}
+    <div class="row" {% if record.url or not record.is_view %}onclick="click_record_div('{{ record.id }}')"
+         style="cursor:pointer "{% endif %}>
+        <div class="col-xs-6  col-sm-6 {% if not record.is_view %}bold{% endif %}">{{ record.title }}</div>
+        {% if record.url %}
+            <div class="col-xs-6 col-sm-2"><a href="{{ record.url }}">点击查看</a></div>
+        {% endif %}
+        <div class="col-xs-12 col-sm-4  text_div">{{ record.sent_at|date:"Y-m-d H:i:s" }}</div>
+    </div>
+    <hr style="margin: 10px auto;">
+
+{% endfor %}
+{% include 'bee_django_message/paginator.html' %}
+
+{% block scripts %}
+    <script>
+        function click_record_div(record_id) {
+            $.post("{% url 'bee_django_message:user_record_click' %}", {"record_id": record_id}, function (res) {
+                {#                console.log(res);#}
+                if (res["url"]) {
+                    location.href = res["url"];
+                } else {
+                    location.reload();
+                }
+            });
+        }
+
+        function click_all() {
+            var user_id = "{{ user.id }}";
+            $.post("{% url 'bee_django_message:user_records_all_click' %}", {"user_id": user_id}, function (res) {
+                alert(res["message"]);
+                if (res["error"] == "0") {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+{% endblock %}
