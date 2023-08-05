@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Migrating from SkoolKit 6 &#8212; SkoolKit 7.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '7.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="SkoolKit 7.0 documentation" href="index.html" />
+    <link rel="next" title="Changelog" href="changelog.html" />
+    <link rel="prev" title="Supported assemblers" href="assemblers.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="assemblers.html" title="Supported assemblers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SkoolKit 7.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="migrating-from-skoolkit-6">
+<span id="migrating"></span><h1>Migrating from SkoolKit 6<a class="headerlink" href="#migrating-from-skoolkit-6" title="Permalink to this headline">¶</a></h1>
+<p>SkoolKit 7 includes some changes that make it incompatible with SkoolKit 6. If
+you have developed a disassembly using SkoolKit 6 and find that the SkoolKit
+commands no longer work with your skool files or ref files, or produce broken
+output, look through the following sections for tips on how to migrate your
+disassembly to SkoolKit 7.</p>
+<div class="section" id="skool2html-py">
+<h2>skool2html.py<a class="headerlink" href="#skool2html-py" title="Permalink to this headline">¶</a></h2>
+<p>In SkoolKit 6, <a class="reference internal" href="commands.html#skool2html-py"><span class="std std-ref">skool2html.py</span></a> wrote a separate disassembly for each skool
+file and ref file named on the command line. In SkoolKit 7, it writes a single
+disassembly from the skool file given as the first positional argument; any
+other positional arguments are interpreted as extra ref files.</p>
+<p>For example:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ skool2html.py game.skool data.ref
+</pre></div>
+</div>
+<p>will convert the following files into a single HTML disassembly:</p>
+<ul class="simple">
+<li><cite>game.skool</cite></li>
+<li>any files named <cite>game*.ref</cite></li>
+<li>any files named in the <code class="docutils literal"><span class="pre">RefFiles</span></code> parameter in the <a class="reference internal" href="ref-files.html#ref-config"><span class="std std-ref">[Config]</span></a>
+section</li>
+<li><cite>data.ref</cite></li>
+</ul>
+</div>
+<div class="section" id="sna2skool-py">
+<h2>sna2skool.py<a class="headerlink" href="#sna2skool-py" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">-l</span></code>, <code class="docutils literal"><span class="pre">-m</span></code>, <code class="docutils literal"><span class="pre">-n</span></code>, <code class="docutils literal"><span class="pre">-r</span></code>, <code class="docutils literal"><span class="pre">-R</span></code>, <code class="docutils literal"><span class="pre">-t</span></code> and <code class="docutils literal"><span class="pre">-z</span></code> options of
+<a class="reference internal" href="commands.html#sna2skool-py"><span class="std std-ref">sna2skool.py</span></a> that were available in SkoolKit 6 are not supported in
+SkoolKit 7. However, the corresponding features are still supported, and each
+one can be controlled by the <code class="docutils literal"><span class="pre">-I</span></code> option with an appropriate configuration
+parameter:</p>
+<ul class="simple">
+<li>instead of <code class="docutils literal"><span class="pre">-l/--defm-size</span> <span class="pre">L</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">DefmSize=L</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-m/--defb-mod</span> <span class="pre">M</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">DefbMod=M</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-n/--defb-size</span> <span class="pre">N</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">DefbSize=N</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-r/--no-erefs</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">ListRefs=0</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-R/--erefs</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">ListRefs=2</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-t/--text</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">Text=1</span></code></li>
+<li>instead of <code class="docutils literal"><span class="pre">-z/--defb-zfill</span></code>, use <code class="docutils literal"><span class="pre">-I</span> <span class="pre">DefbZfill=1</span></code></li>
+</ul>
+<p>In addition, the ability to generate a control file has been moved to the
+<a class="reference internal" href="commands.html#sna2ctl-py"><span class="std std-ref">sna2ctl.py</span></a> command; accordingly, the <code class="docutils literal"><span class="pre">-g</span></code>, <code class="docutils literal"><span class="pre">-h</span></code> and <code class="docutils literal"><span class="pre">-M</span></code> options
+are no longer supported.</p>
+<p>Finally, the <code class="docutils literal"><span class="pre">-L</span></code> (<code class="docutils literal"><span class="pre">--lower</span></code>) option has been renamed <code class="docutils literal"><span class="pre">-l</span></code> and the
+<code class="docutils literal"><span class="pre">--skool-hex</span></code> (<code class="docutils literal"><span class="pre">-H</span></code>) option has been renamed <code class="docutils literal"><span class="pre">--hex</span></code> (for consistency
+with the corresponding options of <a class="reference internal" href="commands.html#skool2asm-py"><span class="std std-ref">skool2asm.py</span></a> and
+<a class="reference internal" href="commands.html#skool2html-py"><span class="std std-ref">skool2html.py</span></a>).</p>
+</div>
+<div class="section" id="gamestatusbufferincludes">
+<h2>GameStatusBufferIncludes<a class="headerlink" href="#gamestatusbufferincludes" title="Permalink to this headline">¶</a></h2>
+<p>In SkoolKit 6, the <code class="docutils literal"><span class="pre">GameStatusBufferIncludes</span></code> parameter in the
+<a class="reference internal" href="ref-files.html#ref-game"><span class="std std-ref">[Game]</span></a> section specified the addresses of entries to include on the
+&#8216;Game status buffer&#8217; page in addition to those that are marked with a <code class="docutils literal"><span class="pre">g</span></code>. In
+SkoolKit 7, this parameter is not supported; instead, use the <code class="docutils literal"><span class="pre">Includes</span></code>
+parameter in the <a class="reference internal" href="ref-files.html#memorymap"><span class="std std-ref">[MemoryMap:GameStatusBuffer]</span></a> section.</p>
+</div>
+<div class="section" id="assemble">
+<h2>&#64;assemble<a class="headerlink" href="#assemble" title="Permalink to this headline">¶</a></h2>
+<p>In SkoolKit 6, the <a class="reference internal" href="asm.html#assemble"><span class="std std-ref">&#64;assemble</span></a> directive accepted the values -1, 0 and 1.
+In SkoolKit 7, the accepted values are 0, 1 and 2.</p>
+</div>
+<div class="section" id="nolabel">
+<h2>&#64;nolabel<a class="headerlink" href="#nolabel" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">&#64;nolabel</span></code> directive is not supported in SkoolKit 7. Instead you should
+use the <a class="reference internal" href="asm.html#label"><span class="std std-ref">&#64;label</span></a> directive with a blank label: <code class="docutils literal"><span class="pre">&#64;label=</span></code>.</p>
+</div>
+<div class="section" id="image-related-methods">
+<h2>Image-related methods<a class="headerlink" href="#image-related-methods" title="Permalink to this headline">¶</a></h2>
+<p>In SkoolKit 6, the following image-related methods were available on
+HtmlWriter:</p>
+<ul class="simple">
+<li><code class="xref py py-meth docutils literal"><span class="pre">image_path()</span></code></li>
+<li><code class="xref py py-meth docutils literal"><span class="pre">img_element()</span></code></li>
+<li><code class="xref py py-meth docutils literal"><span class="pre">need_image()</span></code></li>
+<li><code class="xref py py-meth docutils literal"><span class="pre">write_animated_image()</span></code></li>
+<li><code class="xref py py-meth docutils literal"><span class="pre">write_image()</span></code></li>
+</ul>
+<p>These methods are not available in SkoolKit 7; instead, use the
+<a class="reference internal" href="extending.html#skoolkit.skoolhtml.HtmlWriter.handle_image" title="skoolkit.skoolhtml.HtmlWriter.handle_image"><code class="xref py py-meth docutils literal"><span class="pre">handle_image()</span></code></a> method.</p>
+<p>In addition, the default value of the <cite>path_id</cite> parameter of
+<code class="xref py py-meth docutils literal"><span class="pre">handle_image()</span></code> has changed from <code class="docutils literal"><span class="pre">UDGImagePath</span></code> to <code class="docutils literal"><span class="pre">ImagePath</span></code>.</p>
+</div>
+<div class="section" id="data-definition-entries">
+<h2>Data definition entries<a class="headerlink" href="#data-definition-entries" title="Permalink to this headline">¶</a></h2>
+<p>Data definition entries (&#8216;d&#8217; blocks) are not supported in SkoolKit 7. Use the
+<a class="reference internal" href="asm.html#defb"><span class="std std-ref">&#64;defb</span></a>, <a class="reference internal" href="asm.html#defs"><span class="std std-ref">&#64;defs</span></a> and <a class="reference internal" href="asm.html#defw"><span class="std std-ref">&#64;defw</span></a> directives instead.</p>
+</div>
+<div class="section" id="remote-entries">
+<h2>Remote entries<a class="headerlink" href="#remote-entries" title="Permalink to this headline">¶</a></h2>
+<p>Defining a remote entry with an &#8216;r&#8217; block is not supported in SkoolKit 7. Use
+the <a class="reference internal" href="asm.html#remote"><span class="std std-ref">&#64;remote</span></a> directive instead.</p>
+</div>
+<div class="section" id="skoolkit6to7-py">
+<h2>skoolkit6to7.py<a class="headerlink" href="#skoolkit6to7-py" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://github.com/skoolkid/skoolkit/raw/master/utils/skoolkit6to7.py">skoolkit6to7.py</a> script may be used to convert a control file, ref file,
+skool file or skool file template that is compatible with SkoolKit 6 into a
+file that will work with SkoolKit 7. For example, to convert <cite>game.ref</cite>:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ skoolkit6to7.py game.ref &gt; game7.ref
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Migrating from SkoolKit 6</a><ul>
+<li><a class="reference internal" href="#skool2html-py">skool2html.py</a></li>
+<li><a class="reference internal" href="#sna2skool-py">sna2skool.py</a></li>
+<li><a class="reference internal" href="#gamestatusbufferincludes">GameStatusBufferIncludes</a></li>
+<li><a class="reference internal" href="#assemble">&#64;assemble</a></li>
+<li><a class="reference internal" href="#nolabel">&#64;nolabel</a></li>
+<li><a class="reference internal" href="#image-related-methods">Image-related methods</a></li>
+<li><a class="reference internal" href="#data-definition-entries">Data definition entries</a></li>
+<li><a class="reference internal" href="#remote-entries">Remote entries</a></li>
+<li><a class="reference internal" href="#skoolkit6to7-py">skoolkit6to7.py</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="assemblers.html"
+                        title="previous chapter">Supported assemblers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="changelog.html"
+                        title="next chapter">Changelog</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/migration.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="assemblers.html" title="Supported assemblers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SkoolKit 7.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Richard Dymond.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.
+    </div>
+  </body>
+</html>
