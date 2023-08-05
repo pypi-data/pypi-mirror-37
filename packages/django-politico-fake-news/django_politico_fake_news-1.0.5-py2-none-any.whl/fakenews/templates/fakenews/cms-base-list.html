@@ -1,0 +1,57 @@
+{% extends "fakenews/cms-base.html" %}
+
+{% load getfield %}
+
+{% block content %}
+<div id="cmsList" class="container cms">
+
+  <div class="row">
+    <h1 class="col-sm-11">{{ title }}</h1>
+    {% if allowNew %}
+    <div class="col-sm-1"><a href="./new" class="btn btn-primary">New</a></div>
+    {% endif %}
+  </div>
+
+  <div class="row">
+    <p id="cms-error" class="cms-error"><p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          {% for field in fields %}
+              <th scope="col">{{ field|title }}</th>
+          {% endfor %}
+
+          {% if allowNew %}
+          <th scope="col">Delete</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for object in object_list %}
+          <tr>
+            {% for field in fields %}
+              {% if forloop.first %}
+                  <td>
+                    <a href="{% url url_update pk=object.pk %}">
+                      {{object|getfield:field}}
+                    </a>
+                  </td>
+              {% else %}
+                <td>{{object|getfield:field}}</td>
+              {% endif %}
+            {% endfor %}
+            
+            {% if allowNew %}
+            <td>
+              <button class="btn btn-primary delete" data-action="{% url url_api %}{{object.pk}}/">
+                <i class="far fa-trash-alt"></i>
+              </button>
+            </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
