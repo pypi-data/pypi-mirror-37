@@ -1,0 +1,449 @@
+---
+{% set globs={} %}
+{% if dynamodb_capacity.read|int or dynamodb_capacity.write|int %}
+{% set _ = globs.update({'stateful': True}) %}
+{% else %}
+{% set _ = globs.update({'stateful': False}) %}
+{% endif %}
+resources:
+    {% if domain_name and certificate_arn %}
+    DomainName:
+        Type: "AWS::ApiGateway::DomainName"
+        Properties:
+            CertificateArn: {{certificate_arn}}
+            DomainName: {{domain_name}}
+
+    DomainNameMapping:
+       Type: "AWS::ApiGateway::BasePathMapping"
+       Properties:
+         Stage: "{{__context.stage.lower()}}"
+         RestApiId:
+            Ref: RestApi
+         DomainName:
+            Ref: DomainName
+
+    ApiDnsRecord:
+      Type: AWS::Route53::RecordSetGroup
+      Properties:
+        {% if hosted_zone_id %}
+        HostedZoneId: {{hosted_zone_id}}
+        {% else %}
+        HostedZoneName: {{'.'.join(domain_name.split('.')[-2:])}}.
+        {% endif %}
+        RecordSets:
+            - Name: "{{domain_name}}"
+              Type: A
+              AliasTarget:
+                HostedZoneId: Z2FDTNDATAQYW2
+                DNSName:
+                    "Fn::GetAtt":
+                        - DomainName
+                        - DistributionDomainName
+    {% endif %}
+
+    {% if not api_id %}
+    RestApi:
+      Type: "AWS::ApiGateway::RestApi"
+      Properties:
+        {% if api_name %}
+        Name: "{{api_name}}-{{_env.stage}}"
+        {% else %}
+        Name: "{{_env.name}}-{{_layer.name}}-{{_env.stage}}"
+        {% endif %}
+        Description: "{{api_description}}"
+    {% endif %}
+
+    {% if globs.stateful %}
+    StateTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        {# The state item id #}
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: {{dynamodb_capacity.read}}
+          WriteCapacityUnits: {{dynamodb_capacity.write}}
+        {% if _env.stage %}
+        TableName: {{_env.name}}-{{_layer.name}}-{{_env.stage}}-state
+        {% else %}
+        TableName: {{_env.name}}-{{_layer.name}}-state
+        {% endif %}
+    {% endif %}
+
+    {% for resource in api_resources %}
+    {% if has_dead_letter_queue and not dead_letter_queue_arn %} 
+    DeadLetterQueue{{loop.index}}: 
+        Type: "AWS::SQS::Queue"
+    {% endif %} 
+
+    {% if schedule_expression or resource.schedule_expression %}
+    ScheduledRule{{loop.index}}:
+      Type: "AWS::Events::Rule"
+      Properties:
+        Description: "ScheduledRule"
+        ScheduleExpression: "{{resource.schedule_expression or schedule_expression}}"
+        State: "ENABLED"
+        Targets:
+            - "Arn": { "Fn::GetAtt": ["Lambda{{loop.index}}", "Arn"] }
+              "Id": "MicroserviceScheduledTrigger"
+
+    PermissionForEventsToInvokeLambda{{loop.index}}:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        FunctionName: { "Ref": "Lambda{{loop.index}}" }
+        Action: "lambda:InvokeFunction"
+        Principal: "events.amazonaws.com"
+        SourceArn: { "Fn::GetAtt": ["ScheduledRule{{loop.index}}", "Arn"] }
+    {% endif %}
+
+    Lambda{{loop.index}}:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        FunctionName: "{{__context.environment.name}}-{{__context.layer.name}}-{{__context.stage}}-{{loop.index}}"
+        Code:
+          S3Bucket: "{{resource.lambda_function.s3bucket}}"
+          S3Key: "{{resource.lambda_function.s3key}}"
+        Runtime: "{{resource.lambda_function.runtime or runtime}}"
+        MemorySize: "{{resource.lambda_function.memory_size or memory_size}}"
+        Description: "{{resource.description or description}}"
+        Timeout: "{{resource.lambda_function.timeout or timeout}}"
+        Handler: "handler.lambda_handler"
+        {% if has_dead_letter_queue or dead_letter_queue_arn %}
+        DeadLetterConfig:
+            TargetArn:
+                {% if dead_letter_queue_arn %}
+                {{dead_letter_queue_arn}}
+                {% else %}
+                "Fn::GetAtt":
+                    - DeadLetterQueue{{loop.index}}
+                    - Arn
+                {% endif %}
+        {% endif %}
+        Role:
+          "Fn::GetAtt":
+              - LambdaExecutionRole{{loop.index}}
+              - Arn
+        Environment:
+          Variables:
+              "HUMILIS_ENVIRONMENT": "{{_env.name}}"
+              "HUMILIS_STAGE": "{{_env.stage}}"
+              "HUMILIS_LAYER": "{{_layer.name}}"
+              {% set resource_env = dict(variables or lambda_environment or {}) %}
+              {% if resource.variables or resource.lambda_environment %}
+              {% set _ = resource_env.update(resource.variables or resource.lambda_environment) %}
+              {% endif %}
+              {% if resource_env %}
+              {% for k, v in resource_env.items() %}
+              "{{k}}": "{{v}}"
+              {% endfor %}
+              {% endif %}
+
+    LambdaPermission{{loop.index}}:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        Action: "lambda:invokeFunction"
+        FunctionName: {"Fn::GetAtt": ["Lambda{{loop.index}}", "Arn"]}
+        Principal: "apigateway.amazonaws.com"
+        SourceArn:
+            "Fn::Join":
+                - ""
+                -
+                  - "arn:aws:execute-api:"
+                  - {"Ref": "AWS::Region"}
+                  - ":"
+                  - {"Ref": "AWS::AccountId"}
+                  - ":"
+                  {% if api_id %}
+                  - "{{api_id}}"
+                  {% else %}
+                  - {"Ref": "RestApi"}
+                  {% endif %}
+                  - "/*"
+
+    LambdaExecutionRole{{loop.index}}:
+      Type: "AWS::IAM::Role"
+      {% if has_dead_letter_queue or dead_letter_queue_arn %}
+      DependsOn: DeadLetterQueue{{loop.index}}
+      {% endif %}
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                  Service: 'lambda.amazonaws.com'
+              Action: 'sts:AssumeRole'
+        # Keep all environment role under the same path
+        Path: {{ "/{}/".format(_env.name) }}
+        Policies:
+          {% if iam_role_policies %}
+          {% for policy in iam_role_policies %}
+          - {{ policy }}
+          {% endfor %}
+          {% endif %}
+          - PolicyName: {{loop.index}}
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                # Full access to itself
+                - Effect: Allow
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:lambda:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "function:",
+                         "{{__context.environment.name}}-{{__context.layer.name}}-{{__context.stage}}-{{loop.index}}"]
+                  Action:
+                    - "lambda:*"
+                # Permissions to list and add tags to all other Lambdas
+                - Effect: Allow
+                  Resource: "*"
+                  Action:
+                    - "lambda:ListTags"
+                    - "lambda:TagResource"
+                # Access to KMS
+                - Effect: Allow
+                  Resource: "*"
+                  Action:
+                    - "kms:Decrypt"
+                    - "kms:DescribeKey"
+                {% if has_dead_letter_queue or dead_letter_queue_arn %}
+                - Effect: Allow
+                  Action:
+                    - "sqs:SendMessage"
+                  Resource:
+                  {% if dead_letter_queue_arn %}
+                    - {{dead_letter_queue_arn}}
+                  {% else %}
+                    - "Fn::GetAtt":
+                        - DeadLetterQueue{{loop.index}}
+                        - Arn
+                  {% endif %}
+                {% endif %}
+                {% for policy in iam_actions %}
+                - Effect: Allow
+                  Action:
+                    - "{{policy.action}}"
+                  Resource: "{{policy.resource}}"
+                {% endfor %}
+                # Access to CW logs
+                - Effect: "Allow"
+                  Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:PutRetentionPolicy"
+                  - "logs:PutSubscriptionFilter"
+                  - "logs:DescribeLogStreams"
+                  - "logs:DeleteLogGroup"
+                  - "logs:DeleteRetentionPolicy"
+                  - "logs:DeleteSubscriptionFilter"
+                  Resource:
+                    Fn::Sub: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/{{__context.environment.name}}-{{__context.layer.name}}-{{__context.stage}}-{{loop.index}}:*:*"
+                  {% if globs.stateful %}
+                - Effect: Allow
+                  # Read/write permission on the associated state tables
+                  Action:
+                    - "dynamodb:*"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:dynamodb:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "table/", {"Ref": "StateTable"}]
+                 {% endif %}
+                 {% if output_delivery_stream %}
+                - Effect: Allow
+                  # Write access to the Firehose delivery stream(s)
+                  Action:
+                    - "firehose:PutRecord"
+                    - "firehose:PutRecordBatch"
+                    - "firehose:ListDeliveryStreams"
+                    - "firehose:DescribeDeliveryStream"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:firehose:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":",
+                         "deliverystream/",
+                         "{{output_delivery_stream}}"]
+                  {% endif %}
+                 {% if input_delivery_stream %}
+                - Effect: Allow
+                  # Write access to the Firehose delivery stream(s)
+                  Action:
+                    - "firehose:PutRecord"
+                    - "firehose:PutRecordBatch"
+                    - "firehose:ListDeliveryStreams"
+                    - "firehose:DescribeDeliveryStream"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:firehose:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":",
+                         "deliverystream/",
+                         "{{input_delivery_stream}}"]
+                  {% endif %}
+
+    Resource{{loop.index}}:
+      Type: "AWS::ApiGateway::Resource"
+      Properties:
+        RestApiId:
+          {% if api_id %}
+          "{{api_id}}"
+          {% else %}
+          {"Ref": "RestApi"}
+          {% endif %}
+        ParentId:
+            {% if api_id %}
+            {{resource.parent_resource_id}}
+            {% else %}
+            "Fn::GetAtt":
+              - RestApi
+              - RootResourceId
+            {% endif %}
+        {% if resource.path %}
+        PathPart: "{{resource.path}}"
+        {% else %}
+        PathPart: "{{context.layer.name}}{{loop.index}}"
+        {% endif %}
+
+
+    Method{{loop.index}}:
+      Type: "AWS::ApiGateway::Method"
+      Properties:
+        RestApiId:
+          {% if api_id %}
+          {{api_id}}
+          {% else %}
+          {"Ref": "RestApi"}
+          {% endif %}
+        ResourceId: {Ref: "Resource{{loop.index}}"}
+        ApiKeyRequired: {{resource.api_key_required or 'no'}}
+        HttpMethod: {{http_method}}
+        AuthorizationType: NONE
+        Integration:
+          Type: AWS
+          IntegrationHttpMethod: POST
+          Uri: {"Fn::Join" : ["", ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["Lambda{{loop.index}}", "Arn"]}, "/invocations"]]}
+          PassthroughBehavior: WHEN_NO_TEMPLATES
+          IntegrationResponses:
+              - StatusCode: 200
+          RequestTemplates:
+            "application/x-www-form-urlencoded": |
+                #set($rawAPIData = $input.path('$'))
+                ## first we get the number of "&" in the string, this tells us if there is more than one key value pair
+                #set($countAmpersands = $rawAPIData.length() - $rawAPIData.replace("&", "").length())
+
+                ## if there are no "&" at all then we have only one key value pair.
+                ## we append an ampersand to the string so that we can tokenise it the same way as multiple kv pairs.
+                ## the "empty" kv pair to the right of the ampersand will be ignored anyway.
+                #if ($countAmpersands == 0)
+                 #set($rawPostData = $rawAPIData + "&")
+                #end
+
+                ## now we tokenise using the ampersand(s)
+                #set($tokenisedAmpersand = $rawAPIData.split("&"))
+
+                ## we set up a variable to hold the valid key value pairs
+                #set($tokenisedEquals = [])
+
+                ## now we set up a loop to find the valid key value pairs, which must contain only one "="
+                #foreach( $kvPair in $tokenisedAmpersand )
+                 #set($countEquals = $kvPair.length() - $kvPair.replace("=", "").length())
+                 #if ($countEquals == 1)
+                  #set($kvTokenised = $kvPair.split("="))
+                  #if ($kvTokenised[0].length() > 0)
+                   ## we found a valid key value pair. add it to the list.
+                   #set($devNull = $tokenisedEquals.add($kvPair))
+                  #end
+                 #end
+                #end
+
+                ## next we set up our loop inside the output structure "{" and "}"
+                {
+                #foreach( $kvPair in $tokenisedEquals )
+                  ## finally we output the JSON for this pair and append a comma if this isn't the last pair
+                  #set($kvTokenised = $kvPair.split("="))
+                 "$util.urlDecode($kvTokenised[0])" : #if($kvPair.length() > ($kvTokenised[0].length() + 1))"$util.urlDecode($kvTokenised[1])"#{else}""#end#if( $foreach.hasNext ),#end
+                #end
+                }
+            "application/json": |
+                #set($allParams = $input.params())
+                {
+                  "body" : $input.json('$'),
+                  "context" : {
+                    "api_id" : "$context.apiId",
+                    "http_method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "request_id" : "$context.requestId",
+                    "resource_path" : "$context.resourcePath",
+                    "resource_id" : "$context.resourceId",
+                    "identity" : {
+                        "source_ip" : "$context.identity.sourceIp",
+                        "user-agent" : "$context.identity.userAgent",
+                        "account_id" : "$context.identity.accountId",
+                        "api_key" : "$context.identity.apiKey",
+                        "caller" : "$context.identity.caller",
+                        "user" : "$context.identity.user",
+                        "user_arn" : "$context.identity.userArn"
+                    }
+                  },
+                  "parameters" : {
+                    #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                    "$type" : {
+                      #foreach($paramName in $params.keySet())
+                      "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                      #if($foreach.hasNext),#end
+                      #end
+                    }
+                    #if($foreach.hasNext),#end
+                    #end
+                  }
+                }
+
+        MethodResponses:
+            - StatusCode: 200
+        {% if resource.request_parameters %}
+        RequestParameters:
+          {% for k, v in resource.request_parameters.items() %}
+          "method.request.{{k}}": {{v}}
+          {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+    RestApiDeployment:
+      Type: "AWS::ApiGateway::Deployment"
+      {% if api_resources %}
+      DependsOn:
+        {% for _ in api_resources %}
+        - Method{{loop.index}}
+        {% endfor %}
+      {% endif %}
+      Properties:
+          Description: "{{_env.stage}} deployment of {{_env.name}} environment"
+          RestApiId:
+            {% if api_id %}
+            {{api_id}}
+            {% else %}
+            {"Ref": "RestApi"}
+            {% endif %}
+          StageName: {{api_stage or _env.stage|lower}}
+
+    ApiKey:
+      Type: "AWS::ApiGateway::ApiKey"
+      DependsOn:
+        - "RestApiDeployment"
+        - "RestApi"
+      Properties:
+        Name: "{{_env.name}}-{{_layer.name}}-{{_env.stage}}"
+        Description: "API key for stage {{_env.stage}} of environment {{_env.name}}"
+        Enabled: "true"
+        StageKeys:
+          - RestApiId:
+              Ref: RestApi
+            StageName: "{{api_stage or _env.stage|lower}}"

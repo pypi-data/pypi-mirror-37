@@ -1,0 +1,73 @@
+---
+outputs:
+    {% for resource in api_resources %}
+    {% if has_dead_letter_queue and not dead_letter_queue_arn %}
+    DeadLetterQueueArn{{loop.index}}:
+        Description: Arn of dead letter queue
+        Value:
+          "Fn::GetAtt":
+              - DeadLetterQueue{{loop.index}}
+              - Arn
+    {% endif %}
+
+    Path:
+        Description: The API resource path
+        Value: {{resource.path}}
+
+    {% if resource.schedule_expression or schedule_expression %}
+    ScheduleExpression:
+        Description: The scheduled trigger for the microservice
+        Value: {{resource.schedule_expression or schedule_expression}}
+    {% endif %}
+
+    LambdaArn{{loop.index}}:
+        Description:
+            The Arn of the backend Lambda function
+        Value:
+          "Fn::GetAtt":
+              - Lambda{{loop.index}}
+              - Arn
+
+    LambdaExecutionRole{{loop.index}}:
+        Description:
+            The execution role of the backend Lambda function
+        Value:
+          "Fn::GetAtt":
+              - LambdaExecutionRole{{loop.index}}
+              - Arn
+    {% endfor %}
+    {% if not api_id %}
+    RestApiRootResource:
+        Description:
+            The REST API root resource id
+        Value:
+          "Fn::GetAtt":
+              - RestApi
+              - RootResourceId
+    RestApiId:
+        Description:
+            The REST API Id
+        Value: {Ref: RestApi}
+    {% endif %}
+
+    RootResourceInvokeUrl:
+        Description:
+            The invoke URL for the root resource of the API
+        Value:
+            "Fn::Join":
+                - ""
+                - ["https://",
+                  {% if api_id %}
+                  {{api_id}}
+                  {% else %}
+                  {Ref: RestApi},
+                  {% endif %}
+                  ".execute-api.",
+                  {Ref: "AWS::Region"},
+                  ".amazonaws.com/",
+                  "{{__context.stage.lower()}}"]
+
+    ApiKey:
+        Description:
+            The key associated to the REST API {{__context.stage}} deployment
+        Value: {Ref: ApiKey}
