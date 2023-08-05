@@ -1,0 +1,52 @@
+{% extends "wagtail_eventcalendar/event_base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block main %}
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/fullcalendar.min.css' %}" type="text/css"/>
+    <div id='calendar'></div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#calendar').fullCalendar({
+                header: {center: 'month,agendaWeek,upcoming'},
+                timeFormat: 'H(:mm)',
+                nowIndicator: true,
+                timezone: 'Africa/Johannesburg', //Change as necessary
+                eventColor: "#f8f9fa", //Change as necessary
+                eventTextColor: "#9c27b0", //Change as necessary
+                businessHours: [{
+                    dow: [1, 2, 3, 4, 5],
+                    start: '08:00',
+                    end: '13:00'
+                }, //change as necessary
+                    {
+                        dow: [7],
+                        start: '10:00',
+                        end: '11:00'
+                    }
+                ],
+                views: {
+                    upcoming: {
+                        type: 'list',
+                        duration: {months: 2},
+                        buttonText: 'Upcoming', //translate as necessary
+                        validRange: function (nowDate) {
+                            return {
+                                start: nowDate,
+                                end: nowDate.clone().add(1, 'months')
+                            };
+                        }
+
+                    }
+                },
+                // put your options and callbacks here
+                events: '{{ page.get_url }}events/'
+
+
+            })
+
+        });
+    </script>
+    <br>
+<script src="{% static 'wagtail_eventcalendar/js/moment.min.js' %}"></script>
+<script src="{% static 'wagtail_eventcalendar/js/fullcalendar.min.js' %}"></script>
+{% endblock %}

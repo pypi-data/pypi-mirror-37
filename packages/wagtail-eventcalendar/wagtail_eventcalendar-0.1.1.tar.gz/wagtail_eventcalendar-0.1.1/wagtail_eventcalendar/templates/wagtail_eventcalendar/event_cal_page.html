@@ -1,0 +1,99 @@
+{% load static wagtailcore_tags wagtailimages_tags social_share i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/bootstrap.min.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/all.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/custom.css' %}" type="text/css"/>
+    <script src="{% static 'wagtail_eventcalendar/js/jquery.min.js' %}"></script>
+</head>
+<body>
+    <div class="row">
+        <div class="col-sm-12 col-md-9">
+            <div class="card">
+                <div class="card-header card-header-image">
+                    {% image page.image fill-1000x667 as header_image %}
+                <img class="card-img-top img-fluid" alt="{{ page.image.title }}" src="{{ header_image.url }}">
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title">{{ page.title }}</h1>
+
+                    <div class="card-subtitle">
+                        {% if page.get_status_text %}
+                            <h3 class="title text-danger"> {{ page.get_status_text }} </h3>
+                        {% endif %}
+                        <a href="{{ page.url }}ical/" class="btn btn-primary btn-round ml-auto" style="font-size: large;padding-left: 1em;
+padding-right: 1rem;
+padding-bottom: 0.25rem;
+padding-top: 0.25rem;
+margin-bottom: 1rem;"><i class="far fa-calendar-plus"></i></a>
+                        <ul class="list-unstyled">
+                <li>
+                    <i class="far fa-play-circle"></i> {{ page.start_dt|date:'r' }}
+                </li>
+                <li>
+                    <i class="far fa-stop-circle"></i> {{ page.end_dt|date:'r' }}
+                </li>
+                {% if page.location %}
+                    <li>
+                        <i class="fas fa-map-marked-alt"></i>
+                        {{ page.location }}
+                        <a class="gmap" target="_blank" href="http://maps.google.com/?q={{ page.location }}"><i
+                                class="fas fa-globe-africa"></i></a>
+                    </li>
+                {% endif %}
+            </ul>
+
+
+                    </div>
+
+                    <!--This includes the excerpt in the card-->
+                    <div class="card-text">
+                        {% if page.description %}
+                            {{ page.description|richtext }}
+                        {% else %}
+                            <p>{% trans "No description available" %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <a href="{{ page.get_parent.url }}" style="font-size: large">
+                        <i class="fas fa-angle-double-left"></i></a>
+
+                    <li class="list-inline-item ml-auto">
+                        {% post_to_facebook page.url '<span><div class="circle-badge"><i class="fab fa-facebook-f"></i>   </div></span>' %}
+
+                    </li>
+                    <li class="list-inline-item">
+                        {% post_to_twitter page.title page.url '<span><div class="circle-badge"><i class="fab fa-twitter"></i></div></span>' %}
+                    </li>
+                    <li class="list-inline-item">
+                        {% post_to_gplus page.url '<span><div class="circle-badge"><i class="fab fa-google-plus-g"></i></div></span>' %}
+                    </li>
+
+                </div>
+    </div>
+            <br>
+        </div>
+
+        <div class="col-sm-0 col-md-3">
+
+            <h3>
+                {% trans "Categories" %}
+            </h3>
+            <hr>
+            <ul class="list-unstyled">
+                {% for category in page.get_categories %}
+                    <li>
+                        <a href="/calendar/category/{{ category.name|lower }}/">
+                            {{ category.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+<br>
+</body>
+</html>

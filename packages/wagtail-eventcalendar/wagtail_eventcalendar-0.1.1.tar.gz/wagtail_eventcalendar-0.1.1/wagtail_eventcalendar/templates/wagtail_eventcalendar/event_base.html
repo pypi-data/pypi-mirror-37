@@ -1,0 +1,74 @@
+
+{% load static wagtailcore_tags i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/bootstrap.min.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/all.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'wagtail_eventcalendar/css/custom.css' %}" type="text/css"/>
+    <script src="{% static 'wagtail_eventcalendar/js/jquery.min.js' %}"></script>
+</head>
+<body>
+{% block content %}
+
+    <h1 class="title">{{ page.title }} {% if category %} &mdash; {{ category|capfirst }} {% endif %} </h1>
+    {{ page.description|richtext }}
+    <div class="row">
+        <div class="container-fluid">
+	<ul>
+            <li class="list-inline-item float-right">
+        {% if category %}
+            <a href="{{ page.url }}{{ category|lower }}/ical/" class="btn btn-primary btn-round" style="font-size: large;padding-left: 1rem;
+padding-right: 1rem;
+padding-bottom: 0.25rem;
+padding-top: 0.25rem;"><i class="far fa-calendar-plus"></i></a>
+        {% else %}
+            <a href="{{ page.full_url }}ical/" class="btn btn-primary btn-round" style="font-size: large;padding-left: 1em;
+padding-right: 1em;
+padding-bottom: 0.25em;
+padding-top: 0.25em;"><i class="far fa-calendar-plus"></i></a>
+        {% endif %}
+</li>
+        </div>
+	</div>
+<div class="row">
+        <div class="container-fluid">
+             <li class="list-inline-item float-right">
+                {% if category %}
+                <small>{% trans 'Get the entire calendar for: ' %} {{ category|capfirst }}</small>
+                {% else %}
+                    <small>{% trans 'Get entire calendar. Includes all categories.' %}</small>
+                {% endif %}
+            </li>
+        </div>
+    </div>
+    <div class="row">
+
+        <div class="col-sm-0 col-md-0 col-lg-0 col-xl-2">
+            <h3>
+                {% trans "Categories" %}
+            </h3>
+            <hr>
+            <ul class="list-unstyled list-inline">
+                {% for categ in page.get_categories %}
+                    <li class="list-inline-item ">
+                        <a class="{% if categ.name|lower == category|lower %} font-weight-bold {% endif %}"
+                           href="{{ page.get_url }}category/{{ categ.name|lower }}/">
+                            {{ categ.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-10">
+{% block main %}
+
+{% endblock main %}
+        </div>
+
+
+    </div>
+{% endblock %}
+</body>
+</html>
