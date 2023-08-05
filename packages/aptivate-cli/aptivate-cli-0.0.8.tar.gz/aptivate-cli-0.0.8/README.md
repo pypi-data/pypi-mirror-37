@@ -1,0 +1,71 @@
+[![pipeline status](https://git.coop/aptivate/internal-tools/aptivate-cli/badges/master/pipeline.svg)](https://git.coop/aptivate/internal-tools/aptivate-cli/commits/master)
+[![coverage report](https://git.coop/aptivate/internal-tools/aptivate-cli/badges/master/coverage.svg)](https://git.coop/aptivate/internal-tools/aptivate-cli/commits/master)
+[![PyPI version](https://badge.fury.io/py/aptivate-cli.svg)](https://badge.fury.io/py/aptivate-cli)
+
+# aptivate-cli
+
+Fully automated luxury Aptivate command line interface.
+
+## Install It
+
+The tool is compatible with Python 3.6+ onwards.
+
+```bash
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install aptivate-cli
+```
+
+## Use It
+
+To get moving fast, check out the DYE -> aptivate-cli [cheatsheet](docs/dye-to-cli-cheatsheet.md).
+
+## Hack It
+
+You'll have to install [pipenv] and then:
+
+[pipenv]: https://github.com/pypa/pipenv#installation
+
+```bash
+$ git clone git@git.coop:aptivate/aptivate-cli.git
+$ cd aptivate-cli
+$ pip install --user pipenv
+$ pipenv sync --dev
+$ pipenv run pip install --editable .
+```
+
+Happy Hacking!
+
+## Test It
+
+We use [tox] for testing.
+
+[tox]: https://tox.readthedocs.io/en/latest/
+
+```bash
+$ pipenv run tox
+```
+
+See the [tox.ini](tox.ini) for configuration.
+
+## Release It
+
+```bash
+$ make test-publish
+$ make publish
+```
+
+## Environment Variables
+
+### Mandatory
+
+```bash
+APTIVATE_CLI_PASS_DIR=/tmp/foobar
+```
+
+### Optional
+
+```
+APTIVATE_CLI_MYSQL=myMysqlRootPassword
+APTIVATE_CLI_SUDO=mySudoPassword
+```
