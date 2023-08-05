@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load wagtailimages_tags wagtailsettings_tags i18n static %}
+{% get_settings %}
+
+{% block content %}
+
+{% if settings.globalsite.GlobalSiteSettings.description %}
+  <p>{{settings.globalsite.GlobalSiteSettings.description}}</p>
+{% endif %}
+
+
+<h1 class="">{% trans "Choose your country:" %}</h1>
+<div class="">
+  {% for region in regions %}
+    {{region}}
+    {% for country in region.country_sites.all %}
+      <li class="">
+        <a href="{% url 'molo.globalsite:set_country' country.code %}" class="">
+            {% if country.flag %}
+            {% image country.flag width-30 as tmp_photo %}
+              <img src="{{ tmp_photo.url }}" alt="{{ country.flag.title }}" class="" />
+            {% endif %}
+          {{ country.name }}
+        </a>
+      </li>
+    {% endfor %}
+  {% endfor %}
+</div>
+{% endblock %}
+
