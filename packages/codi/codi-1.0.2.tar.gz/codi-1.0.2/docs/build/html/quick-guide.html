@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Quick Guide &mdash; codi 1.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="codi 1.0.2 documentation" href="index.html"/>
+        <link rel="next" title="codi Reference" href="reference.html"/>
+        <link rel="prev" title="Installation" href="installation.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> codi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usage-example">Usage example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#config-class-usage-example">Config class usage example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#further-readings">Further readings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">codi Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">codi</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Quick Guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/quick-guide.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quick-guide">
+<h1>Quick Guide<a class="headerlink" href="#quick-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage-example">
+<h2>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h2>
+<p>This is a typical usage example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">codi</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="c1">#assume we have 2 config directories:</span>
+<span class="c1">#   * default-cfg/</span>
+<span class="c1">#   * user-cfg/</span>
+<span class="c1">#</span>
+<span class="c1">#in other words, we have the following directory structure:</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#default-cfg/</span>
+<span class="c1">#|</span>
+<span class="c1">#--path/</span>
+<span class="c1">#  |</span>
+<span class="c1">#  --to/</span>
+<span class="c1">#    |</span>
+<span class="c1">#    |-file.txt</span>
+<span class="c1">#    |</span>
+<span class="c1">#    --file.bin</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#user-cfg/</span>
+
+
+<span class="c1">#user config dir</span>
+<span class="n">user_dir</span> <span class="o">=</span> <span class="s1">&#39;user-cfg/&#39;</span>
+<span class="c1">#default config dir</span>
+<span class="n">default_dir</span> <span class="o">=</span> <span class="s1">&#39;default-cfg/&#39;</span>
+
+<span class="c1">#create a Codi object. you can give more than 2 dirs if you need.</span>
+<span class="n">config_dirs</span> <span class="o">=</span> <span class="n">Codi</span><span class="p">(</span><span class="n">user_dir</span><span class="p">,</span> <span class="n">default_dir</span><span class="p">)</span>
+
+<span class="c1">#read a file. args are same as builtin open</span>
+<span class="c1">#will first try to open `user-cfg/path/to/file.txt`. because the file does</span>
+<span class="c1">#not exist, will go to the next config dir and open</span>
+<span class="c1">#`default-cfg/path/to/file.txt`.</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">config_dirs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1">#write a file.</span>
+<span class="c1">#will always write in `user-cfg/path/to/file.txt`. any parent directories</span>
+<span class="c1">#that do not exist will be created</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">config_dirs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;hello world&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1">#convinience method to read data</span>
+<span class="c1">#text. default encoding is utf8</span>
+<span class="c1">#will open `user-cfg/path/to/file.txt` because it exists from our previous</span>
+<span class="c1">#write operation.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config_dirs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span>
+<span class="c1">#binary</span>
+<span class="c1">#will open `default-cfg/path/to/file.bin`</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config_dirs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;path/to/file.bin&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+<span class="c1">#convinience method to write data</span>
+<span class="c1">#text. default encoding is utf8</span>
+<span class="c1">#will always write in `user-cfg/path/to/file.txt`.</span>
+<span class="n">config_dirs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;hello world&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+<span class="c1">#binary</span>
+<span class="c1">#again, will always write in `user-cfg/path/to/file.bin`.</span>
+<span class="n">config_dirs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;path/to/file.bin&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;some binary data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="config-class-usage-example">
+<h2>Config class usage example<a class="headerlink" href="#config-class-usage-example" title="Permalink to this headline">¶</a></h2>
+<p>This is a typical usage example for the <cite>Config</cite> class:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">codi</span>
+
+<span class="c1">#Config objects are dictionary objects. you can pass the constructor</span>
+<span class="c1">#anything you pass to a dictionary.</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">codi</span><span class="o">.</span><span class="n">Config</span><span class="p">()</span>
+
+<span class="c1">#set default values</span>
+<span class="n">config</span><span class="o">.</span><span class="n">set_default</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">config</span><span class="o">.</span><span class="n">set_default</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="c1">#set config values</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+
+<span class="c1">#print config values</span>
+<span class="c1">#will print -1 because we set its value previously</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">])</span>
+
+<span class="c1">#will print -2 because we set its value. default is ignored.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+
+<span class="c1">#we did not set its value. will take the default value and print 3.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">])</span>
+
+<span class="c1">#no value and no default value. will raise KeyError</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;d&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="further-readings">
+<h2>Further readings<a class="headerlink" href="#further-readings" title="Permalink to this headline">¶</a></h2>
+<p>In <a class="reference internal" href="reference.html"><span class="doc">codi Reference</span></a> you will find the library reference.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reference.html" class="btn btn-neutral float-right" title="codi Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Mohammad Alghafli.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

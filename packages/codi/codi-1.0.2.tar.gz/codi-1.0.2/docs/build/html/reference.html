@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>codi Reference &mdash; codi 1.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="codi 1.0.2 documentation" href="index.html"/>
+        <link rel="prev" title="Quick Guide" href="quick-guide.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> codi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick-guide.html">Quick Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">codi Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">codi</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>codi Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/reference.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-codi">
+<span id="codi-reference"></span><h1>codi Reference<a class="headerlink" href="#module-codi" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Date:</th><td class="field-body"><p class="first">2018-10-06</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Version:</th><td class="field-body"><p class="first">1.0.2</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body"><ul class="first last simple">
+<li>Mohammad Alghafli &lt;<a class="reference external" href="mailto:thebsom&#37;&#52;&#48;gmail&#46;com">thebsom<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Multiple configuration directories for your program.
+This library is useful if you have the following situation: you have a config
+directory where you store default configuration and another config directory
+where you store user custom configuration. When a user runs your program for the
+first time, no files exist in the user config directory and you want to read
+everything from the default config directory. When you write a config file, it
+must always be written in the user config directory.
+This library does this for you. You specify user config directory and any more
+directories you want to use for default config files. When you open a file for
+reading, the library opens the file from the user config directory if it exists.
+Otherwise, it searches for the file in the default config directories. When you
+open a file for writing, it is always opened in the user config directory. A
+typical usage example is below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">codi</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="c1">#assume we have 2 config directories:</span>
+<span class="c1">#   * default-cfg/</span>
+<span class="c1">#   * user-cfg/</span>
+<span class="c1">#</span>
+<span class="c1">#in other words, we have the following directory structure:</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#default-cfg/</span>
+<span class="c1">#|</span>
+<span class="c1">#--path/</span>
+<span class="c1">#  |</span>
+<span class="c1">#  --to/</span>
+<span class="c1">#    |</span>
+<span class="c1">#    |-file.txt</span>
+<span class="c1">#    |</span>
+<span class="c1">#    --file.bin</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#user-cfg/</span>
+
+
+<span class="c1">#user config dir</span>
+<span class="n">user_dir</span> <span class="o">=</span> <span class="s1">&#39;user-cfg/&#39;</span>
+<span class="c1">#default config dir</span>
+<span class="n">default_dir</span> <span class="o">=</span> <span class="s1">&#39;default-cfg/&#39;</span>
+
+<span class="c1">#create a Codi object. you can give more than 2 dirs if you need.</span>
+<span class="n">config_dirs</span> <span class="o">=</span> <span class="n">Codi</span><span class="p">(</span><span class="n">user_dir</span><span class="p">,</span> <span class="n">default_dir</span><span class="p">)</span>
+
+<span class="c1">#read a file. args are same as builtin open</span>
+<span class="c1">#will first try to open `user-cfg/path/to/file.txt`. because the file does</span>
+<span class="c1">#not exist, will go to the next config dir and open</span>
+<span class="c1">#`default-cfg/path/to/file.txt`.</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">config_dirs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1">#write a file.</span>
+<span class="c1">#will always write in `user-cfg/path/to/file.txt`. any parent directories</span>
+<span class="c1">#that do not exist will be created</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">config_dirs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;hello world&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1">#convinience method to read data</span>
+<span class="c1">#text. default encoding is utf8</span>
+<span class="c1">#will open `user-cfg/path/to/file.txt` because it exists from our previous</span>
+<span class="c1">#write operation.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config_dirs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span>
+<span class="c1">#binary</span>
+<span class="c1">#will open `default-cfg/path/to/file.bin`</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">config_dirs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;path/to/file.bin&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+<span class="c1">#convinience method to write data</span>
+<span class="c1">#text. default encoding is utf8</span>
+<span class="c1">#will always write in `user-cfg/path/to/file.txt`.</span>
+<span class="n">config_dirs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;path/to/file.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;hello world&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+<span class="c1">#binary</span>
+<span class="c1">#again, will always write in `user-cfg/path/to/file.bin`.</span>
+<span class="n">config_dirs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;path/to/file.bin&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;some binary data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The library also provides <cite>Config</cite> class which acts as a dict for config values.
+It adds the ability to set default values.</p>
+<dl class="class">
+<dt id="codi.Codi">
+<em class="property">class </em><code class="descclassname">codi.</code><code class="descname">Codi</code><span class="sig-paren">(</span><em>*dirs</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to set multiple directories for configuration files. The first config
+directory is the user config directory. The other config directories added
+are used as fallbacks when a file opened for reading is not found in the
+user config directory. If a path is opened for writing, it is always opened
+in the user config directory.</p>
+<dl class="method">
+<dt id="codi.Codi.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>dir</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a config dir.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>dir (any type accepted by <cite>pathlib.Path</cite> constructor):</dt>
+<dd>Directory to add.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>dirs</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append new config dirs from iterable.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>dirs (path-like object): iterable of directories to add.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.glob">
+<code class="descname">glob</code><span class="sig-paren">(</span><em>pattern</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.glob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as <cite>pathlib.Path.glob</cite> but searches all config dirs added to
+<cite>self</cite> for glob results. If a file is found in multiple config dirs,
+only the path of the file found in the first config dir is returned. The
+returned paths are absolute.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>pattern (str): Glob pattern.</li>
+</ul>
+</dd>
+<dt>returns:</dt>
+<dd>The glob result as a <cite>list</cite> of <cite>pathlib.Path</cite> objects.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.insert">
+<code class="descname">insert</code><span class="sig-paren">(</span><em>index</em>, <em>dir</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a config dir.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>index (int): The index in which the new directory is added.</li>
+<li>dir (path-like object): Directory to add.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>file</em>, <em>mode='r'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens a file. This function is used in the same way as the builtin
+<cite>open</cite>. If <cite>mode</cite> contains w, x, a or +, the file is created in the
+first config dir and all directories in the path are created if they do 
+not exist.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd>Same as builtin <cite>open</cite>.</dd>
+<dt>returns:</dt>
+<dd>File object.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.path">
+<code class="descname">path</code><span class="sig-paren">(</span><em>path=''</em>, <em>writable=False</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an absolute path as a pathlib.Path object for <cite>path</cite> in one of
+the config directories added to <cite>self</cite>.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>path (path-like object): The relative path to return.</li>
+<li><dl class="first docutils">
+<dt>writable (bool): Whether the path is requested for writing or</dt>
+<dd>reading. If <cite>False</cite>, the function searches the config
+directories in the order they were added for an existing path.
+If <cite>writable</cite> is <cite>True</cite>, the returned path is in the first
+config dir added to <cite>self</cite> whether it exists or not.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><em>index=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the config directory at index.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>index (int): The index of the dir to be removed.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>path</em>, <em>text=True</em>, <em>encoding='utf-8'</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the content of the file <cite>path</cite>.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>path (path-like object): The path to read relative to the config </dt>
+<dd>dirs added to <cite>self</cite>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>text (bool): If <cite>True</cite>, the file is read in text mode and str</dt>
+<dd>object is returned . If <cite>False</cite>, the file is read in binary mode
+and bytes object is returned.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>encoding: Text encoding to open the file with. Ignored if <cite>text</cite></dt>
+<dd>is <cite>False</cite>.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>returns:</dt>
+<dd>The content of the file as str or bytes object.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a config directory.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li>value (path-like object): The directory to remove.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Codi.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>path</em>, <em>data</em>, <em>encoding='utf-8'</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Codi.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to the file <cite>path</cite>.</p>
+<dl class="docutils">
+<dt>args:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>path (path-like object): The path to write into</dt>
+<dd>relative to the config dirs added to <cite>self</cite>.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>data (str or bytes): Data to write. If an str object, file is</dt>
+<dd>opened in text mode. If bytes object, file is opened in binary
+mode.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>encoding: Text encoding to open the file with. Ignored if <cite>data</cite></dt>
+<dd>is a bytes object.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>returns:</dt>
+<dd>None</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="codi.Config">
+<em class="property">class </em><code class="descclassname">codi.</code><code class="descname">Config</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to store config values. This class subclasses dict and adds the
+functionality of adding default values. Instead of raising a <cite>KeyError</cite> if
+the key is not in the dict, it looks for the key in an internal default
+values dict. If there is a default value for key, it adds it to itself and
+returns it. Otherwise, <cite>KeyError</cite> is raised.</p>
+<dl class="method">
+<dt id="codi.Config.get_default">
+<code class="descname">get_default</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Config.get_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the default value of <cite>key</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Config.pop_default">
+<code class="descname">pop_default</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Config.pop_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes and returns default value of <cite>key</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="codi.Config.set_default">
+<code class="descname">set_default</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#codi.Config.set_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets default value of <cite>key</cite> to <cite>value</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="quick-guide.html" class="btn btn-neutral" title="Quick Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Mohammad Alghafli.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
