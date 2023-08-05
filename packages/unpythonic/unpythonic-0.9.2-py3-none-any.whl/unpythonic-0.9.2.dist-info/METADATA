@@ -1,0 +1,48 @@
+Metadata-Version: 2.1
+Name: unpythonic
+Version: 0.9.2
+Summary: Lispy (and some haskelly) missing batteries for Python.
+Home-page: https://github.com/Technologicat/unpythonic
+Author: Juha Jeronen
+Author-email: juha.jeronen@tut.fi
+License: BSD
+Keywords: functional-programming,lisp,scheme,racket,haskell
+Platform: Linux
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Provides: unpythonic
+
+Python clearly wants to be an impure-FP language. A decorator with arguments
+is a curried closure - how much more FP can you get?
+
+We provide some missing features for Python from the list processing tradition,
+plus a few bonus haskellisms.
+
+We place a special emphasis on clear, pythonic syntax, as far as possible without MacroPy.
+Other design considerations are simplicity, robustness, and minimal dependencies (currently none).
+
+Tail call optimization (TCO), TCO'd loops in FP style, call/ec, let & letrec,
+assign-once, multi-expression lambdas, def as a code block, dynamic assignment,
+memoize (also for generators and iterables), compose, folds and scans
+(left and right), unfold, lazy partial unpacking of iterables,
+functional sequence updates, pythonic lispy linked lists.
+
+We also provide a curry that passes extra arguments through on the right,
+and calls a callable return value on the remaining arguments. This is now
+valid Python::
+
+    mymap = lambda f: curry(foldr, composerc(cons, f), nil)
+    myadd = lambda a, b: a + b
+    assert curry(mymap, myadd, ll(1, 2, 3), ll(2, 4, 6)) == ll(3, 6, 9)
+
+For documentation and examples, see the project's GitHub homepage.
+
+
