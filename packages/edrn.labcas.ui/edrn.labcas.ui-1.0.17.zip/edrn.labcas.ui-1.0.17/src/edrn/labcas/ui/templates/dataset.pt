@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='UTF-8'?> 
+<!DOCTYPE html>
+<html
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:tal='http://xml.zope.org/namespaces/tal'
+    xmlns:metal='http://xml.zope.org/namespaces/metal'
+    lang='en'
+    xml:lang='en'
+    metal:use-macro='load:edrn.labcas.ui:templates/master.pt'>
+    <head>
+        <title>Dataset</title>
+        <!--
+            provided names:
+            - collection: parent collection
+            - dataset: current dataset
+            — totalSize: human-friendly string giving total size of files in this dataset
+        -->
+    </head>
+    <body>
+        <div metal:fill-slot='content'>
+            <div class='container' tal:define='files python:dataset.files()'>
+                <ol class="breadcrumb">
+                    <li><a href='#' tal:attributes='href python:request.route_url("collections")'>Home</a></li>
+                    <li class="active" tal:content='dataset.name'>blah-blah</li>
+                </ol>
+
+                <h1>Dataset: <span tal:replace='dataset.name'>urn:whatever:blah-blah</span></h1>
+
+                <div tal:condition='dataset.parentID' class='small'>
+                    <tal:define define='parentURL python:request.route_url(
+                        "dataset",
+                        collectionID=collection.identifier,
+                        datasetID=dataset.parentID.replace(u"/", u"%57")
+                    )'>
+                        <a class='btn btn-default' href='#' role='button' tal:attributes='href parentURL'>
+                            <span class='glyphicon glyphicon-chevron-up' aria-hidden='true'></span> Parent dataset
+                        </a>
+                    </tal:define>
+                </div>
+
+                <dl class='dl-horizontal'>
+                    <dt>Identifier:</dt>
+                    <dd tal:content='dataset.identifier'>urn:id:datasetID</dd>
+                    <dt>Name:</dt>
+                    <dd tal:content='dataset.name'>Some Dataset Name</dd>
+                    <dt>Description:</dt>
+                    <dd tal:content='python:dataset.description'>
+                        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+                        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+                        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+                        cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </dd>
+                </dl>
+
+                <h4>Other Metadata</h4>
+
+                <table id='metadata' class='table' tal:define='metadata dataset.getMetadata()'>
+                    <tbody>
+                        <tr tal:repeat='row metadata'>
+                            <td><label tal:content='python:row[0]'>Number of sheep</label></td>
+                            <td tal:define='values python:row[1]'>
+                                <span tal:condition='python:len(values) == 0' class='text-muted'>
+                                    No values.
+                                </span>
+                                <span tal:condition='python:len(values) == 1'
+                                    tal:content='structure python:values[0]'>
+                                    One value
+                                </span>
+                                <ul tal:condition='python:len(values) &gt; 1'>
+                                    <li tal:repeat='value values'>
+                                        <span tal:replace='value'>One of several values</span>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div tal:condition='python: dataset.children'>
+                    <h4>Nested Datasets</h4>
+                    <ul>
+                        <li tal:repeat='child dataset.children'>
+                            <tal:define define='
+                                name python:child.name;
+                                url python:request.route_url(
+                                    "dataset",
+                                    collectionID=collection.identifier,
+                                    datasetID=child.identifier.replace(u"/", u"%57")
+                                )
+                            '>
+                                <a href='#' tal:attributes='href url' tal:content='name'>
+                                    Nested dataset
+                                </a>
+                            </tal:define>                            
+                        </li>
+                    </ul>
+                </div>
+
+                <div tal:condition='files'>
+                    <h3>Files</h3>
+                    <form action='#' method='POST' tal:attributes='action python:request.current_route_url()'>
+                        <table class='table' id='file-table'>
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type='checkbox' name='select-all' id='select-all'/>
+                                    </th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Thumbnail</th>
+                                    <th style='text-align: right;'>Size</th>
+                                    <th>Download</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr tal:repeat='f python:files'>
+                                    <td>
+                                        <!-- CHECK: Do we need to transform / to %57 here? -->
+                                        <input type='checkbox' class='downloadToggle' name='include.name'
+                                            tal:attributes='name python:u"include." + f.identifier'/>
+                                    </td>
+                                    <td tal:define='fileURL python:request.route_url(
+                                        "file",
+                                        fileID=f.identifier.replace(u"/", u"%57"),
+                                        _query=dict(
+                                            collectionID=collection.identifier,
+                                            datasetID=dataset.identifier
+                                        )
+                                    )'>
+                                        <a href='#' tal:attributes='href fileURL' tal:content='f.name'>
+                                            Some file name
+                                        </a>
+                                    </td>
+                                    <td tal:content='python:view.humanFriendlyMimeType(f)'>
+                                        application/get-a-life
+                                    </td>
+                                    <td tal:content='f.description'>
+                                        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+                                        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+                                        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                                        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+                                        cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                                        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                                    </td>
+                                    <td>
+                                        <img src='#' tal:condition='f.thumbnailURL' tal:attributes='src f.thumbnailURL'
+                                            style='border-width: 1px; border-color: black; border-style: solid;'
+                                            width='80' />
+                                    </td>
+                                    <td tal:content='python:view.humanFriendlySize(f.size)'
+                                        style='text-align: right;'>
+                                        42M
+                                    </td>
+                                    <td tal:define='downloadHREF python:request.route_url(
+                                            "file",
+                                            fileID=f.identifier.replace(u"/", u"%57"),
+                                            _query=dict(
+                                                collectionID=collection.identifier,
+                                                datasetID=dataset.identifier,
+                                                download=True
+                                            )
+                                        )'>
+                                        <a class='btn btn-default' data-id='name' href='#' role='button'
+                                            tal:attributes='href downloadHREF; data-id python:f.identifier;'>
+                                            <span class='glyphicon glyphicon-cloud-download' aria-hidden='true'></span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <a class='btn btn-default' name='Download checked files' id='dl'>
+                            <span class='glyphicon glyphicon-download-alt' aria-hidden='true'></span>
+                            Download checked files
+                        </a>
+                    </form>
+                    <script type='text/javascript'>
+                        $(document).ready(function() {
+                            $("#select-all").click(function() {
+                                $("#file-table input[type='checkbox']").prop('checked', this.checked);
+                            });
+                            $("#dl").click(function(e) {
+                                e.preventDefault();
+                                var tempDownloadLink = document.createElement("a");
+                                tempDownloadLink.style.display = "none";
+                                document.body.appendChild(tempDownloadLink);
+                                boxes = $("#file-table input:checked")
+                                if (boxes.length == 0)
+                                    alert("Please check one or more boxes");
+                                else {
+                                    boxes.each(function (index) {
+                                        if ($(this).prop('checked')) {
+                                            var name = $(this).prop('name').substring(8);
+                                            var selector = 'a[data-id="' + name + '"]';
+                                            var href = $(selector).prop('href');
+                                            tempDownloadLink.setAttribute('download', name);
+                                            tempDownloadLink.setAttribute('href', href);
+                                            tempDownloadLink.click();
+                                        }
+                                    });
+                                }
+                                document.body.removeChild(tempDownloadLink);
+                            });
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
