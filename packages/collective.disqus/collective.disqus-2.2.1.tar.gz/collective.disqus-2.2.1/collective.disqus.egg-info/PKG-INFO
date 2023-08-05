@@ -1,0 +1,355 @@
+Metadata-Version: 2.1
+Name: collective.disqus
+Version: 2.2.1
+Summary: Integration of Disqus comments platform API into Plone.
+Home-page: http://github.com/collective/collective.disqus
+Author: JeanMichel FRANCOIS aka toutpt
+Author-email: toutpt@gmail.com
+License: GPLv2
+Description: *****************
+        collective.disqus
+        *****************
+        
+        .. contents:: Table of Contents
+        
+        Overview
+        --------
+        
+        Integrates the `Disqus`_ commenting platform into Plone.
+        
+        Default Plone discussion mechanism doesn't have a nice panel to administer
+        comments. It's hard to find new comments. It's not possible to block posts
+        with links or any other unwelcome contents.
+        
+        However there are much more specialized tools for commenting on the web:
+        
+        * `Disqus`_
+        * `IntenseDebate`_
+        * `JS-Kit`_
+        
+        These commenting platforms can be easily integrated with sites, users just
+        need to create an account and add some special code into their websites.
+        
+        Mostly Harmless
+        ---------------
+        
+        .. image:: http://img.shields.io/pypi/v/collective.disqus.svg
+            :target: https://pypi.python.org/pypi/collective.disqus
+        
+        .. image:: https://img.shields.io/travis/collective/collective.disqus/master.svg
+            :target: http://travis-ci.org/collective/collective.disqus
+        
+        .. image:: https://img.shields.io/coveralls/collective/collective.disqus/master.svg
+            :target: https://coveralls.io/r/collective/collective.disqus
+        
+        Got an idea? Found a bug? Let us know by `opening a support ticket`_.
+        
+        
+        Installation
+        ------------
+        
+        To enable this package in a buildout-based installation:
+        
+        1. Edit your buildout.cfg and add ``collective.disqus`` to the list of eggs to
+           install::
+        
+            [buildout]
+            ...
+            eggs =
+                collective.disqus
+        
+        After updating the configuration you need to run ''bin/buildout'', which will
+        take care of updating your system.
+        
+        Go to the 'Site Setup' page in a Plone site and click on the 'Add-ons' link.
+        
+        Check the box next to ``collective.disqus`` and click the 'Activate' button.
+        
+        .. Note::
+        	You may have to empty your browser cache and save your resource registries
+        	in order to see the effects of the product installation.
+        
+        Upgrading from 0.3.1
+        ^^^^^^^^^^^^^^^^^^^^
+        
+        .. Warning::
+           Versions 2.0 and up are not backwards compatible. If you are coming from an
+           old version, you'll need to write your own upgrade code, or simply
+           manually uninstall the old package before installing the new one.
+        
+        If you're upgrading from a pre-2.0 installation you'll have to manually
+        reconfigure the @@disqus-controlpanel.
+        
+        A GenericSetup upgrade profile called "collective.disqus: cleanup old 0.3.1
+        install" will undo the viewlet suppression that was part of 0.3.1. This may
+        also unhide other belowcontent viewlets, YMMV. It does not provide a full
+        upgrade.
+        
+        Usage
+        -----
+        
+        Configuration
+        ^^^^^^^^^^^^^
+        
+        To enable Disqus comments in your site you need to:
+        
+        * Enable comments globally from Plone's default "Discussion settings" tool in the control panel.
+        * Go to Disqus control panel configlet and enable "Activate Disqus as system comment for Plone"
+        * Enter your blog's short name as provided by Disqus
+        * Enable commenting for one or more types in the types control panel configlet.
+          You can also disable commenting cor each item.
+        
+        Now a Disqus comment box should be shown for each content type that has
+        comments enabled.
+        
+        Comments count
+        ^^^^^^^^^^^^^^
+        
+        The product provides a 'Disqus summary view' that you can apply to any
+        folderish or collection-type content type. It will show a comments count
+        next to the "Read more..." link of each element.
+        
+        In addition, there's a counter beneath the title of any object that accepts
+        comments. This is done through a viewlet named as "disqus.comments.count".
+        
+        Portlets
+        ^^^^^^^^
+        
+        This product provides 2 portlets that you can use:
+        
+        * `Hot threads`_: Shows a list of threads sorted by hotness (date and likes)
+        
+        * `Popular threads`_: Shows a list of threads sorted by number of posts made
+          since the specified interval
+        
+        They both use the `Disqus API`_, and for them to work, you need to provide:
+        
+        * Access token
+        * Public key
+        * Secret key
+        
+        And to get them, you need to register an `API Disqus account`_
+        
+        TODO
+        ^^^^
+        
+        Add a portlet that shows a list of `Trending threads`_.
+        
+        .. _`API Disqus account`: http://disqus.com/api/docs/
+        .. _`Disqus API`: http://docs.disqus.com/developers/api/
+        .. _`Disqus`: http://disqus.com/
+        .. _`Hot threads`: http://disqus.com/api/docs/threads/listHot/
+        .. _`IntenseDebate`: http://intensedebate.com/
+        .. _`JS-Kit`: http://js-kit.com/
+        .. _`opening a support ticket`: https://github.com/collective/collective.disqus/issues
+        .. _`Popular threads`: http://disqus.com/api/docs/threads/listPopular/
+        .. _`Trending threads`: http://disqus.com/api/docs/trends/listThreads/
+        
+        Contributors
+        ------------
+        
+        - Wojciech Lichota
+        - Rok Garbas
+        - Harald Friessnegger
+        - Héctor Velarde
+        - JeanMichel FRANCOIS
+        - Juan A. Diaz
+        - Franco Pellegrini
+        - Guido Stevens
+        - Andre Nogueira
+        - Philip Bauer
+        
+        Changelog
+        ---------
+        
+        2.2.1 (2018-10-09)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - Use HTTPS schema for comments counter too.
+          [philipsahli]
+        
+        
+        2.2 (2018-09-20)
+        ^^^^^^^^^^^^^^^^
+        
+        - Use HTTPS schema to load count.js from Disqus.
+          [philipsahli]
+        
+        - Fix package dependencies.
+          [hvelarde]
+        
+        - Remove soft dependency on zope.formlib under Plone 5;
+          this fixes support for Plone 5.x.
+          [hvelarde]
+        
+        - Drop support for Plone 4.2.
+          [hvelarde]
+        
+        - Remove dependency on unittest2 and explicitly drop support for Python 2.6.
+          [hvelarde]
+        
+        
+        2.1 (2015-10-19)
+        ^^^^^^^^^^^^^^^^^^^
+        
+        - Update tests, docs and buildout to work with Plone 5.
+          [pbauer]
+        
+        - Drop support for Plone 4.1.
+          [hvelarde]
+        
+        
+        2.0rc1 (2014-05-13)
+        ^^^^^^^^^^^^^^^^^^^
+        
+        - Update package dependencies.
+          [hvelarde]
+        
+        - Added wrapper div "disqus_thread_wrapper" to comments to ease pull via Diazo
+          [simahawk]
+        
+        - Added italian translations [simahawk]
+        
+        - Update pt_BR translation [ericof]
+        
+        - Use plone styles in portlets HTML [agnogueira]
+        
+        - Show portlets results inside an ordered list [agnogueira]
+        
+        - Fixes an issue with content title containing single quotes [ericof]
+        
+        - provide partial 0.3.1->2.0 upgrade profile [gyst]
+        
+        - Tested compatibility with Plone 4.3. [hvelarde]
+        
+        
+        2.0b2 (2013-02-22)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - Add Disqus icon on the control panel. [hvelarde]
+        
+        - Include an Id in the counter link for themming purposes [tamosauskas]
+        
+        - Update Traditional Chinese translation. [l34marr]
+        
+        - Bugfix, javascript variables weren't being embedded in the page.
+          [jcbrand]
+        
+        
+        2.0b1 (2012-12-13)
+        ^^^^^^^^^^^^^^^^^^^
+        
+        - Added a "Disqus summary view" to include comments count on listings.
+          [frapell]
+        
+        - Added a viewlet that will display the comments count beneath the object's
+          title. [frapell]
+        
+        - If wrong url (not returning json), return empty list. [flecox]
+        
+        - Use network-path reference to load Disqus JavaScript to avoid "This Page
+          Contains Both Secure and Non-Secure Items" messages over HTTPS. [hvelarde]
+        
+        - Updated Brazilian Portuguese translation. [hvelarde]
+        
+        - Updated German translation. [fRiSi]
+        
+        - Updated Spanish translation. [frapell]
+        
+        - Bugfix for the article's titles. [frapell]
+        
+        - Avoid removal of registry records on reinstall. [hvelarde]
+        
+        - Tested for Plone 4.2 compatibility. [hvelarde]
+        
+        - Added portlets for hot and popular threads. [hvelarde]
+        
+        - Added records to access the Disqus API to the control panel. [hvelarde]
+        
+        - Updated development buildout configurations. [hvelarde]
+        
+        - Updated package distribution and documentation. [hvelarde]
+        
+        - Add control panel and viewlet. [toutpt]
+        
+        - Complete refactoring of the package. [toutpt, hvelarde, frapell]
+        
+        
+        0.3.2 (unreleased)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - moved javascript template code from disqus_panel.pt into it's view to bypass
+          a chameleon related bug. [thet]
+        - added DisqusAPI class for remote DISQUS API calls with predefined control
+          panel settings, it inherits from disqus-python API [piv]
+        - added option to switch DISQUS credit link off [piv]
+        - added DISQUS SSO Addon support [piv]
+        - added export comments view from plone to WXR format to import
+          it into DISQUS [piv]
+        - added product layer interface and registered viewlet for it instead of
+          hiding it on uninstall [piv]
+        - added highly recommended disqus_url additional parameter [piv]
+        - added an option to display DISQUS comments only for anonymous [zupo]
+        - add french translation [toutpt]
+        - updated pot file and Spanish translation; removed mo file [hvelarde]
+        - include Products.CMFCore.permissions.zcml [ajung]
+        - add support for language param according to http://docs.disqus.com/help/97/
+          [toutpt]
+        
+        
+        0.3.1 (2011-01-31)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - cleaned up i18n and added German translation [fRiSi]
+        - added Spanish translation [hvelarde]
+        - fixed action icons [hvelarde]
+        - disqus_summary_listing now uses the configured shortname and includes
+          the js only once [fRiSi]
+        
+        
+        0.3.0 (2010-08-15)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - updated disqus api [garbas]
+        - added disqus summary listing view with number of comments [garbas]
+        - added some basic integration tests using plone.app.testing [garbas]
+        - removed actionicon registration - depracated [garbas]
+        - found and fixed bug in plone which was causing hidding of default plone
+          commenting viewlet only for "Plone Classic Theme". [garbas]
+          https://dev.plone.org/plone/ticket/10903
+        - add test buildout, with coverage report and pylint check
+          current result is 82% coverage and pylint score is -13.21/10 [garbas]
+        - added translation for english and slovenian [garbas]
+        
+        
+        0.2.0 (2009-10-30)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - Compatibility with Plone 4 [sargo]
+        - Uninstall profile (unhide plone.comment viewlet, hide collective.disqus
+          viewlet) [sargo]
+        
+        
+        0.1.0 (2009-08-13)
+        ^^^^^^^^^^^^^^^^^^
+        
+        - Initial release [sargo]
+        
+Keywords: plone disqus comments api portlets
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Plone
+Classifier: Framework :: Plone :: 4.3
+Classifier: Framework :: Plone :: 5.0
+Classifier: Framework :: Plone :: 5.1
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: JavaScript
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Office/Business :: News/Diary
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Provides-Extra: test
