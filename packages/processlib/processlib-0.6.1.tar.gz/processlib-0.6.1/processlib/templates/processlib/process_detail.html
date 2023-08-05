@@ -1,0 +1,88 @@
+{% extends "processlib/layout.html" %}
+{% load i18n %}
+
+{% block title %}{{ process }}{% endblock %}
+
+{% block content %}
+    <div class="process-detail">
+        <div class="row">
+            <div class="col-xs-12">
+                <a class="btn btn-default pull-left" href="{{ return_to }}">{% trans "Back" %}</a>
+                <div class="pull-right">
+                    {% if process.can_cancel %}
+                        <a class="btn btn-danger" href="{% url 'processlib:process-cancel' process.id %}">
+                            {% blocktrans with process=process %}Cancel process{% endblocktrans %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <h1>{{ process|capfirst }}</h1>
+
+        <div class="row">
+            <div class="col-xs-12">
+                {% include "processlib/process_details_partial.html" %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <h2>{% trans "To-do" %}</h2>
+                {% include "processlib/process_to_do_partial.html" %}
+            </div>
+
+            <div class="col-lg-6">
+                <h2>{% trans "History" %}</h2>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Activity" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Instantiated at" %}</th>
+                        <th>{% trans "Finished at" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for activity in activities %}
+                        {% with instance=activity.instance %}
+                            <tr  {% if instance.status == instance.STATUS_ERROR %}class="warning"{% endif %}>
+                                <td>{{ activity }}</td>
+                                <td>{{ instance.get_status_display }}</td>
+                                <td class="text-nowrap">{{ instance.instantiated_at|date:"SHORT_DATETIME_FORMAT"|default_if_none:"-" }}</td>
+                                <td class="text-nowrap">{{ instance.finished_at|date:"SHORT_DATETIME_FORMAT"|default_if_none:"-" }}</td>
+                            </tr>
+
+                        {% endwith %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <ul>
+                    {% for activity in activities %}
+                        <li>
+                            {% with instance=activity.instance %}
+                                {{ activity }}
+                                ({{ instance.status }}), instantiated {{ instance.instantiated_at }}, started {{ instance.started_at }}, finished {{ instance.finished_at }}
+                                assigned user: {{ instance.assigned_user }}, assigned group: {{ instance.assigned_group }}
+                                {% if not instance.has_active_successors and process.status != process.STATUS_DONE and process.status != process.STATUS_CANCELED %}
+                                    {% if instance.status == instance.STATUS_DONE %}
+                                        <form method="post" action="{% url "processlib:activity-undo" instance.process.flow_label instance.pk %}">
+                                            {% csrf_token %}
+                                            <input type="submit" value="undo" class="btn btn-warning">
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            {% endwith %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+    {% block extra_detail %}
+        {% if extra_detail_template_name %}
+        {% include extra_detail_template_name %}
+        {% endif %}
+    {% endblock %}
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "processlib/layout.html" %}
+{% load processlib_tags %}
+{% load i18n %}
+
+{% block content %}
+    <div class="process-list">
+        {% block headline %}
+            <h1>{% trans "Processes" %}</h1>
+        {% endblock %}
+        {% block tabs %}
+            {% url 'processlib:process-list' as list_url %}
+            {% url 'processlib:process-list-user' as list_user_url %}
+            {% url 'processlib:process-list-user-current' as list_user_current_url %}
+            <ul class="nav nav-tabs">
+                <li role="presentation" {% if list_user_current_url == request.path %}class="active"{% endif %}>
+                    <a href="{{ list_user_current_url }}">{% trans "Current processes assigned to me" %}</a>
+                </li>
+                <li role="presentation" {% if list_user_url == request.path %}class="active"{% endif %}>
+                    <a href="{{ list_user_url }}">{% trans "All processes assigned to me" %}</a>
+                </li>
+                <li role="presentation" {% if list_url == request.path %}class="active"{% endif %}>
+                    <a href="{{ list_url }}">{% trans "All processes" %}</a>
+                </li>
+            </ul>
+        {% endblock %}
+        {% block search %}
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-1 control-label" for="process-search">{% trans "Search" %}</label>
+                    <div class="col-sm-11">
+                        <input class="form-control" id="process-search" type="text" name="search" value="{{ search }}">
+                    </div>
+                </div>
+            </form>
+        {% endblock %}
+
+        {% block list_items %}
+            <div class="list-items">
+                {% for process in process_list %}
+                    {% include "processlib/process_list_item.html" %}
+                {% empty %}
+                    <div class="process-list-empty">
+                        {% url 'processlib:process-list-user-current' as list_user_current_url %}
+                        {% if list_user_current_url == request.path and not search %}
+                            {% trans "Congratulations, there is nothing for you to do in any process." %}
+                        {% else %}
+                            {% trans "No processes found." %}
+                        {% endif %}
+                        {% if search %}
+                            <a href="{{ request.path }}">{% trans "Reset search." %}</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endblock %}
+
+        {% block pagination %}
+            {% if is_paginated %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li><a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" aria-label="{% trans 'Previous' %}"><span aria-hidden="true">&laquo;</span></a></li>
+                            {% else %}
+                        <li class="disabled"><a href="#" aria-label="{% trans 'Previous' %}"><span aria-hidden="true">&laquo;</span></a></li>
+                    {% endif %}
+                    {% for page_number in page_obj.paginator.page_range %}
+                        {% if page_number ==  page_obj.number %}
+                            <li class="active"><a href="#">{{ page_number }} <span class="sr-only">{% trans "(current)" %}</span></a></li>
+                        {% else %}
+                            <li><a href="?page={{ page_number }}{% if search %}&search={{ search }}{% endif %}">{{ page_number }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li><a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}" aria-label="{% trans 'Next' %}"><span aria-hidden="true">&raquo;</span></a></li>
+                            {% else %}
+                        <li class="disabled"><a href="#" aria-label="{% trans 'Next' %}"><span aria-hidden="true">&raquo;</span></a></li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+        {% endblock %}
+
+        {% block start_buttons %}
+            <h2>{% trans "Start a workflow" %}</h2>
+            {% for label, flow in flows %}
+                {% if flow.get_start_activity.has_view %}
+                    <form class="pull-left" action="{% url "processlib:process-start" label %}" method="get">
+                        {% csrf_token %}
+                        <input type="submit" name="start" class="btn btn-default" value="{{ flow }}">
+                    </form>
+
+                {% endif %}
+            {% endfor %}
+        {% endblock %}
+    </div>
+{% endblock %}
