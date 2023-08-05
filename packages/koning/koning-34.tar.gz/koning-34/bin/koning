@@ -1,0 +1,101 @@
+#!/usr/bin/python3
+# KONING - Zyprexa is gif !!
+#
+# bin/koning
+#
+# Copyright 2017,2018 B.H.J Thate
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy 
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+# copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice don't have to be included.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+# THE SOFTWARE.
+#
+# 18-09-2018 As the creator of this file, I disclaim all rights on this file. 
+#
+# Bart Thate
+# Heerhugowaard
+# The Netherlands
+
+""" The OBJ Shell. """
+
+import os, sys ; sys.path.insert(0, os.getcwd() + os.sep + "..")
+
+## imports
+
+from obj.base import __version__
+from obj.shell import CLI, Shell, cfg, daemon, defaults, level, opts, parse_cli, reset, set_completer, startup
+from obj.utils import cdir, get_exception
+
+import logging
+import time
+
+startup()
+
+def showversion(event):
+    event.reply("KONING #%s" % __version__)
+
+## functions
+
+def main(name="koning", version=__version__, options=opts, defaults=defaults):
+    parse_cli(name, version, options, defaults)
+    if not cfg.workdir:
+        cfg.workdir = os.path.abspath(os.path.join(os.path.expanduser("~"), ".obj"))
+    if not os.path.exists(cfg.workdir):
+        cdir(cfg.workdir)
+    if cfg.daemon:
+        path = os.path.abspath(os.path.join(os.path.expanduser("~"), ".koning", "pidfile"))
+        f = open(path, 'w')
+        f.write(str(os.getpid()))
+        f.flush()
+        f.close()
+        daemon()
+        level(cfg.level or "debug")
+        logging.warn("%s #%s started at %s" % (name.upper(), __version__, time.ctime(time.time())))
+        bot = CLI()
+    else:
+        level(cfg.level or "error")
+        bot = Shell()
+    for n in [x for x in cfg.modules.split(",") if x]:
+        bot.walk(n)
+        cfg.shell = True
+    for n in [x for x in cfg.init.split(",") if x]:
+        nn = "obj.server.%s" % n
+        try:
+            m = bot.load_mod(nn)
+        except ModuleNotFoundError:
+            continue
+        try:
+            m.start()
+        except Exception as ex:
+            logging.error(get_exception())
+    set_completer(bot.names)
+    bot.handlers["version"] = showversion
+    bot.start()
+    if cfg.args and not cfg.shell:
+        bot.cmd(" ".join(cfg.args))
+        return
+    else:
+        if not cfg.daemon and not cfg.args or cfg.shell:
+            bot.prompt()
+    bot.wait()
+
+try:
+    main()
+except (KeyboardInterrupt, EOFError):
+    print("")
+except Exception as ex:
+    logging.error(get_exception())
+reset()
+os._exit(0)
