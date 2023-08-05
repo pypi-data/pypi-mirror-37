@@ -1,0 +1,54 @@
+flowcell: FLO-MIN106
+kit: SQK-RNA001
+data:
+  MXG3.2: /arena/hyeshik/nanopore-data/20180622_0535_Mux_yeast/fast5
+reference_transcriptomes:
+  - [ath, refs/ath-all.fa.gz]
+  - [hsa, refs/hsa-all.fa.gz]
+  - [sce, refs/sce-all.fa.gz]
+  - [cel, refs/cel-all.fa.gz]
+reference_transcriptome_filtering:
+  blacklist_alignment_match_length: 100
+decoy_signal_generation:
+  mean_signal_stride: 15
+  fragment_oversampling_rate: 1
+  fragment_random_source_size: 10000
+  fragment_break_density: 0.0166666 # 1/60
+  fragment_length_min: 30
+  fragment_length_max: 70
+  stitching_noise_stdev: 2
+  length_histogram_min: 90
+  length_histogram_max: 3000
+  length_histogram_bins: 97
+  target_population_per_round: 10000
+  num_rounds: 100
+  output_length: 1000
+train_data_selection:
+  min_alignment_score: 200
+  max_2nd_alignment_score: 100
+  min_alignment_score_ratio: 0.833 # 5/(1+5): factor of 5
+  min_alignment_coverage: 0.5
+  max_unalignable_length: 250
+  min_adapter_length: 4000
+  max_adapter_length: 30000
+  min_sequence_length: 200
+train_data_transform:
+  trim_adapter_length: 300
+  test_data_split: 0.2
+  subsample_sizes: [180000]
+  final_trim_sizes: [300]
+training_parameters:
+  global:
+    ngpu: 2
+    epochs: 1500
+    validation_split: 0.2
+    batchsize_train: 2048
+    batchsize_eval: 2048
+    batchsize_test: 2048
+    optimizer: adam
+    model_checkpoint_period: 1
+    earlystopping_min_delta: 0.001
+    earlystopping_patience: 30
+  layer_designs:
+    - LSTM1
+    - GRU1

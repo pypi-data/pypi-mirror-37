@@ -1,0 +1,25 @@
+configfile: 'config.yaml'
+
+RUN_NAMES = sorted(config['data'])
+REFERNCE_TRANSCRIPTOME_SEQS = dict(config['reference_transcriptomes'])
+
+rule all:
+    input:
+        'sequencing_summary.feather',
+        expand('sequences/{name}.fa.gz', name=RUN_NAMES),
+        expand('tables/controls-mapq-{name}.txt.gz', name=RUN_NAMES),
+        expand('alignments/{name}-{refsample}.bam.bai', name=RUN_NAMES,
+                refsample=sorted(REFERNCE_TRANSCRIPTOME_SEQS)),
+        expand('traindata/signals-{name}-s{size}-t{trim}.hdf5',
+                name=RUN_NAMES, size=config['train_data_transform']['subsample_sizes'],
+                trim=config['train_data_transform']['final_trim_sizes']),
+        expand('models/{name}-s{size}-t{trim}-l{preset}/test-predictions.txt',
+                name=RUN_NAMES, size=config['train_data_transform']['subsample_sizes'],
+                trim=config['train_data_transform']['final_trim_sizes'],
+                preset=config['training_parameters']['layer_designs'])
+
+include: 'workflows/preprocessing.py'
+include: 'workflows/prepare_references.py'
+include: 'workflows/sequence_alignments.py'
+include: 'workflows/training_data_preparation.py'
+
