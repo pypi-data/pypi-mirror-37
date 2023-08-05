@@ -1,0 +1,378 @@
+Metadata-Version: 2.1
+Name: exoedge
+Version: 18.10.9
+Summary: The ExoSense Client is the Python library for interacting with Exosite's ExoSense Industrial IoT Solution.
+Home-page: https://github.com/exosite/lib_exoedge_python
+Author: Exosite LLC
+Author-email: support@exosite.com
+License: Apache 2.0
+Keywords: murano exosite iot iiot gateway edge exoedge exosense
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: System :: Operating System Kernels :: Linux
+Classifier: Topic :: Software Development :: Embedded Systems
+Classifier: License :: OSI Approved :: Apache Software License
+Requires-Python: >= 2.7.9, <4
+Requires-Dist: docopt (>=0.6.2)
+Requires-Dist: pureyaml
+Requires-Dist: murano-client (>=18.9.26)
+
+ExoEdge (Python)
+========================
+
+ExoEdge is the client to `ExoSense <exosense.readme.io>`_. ExoSense provides configuration objects that conform to data schemas. ExoEdge interprets these schema-driven objects and configures industrial IoT gateways to give their data to ExoSense according to schema. In other words, ExoEdge is a schema based IIoT gateway that runs on most platforms.
+
+ExoEdge provides functionality to interpret ExoSense data schemas and self-configure gateways. It is expected that the user will write a gateway application to leverage this library, but many use cases can be covered in very few lines of application code.
+
+Requirements
+---------------
+
+* Python 2.7.9+, 3.4, 3.5, 3.6,3.7
+
+**NOTE:** In most cases, having a linux gateway is enough as long as the Python requirements are met. ExoEdge is pure-python, which means there is no need for ``gcc`` or ``python-dev`` in order to install and run it.
+
+Getting started in 15m
+-----------------------
+
+Install ExoEdge
+~~~~~~~~~~~~~~~~~
+
+Make sure the gateway is connected to the internet before installing ExoEdge.
+
+  .. code-block :: bash
+
+    pip install exoedge
+
+Start Reporting
+~~~~~~~~~~~~~~~~~~
+
+Once ExoEdge is installed, it must be started with some variant of the following ``edged`` command (pronounced edge-dee, as in 'edge daemon').
+
+.. code-block :: bash
+
+    edged -s <GATEWAY_SERIAL_#> -H <MURANO_PRODUCT_HOST> go
+
+The ``edged`` command has many options (run ``edged --help`` for more information), but must be running in order for data to be reported to ExoSense.
+
+Once ``edged`` is running, set the ``config_io`` resource to the object below in the Murano Product UI:
+
+.. code-block :: json
+
+    {
+      "channels": {
+        "one": {
+          "display_name": "Temperature",
+          "description": "It's the temperature",
+          "properties": {
+            "max": 1000,
+            "data_unit": "DEG_CELSIUS",
+            "precision": 4,
+            "data_type": "TEMPERATURE",
+            "min": 0
+          },
+          "protocol_config": {
+            "application": "ExoSimulator",
+            "report_on_change": false,
+            "report_rate": 1000,
+            "sample_rate": 1000,
+            "down_sample": "ACT",
+            "app_specific_config": {
+              "function": "sin_wave",
+              "module": "exo_simulator",
+              "parameters": {
+                "period": 120,
+                "amplitude": 10,
+                "offset": 100,
+                "precision": 0,
+              },
+              "positionals": []
+            }
+          }
+        }
+      }
+    }
+
+
+Verify that the device started reporting a sin wave with those characteristics.
+
+For more information on the configuration options available in ExoEdge and ExoSense, please visit the `ExoSense documentation <exosense.readme.io>`_.
+
+Argument Support
+-----------------
+
+The ``edged`` command supports supplying arguments via CLI flags, environment variables, and INI files.
+
+Naming conventions differ slightly between these methods—for a generic argument
+``some_argument`` they are named as follows:
+
+* CLI: ``--some-argument``
+* Environment: ``EDGED_SOME_ARGUMENT``
+* INI: ``some_argument``
+
+Argument Precedence
+----------------------
+
+In handling conflicting arguments from different sources, ``edged`` evaluates arguments in the following order:
+
+1. CLI (overrides Environment and INI)
+2. Environent (overriden by CLI, overrides INI)
+3. INI (overriden by CLI and Environment)
+
+
+Examples
+~~~~~~~~~~
+
+With command line arguments and a local config_io:
+
+.. code-block :: bash
+
+    $ edged --host=https://abcdef123456.m2.exosite.io/ -s device01.ini -c my_config.json -i device01.ini go
+
+    ...^C
+
+    $ cat device01.ini
+    [device]
+    murano_token = DoHALdFD5Jo8Iz979Cc4ze5N6RlJCzbQbnkaP3Ci
+
+With INI file:
+
+.. code-block :: bash
+
+    $ cat device01.ini
+    [device]
+    murano_host = https://abcdef123456.m2.exosite.io/
+    murano_id = device01
+    watchlist = config_io
+    debug = INFO
+
+    $ edged -i device01.ini -c my_config.json go
+
+**NOTE:** The ``murano_token`` option is not present in the .ini file prior to activation. If ``murano_token`` is present, the client will attempt to use
+that token, even if it's blank, to communicate with Murano. The example, above, omits ``murano_token``, because it will be saved there after ``edged`` provisions with Murano.
+
+Local or Remote Configs
+------------------------
+
+ExoEdge will always look for a local ``config_io`` file first, then check to see if there's one in ExoSense. This can be overridden with the ``--strategy remote`` CLI option with will only ever use configs from ExoSense.
+
+Creating an ExoEdge Source
+----------------------------
+
+There are two types of sources for data in ExoEdge: ones that are implemented and supported by Exosite (e.g. Modbus_TCP, Modbus_RTU, ExoSimulator, etc.), and ones that are provided by installed Python packages and modules.
+
+Creating a "source" is as simple as writing Python package or module.
+
+Simple Case
+~~~~~~~~~~~~
+
+The "source", above, illustrates that ExoEdge imports the ``my_source`` module and calls the function ``minutes_from_now`` with parameter ``30`` every second. This module needs to be installed like any other Python module or package (i.e. ``python setup.py install``, ``pip install my_source``, etc.).
+
+.. code-block :: python
+
+    # in my_source/__init__.py
+    import time
+
+    def minutes_to_seconds(min):
+      return min * 60
+
+    def minutes_from_now(minutes=0):
+      # Returns the timestamp `minutes` after the current time.
+      return time.time() + minutes_to_seconds(minutes)
+
+.. code-block ::
+
+    {
+      "channels": {
+        "001": {
+          "display_name": "30 Minutes from Now",
+          ...,
+          "protocol_config": {
+            "application": "Custom Application",
+            "report_on_change": false,
+            "report_rate": 1000,
+            "sample_rate": 1000,
+            "down_sample": "ACT",
+            "app_specific_config": {
+              "module": "my_source",
+              "function": "minutes_from_now",
+              "parameters": {
+                "minutes": 30
+              },
+              "positionals": []
+            }
+            ...
+          }
+        }
+      }
+    }
+
+Complex Case
+~~~~~~~~~~~~~
+
+The example, below, utilizes the ``ExoEdgeSource`` class provided by ExoEdge.
+
+**NOTE:** Though it is not required, when using the ``ExoEdgeSource`` class you can set ``protocol_config.application`` to ``ExoSimulator``. Doing so will prevent an unecessary thread of execution from being started for the associated channel. By setting ``protocol_config.application`` to ``Custom Application`` or some other unique identifier, ExoEdge will import ``protocol_config.app_specific_config.module`` and call ``protocol_config.app_specific_config.function`` with ``protocol_config.app_specific_config.positionals`` and ``protocol_config.app_specific_config.parameters`` every ``protocol_config.sample_rate``.
+
+.. code-block:: python
+
+    # my_source.py
+    import time
+    from exoedge.sources import ExoEdgeSource
+    from exoedge import logger
+
+    LOG = logger.getLogger(__name__)
+
+    def sixteen():
+        return 16
+
+    class MySource(ExoEdgeSource):
+
+        def seventeen(self):
+            return 17
+
+        def run(self):
+
+            channels = self.get_channels_by_application('ExoSimulator')
+            my_channels = []
+            for channel in channels:
+                if channel.protocol_config.app_specific_config['module'] == 'my_source':
+                    my_channels.append(channel)
+
+            while True:
+
+                for channel in my_channels:
+                    if channel.is_sample_time():
+                        func = channel.protocol_config.app_specific_config['function']
+                        if hasattr(sys.modules[__name__], func):
+                            function = getattr(sys.modules[__name__], func)
+                            par = channel.protocol_config.app_specific_config['parameters']
+                            pos = channel.protocol_config.app_specific_config['positionals']
+                            LOG.warning("calling '{}' with: **({})"
+                                        .format(function, par))
+                            try:
+                                channel.put_sample(function(*pos, **par))
+                            except Exception as exc: # pylint: disable=W0703
+                                LOG.warning("Exception".format(format_exc=exc))
+                                channel.put_channel_error(exc)
+                        elif hasattr(self, func):
+                            function = getattr(self, func)
+                            par = channel.protocol_config.app_specific_config['parameters']
+                            pos = channel.protocol_config.app_specific_config['positionals']
+                            LOG.warning("calling '{}' with: **({})"
+                                        .format(function, par))
+                            try:
+                                channel.put_sample(function(*pos, **par))
+                            except Exception as exc: # pylint: disable=W0703
+                                LOG.warning("Exception".format(format_exc=exc))
+                                channel.put_channel_error(exc)
+                        else:
+                            channel.put_channel_error(
+                                'MySource has no function: {}'.format(func))
+
+                time.sleep(0.01) # throttle a bit to lay off the processor
+
+.. code-block:: json
+
+    {
+      "channels": {
+        "001": {
+          "display_name": "My custom data source.",
+          ...,
+          "protocol_config": {
+            "application": "ExoSimulator",
+            "report_on_change": false,
+            "report_rate": 1000,
+            "sample_rate": 1000,
+            "down_sample": "ACT",
+            "app_specific_config": {
+              "module": "my_source",
+              "function": "minutes_from_now",
+              "parameters": {
+                "minutes": 30
+              },
+              "positionals": []
+            }
+            ...
+          }
+        }
+      }
+    }
+
+
+For more in-depth information on creating Python modules and packages, see the docs_.
+
+.. _docs: https://docs.python.org/2/tutorial/modules.html#packages
+
+Passing Parameters
+~~~~~~~~~~~~~~~~~~
+Some application functions take keyword arguments which are passed in the parameters section of the ``app_specific_config`` object in ``config_io``. For instance, a function ``random_integer(lower=0, upper=10)`` which returns—you guessed it—a random integer between it's ``lower`` and ``upper`` keyword arguments might have a parameters section like this:
+
+.. code-block:: json
+
+    "parameters": {
+      "lower": 100,
+      "upper": 200
+    }
+
+Other application functions accept positional arguments. In this case, supply them in ``protocol_config.app_specific_config.positionals``
+
+.. code-block:: json
+
+    "positionals": ["arg1", "foo", 15]
+
+
+Upgrades
+----------
+
+To upgrade ExoEdge, the following command should be used:
+
+.. code-block::
+
+    pip install exoedge --upgrade
+
+
+Log Rotation
+---------------
+
+ExoEdge can be configured to save and rotate its own logs, as opposed to dumping logging to 'stdout'.
+
+.. code-block:: bash
+
+    # example
+    $ export EDGED_LOG_FILENAME=${PWD}/edged.log
+    $ edged -i f5330e5s8cho0000.ini go
+
+Other supported environment variables for logging configuration are:
+
+* ``EDGED_LOG_DEBUG`` (default:CRITICAL)
+* ``EDGED_LOG_MAX_BYTES`` (default:1024000)
+* ``EDGED_LOG_MAX_BACKUPS`` (default:3)
+
+You might wish to save and rotate the underlying ``murano_client`` logging as well. For help on this see `murano-client <https://pypi.org/project/murano-client/#logging>`_.
+
+A typical logging configuration for a production gateway looks like the following:
+
+.. code-block::
+
+    export EDGED_LOG_FILENAME=/var/log/edged.log
+    export MURANO_CLIENT_LOGFILE=/var/log/murano_client.log
+
+A typical logging configuration for a development gateway might look like:
+
+.. code-block::
+
+    export EDGED_LOG_FILENAME=${PWD}/edged.log
+    export MURANO_CLIENT_LOGFILE=${PWD}/murano_client.log
+
+**TIP:** If you don't care about the ``murano_client`` logging, you can use the standard redirect since ``murano_client`` defaults to logging on 'stderr':
+
+.. code-block:
+
+    edged -i f5330e5s8cho0000.ini go 2>/dev/null
+
+
