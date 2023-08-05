@@ -1,0 +1,70 @@
+from subprocess import Popen, PIPE
+from robot.api import logger
+
+name = "RobotGrpc"
+
+__version__ = '0.0.1'
+
+
+class RobotGrpc:
+    """GRpc library"""
+    ROBOT_LIBRARY_SCOPE = 'GLOBAL'
+
+    def __init__(self, host, git_url, branch, access_token):
+        self._host = host
+        self._gitUrl = git_url
+        self._branch = branch
+        self._accessToken = access_token
+        logger.info("GRpc config success!")
+
+    def invoke_grpc_method(self, method_name, request):
+        """Invoke grpc method"""
+        p = Popen(
+            [
+                'robot-grpc',
+                'invokeMethod',
+                self._host,
+                self._gitUrl,
+                self._branch,
+                self._accessToken,
+                method_name,
+                request,
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+            shell=True,
+        )
+        output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+        rc = p.returncode
+        if rc != 0:
+            raise Exception(output)
+        print output
+        return output
+
+    def run_grpc_cases(self, case_file_path, case_name=''):
+        """Run grpc interface test case"""
+        p = Popen(
+            [
+                'robot-grpc',
+                'runCases',
+                self._host,
+                self._gitUrl,
+                self._branch,
+                self._accessToken,
+                case_file_path,
+                case_name,
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+            shell=True,
+        )
+        output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+        rc = p.returncode
+        logger.info(unicode(output, "utf8", errors="ignore"), html=True)
+        if rc == 2:
+            raise Exception(u"Case no matched")
+        elif rc != 0:
+            raise Exception(output)
+        return output
