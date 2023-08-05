@@ -1,0 +1,39 @@
+.. http:{{ method|lower }}:: {{ path }}
+
+   {{ desc|indent(3) }}
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET {{ path|path_example }} HTTP/1.1
+      Host: {{ domain }}
+      Accept: application/json, text/javascript
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: text/javascript
+
+      [
+        {
+          "post_id": 12345,
+          "author_id": 123,
+          "tags": ["server", "web"],
+          "subject": "I tried Nginx"
+        },
+        {
+          "post_id": 12346,
+          "author_id": 123,
+          "tags": ["html5", "standards", "web"],
+          "subject": "We go to HTML 5"
+        }
+      ]
+   :query sort: one of ``hit``, ``created-at``
+   :query offset: offset number. default is 0
+   :query limit: limit number. default is 30
+   :statuscode 200: no error
+   :statuscode 404: there's no user
