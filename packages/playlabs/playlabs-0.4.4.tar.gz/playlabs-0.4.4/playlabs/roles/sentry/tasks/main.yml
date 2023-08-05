@@ -1,0 +1,110 @@
+---
+
+- name: Create sentry network
+  docker_network:
+    name: sentry
+
+- name: Create sentry-redis container
+  docker_container:
+    name: sentry-redis
+    pull: yes
+    networks:
+    - name: sentry
+    image: redis:3.2-alpine
+    restart_policy: always
+    volumes:
+    - '{{ sentry_home }}/redis:/data'
+    command: redis-server --appendonly yes
+
+- name: Create sentry-postgres container
+  register: sentry_postgresql_container
+  docker_container:
+    pull: yes
+    name: sentry-postgres
+    networks:
+    - name: sentry
+    image: postgres:9.5
+    restart_policy: always
+    volumes:
+    - '{{ sentry_home }}/postgres/data:/var/lib/postgresql/data'
+    - '{{ sentry_home }}/postgres/run:/var/run/postgresql'
+    env:
+      POSTGRES_PASSWORD: '{{ sentry_postgresql_password }}'
+      POSTGRES_USER: sentry
+
+- name: Wait for postgres to be up
+  wait_for:
+    host: "{{ sentry_postgresql_container['ansible_facts']['docker_container']['NetworkSettings']['IPAddress'] }}"
+    port: 5432
+    state: started
+
+- name: Migrate sentry database
+  expect:
+    timeout: 300
+    command:
+      docker run
+      -it
+      --rm
+      --network sentry
+      --env SENTRY_DB_PASSWORD={{ sentry_postgresql_password }}
+      --env SENTRY_DB_USER=sentry
+      --env SENTRY_POSTGRES_HOST=sentry-postgres
+      --env SENTRY_REDIS_HOST=sentry-redis
+      --env SENTRY_SECRET_KEY={{ sentry_secret_key }}
+      sentry upgrade
+    responses:
+      'Would you like to create a user account now':
+      - N
+
+- name: Create sentry-web container
+  docker_container:
+    pull: yes
+    name: sentry-web
+    restart_policy: always
+    networks:
+    - name: sentry
+    image: sentry
+    exposed_ports: ['9000']
+    env: '{{ sentry_env }}'
+
+- name: Create sentry-worker container
+  docker_container:
+    pull: yes
+    name: sentry-worker
+    restart_policy: always
+    networks:
+    - name: sentry
+    image: sentry
+    command: run worker
+    env: '{{ sentry_env }}'
+
+- name: Create sentry-cron container
+  docker_container:
+    pull: yes
+    name: sentry-cron
+    restart_policy: always
+    networks:
+    - name: sentry
+    image: sentry
+    command: run cron
+    env: '{{ sentry_env }}'
+
+- name: Create super users
+  failed_when: false
+  with_items: '{{ users|default([]) }}'
+  when: item['name']|vaulted_password(false) and 'superuser' in item.get('roles', {}).get('sentry', [])
+  tags: users
+  command:
+    docker run
+    -t
+    --rm
+    --network sentry
+    --env SENTRY_DB_PASSWORD={{ sentry_postgresql_password }}
+    --env SENTRY_DB_USER=sentry
+    --env SENTRY_POSTGRES_HOST=sentry-postgres
+    --env SENTRY_REDIS_HOST=sentry-redis
+    --env SENTRY_SECRET_KEY={{ sentry_secret_key }}
+    sentry sentry createuser --no-input
+    --superuser
+    --email {{ item['email'] }}
+    --password {{ item['name']|vaulted_password() }}

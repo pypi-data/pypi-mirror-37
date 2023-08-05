@@ -1,0 +1,125 @@
+---
+
+- name: Pull project image
+  tags: update
+  docker_image:
+    name: '{{ project_image }}'
+    force: yes
+
+- name: Get image USER uuid
+  shell: docker run {{ project_image }} id -u
+  tags: update
+  register: project_image_uuid_shell
+  changed_when: false
+
+- name: Set project_image_uuid
+  tags: update
+  set_fact: project_image_uuid={{ project_image_uuid_shell.stdout }}
+
+- name: Docker inspect image
+  tags: update
+  docker_image_facts:
+    name: '{{ project_image }}'
+  register: project_image_facts
+
+- name: Merge environment variables
+  set_fact:
+    project_image_env: "{{ project_image_facts['images'][0]['Config']['Env']|docker_env_dict }}"
+  tags: update
+
+- name: Get plugins from image variables
+  set_fact:
+    project_plugins: "{{ project_image_env.get('PLAYLABS_PLUGINS', '').split(',') }}"
+  tags: update
+  when: project_plugins == [] and 'PLAYLABS_PLUGINS' in project_image_env
+
+- include: vars.yml
+  tags: update
+
+- include: home.yml
+- include: http.yml
+- include: backup.yml
+- include: logrotate.yml
+
+- name: Create project network
+  docker_network:
+    name: '{{ project_instance }}'
+
+- name: Execute backup
+  when: project_backup_password != False
+  tags: [update, migrate, backup]
+  shell: sudo {{ project_home }}/backup.sh
+
+- name: Stop container if any
+  failed_when: false
+  tags: update,stop
+  docker_container:
+    name: '{{ project_instance }}'
+    state: stopped
+
+- name: Running deploy.pre.yml for plugins
+  with_items: '{{ project_plugins }}'
+  include: plugins/{{ item }}/deploy.pre.yml
+  tags: update,predeploy
+
+- name: Run image pre-deploy script if any
+  tags: [update, migrate]
+  shell: |
+    docker run --name {{ project_instance }}-pre-deploy --rm \
+    -v {{ project_log_home }}:{{ project_log_mount }} \
+    {% for key, value in project_env.items() %}
+    -e {{ key }}='{{ value | regex_replace("\'", "\\\'") }}' \
+    {% endfor %}
+    --network {{ project_instance }} \
+    {{ project_image }} bash -c '[ ! -f /app/predeploy ] || /app/predeploy'
+
+- include: docker.yml
+  tags: deploy
+
+- name: Running deploy.post.yml for plugins
+  with_items: '{{ project_plugins }}'
+  include: plugins/{{ item }}/deploy.post.yml
+  tags: update,postdeploy
+
+- name: Set test id
+  set_fact: test_id={{ ansible_date_time|to_uuid }}
+  tags: check,update
+
+- name: Set URL
+  set_fact: url='{{ "https" if project_letsencrypt_email else "http" }}://{{ project_dns }}/?test={{ test_id }}'
+  tags: check,update
+
+- block:
+  - name: Verify URL
+    register: url_verify
+    retries: '{{ timeout|default(60) }}'
+    delay: 1
+    until: url_verify.failed == false
+    tags: check,update
+    changed_when: false
+    shell: curl -I {{ "" if project_env.get("ACME_CA_URI", "") == "https://acme-v01.api.letsencrypt.org/directory" else "-k" }} {{ url }}
+    #get_url:
+    #  url: '{{ url }}'
+    #  validate_certs: '{{ "yes" if project_env.get("ACME_CA_URI", "") == "https://acme-v01.api.letsencrypt.org/directory" else "no" }}'
+    #  dest: /dev/null
+    #  tmp_dest: /tmp
+
+  always:
+  - name: nginx-letsencrypt application logs relevant to DNS
+    shell: docker logs --since=2m nginx-letsencrypt 2>&1 | grep {{ project_dns }} | tail -n 10
+    tags: check,update
+    changed_when: false
+    failed_when: false
+    when: project_letsencrypt_email|default(false)
+
+  - name: nginx-proxy application logs relevant to current deploy
+    shell: docker logs --since=2m nginx-proxy 2>&1 | grep -C1 "{{ test_id }}"
+    tags: check,update
+    failed_when: false
+    changed_when: false
+
+  - name: project application logs
+    shell: docker logs --since=2m {{ project_instance }}
+    tags: check,update
+    failed_when: false
+    changed_when: false

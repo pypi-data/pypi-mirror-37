@@ -1,0 +1,103 @@
+---
+
+- hosts: all
+
+  # Don't crash if python isn't installed, we'll install it
+  gather_facts: False
+
+  tasks:
+  - name: Cancel now if /etc/playlabs/initialized exists unless force=true
+    when: force|default(false) == false
+    raw: ls /etc/playlabs/initialized
+    register: initialized
+    failed_when: initialized.rc == 0
+    changed_when: false
+
+  - name: Raw bootstrap.sh
+    script: 'init.sh'
+    register: out
+    changed_when: "'+ exit 0' not in out.stdout_lines"
+
+- hosts: all
+  tasks:
+  - name: Activate Alpine community and edge repositories
+    when: ansible_os_family == 'Alpine'
+    with_items:
+    - '@testing http://nl.alpinelinux.org/alpine/edge/testing'
+    - http://nl.alpinelinux.org/alpine/edge/community
+    lineinfile:
+      path: /etc/apk/repositories
+      line: '{{ item }}'
+
+  - name: Install packages to add user
+    package: name={{ item }}
+    with_items:
+    - '{{ "shadow" if ansible_os_family in ("Alpine", "Archlinux") else "passwd" }}'
+    - sudo
+    - bash
+
+  - name: Create sudo group
+    group:
+      name: sudo
+      state: present
+
+  - name: Install your user account
+    with_items:
+    - root
+    - '{{ lookup("env", "USER") }}'
+    user:
+      name: '{{ item }}'
+      state: present
+      shell: /bin/bash
+      groups: sudo
+
+  - name: Install your ssh key on your user and root
+    authorized_key:
+      user: '{{ lookup("env", "USER") }}'
+      state: present
+      key: '{{ lookup("file", item) }}'
+    with_fileglob:
+    - '{{ lookup("env", "HOME") + "/.ssh/id_*.pub" }}'
+
+  - name: Passwordless sudo for sudo group
+    lineinfile:
+      path: /etc/sudoers.d/passwordless
+      line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+      create: yes
+      owner: root
+      group: root
+      mode: 0600
+
+  - name: Disable password login
+    when: ansible_os_family == 'Alpine'
+    with_items:
+    - root
+    - '{{ lookup("env", "USER") }}'
+    user:
+      name: '{{ item }}'
+      password: '*'  # disable password by setting it to "not the hash of anything"
+
+  - name: Create /etc/playlabs, let's store grains lol
+    file:
+      path: /etc/playlabs
+      owner: root
+      mode: 700
+      state: directory
+
+  - name: Set facts for ssh connection test
+    set_fact:
+      remote_ansible_ssh_host: '{{ ansible_ssh_host }}'
+
+- hosts: '*'
+  tasks:
+  - name: Write init file
+    copy:
+      content: Initialized by {{ ansible_ssh_user }} {{ lookup('pipe', 'date  +\"%Y%m%d\"') }}
+      dest: /etc/playlabs/initialized
+
+- hosts: '*'
+  roles: [ssh]
+  user: '{{ lookup("env", "USER") }}'
+  become: true
+  become_method: sudo
+  become_user: root
