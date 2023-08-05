@@ -1,0 +1,60 @@
+<div{% if image %} style="background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url({{image}}) no-repeat center center; background-size:cover"{% endif %}>
+    <nav class="navbar navbar-expand-sm navbar-dark container">
+      <a href="/" class="navbar-brand">
+        {% include 'logo.jinja2' %}
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarSupportedContent" class="collapse navbar-collapse">
+        <ul class="navbar-nav">
+          {%- for item in menu %}
+          <li class="nav-item dropdown">
+            {%- if item.children %}
+            <a role="button" class="nav-link dropdown-toggle cursor-default" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{item.title}}</a>
+            <ul class="dropdown-menu">
+              {%- if item.href %}
+              <li>
+                <a href="{{item.href|e}}" class="dropdown-item">{{item.title}}</a>
+              </li>
+              <li>
+                <div class="dropdown-divider"></div>
+              </li>
+              {%- endif -%}
+              {%- for subitem in item.children recursive -%}
+              {%- if subitem.children %}
+              <li class="dropright">
+                <button class="dropdown-item dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{subitem.title}}</button>
+                <ul class="dropdown-menu">
+                  {%- if subitem.href %}
+                  <li>
+                    <a href="{{subitem.href|e}}" class="dropdown-item">{{subitem.title}}</a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider"></div>
+                  </li>
+                  {%- endif -%}
+                  {{ loop(subitem.children) }}
+                </ul>
+              {%- else -%}
+              <li>
+                <a href="{{subitem.href|e}}" class="dropdown-item">{{subitem.title}}</a>
+                {%- endif -%}
+              </li>
+              {%- endfor %}
+              </ul>
+            {%- else %}
+            <a href="{{item.href|e}}" class="nav-link">{{item.title}}</a>
+            {%- endif %}
+          </li>
+          {%- endfor %}
+        </ul>
+      </div>
+    </nav>
+  <div class="jumbotron container text-white bg-transparent">
+    <h1 class="display-4">{{title}}</h1>
+    {%- if description %}
+    <p class="lead">{{description}}</p>
+    {% endif %}
+  </div>
+</div>
