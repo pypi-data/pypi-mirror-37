@@ -1,0 +1,104 @@
+{
+    "index_patterns": "*",
+    "settings": {
+        "number_of_shards": 1,
+        "analysis": {
+            "analyzer": {
+                "url": {
+                    "tokenizer": "url"
+                },
+                "format": {
+                    "tokenizer": "format"
+                }
+            },
+            "tokenizer": {
+                "url": {
+                    "type": "uax_url_email"
+                },
+                "format": {
+                    "type": "simple_pattern_split",
+                    "pattern": "_"
+                }
+            }
+        }
+    },
+    "mappings": {
+        "_doc": {
+            "_source": {
+                "enabled": true
+            },
+            "properties": {
+                "me": {
+                    "type": "object",
+                    "properties": {
+                        "ip": {"type": "ip"},
+                        "coords": {"type": "geo_point"}
+                    }
+                },
+                "video": {
+                    "type": "object",
+                    "properties": {
+                        "metadata": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "text"},
+                                "uploader":  {"type": "text"},
+                                "title": {"type": "text"},
+                                "duration": {"type": "long"},
+                                "webpage_url": {"type": "text", "analyzer": "url"},
+                                "view_count": {"type": "long"},
+                                "error": {"type": "text"}
+                            }
+                        },
+                        "statistics": {
+                            "type": "object",
+                            "properties": {
+                                "cache_url": {"type": "text", "analyzer": "url"},
+                                "ping": {
+                                    "type": "object",
+                                    "properties": {
+                                        "min": {"type": "float"},
+                                        "max": {"type": "float"},
+                                        "mdev": {"type": "float"},
+                                        "avg": {"type": "float"},
+                                        "ip": {"type": "ip"}
+                                    }
+                                },
+                                "processing_time": {
+                                    "type": "object",
+                                    "properties": {
+                                        "dns_time": {"type": "float"},
+                                        "ping_time": {"type": "float"}
+                                    }    
+                                },
+                                "distance": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ip": {"type": "ip"},
+                                        "coordinates": {"type": "geo_point"},
+                                        "distance": {"type": "long"}
+                                    }
+                                },
+                                "download": {
+                                    "type": "object",
+                                    "properties": {
+                                        "downloaded": {"type": "long"},
+                                        "throughput": {"type": "float"},
+                                        "processing_time": {
+                                            "type": "object",
+                                            "properties": {
+                                                "request_time": {"type": "float"},
+                                                "response_time": {"type": "float"}
+                                            }
+                                        },
+                                        "format": {"type": "text", "analyzer": "format"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
