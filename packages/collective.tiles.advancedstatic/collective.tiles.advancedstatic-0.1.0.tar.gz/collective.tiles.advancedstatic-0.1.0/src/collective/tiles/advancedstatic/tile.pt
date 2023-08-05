@@ -1,0 +1,34 @@
+<div tal:attributes="class view/portlet_class"
+    tal:define="title view/data/title|nothing;
+                img_style view/img_style;
+                tile_link view/tile_link|nothing;
+                text view/data/text|nothing;
+                footer view/data/footer;
+                target_attr view/data/target_attr;
+                link_target python: target_attr and '_blank' or '_self'">
+    <div class="tile-container">
+      <!-- HEADER -->
+      <h3 class="tileTitle"
+           tal:condition="python: title or img_style">
+          <span tal:condition="img_style"
+                tal:attributes="style img_style"/>
+          <a class="ast-title-link"
+             tal:attributes="href tile_link; target link_target"
+             tal:omit-tag="not:tile_link">
+              <span class="ast_title" tal:content="title" />
+          </a>
+      </h3>
+      <!-- BODY -->
+      <div class="tile-text tileBody"
+           tal:condition="text"
+           tal:content="structure text/output" />
+      <!-- FOOTER -->
+      <div class="tile-footer tileFooter" tal:condition="footer">
+          <a class="ast-footer-link"
+             tal:attributes="href tile_link; target link_target"
+             tal:omit-tag="not:tile_link">
+              <span class="ast-footer" tal:content="footer" />
+          </a>
+      </div>
+    </div>
+</div>
