@@ -1,0 +1,83 @@
+Metadata-Version: 2.1
+Name: crecaptcha
+Version: 0.1.31
+Summary: reCatpcha api v3.0 - with django support
+Home-page: https://github.com/cristiansteib/crecaptcha/
+Author: Steib Cristian
+Author-email: cristiansteib@gmail.com
+License: LICENSE.txt
+Description: # crecaptcha
+        ###### A simple python module for  Google Recaptcha V3
+        A pure python module, don't requires requests library
+        ## Installation
+        - from latest version on PyPi:
+            ```bash
+            pip install crecaptcha
+            ```
+            
+        ## how to use?
+        ```python
+        from crecatpcha.crecaptcha import crecaptcha
+        SECRET_KEY = 'Your secret key'
+        
+        def some_function():
+            response_token = 'the response token from the client'
+            
+            if crecaptcha(SECRET_KEY, response_token, 'action_name'):
+                # safe action
+                pass
+            else:
+                # is a bot, take your custom action.
+                pass
+         ```
+         
+              
+        ## how to use with django?
+        ### Configuration:
+        In the settings.py define the following values:  
+         **CRECAPTCHA_SECRET_KEY**: the recaptcha secret key.   
+         **CRECAPTCHA_KEY_NAME**: the name of the var in the POST request, by default is 'recaptcha_token'.    
+         Example:
+         ```python
+        CRECAPTCHA_SECRET_KEY = "jgjdnvurmfj3nrfo3nrlksjf" # Mandatory
+        CRECAPTCHA_KEY_NAME = "grecatpcha" # by default is 'recaptcha_token'
+         ```
+         
+        ### Usage:
+        #### Simple way:
+        In the following example if the recaptcha validation fails, it will raise an HttpResponseForbidden
+        ```python
+        from crecatpcha.django_crecatpcha import crecaptcha
+        
+        @crecaptcha('login')
+        def login_user(request):
+            pass
+            
+        @crecaptcha('register', threshold=0.6)
+        def register_user(request):
+            pass
+            
+        ```
+        
+        #### Advance way:
+        You can define your custom callback when the validations fails, an optionally you can send args & kwargs.
+        
+        ```python
+        from crecatpcha.django_crecatpcha import crecaptcha
+        
+        def register_user_on_crecaptcha_error(request, *args, **kwargs):
+            pass
+            
+        @crecaptcha('register', register_user_on_crecaptcha_error, args_on_error=[], kwargs_on_error={})    
+        def register_user(request):
+            pass
+        ```
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Framework :: Django
+Classifier: Framework :: Flask
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Topic :: Security
+Description-Content-Type: text/markdown
