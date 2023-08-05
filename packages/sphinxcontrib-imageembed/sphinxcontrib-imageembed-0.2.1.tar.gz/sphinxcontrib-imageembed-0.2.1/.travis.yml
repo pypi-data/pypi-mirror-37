@@ -1,0 +1,29 @@
+---
+language: python
+sudo: false
+cache: pip
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - pypy
+install:
+  - pip install tox-travis
+script:
+  - tox
+stages:
+  - test
+  - deploy
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      deploy:
+        provider: pypi
+        user: jangutter
+        password:
+          secure: F2L3qB1NtUhoKRaz67DG4gBTXr5Y76+8Qt+/dGnUuAo6iOSujJsT3GPLZrRt4VTaUVc6cQoUvTwxw+uZUdpQORxi+BuueABdj9NgRIkcubcadSFo1nCfCg3Si+cznXG5hJxkX3ptnjMYI2p9ga9iJQL8BiqhwGySDh/2kydyPHX6TdXuoBkNrTu/KV7H+4C4y1+8LwoEHnvTryX8qmXz5Dqz6ahS7DyBrWvzBxGN3Swa4RvKf+0ti9aNpp+8JjndWxQl+OYNBjHHiROS3KNElLo0t/alZwtKShPRcni3O4cAOcRrC2zyW6gf7v6KP2MW7HcBqHZU68aLEcVhRG/Z7SWo2bjsHSxTwuZiTJHCrzBg7wXLyCNFqhi5ndWZr7B82KU7pllaFU4gx4XoB/Hd9YjX5iM64GgTp2ozkxORgABnAvvDS2k3HRvbNS8T76QIGAUi2AkT9DdJwWo5N7hls1kck87Zo0Ha5fb/A9LG8mIUy2lo0ZxouMmgSQhnVULU5zPZR5JhzSnv5DLcf6YpEek844h8GTChBUcwqJQbBBrlANK1AhwP19effOBPbKR6hwxbRbWLbYcbrIBh+lPTdAXIsb5nmlrrXp8xzKoz2qoWF1ylu3QYmT+4X9TIRaDZMTUCIFiqJfW1z8HQysQzONdUSsSUYMux2RKeFnBjL7I=
+        on:
+          tags: true
+        distributions: sdist bdist_wheel
