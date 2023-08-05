@@ -1,0 +1,5 @@
+library(assertthat)
+see_if(noNA("a"))
+see_if(noNA(c(TRUE, NA)))
+x <- sample(c(1:10, NA), 100, rep = TRUE)
+see_if(noNA(x)

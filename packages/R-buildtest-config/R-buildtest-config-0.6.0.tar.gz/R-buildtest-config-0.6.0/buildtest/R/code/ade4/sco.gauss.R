@@ -1,0 +1,5 @@
+library(ade4)
+data(meau)
+envpca <- dudi.pca(meau$env, scannf=FALSE)
+dffac <- cbind.data.frame(meau$design$season, meau$design$site)
+sco.gauss(envpca$li[,1], dffac, clabel = 2, csub = 2)

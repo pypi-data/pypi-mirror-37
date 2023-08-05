@@ -1,0 +1,3 @@
+library(geepack)
+data(respiratory)
+## maybe str(respiratory) ; plot(respiratory) ...

@@ -1,0 +1,5 @@
+library(ade4)
+data(rpjdl)
+rpjdl.coa <- dudi.coa(rpjdl$fau, scannf = FALSE, nf = 4)
+screeplot(rpjdl.coa)
+biplot(rpjdl.coa)

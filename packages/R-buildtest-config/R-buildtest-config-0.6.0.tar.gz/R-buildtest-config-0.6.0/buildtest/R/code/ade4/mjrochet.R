@@ -1,0 +1,7 @@
+library(ade4)
+data(mjrochet)
+mjrochet.phy <- newick2phylog(mjrochet$tre)
+tab <- log((mjrochet$tab))
+tab0 <- data.frame(scalewt(tab))
+table.phylog(tab0, mjrochet.phy, csi = 2, clabel.r = 0.75)
+orthogram(tab0[,1], ortho = mjrochet.phy$Bscores)

@@ -1,0 +1,6 @@
+library(ape)
+data(bird.families)
+summary(bird.families)
+Ntip(bird.families)
+Nnode(bird.families)
+Nedge(bird.families)

@@ -1,0 +1,5 @@
+library(ade4)
+data(lascaux)
+w <- cbind.data.frame(lascaux$colo, lascaux$ornem)
+dd <- dudi.mix(w, scan = FALSE, nf = 4, add = TRUE)
+score(dd, which = which(dd$cr[,1] > 0.3))

@@ -1,0 +1,3 @@
+library(checkmate)
+testOS("linux")
+
