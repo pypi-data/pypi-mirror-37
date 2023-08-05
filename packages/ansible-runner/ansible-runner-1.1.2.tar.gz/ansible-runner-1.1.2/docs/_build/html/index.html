@@ -1,0 +1,175 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Ansible Runner &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction to Ansible Runner" href="intro.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ansible-runner">
+<h1>Ansible Runner<a class="headerlink" href="#ansible-runner" title="Permalink to this headline">¶</a></h1>
+<p>Ansible Runner is a tool and python library that helps when interfacing with Ansible directly or as part of another system
+whether that be through a container image interface, as a standalone tool, or as a Python module that can be imported. The goal
+is to provide a stable and consistent interface abstraction to Ansible.</p>
+<p><strong>Ansible Runner</strong> represents the modularization of the part of <a class="reference external" href="https://github.com/ansible/awx">Ansible Tower/AWX</a> that is responsible
+for running <code class="docutils literal notranslate"><span class="pre">ansible</span></code> and <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span></code> tasks and gathers the output from it. It does this by presenting a common interface that doesn’t
+change, even as <strong>Ansible</strong> itself grows and evolves.</p>
+<p>Part of what makes this tooling useful is that it can gather its inputs in a flexible way (See <a class="reference internal" href="intro.html#intro"><span class="std std-ref">Introduction to Ansible Runner</span></a>:). It also has a system for storing the
+output (stdout) and artifacts (host-level event data, fact data, etc) of the playbook run.</p>
+<p>There are 3 primary ways of interacting with <strong>Runner</strong></p>
+<ul class="simple">
+<li>A standalone command line tool (<code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code>) that can be started in the foreground or run in the background asynchronously</li>
+<li>A reference container image that can be used as a base for your own images and will work as a standalone container or running in
+Openshift or Kubernetes</li>
+<li>A python module - library interface</li>
+</ul>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Ansible Runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#runner-input-directory-hierarchy">Runner Input Directory Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#the-env-directory">The <code class="docutils literal notranslate"><span class="pre">env</span></code> directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-envvars"><code class="docutils literal notranslate"><span class="pre">env/envvars</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-extravars"><code class="docutils literal notranslate"><span class="pre">env/extravars</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-passwords"><code class="docutils literal notranslate"><span class="pre">env/passwords</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-cmdline"><code class="docutils literal notranslate"><span class="pre">env/cmdline</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-ssh-key"><code class="docutils literal notranslate"><span class="pre">env/ssh_key</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#env-settings-settings-for-runner-itself"><code class="docutils literal notranslate"><span class="pre">env/settings</span></code> - Settings for Runner itself</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#project">Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#roles">Roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#runner-artifacts-directory-hierarchy">Runner Artifacts Directory Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#runner-artifact-job-events-host-and-playbook-events">Runner Artifact Job Events (Host and Playbook Events)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing Ansible Runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#using-pip">Using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#fedora">Fedora</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#from-source">From source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#build-the-distribution">Build the distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#building-the-base-container-image">Building the base container image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#building-the-rpm">Building the RPM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#changelog">Changelog</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="standalone.html">Using Runner as a standalone command line tool</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="standalone.html#executing-runner-in-the-foreground">Executing <strong>Runner</strong> in the foreground</a></li>
+<li class="toctree-l2"><a class="reference internal" href="standalone.html#executing-runner-in-the-background">Executing <strong>Runner</strong> in the background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="standalone.html#running-playbooks">Running Playbooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="standalone.html#running-roles-directly">Running Roles Directly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="standalone.html#outputting-json-raw-event-data-to-the-console-instead-of-normal-output">Outputting json (raw event data) to the console instead of normal output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python_interface.html">Using Runner as a Python Module Interface to Ansible</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#helper-interfaces">Helper Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#run-helper-function"><code class="docutils literal notranslate"><span class="pre">run()</span></code> helper function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#run-async-helper-function"><code class="docutils literal notranslate"><span class="pre">run_async()</span></code> helper function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#the-runner-object">The <code class="docutils literal notranslate"><span class="pre">Runner</span></code> object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#runner-stdout"><code class="docutils literal notranslate"><span class="pre">Runner.stdout</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#runner-events"><code class="docutils literal notranslate"><span class="pre">Runner.events</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#runner-stats"><code class="docutils literal notranslate"><span class="pre">Runner.stats</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#usage-examples">Usage examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_interface.html#providing-custom-behavior-and-inputs">Providing custom behavior and inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="container.html">Using Runner as a container interface to Ansible</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="container.html#overriding-the-reference-container-image">Overriding the reference container image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="container.html#gathering-output-from-the-reference-container-image">Gathering output from the reference container image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="container.html#changing-the-console-output-to-emit-raw-events">Changing the console output to emit raw events</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Ansible Runner</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="intro.html" title="next chapter">Introduction to Ansible Runner</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

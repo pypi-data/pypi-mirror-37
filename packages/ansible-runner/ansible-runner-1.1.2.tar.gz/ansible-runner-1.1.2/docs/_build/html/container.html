@@ -1,0 +1,135 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using Runner as a container interface to Ansible &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Using Runner as a Python Module Interface to Ansible" href="python_interface.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-runner-as-a-container-interface-to-ansible">
+<span id="container"></span><h1>Using Runner as a container interface to Ansible<a class="headerlink" href="#using-runner-as-a-container-interface-to-ansible" title="Permalink to this headline">¶</a></h1>
+<p>The design of <strong>Ansible Runner</strong> makes it especially suitable for controlling the execution of <strong>Ansible</strong> from within a container for single-purpose
+automation workflows. A reference container image definition is <a class="reference external" href="https://github.com/ansible/ansible-runner/blob/master/Dockerfile">provided</a> and
+is also published to <a class="reference external" href="https://hub.docker.com/r/ansible/ansible-runner/">DockerHub</a> you can try it out for yourself</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker run --rm -e <span class="nv">RUNNER_PLAYBOOK</span><span class="o">=</span>test.yml ansible/ansible-runner:latest
+<span class="go">  Unable to find image &#39;ansible/ansible-runner:latest&#39; locally</span>
+<span class="go">  latest: Pulling from ansible/ansible-runner</span>
+<span class="go">  [...]</span>
+<span class="go">  PLAY [all] *********************************************************************</span>
+
+<span class="go">  TASK [Gathering Facts] *********************************************************</span>
+<span class="go">  ok: [localhost]</span>
+
+<span class="go">  TASK [debug] *******************************************************************</span>
+<span class="go">  ok: [localhost] =&gt; {</span>
+<span class="go">    &quot;msg&quot;: &quot;Test!&quot;</span>
+<span class="go">  }</span>
+
+<span class="go">  PLAY RECAP *********************************************************************</span>
+<span class="go">  localhost                  : ok=2    changed=0    unreachable=0    failed=0</span>
+</pre></div>
+</div>
+<p>The reference container image is purposefully light-weight and only containing the dependencies necessary to run <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> itself. It’s
+intended to be overridden.</p>
+<div class="section" id="overriding-the-reference-container-image">
+<h2>Overriding the reference container image<a class="headerlink" href="#overriding-the-reference-container-image" title="Permalink to this headline">¶</a></h2>
+<p><strong>TODO</strong></p>
+</div>
+<div class="section" id="gathering-output-from-the-reference-container-image">
+<h2>Gathering output from the reference container image<a class="headerlink" href="#gathering-output-from-the-reference-container-image" title="Permalink to this headline">¶</a></h2>
+<p><strong>TODO</strong></p>
+</div>
+<div class="section" id="changing-the-console-output-to-emit-raw-events">
+<h2>Changing the console output to emit raw events<a class="headerlink" href="#changing-the-console-output-to-emit-raw-events" title="Permalink to this headline">¶</a></h2>
+<p>This can be useful when directing task-level event data to an external system by means of the container’s console output.</p>
+<p>See <a class="reference internal" href="standalone.html#outputjson"><span class="std std-ref">Outputting json (raw event data) to the console instead of normal output</span></a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using Runner as a container interface to Ansible</a><ul>
+<li><a class="reference internal" href="#overriding-the-reference-container-image">Overriding the reference container image</a></li>
+<li><a class="reference internal" href="#gathering-output-from-the-reference-container-image">Gathering output from the reference container image</a></li>
+<li><a class="reference internal" href="#changing-the-console-output-to-emit-raw-events">Changing the console output to emit raw events</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="python_interface.html" title="previous chapter">Using Runner as a Python Module Interface to Ansible</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/container.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/container.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,349 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ansible_runner.runner_config &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ansible_runner.runner_config</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Licensed to the Apache Software Foundation (ASF) under one</span>
+<span class="c1"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="c1"># distributed with this work for additional information</span>
+<span class="c1"># regarding copyright ownership.  The ASF licenses this file</span>
+<span class="c1"># to you under the Apache License, Version 2.0 (the</span>
+<span class="c1"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="c1"># with the License.  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pipes</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">pexpect</span>
+<span class="kn">import</span> <span class="nn">stat</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="k">import</span> <span class="n">uuid4</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span> <span class="nn">six</span> <span class="k">import</span> <span class="n">iteritems</span><span class="p">,</span> <span class="n">string_types</span>
+
+<span class="kn">from</span> <span class="nn">ansible_runner</span> <span class="k">import</span> <span class="n">output</span>
+<span class="kn">from</span> <span class="nn">ansible_runner.exceptions</span> <span class="k">import</span> <span class="n">ConfigurationError</span>
+<span class="kn">from</span> <span class="nn">ansible_runner.loader</span> <span class="k">import</span> <span class="n">ArtifactLoader</span>
+
+
+<div class="viewcode-block" id="RunnerConfig"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig">[docs]</a><span class="k">class</span> <span class="nc">RunnerConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A ``Runner`` configuration object that&#39;s meant to encapsulate the configuration used by the</span>
+<span class="sd">    :py:mod:`ansible_runner.runner.Runner` object to launch and manage the invocation of ``ansible``</span>
+<span class="sd">    and ``ansible-playbook``</span>
+
+<span class="sd">    Typically this object is initialized for you when using the standard ``run`` interfaces in :py:mod:`ansible_runner.interface`</span>
+<span class="sd">    but can be used to construct the ``Runner`` configuration to be invoked elsewhere. It can also be overridden to provide different</span>
+<span class="sd">    functionality to the Runner object.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; rc = RunnerConfig(...)</span>
+<span class="sd">    &gt;&gt;&gt; r = Runner(config=rc)</span>
+<span class="sd">    &gt;&gt;&gt; r.run()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">private_data_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">playbook</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ident</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                 <span class="n">inventory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">module_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbosity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">json_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">artifact_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">private_data_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ident</span> <span class="o">=</span> <span class="n">ident</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_mode</span> <span class="o">=</span> <span class="n">json_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">playbook</span> <span class="o">=</span> <span class="n">playbook</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inventory</span> <span class="o">=</span> <span class="n">inventory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="n">limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_args</span> <span class="o">=</span> <span class="n">module_args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span> <span class="o">=</span> <span class="n">artifact_dir</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ident</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">,</span> <span class="s2">&quot;artifacts&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">,</span> <span class="s2">&quot;artifacts&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ident</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_vars</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span> <span class="o">=</span> <span class="n">quiet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="o">=</span> <span class="n">ArtifactLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RunnerConfig.prepare"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs basic checks and then properly invokes</span>
+
+<span class="sd">        - prepare_inventory</span>
+<span class="sd">        - prepare_env</span>
+<span class="sd">        - prepare_command</span>
+
+<span class="sd">        It&#39;s also responsible for wrapping the command with the proper ssh agent invocation</span>
+<span class="sd">        and setting early ANSIBLE_ environment variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="s2">&quot;Runner Base Directory is not defined&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">playbook</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># TODO: ad-hoc mode, module and args</span>
+            <span class="k">raise</span> <span class="n">ConfigurationError</span><span class="p">(</span><span class="s2">&quot;Runner playbook is not defined&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_inventory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_env</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_command</span><span class="p">()</span>
+
+        <span class="c1"># write the SSH key data into a fifo read by ssh-agent</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">,</span> <span class="s1">&#39;ssh_key_data&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_auth_sock</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span><span class="p">,</span> <span class="s1">&#39;ssh_auth.sock&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open_fifo_write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrap_args_with_ssh_agent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssh_auth_sock</span><span class="p">)</span>
+
+        <span class="c1"># Use local callback directory</span>
+        <span class="n">callback_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;AWX_LIB_DIRECTORY&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callback_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">callback_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))[</span><span class="mi">0</span><span class="p">],</span>
+                                        <span class="s2">&quot;callbacks&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;ANSIBLE_CALLBACK_PLUGINS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">callback_dir</span>
+        <span class="k">if</span> <span class="s1">&#39;AD_HOC_COMMAND_ID&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;ANSIBLE_STDOUT_CALLBACK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;minimal&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;ANSIBLE_STDOUT_CALLBACK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;awx_display&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;ANSIBLE_RETRY_FILES_ENABLED&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;False&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;ANSIBLE_HOST_KEY_CHECKING&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;False&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;AWX_ISOLATED_DATA_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">artifact_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;PYTHONPATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PYTHONPATH&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">callback_dir</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span></div>
+
+<div class="viewcode-block" id="RunnerConfig.prepare_inventory"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.prepare_inventory">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepares the inventory default under ``private_data_dir`` if it&#39;s not overridden by the constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inventory</span>  <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span><span class="p">,</span> <span class="s2">&quot;inventory&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RunnerConfig.prepare_env"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.prepare_env">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Manages reading environment metadata files under ``private_data_dir`` and merging/updating</span>
+<span class="sd">        with existing values so the :py:class:`ansible_runner.runner.Runner` object can read and use them easily</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">passwords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;env/passwords&#39;</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expect_passwords</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">):</span> <span class="n">password</span>
+                <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">password</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">passwords</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s1">&#39;Not loading passwords&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expect_passwords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expect_passwords</span><span class="p">[</span><span class="n">pexpect</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expect_passwords</span><span class="p">[</span><span class="n">pexpect</span><span class="o">.</span><span class="n">EOF</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># seed env with existing shell env</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">envvars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;env/envvars&#39;</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">envvars</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">envvars</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s2">&quot;Not loading environment vars&quot;</span><span class="p">)</span>
+            <span class="c1"># Still need to pass default environment to pexpect</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;env/extravars&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extra_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;env/extravars&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;env/settings&#39;</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s2">&quot;Not loading settings&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;env/ssh_key&#39;</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s2">&quot;Not loading ssh key&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssh_key_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">idle_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;idle_timeout&#39;</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_timeout&#39;</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pexpect_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pexpect_timeout&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suppress_ansible_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;suppress_ansible_output&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;AD_HOC_COMMAND_ID&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">private_data_dir</span><span class="p">,</span> <span class="s1">&#39;project&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RunnerConfig.prepare_command"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.prepare_command">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines if the literal ``ansible`` or ``ansible-playbook`` commands are given</span>
+<span class="sd">        and if not calls :py:meth:`ansible_runner.runner_config.RunnerConfig.generate_ansible_command`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_ansible_command</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RunnerConfig.generate_ansible_command"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.generate_ansible_command">[docs]</a>    <span class="k">def</span> <span class="nf">generate_ansible_command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given that the ``RunnerConfig`` preparation methods have been run to gather the inputs this method</span>
+<span class="sd">        will generate the ``ansible`` or ``ansible-playbook`` command that will be used by the</span>
+<span class="sd">        :py:class:`ansible_runner.runner.Runner` object to start the process</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_command</span> <span class="o">=</span> <span class="s1">&#39;ansible&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_command</span> <span class="o">=</span> <span class="s1">&#39;ansible-playbook&#39;</span>
+
+        <span class="n">exec_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">base_command</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cmdline_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s1">&#39;env/cmdline&#39;</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmdline_args</span><span class="p">)</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConfigurationError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">)</span>
+        <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventory</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--limit&quot;</span><span class="p">)</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_vars</span><span class="p">:</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;-e&#39;</span><span class="p">,</span> <span class="s1">&#39;@</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_vars</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Other parameters</span>
+        <span class="k">if</span> <span class="n">base_command</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;ansible-playbook&#39;</span><span class="p">):</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">playbook</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">base_command</span> <span class="o">==</span> <span class="s1">&#39;ansible&#39;</span><span class="p">:</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-m&quot;</span><span class="p">)</span>
+            <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-a&quot;</span><span class="p">)</span>
+                <span class="n">exec_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">exec_list</span></div>
+
+
+<div class="viewcode-block" id="RunnerConfig.wrap_args_with_ssh_agent"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.wrap_args_with_ssh_agent">[docs]</a>    <span class="k">def</span> <span class="nf">wrap_args_with_ssh_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">ssh_key_path</span><span class="p">,</span> <span class="n">ssh_auth_sock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">silence_ssh_add</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given an existing command line and parameterization this will return the same command line wrapped with the</span>
+<span class="sd">        necessary calls to ``ssh-agent``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ssh_key_path</span><span class="p">:</span>
+            <span class="n">ssh_add_command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args2cmdline</span><span class="p">(</span><span class="s1">&#39;ssh-add&#39;</span><span class="p">,</span> <span class="n">ssh_key_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">silence_ssh_add</span><span class="p">:</span>
+                <span class="n">ssh_add_command</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ssh_add_command</span><span class="p">,</span> <span class="s1">&#39;2&gt;/dev/null&#39;</span><span class="p">])</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39; &amp;&amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ssh_add_command</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">args2cmdline</span><span class="p">(</span><span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">ssh_key_path</span><span class="p">),</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">args2cmdline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)])</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ssh-agent&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ssh_auth_sock</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">ssh_auth_sock</span><span class="p">])</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s1">&#39;sh&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">args</span></div>
+
+
+<div class="viewcode-block" id="RunnerConfig.open_fifo_write"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.open_fifo_write">[docs]</a>    <span class="k">def</span> <span class="nf">open_fifo_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># TODO: Switch to utility function</span>
+        <span class="sd">&#39;&#39;&#39;open_fifo_write opens the fifo named pipe in a new thread.</span>
+<span class="sd">        This blocks the thread until an external process (such as ssh-agent)</span>
+<span class="sd">        reads data from the pipe.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkfifo</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWUSR</span><span class="p">)</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">open</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">d</span><span class="p">),</span>
+                         <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RunnerConfig.args2cmdline"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig.args2cmdline">[docs]</a>    <span class="k">def</span> <span class="nf">args2cmdline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c1"># TODO: switch to utility function</span>
+        <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">pipes</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

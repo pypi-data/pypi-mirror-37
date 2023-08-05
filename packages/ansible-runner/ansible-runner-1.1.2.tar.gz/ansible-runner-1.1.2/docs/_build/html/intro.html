@@ -1,0 +1,368 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Introduction to Ansible Runner &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing Ansible Runner" href="install.html" />
+    <link rel="prev" title="Ansible Runner" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction-to-ansible-runner">
+<span id="intro"></span><h1>Introduction to Ansible Runner<a class="headerlink" href="#introduction-to-ansible-runner" title="Permalink to this headline">¶</a></h1>
+<p><strong>Runner</strong> is intended to be most useful as part of automation and tooling that needs to invoke Ansible and consume its results.
+Most of the parameterization of the <strong>Ansible</strong> command line is also available on the <strong>Runner</strong> command line but <strong>Runner</strong> also
+can rely on an input interface that is mapped onto a directory structure, an example of which can be seen in <a class="reference external" href="https://github.com/ansible/ansible-runner/tree/master/demo">the source tree</a>.</p>
+<p>Further sections in this document refer to the configuration and layout of that hierarchy. This isn’t the only way to interface with <strong>Runner</strong>
+itself. The Python module interface allows supplying these details as direct module parameters in many forms, and the command line interface allows
+supplying them directly as arguments, mimicking the behavior of <code class="docutils literal notranslate"><span class="pre">ansible-playbook</span></code>. Having the directory structure <strong>does</strong> allow gathering the inputs
+from elsewhere and preparing them for consumption by <strong>Runner</strong>, then the tooling can come along and inspect the results after the run.</p>
+<p>This is best seen in the way Ansible <strong>AWX</strong> uses <strong>Runner</strong> where most of the content comes from the database (and other content-management components) but
+ultimately needs to be brought together in a single place when launching the <strong>Ansible</strong> task.</p>
+<div class="section" id="runner-input-directory-hierarchy">
+<span id="inputdir"></span><h2>Runner Input Directory Hierarchy<a class="headerlink" href="#runner-input-directory-hierarchy" title="Permalink to this headline">¶</a></h2>
+<p>This directory contains all necessary inputs. Here’s a view of the <a class="reference external" href="https://github.com/ansible/ansible-runner/tree/master/demo">demo directory</a> showing
+an active configuration.</p>
+<p>Note that not everything is required. Defaults will be used or values will be omitted if they are not provided.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>.
+├── env
+│   ├── envvars
+│   ├── extravars
+│   ├── passwords
+│   ├── cmdline
+│   ├── settings
+│   └── ssh_key
+├── inventory
+│   └── hosts
+├── project
+│   └── test.yml
+└── roles
+    └── testrole
+        ├── defaults
+        ├── handlers
+        ├── meta
+        ├── README.md
+        ├── tasks
+        ├── tests
+        └── vars
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-env-directory">
+<h2>The <code class="docutils literal notranslate"><span class="pre">env</span></code> directory<a class="headerlink" href="#the-env-directory" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>env</strong> directory contains settings and sensitive files that inform certain aspects of the invocation of the <strong>Ansible</strong> process, an example of which can
+be found in <a class="reference external" href="https://github.com/ansible/ansible-runner/tree/master/demo/env">the demo env directory</a>. Each of these files can also be represented by a named
+pipe providing a bit of an extra layer of security. The formatting and expectation of these files differs slightly depending on what they are representing.</p>
+</div>
+<div class="section" id="env-envvars">
+<h2><code class="docutils literal notranslate"><span class="pre">env/envvars</span></code><a class="headerlink" href="#env-envvars" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For an example see <a class="reference external" href="https://github.com/ansible/ansible-runner/blob/master/demo/env/envvars">the demo envvars</a>.</p>
+</div>
+<p><strong>Ansible Runner</strong> will inherit the environment of the launching shell (or container, or system itself). This file (which can be in json or yaml format) represents
+the environment variables that will be added to the environment at run-time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span>
+<span class="n">TESTVAR</span><span class="p">:</span> <span class="n">exampleval</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="env-extravars">
+<h2><code class="docutils literal notranslate"><span class="pre">env/extravars</span></code><a class="headerlink" href="#env-extravars" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For an example see <a class="reference external" href="https://github.com/ansible/ansible-runner/blob/master/demo/env/extravars">the demo extravars</a>.</p>
+</div>
+<p><strong>Ansible Runner</strong> gathers the extra vars provided here and supplies them to the <strong>Ansible Process</strong> itself. This file can be in either json or yaml format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span>
+<span class="n">ansible_connection</span><span class="p">:</span> <span class="n">local</span>
+<span class="n">test</span><span class="p">:</span> <span class="n">val</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="env-passwords">
+<h2><code class="docutils literal notranslate"><span class="pre">env/passwords</span></code><a class="headerlink" href="#env-passwords" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For an example see <a class="reference external" href="https://github.com/ansible/ansible-runner/blob/master/demo/env/passwords">the demo passwords</a>.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">We expect this interface to change/simplify in the future but will guarantee backwards compatibility. The goal is for the user of <strong>Runner</strong> to not
+have to worry about the format of certain prompts emitted from <strong>Ansible</strong> itself. In particular, vault passwords need to become more flexible.</p>
+</div>
+<p><strong>Ansible</strong> itself is set up to emit passwords to certain prompts, these prompts can be requested (<code class="docutils literal notranslate"><span class="pre">-k</span></code> for example to prompt for the connection password).
+Likewise, prompts can be emitted via <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_prompts.html">vars_prompt</a> and also
+<a class="reference external" href="https://docs.ansible.com/ansible/2.5/user_guide/vault.html#vault-ids-and-multiple-vault-passwords">Ansible Vault</a>.</p>
+<p>In order for <strong>Runner</strong> to respond with the correct password, it needs to be able to match the prompt and provide the correct password. This is currently supported
+by providing a yaml or json formatted file with a regular expression and a value to emit, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span>
+<span class="s2">&quot;^SSH [pP]assword:$&quot;</span><span class="p">:</span> <span class="s2">&quot;some_password&quot;</span>
+<span class="s2">&quot;^BECOME [pP]assword:$&quot;</span><span class="p">:</span> <span class="s2">&quot;become_password&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="env-cmdline">
+<h2><code class="docutils literal notranslate"><span class="pre">env/cmdline</span></code><a class="headerlink" href="#env-cmdline" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For an example see <a class="reference external" href="https://github.com/ansible/ansible-runner/blob/master/demo/env/cmdline">the demo cmdline</a></p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Current <strong>Ansible Runner</strong> does not validate the command line arguments passed using this method so it is up to the playbook writer to provide a valid set of options
+The command line options provided by this method are lower priority than the ones set by <strong>Ansible Runner</strong>.  For instance, this will not override <cite>inventory</cite> or <cite>limit</cite> values.</p>
+</div>
+</div>
+<div class="section" id="env-ssh-key">
+<h2><code class="docutils literal notranslate"><span class="pre">env/ssh_key</span></code><a class="headerlink" href="#env-ssh-key" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently only a single ssh key can be provided via this mechanism but this is set to <a class="reference external" href="https://github.com/ansible/ansible-runner/issues/51">change soon</a>.</p>
+</div>
+<p>This file should contain the ssh private key used to connect to the host(s). <strong>Runner</strong> detects when a private key is provided and will wrap the call to
+<strong>Ansible</strong> in ssh-agent.</p>
+</div>
+<div class="section" id="env-settings-settings-for-runner-itself">
+<h2><code class="docutils literal notranslate"><span class="pre">env/settings</span></code> - Settings for Runner itself<a class="headerlink" href="#env-settings-settings-for-runner-itself" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>settings</strong> file is a little different than the other files provided in this section in that its contents are meant to control <strong>Runner</strong> directly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span>
+<span class="n">idle_timeout</span><span class="p">:</span> <span class="mi">600</span> <span class="c1"># If no output is detected from ansible in this number of seconds the execution will be terminated.</span>
+<span class="n">job_timeout</span><span class="p">:</span> <span class="mi">3600</span> <span class="c1"># The maximum amount of time to allow the job to run for, exceeding this and the execution will be terminated.</span>
+<span class="n">pexpect_timeout</span><span class="p">:</span> <span class="mi">10</span> <span class="c1"># Number of seconds for the internal pexpect command to wait to block on input before continuuing</span>
+<span class="n">suppress_ansible_output</span><span class="p">:</span> <span class="kc">False</span> <span class="c1"># Allow output from ansible to not be printed to the screen</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inventory">
+<h2>Inventory<a class="headerlink" href="#inventory" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>Runner</strong> <code class="docutils literal notranslate"><span class="pre">inventory</span></code> location under the private data dir has the same expectations as inventory provided directly to ansible itself. It can
+be either a single file or script or a directory containing static inventory files or scripts. This inventory is automatically loaded and provided to
+<strong>Ansible</strong> when invoked and can be further limited or overridden on the command line or via an environment variable to specify the hosts directly.</p>
+</div>
+<div class="section" id="project">
+<h2>Project<a class="headerlink" href="#project" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>Runner</strong> <code class="docutils literal notranslate"><span class="pre">project</span></code> directory  is the playbook root containing playbooks and roles that those playbooks can consume directly. This is also the
+directory that will be set as the <code class="docutils literal notranslate"><span class="pre">current</span> <span class="pre">working</span> <span class="pre">directory</span></code> when launching the <strong>Ansible</strong> process.</p>
+</div>
+<div class="section" id="roles">
+<h2>Roles<a class="headerlink" href="#roles" title="Permalink to this headline">¶</a></h2>
+<p><strong>Runner</strong> has the ability to execute <a class="reference external" href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html">Roles</a> directly without first needing
+a playbook to reference them. This directory holds roles used for that. Behind the scenes, <strong>Runner</strong> will generate a playbook and invoke the <code class="docutils literal notranslate"><span class="pre">Role</span></code>.</p>
+</div>
+<div class="section" id="runner-artifacts-directory-hierarchy">
+<span id="artifactdir"></span><h2>Runner Artifacts Directory Hierarchy<a class="headerlink" href="#runner-artifacts-directory-hierarchy" title="Permalink to this headline">¶</a></h2>
+<p>This directory will contain the results of <strong>Runner</strong> invocation grouped under an <code class="docutils literal notranslate"><span class="pre">identifier</span></code> directory. This identifier can be supplied to <strong>Runner</strong> directly
+and if not given, an identifier will be generated as a <a class="reference external" href="https://docs.python.org/3/library/uuid.html#uuid.uuid4">UUID</a>. This is how the directory structure looks
+from the top level:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
+├── artifacts
+│   └── identifier
+├── env
+├── inventory
+├── project
+└── roles
+</pre></div>
+</div>
+<p>The artifact directory itself contains a particular structure that provides a lot of extra detail from a running or previously-run invocation of Ansible/Runner:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
+├── artifacts
+│   └── 37f639a3-1f4f-4acb-abee-ea1898013a25
+│       ├── job_events
+│       │   ├── 1-34437b34-addd-45ae-819a-4d8c9711e191.json
+│       │   ├── 2-8c164553-8573-b1e0-76e1-000000000006.json
+│       │   ├── 3-8c164553-8573-b1e0-76e1-00000000000d.json
+│       │   ├── 4-f16be0cd-99e1-4568-a599-546ab80b2799.json
+│       │   ├── 5-8c164553-8573-b1e0-76e1-000000000008.json
+│       │   ├── 6-981fd563-ec25-45cb-84f6-e9dc4e6449cb.json
+│       │   └── 7-01c7090a-e202-4fb4-9ac7-079965729c86.json
+│       ├── rc
+│       ├── status
+│       └── stdout
+</pre></div>
+</div>
+<p>The <strong>rc</strong> file contains the actual return code from the <strong>Ansible</strong> process.</p>
+<p>The <strong>status</strong> file contains one of two statuses suitable for displaying:</p>
+<ul class="simple">
+<li>success: The <strong>Ansible</strong> process finished successfully</li>
+<li>failed: The <strong>Ansible</strong> process failed</li>
+</ul>
+<p>The <strong>stdout</strong> file contains the actual stdout as it appears at that moment.</p>
+</div>
+<div class="section" id="runner-artifact-job-events-host-and-playbook-events">
+<span id="artifactevents"></span><h2>Runner Artifact Job Events (Host and Playbook Events)<a class="headerlink" href="#runner-artifact-job-events-host-and-playbook-events" title="Permalink to this headline">¶</a></h2>
+<p><strong>Runner</strong> gathers the individual task and playbook events that are emitted as part of the <strong>Ansible</strong> run. This is extremely helpful if you don’t want
+to process or read the stdout returned from <strong>Ansible</strong> as it contains much more detail and status than just the plain stdout.
+It does some of the heavy lifting of assigning order to the events and stores them in json format under the <code class="docutils literal notranslate"><span class="pre">job_events</span></code> artifact directory.
+It also takes it a step further than normal <strong>Ansible</strong> callback plugins in that it will store the <code class="docutils literal notranslate"><span class="pre">stdout</span></code> associated with the event alongside the raw
+event data (along with stdout line numbers). It also generates dummy events for stdout that didn’t have corresponding host event data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;8c164553-8573-b1e0-76e1-000000000008&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;counter&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s2">&quot;stdout&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">TASK [debug] *******************************************************************&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;start_line&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s2">&quot;end_line&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="s2">&quot;playbook_on_task_start&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;playbook&quot;</span><span class="p">:</span> <span class="s2">&quot;test.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;playbook_uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;34437b34-addd-45ae-819a-4d8c9711e191&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;play&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;play_uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;8c164553-8573-b1e0-76e1-000000000006&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;play_pattern&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="s2">&quot;debug&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;task_uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;8c164553-8573-b1e0-76e1-000000000008&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;task_action&quot;</span><span class="p">:</span> <span class="s2">&quot;debug&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;task_path&quot;</span><span class="p">:</span> <span class="s2">&quot;\/home\/mjones\/ansible\/ansible-runner\/demo\/project\/test.yml:3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;task_args&quot;</span><span class="p">:</span> <span class="s2">&quot;msg=Test!&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;debug&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;is_conditional&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;pid&quot;</span><span class="p">:</span> <span class="mi">10640</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;pid&quot;</span><span class="p">:</span> <span class="mi">10640</span><span class="p">,</span>
+  <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-06-07T14:54:58.410605&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If the playbook runs to completion without getting killed, the last event will always be the <code class="docutils literal notranslate"><span class="pre">stats</span></code> event:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;01c7090a-e202-4fb4-9ac7-079965729c86&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;counter&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s2">&quot;stdout&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">PLAY RECAP *********************************************************************</span><span class="se">\r\n\u001b</span><span class="s2">[0;32mlocalhost,</span><span class="se">\u001b</span><span class="s2">[0m                 : </span><span class="se">\u001b</span><span class="s2">[0;32mok=2   </span><span class="se">\u001b</span><span class="s2">[0m changed=0    unreachable=0    failed=0   </span><span class="se">\r\n</span><span class="s2">&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;start_line&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+  <span class="s2">&quot;end_line&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">,</span>
+  <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="s2">&quot;playbook_on_stats&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;event_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;playbook&quot;</span><span class="p">:</span> <span class="s2">&quot;test.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;playbook_uuid&quot;</span><span class="p">:</span> <span class="s2">&quot;34437b34-addd-45ae-819a-4d8c9711e191&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;changed&quot;</span><span class="p">:</span> <span class="p">{</span>
+
+    <span class="p">},</span>
+    <span class="s2">&quot;dark&quot;</span><span class="p">:</span> <span class="p">{</span>
+
+    <span class="p">},</span>
+    <span class="s2">&quot;failures&quot;</span><span class="p">:</span> <span class="p">{</span>
+
+    <span class="p">},</span>
+    <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;localhost,&quot;</span><span class="p">:</span> <span class="mi">2</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;processed&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;localhost,&quot;</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;skipped&quot;</span><span class="p">:</span> <span class="p">{</span>
+
+    <span class="p">},</span>
+    <span class="s2">&quot;artifact_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+
+    <span class="p">},</span>
+    <span class="s2">&quot;pid&quot;</span><span class="p">:</span> <span class="mi">10640</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;pid&quot;</span><span class="p">:</span> <span class="mi">10640</span><span class="p">,</span>
+  <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="s2">&quot;2018-06-07T14:54:58.424603&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <strong>Runner module interface</strong> presents a programmatic interface to these events that allow getting the final status and performing host filtering of task events.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction to Ansible Runner</a><ul>
+<li><a class="reference internal" href="#runner-input-directory-hierarchy">Runner Input Directory Hierarchy</a></li>
+<li><a class="reference internal" href="#the-env-directory">The <code class="docutils literal notranslate"><span class="pre">env</span></code> directory</a></li>
+<li><a class="reference internal" href="#env-envvars"><code class="docutils literal notranslate"><span class="pre">env/envvars</span></code></a></li>
+<li><a class="reference internal" href="#env-extravars"><code class="docutils literal notranslate"><span class="pre">env/extravars</span></code></a></li>
+<li><a class="reference internal" href="#env-passwords"><code class="docutils literal notranslate"><span class="pre">env/passwords</span></code></a></li>
+<li><a class="reference internal" href="#env-cmdline"><code class="docutils literal notranslate"><span class="pre">env/cmdline</span></code></a></li>
+<li><a class="reference internal" href="#env-ssh-key"><code class="docutils literal notranslate"><span class="pre">env/ssh_key</span></code></a></li>
+<li><a class="reference internal" href="#env-settings-settings-for-runner-itself"><code class="docutils literal notranslate"><span class="pre">env/settings</span></code> - Settings for Runner itself</a></li>
+<li><a class="reference internal" href="#inventory">Inventory</a></li>
+<li><a class="reference internal" href="#project">Project</a></li>
+<li><a class="reference internal" href="#roles">Roles</a></li>
+<li><a class="reference internal" href="#runner-artifacts-directory-hierarchy">Runner Artifacts Directory Hierarchy</a></li>
+<li><a class="reference internal" href="#runner-artifact-job-events-host-and-playbook-events">Runner Artifact Job Events (Host and Playbook Events)</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Ansible Runner</a></li>
+      <li>Next: <a href="install.html" title="next chapter">Installing Ansible Runner</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/intro.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

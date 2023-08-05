@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using Runner as a Python Module Interface to Ansible &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using Runner as a container interface to Ansible" href="container.html" />
+    <link rel="prev" title="Using Runner as a standalone command line tool" href="standalone.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-runner-as-a-python-module-interface-to-ansible">
+<span id="python-interface"></span><h1>Using Runner as a Python Module Interface to Ansible<a class="headerlink" href="#using-runner-as-a-python-module-interface-to-ansible" title="Permalink to this headline">¶</a></h1>
+<p><strong>Ansible Runner</strong> is intended to provide a directly importable and usable API for interfacing with <strong>Ansible</strong> itself and exposes a few helper interfaces.</p>
+<p>The modules center around the <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner" title="ansible_runner.runner.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a> object. The helper methods will return an instance of this object which provides an
+interface to the results of executing the <strong>Ansible</strong> command.</p>
+<p><strong>Ansible Runner</strong> itself is a wrapper around <strong>Ansible</strong> execution and so adds plugins and interfaces to the system in order to gather extra information and
+process/store it for use later.</p>
+<div class="section" id="helper-interfaces">
+<h2>Helper Interfaces<a class="headerlink" href="#helper-interfaces" title="Permalink to this headline">¶</a></h2>
+<p>The helper <a class="reference internal" href="source/ansible_runner.html#module-ansible_runner.interface" title="ansible_runner.interface"><code class="xref py py-mod docutils literal notranslate"><span class="pre">interfaces</span></code></a> provides a quick way of supplying the recommended inputs in order to launch a <strong>Runner</strong> process.</p>
+</div>
+<div class="section" id="run-helper-function">
+<h2><code class="docutils literal notranslate"><span class="pre">run()</span></code> helper function<a class="headerlink" href="#run-helper-function" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="source/ansible_runner.html#ansible_runner.interface.run" title="ansible_runner.interface.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ansible_runner.interface.run()</span></code></a></p>
+<p>When called, this function will take the inputs (either provided as direct inputs to the function or from the <a class="reference internal" href="intro.html#inputdir"><span class="std std-ref">Runner Input Directory Hierarchy</span></a>), and execute <strong>Ansible</strong>. It will run in the
+foreground and return the <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner" title="ansible_runner.runner.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a> object when finished.</p>
+</div>
+<div class="section" id="run-async-helper-function">
+<h2><code class="docutils literal notranslate"><span class="pre">run_async()</span></code> helper function<a class="headerlink" href="#run-async-helper-function" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="source/ansible_runner.html#ansible_runner.interface.run_async" title="ansible_runner.interface.run_async"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ansible_runner.interface.run_async()</span></code></a></p>
+<p>Takes the same arguments as <a class="reference internal" href="source/ansible_runner.html#ansible_runner.interface.run" title="ansible_runner.interface.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ansible_runner.interface.run()</span></code></a> but will launch <strong>Ansible</strong> asynchronously and return a tuple containing
+the <code class="docutils literal notranslate"><span class="pre">thread</span></code> object and a <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner" title="ansible_runner.runner.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a> object. The <strong>Runner</strong> object can be inspected during execution.</p>
+</div>
+<div class="section" id="the-runner-object">
+<h2>The <code class="docutils literal notranslate"><span class="pre">Runner</span></code> object<a class="headerlink" href="#the-runner-object" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner" title="ansible_runner.runner.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a> object is returned as part of the execution of <strong>Ansible</strong> itself. Since it wraps both execution and output
+it has some helper methods for inspecting the results. Other than the methods and indirect properties, the instance of the object itself contains two direct
+properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rc</span></code> will represent the actual return code of the <strong>Ansible</strong> process</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">status</span></code> will represent the state and can be one of:</dt>
+<dd><ul class="first last">
+<li><code class="docutils literal notranslate"><span class="pre">unstarted</span></code>: This is a very brief state where the Runner task has been created but hasn’t actually started yet.</li>
+<li><code class="docutils literal notranslate"><span class="pre">successfull</span></code>: The <code class="docutils literal notranslate"><span class="pre">ansible</span></code> process finished successfully.</li>
+<li><code class="docutils literal notranslate"><span class="pre">failed</span></code>: The <code class="docutils literal notranslate"><span class="pre">ansible</span></code> process failed.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="runner-stdout">
+<h2><code class="docutils literal notranslate"><span class="pre">Runner.stdout</span></code><a class="headerlink" href="#runner-stdout" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner" title="ansible_runner.runner.Runner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span></code></a> object contains a property <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner.stdout" title="ansible_runner.runner.Runner.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ansible_runner.runner.Runner.stdout</span></code></a> which will return an open file
+handle containing the <code class="docutils literal notranslate"><span class="pre">stdout</span></code> of the <strong>Ansible</strong> process.</p>
+</div>
+<div class="section" id="runner-events">
+<h2><code class="docutils literal notranslate"><span class="pre">Runner.events</span></code><a class="headerlink" href="#runner-events" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner.events" title="ansible_runner.runner.Runner.events"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ansible_runner.runner.Runner.events</span></code></a> is a <code class="docutils literal notranslate"><span class="pre">generator</span></code> that will return the <a class="reference internal" href="intro.html#artifactevents"><span class="std std-ref">Playbook and Host Events</span></a> as Python <code class="docutils literal notranslate"><span class="pre">dict</span></code> objects.</p>
+</div>
+<div class="section" id="runner-stats">
+<h2><code class="docutils literal notranslate"><span class="pre">Runner.stats</span></code><a class="headerlink" href="#runner-stats" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner.stats" title="ansible_runner.runner.Runner.stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ansible_runner.runner.Runner.stats</span></code></a> is a property that will return the final <code class="docutils literal notranslate"><span class="pre">playbook</span> <span class="pre">stats</span></code> event from <strong>Ansible</strong> in the form of a Python <code class="docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Runner.host_events</span></code>
+<a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner.Runner.host_events" title="ansible_runner.runner.Runner.host_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ansible_runner.runner.Runner.host_events()</span></code></a> is a method that, given a hostname, will return a list of only <strong>Ansible</strong> event data executed on that Host.</p>
+</div>
+<div class="section" id="usage-examples">
+<h2>Usage examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ansible_runner</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">ansible_runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">private_data_dir</span><span class="o">=</span><span class="s1">&#39;/tmp/demo&#39;</span><span class="p">,</span> <span class="n">playbook</span><span class="o">=</span><span class="s1">&#39;test.yml&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;{}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">rc</span><span class="p">))</span>
+<span class="c1"># successful: 0</span>
+<span class="k">for</span> <span class="n">each_host_event</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">events</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">each_host_event</span><span class="o">.</span><span class="n">event</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Final status:&quot;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="providing-custom-behavior-and-inputs">
+<h2>Providing custom behavior and inputs<a class="headerlink" href="#providing-custom-behavior-and-inputs" title="Permalink to this headline">¶</a></h2>
+<p><strong>TODO</strong></p>
+<p>The helper methods are just one possible entrypoint, extending the classes used by these helper methods can allow a lot more custom behavior and functionality.</p>
+<p>Show:</p>
+<ul class="simple">
+<li>How <a class="reference internal" href="source/ansible_runner.html#ansible_runner.runner_config.RunnerConfig" title="ansible_runner.runner_config.RunnerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">Runner</span> <span class="pre">Config</span></code></a> is used and how overriding the methods and behavior can work</li>
+<li>Show how custom cancel and status callbacks can be supplied.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using Runner as a Python Module Interface to Ansible</a><ul>
+<li><a class="reference internal" href="#helper-interfaces">Helper Interfaces</a></li>
+<li><a class="reference internal" href="#run-helper-function"><code class="docutils literal notranslate"><span class="pre">run()</span></code> helper function</a></li>
+<li><a class="reference internal" href="#run-async-helper-function"><code class="docutils literal notranslate"><span class="pre">run_async()</span></code> helper function</a></li>
+<li><a class="reference internal" href="#the-runner-object">The <code class="docutils literal notranslate"><span class="pre">Runner</span></code> object</a></li>
+<li><a class="reference internal" href="#runner-stdout"><code class="docutils literal notranslate"><span class="pre">Runner.stdout</span></code></a></li>
+<li><a class="reference internal" href="#runner-events"><code class="docutils literal notranslate"><span class="pre">Runner.events</span></code></a></li>
+<li><a class="reference internal" href="#runner-stats"><code class="docutils literal notranslate"><span class="pre">Runner.stats</span></code></a></li>
+<li><a class="reference internal" href="#usage-examples">Usage examples</a></li>
+<li><a class="reference internal" href="#providing-custom-behavior-and-inputs">Providing custom behavior and inputs</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="standalone.html" title="previous chapter">Using Runner as a standalone command line tool</a></li>
+      <li>Next: <a href="container.html" title="next chapter">Using Runner as a container interface to Ansible</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/python_interface.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/python_interface.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

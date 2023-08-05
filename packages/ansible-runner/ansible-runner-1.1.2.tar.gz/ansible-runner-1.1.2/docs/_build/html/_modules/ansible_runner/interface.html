@@ -1,0 +1,197 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ansible_runner.interface &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ansible_runner.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Licensed to the Apache Software Foundation (ASF) under one</span>
+<span class="c1"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="c1"># distributed with this work for additional information</span>
+<span class="c1"># regarding copyright ownership.  The ASF licenses this file</span>
+<span class="c1"># to you under the Apache License, Version 2.0 (the</span>
+<span class="c1"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="c1"># with the License.  You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c1"># software distributed under the License is distributed on an</span>
+<span class="c1"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="c1"># KIND, either express or implied.  See the License for the</span>
+<span class="c1"># specific language governing permissions and limitations</span>
+<span class="c1"># under the License.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">ansible_runner</span> <span class="k">import</span> <span class="n">output</span>
+<span class="kn">from</span> <span class="nn">ansible_runner.runner_config</span> <span class="k">import</span> <span class="n">RunnerConfig</span>
+<span class="kn">from</span> <span class="nn">ansible_runner.runner</span> <span class="k">import</span> <span class="n">Runner</span>
+<span class="kn">from</span> <span class="nn">ansible_runner.utils</span> <span class="k">import</span> <span class="n">dump_artifacts</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;ansible-runner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="init_runner"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.interface.init_runner">[docs]</a><span class="k">def</span> <span class="nf">init_runner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Initialize the Runner() instance</span>
+
+<span class="sd">    This function will properly initialize both run() and run_async()</span>
+<span class="sd">    functions in the same way and return a value instance of Runner.</span>
+
+<span class="sd">    See parameters given to :py:func:`ansible_runner.interface.run`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">dump_artifacts</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">output</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+
+    <span class="n">debug</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">set_debug</span><span class="p">(</span><span class="s1">&#39;enable&#39;</span> <span class="k">if</span> <span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span> <span class="k">else</span> <span class="s1">&#39;disable&#39;</span><span class="p">)</span>
+
+    <span class="n">logfile</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;logfile&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">logfile</span><span class="p">:</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">set_logfile</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+
+    <span class="n">rc</span> <span class="o">=</span> <span class="n">RunnerConfig</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">rc</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">Runner</span><span class="p">(</span><span class="n">rc</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.interface.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Run an Ansible Runner task in the foreground and return a Runner object when complete.</span>
+
+<span class="sd">    :param private_data_dir: The directory containing all runner metadata needed to invoke the runner</span>
+<span class="sd">                             module. Output artifacts will also be stored here for later consumption.</span>
+<span class="sd">    :param ident: The run identifier for this invocation of Runner. Will be used to create and name</span>
+<span class="sd">                  the artifact directory holding the results of the invocation.</span>
+<span class="sd">    :param json_mode: Store event data in place of stdout on the console and in the stdout file</span>
+<span class="sd">    :param playbook: The playbook (either supplied here as a list or string... or as a path relative to</span>
+<span class="sd">                     ``private_data_dir/project``) that will be invoked by runner when executing Ansible.</span>
+<span class="sd">    :param inventory: Overridees the inventory directory/file (supplied at ``private_data_dir/inventory``) with</span>
+<span class="sd">                      a specific host or list of hosts. This can take the form of</span>
+<span class="sd">      - Path to the inventory file in the ``private_data_dir``</span>
+<span class="sd">      - Native python dict supporting the YAML/json inventory structure</span>
+<span class="sd">      - A text INI formatted string</span>
+<span class="sd">    :param envvars: Environment variables to be used when running Ansible. Environment variables will also be</span>
+<span class="sd">                    read from ``env/envvars`` in ``private_data_dir``</span>
+<span class="sd">    :param extravars: Extra variables to be passed to Ansible at runtime using ``-e``. Extra vars will also be</span>
+<span class="sd">                      read from ``env/extravars`` in ``private_data_dir``.</span>
+<span class="sd">    :param passwords: A dictionary containing password prompt patterns and response values used when processing output from</span>
+<span class="sd">                      Ansible. Passwords will also be read from ``env/passwords`` in ``private_data_dir``.</span>
+<span class="sd">    :param settings: A dictionary containing settings values for the ``ansible-runner`` runtime environment. These will also</span>
+<span class="sd">                     be read from ``env/settings`` in ``private_data_dir``.</span>
+<span class="sd">    :param ssh_key: The ssh private key passed to ``ssh-agent`` as part of the ansible-playbook run.</span>
+<span class="sd">    :param cmdline: Commnad line options passed to Ansible read from ``env/cmdline`` in ``private_data_dir``</span>
+<span class="sd">    :param limit: Matches ansible&#39;s ``--limit`` parameter to further constrain the inventory to be used</span>
+<span class="sd">    :param verbosity: Control how verbose the output of ansible-playbook is</span>
+<span class="sd">    :param quiet: Disable all output</span>
+<span class="sd">    :param artifact_dir: The path to the directory where artifacts should live</span>
+<span class="sd">    :type private_data_dir: str</span>
+<span class="sd">    :type ident: str</span>
+<span class="sd">    :type json_mode: bool</span>
+<span class="sd">    :type playbook: str or filename or list</span>
+<span class="sd">    :type inventory: str or dict or list</span>
+<span class="sd">    :type envvars: dict</span>
+<span class="sd">    :type extravars: dict</span>
+<span class="sd">    :type passwords: dict</span>
+<span class="sd">    :type settings: dict</span>
+<span class="sd">    :type ssh_key: str</span>
+<span class="sd">    :type artifact_dir: str</span>
+<span class="sd">    :type cmdline: str</span>
+<span class="sd">    :type quiet: bool</span>
+<span class="sd">    :type verbosity: int</span>
+
+<span class="sd">    :returns: A :py:class:`ansible_runner.runner.Runner` object</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">init_runner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="run_async"><a class="viewcode-back" href="../../source/ansible_runner.html#ansible_runner.interface.run_async">[docs]</a><span class="k">def</span> <span class="nf">run_async</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Runs an Ansible Runner task in the background which will start immediately. Returns the thread object and a Runner object.</span>
+
+<span class="sd">    This uses the same parameters as :py:func:`ansible_runner.interface.run`</span>
+
+<span class="sd">    :returns: A tuple containing a :py:class:`threading.Thread` object and a :py:class:`ansible_runner.runner.Runner` object</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">init_runner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">runner_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+    <span class="n">runner_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">runner_thread</span><span class="p">,</span> <span class="n">r</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

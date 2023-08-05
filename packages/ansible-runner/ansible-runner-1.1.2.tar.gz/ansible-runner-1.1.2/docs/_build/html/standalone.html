@@ -1,0 +1,162 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using Runner as a standalone command line tool &#8212; ansible-runner 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using Runner as a Python Module Interface to Ansible" href="python_interface.html" />
+    <link rel="prev" title="Installing Ansible Runner" href="install.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-runner-as-a-standalone-command-line-tool">
+<span id="standalone"></span><h1>Using Runner as a standalone command line tool<a class="headerlink" href="#using-runner-as-a-standalone-command-line-tool" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>Ansible Runner</strong> command line tool can be used as a standard command line interface to <strong>Ansible</strong> itself but is primarily intended
+to fit into automation and pipeline workflows. Because of this, it has a bit of a different workflow than <strong>Ansible</strong> itself because you can select between a few different modes to launch the command.</p>
+<p>While you can launch <strong>Runner</strong> and provide it all of the inputs as arguments to the command line (as you do with <strong>Ansible</strong> itself),
+there is another interface where inputs are gathered into a single location referred to in the command line parameters as <code class="docutils literal notranslate"><span class="pre">private_data_dir</span></code>.
+(see <a class="reference internal" href="intro.html#inputdir"><span class="std std-ref">Runner Input Directory Hierarchy</span></a>)</p>
+<p>To view the parameters accepted by <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ansible-runner --help
+</pre></div>
+</div>
+<p>An example invocation of the standalone <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> utility:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ansible-runner -p playbook.yml run /tmp/private
+</pre></div>
+</div>
+<p>Where playbook.yml is the playbook from the <code class="docutils literal notranslate"><span class="pre">/tmp/private/projects</span></code> directory, and <code class="docutils literal notranslate"><span class="pre">run</span></code> is the command mode you want to invoke <strong>Runner</strong> with</p>
+<p>The different <strong>commands</strong> that runner accepts are:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">run</span></code> starts <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> in the foreground and waits until the underlying <strong>Ansible</strong> process completes before returning</li>
+<li><code class="docutils literal notranslate"><span class="pre">start</span></code> starts <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> as a background daemon process and generates a pid file</li>
+<li><code class="docutils literal notranslate"><span class="pre">stop</span></code> terminates an <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> process that was launched in the background with <code class="docutils literal notranslate"><span class="pre">start</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">is-alive</span></code> checks the status of an <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code> process that was started in the background with <code class="docutils literal notranslate"><span class="pre">start</span></code></li>
+</ul>
+<p>While <strong>Runner</strong> is running it creates an <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> directory (see <a class="reference internal" href="intro.html#artifactdir"><span class="std std-ref">Runner Artifacts Directory Hierarchy</span></a>) regardless of what mode it was started
+in. The resulting output and status from <strong>Ansible</strong> will be located here. You can control the exact location underneath the <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> directory
+with the <code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">IDENT</span></code> argument to <code class="docutils literal notranslate"><span class="pre">ansible-runner</span></code>, otherwise a random UUID will be generated.</p>
+<div class="section" id="executing-runner-in-the-foreground">
+<h2>Executing <strong>Runner</strong> in the foreground<a class="headerlink" href="#executing-runner-in-the-foreground" title="Permalink to this headline">¶</a></h2>
+<p>When launching <strong>Runner</strong> with the <code class="docutils literal notranslate"><span class="pre">run</span></code> command, as above, the program will stay in the foreground and you’ll see output just as you expect from a normal
+<strong>Ansible</strong> process. <strong>Runner</strong> will still populate the <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> directory, as mentioned in the previous section, to preserve the output and allow processing
+of the artifacts after exit.</p>
+</div>
+<div class="section" id="executing-runner-in-the-background">
+<h2>Executing <strong>Runner</strong> in the background<a class="headerlink" href="#executing-runner-in-the-background" title="Permalink to this headline">¶</a></h2>
+<p>When launching <strong>Runner</strong> with the <code class="docutils literal notranslate"><span class="pre">start</span></code> command, the program will generate a pid file and move to the background. You can check its status with the
+<code class="docutils literal notranslate"><span class="pre">is-alive</span></code> command, or terminate it with the <code class="docutils literal notranslate"><span class="pre">stop</span></code> command. You can find the stdout, status, and return code in the <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> directory.</p>
+</div>
+<div class="section" id="running-playbooks">
+<h2>Running Playbooks<a class="headerlink" href="#running-playbooks" title="Permalink to this headline">¶</a></h2>
+<p>An example invocation using <code class="docutils literal notranslate"><span class="pre">demo</span></code> as private directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ansible-runner --playbook test.yml run demo
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-roles-directly">
+<h2>Running Roles Directly<a class="headerlink" href="#running-roles-directly" title="Permalink to this headline">¶</a></h2>
+<p>An example invocation using <code class="docutils literal notranslate"><span class="pre">demo</span></code> as private directory and <code class="docutils literal notranslate"><span class="pre">localhost</span></code> as target:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ansible-runner --role testrole --hosts localhost run demo
+</pre></div>
+</div>
+<p>Ansible roles directory can be provided with <code class="docutils literal notranslate"><span class="pre">--roles-path</span></code> option. Role variables can be passed with <code class="docutils literal notranslate"><span class="pre">--role-vars</span></code> at runtime.</p>
+</div>
+<div class="section" id="outputting-json-raw-event-data-to-the-console-instead-of-normal-output">
+<span id="outputjson"></span><h2>Outputting json (raw event data) to the console instead of normal output<a class="headerlink" href="#outputting-json-raw-event-data-to-the-console-instead-of-normal-output" title="Permalink to this headline">¶</a></h2>
+<p><strong>Runner</strong> supports outputting json event data structure directly to the console (and stdout file) instead of the standard <strong>Ansible</strong> output, thus
+mimicing the behavior of the <code class="docutils literal notranslate"><span class="pre">json</span></code> output plugin. This is in addition to the event data that’s already present in the artifact directory. All that is needed
+is to supply the <code class="docutils literal notranslate"><span class="pre">-j</span></code> argument on the command line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ansible-runner ... -j ...
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using Runner as a standalone command line tool</a><ul>
+<li><a class="reference internal" href="#executing-runner-in-the-foreground">Executing <strong>Runner</strong> in the foreground</a></li>
+<li><a class="reference internal" href="#executing-runner-in-the-background">Executing <strong>Runner</strong> in the background</a></li>
+<li><a class="reference internal" href="#running-playbooks">Running Playbooks</a></li>
+<li><a class="reference internal" href="#running-roles-directly">Running Roles Directly</a></li>
+<li><a class="reference internal" href="#outputting-json-raw-event-data-to-the-console-instead-of-normal-output">Outputting json (raw event data) to the console instead of normal output</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="install.html" title="previous chapter">Installing Ansible Runner</a></li>
+      <li>Next: <a href="python_interface.html" title="next chapter">Using Runner as a Python Module Interface to Ansible</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/standalone.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Red Hat Ansible.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/standalone.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
