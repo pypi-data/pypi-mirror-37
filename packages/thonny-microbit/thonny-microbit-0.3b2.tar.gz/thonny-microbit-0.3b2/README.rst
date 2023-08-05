@@ -1,0 +1,1 @@
+See https://bitbucket.org/plas/thonny/wiki/MicroPython for more info.
