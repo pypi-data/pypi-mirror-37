@@ -1,0 +1,122 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+  xmlns:tal="http://xml.zope.org/namespaces/tal"
+  xmlns:metal="http://xml.zope.org/namespaces/metal"
+  xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+  metal:use-macro="context/main_template/macros/master"
+  i18n:domain="eea">
+
+<body>
+
+  <metal:content-core fill-slot="content-core">
+
+     <metal:block define-macro="content-core">
+      <div tal:define="
+        self nocall:context/@@faceted-tabular-view;
+        Batch python:modules['Products.CMFPlone'].Batch;
+        b_start python:request.get('b_start', 0);
+        batch python:isinstance(folderContents, Batch) and folderContents or Batch(folderContents, 100, int(b_start), orphan=2);">
+
+        <div metal:use-macro="context/batch_macros/macros/navigation" />
+
+        <table class="table table-striped table-bordered"
+            i18n:domain="brasil.gov.behaviors"
+            summary="Report listing"
+            i18n:attributes="summary summary_report_listing;"
+            tal:define="fields self/get_faceted_tabular_fields;"
+            >
+          <thead>
+            <tr>
+                <th tal:content="fields/column_01_title"
+                    tal:condition="fields/column_01_title|nothing">
+                </th>
+                <th tal:content="fields/column_02_title"
+                    tal:condition="fields/column_02_title|nothing">
+                </th>
+                <th tal:content="fields/column_03_title"
+                    tal:condition="fields/column_03_title|nothing">
+                </th>
+                <th tal:content="fields/column_04_title"
+                    tal:condition="fields/column_04_title|nothing">
+                </th>
+                <th tal:content="fields/column_05_title"
+                    tal:condition="fields/column_05_title|nothing">
+                </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tal:entries tal:repeat="brain batch">
+              <tal:block tal:define="url python:self.get_url(brain);"
+                                     >
+                <tr metal:define-macro="listitem"
+                    tal:define="oddrow repeat/brain/odd;"
+                    tal:attributes="class python: oddrow and 'even' or 'odd'">
+
+                    <td tal:condition="fields/column_01">
+                      <a tal:attributes="href url"
+                         tal:content="python:self.get_value(fields['column_01'], fields['column_01_vocab'], brain)"
+                         tal:condition="fields/column_01_link">
+                      </a>
+                      <tal:text
+                         content="python:self.get_value(fields['column_01'], fields['column_01_vocab'], brain)"
+                         tal:condition="not:fields/column_01_link">
+                      </tal:text>
+                    </td>
+
+                    <td tal:condition="fields/column_02">
+                      <a tal:attributes="href url"
+                         tal:content="python:self.get_value(fields['column_02'], fields['column_02_vocab'], brain)"
+                         tal:condition="fields/column_02_link">
+                      </a>
+                      <tal:text
+                         content="python:self.get_value(fields['column_02'], fields['column_02_vocab'], brain)"
+                         tal:condition="not:fields/column_02_link">
+                      </tal:text>
+                    </td>
+
+                    <td tal:condition="fields/column_03">
+                      <a tal:attributes="href url"
+                         tal:content="python:self.get_value(fields['column_03'], fields['column_03_vocab'], brain)"
+                         tal:condition="fields/column_03_link">
+                      </a>
+                      <tal:text
+                         content="python:self.get_value(fields['column_03'], fields['column_03_vocab'], brain)"
+                         tal:condition="not:fields/column_03_link">
+                      </tal:text>
+                    </td>
+
+                    <td tal:condition="fields/column_04">
+                      <a tal:attributes="href url"
+                         tal:content="python:self.get_value(fields['column_04'], fields['column_04_vocab'], brain)"
+                         tal:condition="fields/column_04_link">
+                      </a>
+                      <tal:text
+                         content="python:self.get_value(fields['column_04'], fields['column_04_vocab'], brain)"
+                         tal:condition="not:fields/column_04_link">
+                      </tal:text>
+                    </td>
+
+                    <td tal:condition="fields/column_05">
+                      <a tal:attributes="href url"
+                         tal:content="python:self.get_value(fields['column_05'], fields['column_05_vocab'], brain)"
+                         tal:condition="fields/column_05_link">
+                      </a>
+                      <tal:text
+                         content="python:self.get_value(fields['column_05'], fields['column_05_vocab'], brain)"
+                         tal:condition="not:fields/column_05_link">
+                      </tal:text>
+                    </td>
+
+                </tr>
+              </tal:block>
+            </tal:entries>
+          </tbody>
+        </table>
+
+        <div metal:use-macro="context/batch_macros/macros/navigation" />
+
+      </div>
+
+    </metal:block>
+  </metal:content-core>
+</body>
+</html>

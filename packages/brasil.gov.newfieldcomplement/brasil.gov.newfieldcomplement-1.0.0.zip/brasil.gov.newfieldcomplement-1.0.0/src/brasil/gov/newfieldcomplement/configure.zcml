@@ -1,0 +1,56 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="brasil.gov.newfieldcomplement">
+
+  <i18n:registerTranslations directory="locales" />
+
+  <!-- Dependencies -->
+  <include package="plone.app.registry" />
+  <include package="eea.facetednavigation" />
+
+
+  <include package=".browser" />
+
+  <include file="permissions.zcml" />
+
+  <include file="upgrades.zcml" />
+
+  <genericsetup:registerProfile
+      name="default"
+      title="brasil.gov.newfieldcomplement"
+      directory="profiles/default"
+      description="Installs the brasil.gov.newfieldcomplement add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.post_install"
+      />
+
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="brasil.gov.newfieldcomplement (uninstall)"
+      directory="profiles/uninstall"
+      description="Uninstalls the brasil.gov.newfieldcomplement add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.uninstall"
+      />
+
+  <genericsetup:registerProfile
+      name="tests"
+      title="brasil.gov.newfieldcomplement"
+      directory="profiles/tests"
+      description="Tests of brasil.gov.newfieldcomplement."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="brasil.gov.newfieldcomplement-hiddenprofiles"
+      />
+
+  <!-- -*- extra stuff goes here -*- -->
+
+  <include file="vocabularies.zcml" />
+
+</configure>

@@ -1,0 +1,76 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:faceted="http://namespaces.zope.org/faceted"
+    i18n_domain="brasil.gov.newfieldcomplement">
+
+  <!-- Publish static files -->
+  <browser:resourceDirectory
+    name="brasil.gov.newfieldcomplement"
+    directory="static"
+  />
+
+  <include package="plone.app.registry" />
+
+  <include package="brasil.gov.newfieldcomplement" file="permissions.zcml" />
+
+  <!-- Control panel -->
+  <browser:page
+      name="dynamic-vocabularies"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      class=".dynamic_vocabularies_form.DynamicVocabulariesControlPanel"
+      permission="brasil.gov.newfieldcomplement.Setup"
+      layer="brasil.gov.newfieldcomplement.interfaces.IBrasilGovNewfieldcomplementLayer"
+  />
+
+  <!-- AddIndex -->
+  <browser:page
+    name="add-index-form"
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    permission="cmf.ManagePortal"
+    class=".add_index_form.AddIndexFormView"
+    layer="brasil.gov.newfieldcomplement.interfaces.IBrasilGovNewfieldcomplementLayer"
+  />
+
+  <!-- Faceted Tabular -->
+  <include package="Products.CMFCore" file="permissions.zcml"/>
+
+  <faceted:view
+    name="faceted-tabular-view"
+    class=".faceted_tabular_view.FacetedTabularView"
+    template="faceted_tabular_view.pt"
+    title="Faceted Tabular View"
+    permission="zope2.View"
+    layer="brasil.gov.newfieldcomplement.interfaces.IBrasilGovNewfieldcomplementLayer"
+  />
+
+  <!-- https://stackoverflow.com/questions/33305555/how-to-use-annotations-with-z3c-forms-dictionaryfield -->
+  <adapter
+    for="persistent.dict.PersistentDict zope.schema.interfaces.IField"
+    provides="z3c.form.interfaces.IDataManager"
+    factory="z3c.form.datamanager.DictionaryField"
+  />
+  <browser:page
+    for="Products.CMFCore.interfaces.IFolderish"
+    name="faceted-tabular-config"
+    permission="cmf.ModifyPortalContent"
+    class=".faceted_tabular_config.FacetedTabularConfigForm"
+    layer="brasil.gov.newfieldcomplement.interfaces.IBrasilGovNewfieldcomplementLayer"
+  />
+
+  <!-- Utils -->
+  <browser:page
+    name="newfieldcomplement_utils"
+    for="*"
+    permission="zope.Public"
+    class=".utils.UtilsView"
+    allowed_interface="brasil.gov.newfieldcomplement.interfaces.IUtilsView"
+    layer="brasil.gov.newfieldcomplement.interfaces.IBrasilGovNewfieldcomplementLayer"
+  />
+
+
+</configure>
