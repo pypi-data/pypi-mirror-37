@@ -1,0 +1,68 @@
+<style>
+    .data_type {
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+
+    .column_name {
+        font-size: 1.2em;
+    }
+
+    .info_items {
+        margin: 10px 0;
+        font-size: 0.8em;
+    }
+
+    .optimus_table tr:nth-child(even) {
+        background-color: #f2f2f2 !important;
+    }
+
+    .optimus_table tr:nth-child(odd) {
+        background-color: #ffffff !important;
+    }
+
+    .optimus_table thead {
+        border-bottom: 1px solid black;
+    }
+    .optimus_table{
+        font-size: 12px;
+    }
+
+</style>
+
+{% macro header_footer(limit, total_rows, total_cols, partitions) %}
+<div class="info_items">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
+<div class="info_items">{{partitions}} partition(s)</div>
+{% endmacro %}
+
+{{header_footer(limit, total_rows, total_cols, partitions)}}
+<table class="optimus_table">
+    <thead>
+    <tr>
+        {%for col in cols: %}
+        <th>
+            <div class="column_name">{{col[0]}}</div>
+            <div class="data_type">{{loop.index}} ({{col[1]}})</div>
+            <div class="data_type">
+                {% if col[2] == true %}
+                nullable
+                {% endif %}
+            </div>
+        </th>
+        {% endfor %}
+    </tr>
+
+    </thead>
+    <tbody>
+    {%for r in data:%}
+    <tr>
+        {%for k,v in r.items(): %}
+        <td>
+            {{v|string|replace(" ", "\u2E31")}}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{{header_footer(limit, total_rows, total_cols,partitions)}}
