@@ -1,0 +1,34 @@
+#! /bin/bash
+: '
+Usage:
+
+    USER=root PASSWORD=root ./deploy.sh 192.168.x.1,192.168.x.2
+'
+
+INSTALL_PATH="/data/{{ project_name }}"
+IMAGE="ttwshell/hobbit-app:latest"
+
+commonExclude="*.pyc* .* /.git/* /.test/* /*/__pycache__/* /.pytest_cache/* /logs/* /tests/* zip.sh"
+commonInclude="/app/* /migrations/* requirements.txt"
+function mzip() {
+    serverInclude="docker-compose.yml Dockerfile /configs/*"
+    zip -r server.zip . --exclude ${commonExclude} -i ${commonInclude} -i ${serverInclude}
+}
+
+function mssh() {
+    sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no ${USER}@${host} $1
+}
+
+function deploy() {
+    for host in $(echo $1 | tr "," "\n")
+    do
+        echo -e "\033[32mdeploy to ${host} ...\033[0m"
+        mssh "sudo mkdir -p ${INSTALL_PATH} && sudo chown -R ${USER}:${USER} ${INSTALL_PATH}"
+        sshpass -p ${PASSWORD} scp ./server.zip ${USER}@${host}:${INSTALL_PATH}
+        mssh "docker pull ${IMAGE}"
+        mssh "cd ${INSTALL_PATH} && unzip -o server.zip  -d . && docker-compose down && docker-compose up -d"
+    done
+}
+
+mzip server && deploy $1
+
