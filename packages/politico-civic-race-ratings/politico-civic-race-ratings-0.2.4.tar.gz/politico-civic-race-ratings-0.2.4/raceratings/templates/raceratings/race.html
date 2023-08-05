@@ -1,0 +1,72 @@
+{% extends 'raceratings/base.html' %}
+{% block title %}
+<title>{{ race.office.label|title }} Race Rating</title>
+{% endblock %}
+
+{% block page-meta %}
+<!-- Site URL -->
+<meta property="og:url" content="https://www.politico.com/election-results/{{year}}/{{state}}/{{subpath}}" />
+<link rel="canonical" href="https://www.politico.com/election-results/{{year}}/{{state}}/{{subpath}}" />
+<!-- Project title -->
+<meta property="twitter:title" content="{{ race.office.label|title }} Race Rating" />
+<meta property="og:title" content="{{ race.office.label|title }} Race Rating" />
+<!-- Project description -->
+<meta property="twitter:description" content="Get real-time {{year}} {{ division.label|title }} primary election results & live maps by county. POLITICO's coverage of the {{year}} midterm races for Senate, House & state governors." />
+<meta property="og:description" content="Get real-time {{year}} {{ division.label|title }} primary election results & live maps by county. POLITICO's coverage of the {{year}} midterm races for Senate, House & state governors." />
+<meta name="description" content="Get real-time {{year}} {{ division.label|title }} primary election results & live maps by county. POLITICO's coverage of the {{year}} midterm races for Senate, House & state governors." />
+{% endblock %}
+
+{% block meta-image %}
+{% endblock %}
+
+{% block google-meta %}
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "NewsArticle",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://www.politico.com/election-results/{{year}}/{{state}}/{{subpath}}"
+    },
+    "headline": "{{ race.office.label|title }} Race Rating",
+    "description": "Get real-time {{year}} {{ division.label|title }} primary election results & live maps by county. POLITICO's coverage of the {{year}} midterm races for Senate, House & state governors.",
+    "image": [
+      "https://www.politico.com/election-results/cdn/img/2018/share/{{division.code_components.postal|lower}}/share.jpg"
+     ],
+    "datePublished": "{{ election_date }}T02:00:00+04:00",
+    "dateModified": "{{ now }}",
+    "isAccessibleForFree":"True",
+    "author": {
+      "@type": "Person",
+      "name": "POLITICO Staff"
+    },
+   "publisher": {
+      "@type": "Organization",
+      "name": "POLITICO",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://static.politico.com/6d/9f/1e153a1748fa9ea656c575dc6dff/politico-logo-60px-tall-1.png"
+      }
+    }
+  }
+</script>
+{% endblock %}
+
+
+{% block api %}
+<script>
+  window.appConfig = {
+    api: {
+      data: '{{ paths.data }}?format=json',
+    }
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="app"></div>
+{% endblock %}
+
+{% block relative_foot %}
+<script type="text/javascript" src="{{ paths.js }}"></script>
+{% endblock %}
