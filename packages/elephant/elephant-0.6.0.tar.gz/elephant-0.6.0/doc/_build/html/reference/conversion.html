@@ -1,0 +1,482 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Data format conversions &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Utility functions to manipulate Neo objects" href="neo_tools.html" />
+    <link rel="prev" title="Spike train surrogates" href="spike_train_surrogates.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="neo_tools.html" title="Utility functions to manipulate Neo objects"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="spike_train_surrogates.html" title="Spike train surrogates"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="spike_train_surrogates.html"
+                        title="previous chapter">Spike train surrogates</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="neo_tools.html"
+                        title="next chapter">Utility functions to manipulate Neo objects</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/conversion.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.conversion">
+<span id="data-format-conversions"></span><h1>Data format conversions<a class="headerlink" href="#module-elephant.conversion" title="Permalink to this headline">¶</a></h1>
+<p>This module allows to convert standard data representations
+(e.g., a spike train stored as Neo SpikeTrain object)
+into other representations useful to perform calculations on the data.
+An example is the representation of a spike train as a sequence of 0-1 values
+(binned spike train).</p>
+<dl class="class">
+<dt id="elephant.conversion.BinnedSpikeTrain">
+<em class="property">class </em><code class="descclassname">elephant.conversion.</code><code class="descname">BinnedSpikeTrain</code><span class="sig-paren">(</span><em>spiketrains</em>, <em>binsize=None</em>, <em>num_bins=None</em>, <em>t_start=None</em>, <em>t_stop=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class which calculates a binned spike train and provides methods to
+transform the binned spike train to a boolean matrix or a matrix with
+counted time points.</p>
+<p>A binned spike train represents the occurrence of spikes in a certain time
+frame.
+I.e., a time series like [0.5, 0.7, 1.2, 3.1, 4.3, 5.5, 6.7] is
+represented as [0, 0, 1, 3, 4, 5, 6]. The outcome is dependent on given
+parameter such as size of bins, number of bins, start and stop points.</p>
+<p>A boolean matrix represents the binned spike train in a binary (True/False)
+manner.
+Its rows represent the number of spike trains
+and the columns represent the binned index position of a spike in a
+spike train.
+The calculated matrix columns contains <strong>Trues</strong>, which indicate
+a spike.</p>
+<p>A matrix with counted time points is calculated the same way, but its
+columns contain the number of spikes that occurred in the spike train(s).
+It counts the occurrence of the timing of a spike in its respective
+spike train.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spiketrains</strong> : List of <cite>neo.SpikeTrain</cite> or a <cite>neo.SpikeTrain</cite> object</p>
+<blockquote>
+<div><p>Spiketrain(s)to be binned.</p>
+</div></blockquote>
+<p><strong>binsize</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>Width of each time bin.
+Default is <cite>None</cite></p>
+</div></blockquote>
+<p><strong>num_bins</strong> : int</p>
+<blockquote>
+<div><p>Number of bins of the binned spike train.
+Default is <cite>None</cite></p>
+</div></blockquote>
+<p><strong>t_start</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>Time of the first bin (left extreme; included).
+Default is <cite>None</cite></p>
+</div></blockquote>
+<p><strong>t_stop</strong> : quantities.Quantity</p>
+<blockquote class="last">
+<div><p>Stopping time of the last bin (right extreme; excluded).
+Default is <cite>None</cite></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_to_binned</span></code>, <a class="reference internal" href="#elephant.conversion.BinnedSpikeTrain.spike_indices" title="elephant.conversion.BinnedSpikeTrain.spike_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spike_indices</span></code></a>, <a class="reference internal" href="#elephant.conversion.BinnedSpikeTrain.to_bool_array" title="elephant.conversion.BinnedSpikeTrain.to_bool_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_bool_array</span></code></a>, <a class="reference internal" href="#elephant.conversion.BinnedSpikeTrain.to_array" title="elephant.conversion.BinnedSpikeTrain.to_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_array</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>There are four cases the given parameters must fulfill.
+Each parameter must be a combination of following order or it will raise
+a value error:
+* t_start, num_bins, binsize
+* t_start, num_bins, t_stop
+* t_start, bin_size, t_stop
+* t_stop, num_bins, binsize</p>
+<p>It is possible to give the SpikeTrain objects and one parameter
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">num_bins</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">binsize</span></code>). The start and stop time will be
+calculated from given SpikeTrain objects (max start and min stop point).
+Missing parameter will also be calculated automatically.
+All parameters will be checked for consistency. A corresponding error will
+be raised, if one of the four parameters does not match the consistency
+requirements.</p>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="attribute">
+<dt id="elephant.conversion.BinnedSpikeTrain.bin_centers">
+<code class="descname">bin_centers</code><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.bin_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns each center time point of all bins between start and stop
+points.</p>
+<p>The center of each bin of all time steps between start and stop
+(start, stop).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bin_edges</strong> : quantities.Quantity array</p>
+<blockquote class="last">
+<div><p>All center edges in interval (start, stop) are returned as
+a quantity array.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="elephant.conversion.BinnedSpikeTrain.bin_edges">
+<code class="descname">bin_edges</code><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.bin_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all time edges with <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_bins</span></code> bins as a quantity array.</p>
+<p>The borders of all time steps between start and stop [start, stop]
+with:attr:<cite>num_bins</cite> bins are regarded as edges.
+The border of the last bin is included.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bin_edges</strong> : quantities.Quantity array</p>
+<blockquote class="last">
+<div><p>All edges in interval [start, stop] with <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_bins</span></code> bins
+are returned as a quantity array.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.conversion.BinnedSpikeTrain.remove_stored_array">
+<code class="descname">remove_stored_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain.remove_stored_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.remove_stored_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the matrix with counted time points from memory.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="elephant.conversion.BinnedSpikeTrain.spike_indices">
+<code class="descname">spike_indices</code><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.spike_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of lists for each spike train (i.e., rows of the binned matrix),
+that in turn contains for each spike the index into the binned matrix
+where this spike enters.</p>
+<p>In contrast to <cite>to_sparse_array().nonzero()</cite>, this function will report
+two spikes falling in the same bin as two entries.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">neo</span> <span class="k">as</span> <span class="nn">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">,</span> <span class="mf">4.3</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">spike_indices</span><span class="p">)</span>
+<span class="go">[[0, 0, 1, 3, 4, 5, 6]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[0 1 3 4 5 6]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.conversion.BinnedSpikeTrain.to_array">
+<code class="descname">to_array</code><span class="sig-paren">(</span><em>store_array=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain.to_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.to_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dense matrix, calculated from the sparse matrix with counted
+time points, which rows represents the number of spike trains and the
+columns represents the binned index position of a spike in a
+spike train.
+The  matrix columns contain the number of spikes that
+occurred in the spike train(s).
+If the <strong>boolean</strong> <code class="xref py py-attr docutils literal notranslate"><span class="pre">store_array</span></code> is set to <strong>True</strong> the matrix
+will be stored in memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>matrix</strong> : numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Matrix with spike times. Columns represent the index position of
+the binned spike and rows represent the number of spike trains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix.toarray</span></code></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">neo</span> <span class="k">as</span> <span class="nn">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">,</span> <span class="mf">4.3</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_array</span><span class="p">())</span>
+<span class="go">[[2 1 0 1 1 1 1 0 0 0]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.conversion.BinnedSpikeTrain.to_bool_array">
+<code class="descname">to_bool_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain.to_bool_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.to_bool_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dense matrix (<cite>scipy.sparse.csr_matrix</cite>), which rows
+represent the number of spike trains and the columns represent the
+binned index position of a spike in a spike train.
+The matrix columns contain <strong>True</strong>, which indicate a spike and
+<strong>False</strong> for non spike.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bool matrix</strong> : numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Returns a dense matrix representation of the sparse matrix,
+with <strong>True</strong> indicating a spike and <strong>False*</strong> for
+non spike.
+The <strong>Trues</strong> in the columns represent the index
+position of the spike in the spike train and rows represent the
+number of spike trains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix.toarray</span></code></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">neo</span> <span class="k">as</span> <span class="nn">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">,</span> <span class="mf">4.3</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_bool_array</span><span class="p">())</span>
+<span class="go">[[ True  True False  True  True  True  True False False False]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.conversion.BinnedSpikeTrain.to_sparse_array">
+<code class="descname">to_sparse_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain.to_sparse_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.to_sparse_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for sparse matrix with time points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">matrix: scipy.sparse.csr_matrix</p>
+<blockquote class="last">
+<div><p>Sparse matrix, counted version.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix</span></code>, <a class="reference internal" href="#elephant.conversion.BinnedSpikeTrain.to_array" title="elephant.conversion.BinnedSpikeTrain.to_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_array</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.conversion.BinnedSpikeTrain.to_sparse_bool_array">
+<code class="descname">to_sparse_bool_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#BinnedSpikeTrain.to_sparse_bool_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.BinnedSpikeTrain.to_sparse_bool_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for <strong>boolean</strong> version of the sparse matrix, calculated from
+sparse matrix with counted time points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">matrix: scipy.sparse.csr_matrix</p>
+<blockquote class="last">
+<div><p>Sparse matrix, binary, boolean version.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.sparse.csr_matrix</span></code>, <a class="reference internal" href="#elephant.conversion.BinnedSpikeTrain.to_bool_array" title="elephant.conversion.BinnedSpikeTrain.to_bool_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_bool_array</span></code></a></p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.conversion.binarize">
+<code class="descclassname">elephant.conversion.</code><code class="descname">binarize</code><span class="sig-paren">(</span><em>spiketrain</em>, <em>sampling_rate=None</em>, <em>t_start=None</em>, <em>t_stop=None</em>, <em>return_times=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/conversion.html#binarize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.conversion.binarize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array indicating if spikes occured at individual time points.</p>
+<p>The array contains boolean values identifying whether one or more spikes
+happened in the corresponding time bin.  Time bins start at <cite>t_start</cite>
+and end at <cite>t_stop</cite>, spaced in <cite>1/sampling_rate</cite> intervals.</p>
+<p>Accepts either a Neo SpikeTrain, a Quantity array, or a plain NumPy array.
+Returns a boolean array with each element being the presence or absence of
+a spike in that time bin.  The number of spikes in a time bin is not
+considered.</p>
+<p>Optionally also returns an array of time points corresponding to the
+elements of the boolean array.  The units of this array will be the same as
+the units of the SpikeTrain, if any.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spiketrain</strong> : Neo SpikeTrain or Quantity array or NumPy array</p>
+<blockquote>
+<div><p>The spike times.  Does not have to be sorted.</p>
+</div></blockquote>
+<p><strong>sampling_rate</strong> : float or Quantity scalar, optional</p>
+<blockquote>
+<div><p>The sampling rate to use for the time points.
+If not specified, retrieved from the <cite>sampling_rate</cite>
+attribute of <cite>spiketrain</cite>.</p>
+</div></blockquote>
+<p><strong>t_start</strong> : float or Quantity scalar, optional</p>
+<blockquote>
+<div><p>The start time to use for the time points.
+If not specified, retrieved from the <cite>t_start</cite>
+attribute of <cite>spiketrain</cite>.  If that is not present, default to
+<cite>0</cite>.  Any value from <cite>spiketrain</cite> below this value is
+ignored.</p>
+</div></blockquote>
+<p><strong>t_stop</strong> : float or Quantity scalar, optional</p>
+<blockquote>
+<div><p>The start time to use for the time points.
+If not specified, retrieved from the <cite>t_stop</cite>
+attribute of <cite>spiketrain</cite>.  If that is not present, default to
+the maximum value of <cite>sspiketrain</cite>.  Any value from
+<cite>spiketrain</cite> above this value is ignored.</p>
+</div></blockquote>
+<p><strong>return_times</strong> : bool</p>
+<blockquote>
+<div><p>If True, also return the corresponding time points.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>values</strong> : NumPy array of bools</p>
+<blockquote>
+<div><p>A <code class="docutils literal notranslate"><span class="pre">True</span></code> value at a particular index indicates the presence of
+one or more spikes at the corresponding time point.</p>
+</div></blockquote>
+<p><strong>times</strong> : NumPy array or Quantity array, optional</p>
+<blockquote>
+<div><p>The time points.  This will have the same units as <cite>spiketrain</cite>.
+If <cite>spiketrain</cite> has no units, this will be an NumPy array.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>TypeError</strong></p>
+<blockquote>
+<div><p>If <cite>spiketrain</cite> is a NumPy array and <cite>t_start</cite>, <cite>t_stop</cite>, or
+<cite>sampling_rate</cite> is a Quantity..</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p><cite>t_start</cite> and <cite>t_stop</cite> can be inferred from <cite>spiketrain</cite> if
+not explicitly defined and not an attribute of <cite>spiketrain</cite>.
+<cite>sampling_rate</cite> cannot, so an exception is raised if it is not
+explicitly defined and not present as an attribute of <cite>spiketrain</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Spike times are placed in the bin of the closest time point, going to the
+higher bin if exactly between two bins.</p>
+<p>So in the case where the bins are <cite>5.5</cite> and <cite>6.5</cite>, with the spike time
+being <cite>6.0</cite>, the spike will be placed in the <cite>6.5</cite> bin.</p>
+<p>The upper edge of the last bin, equal to <cite>t_stop</cite>, is inclusive.  That is,
+a spike time exactly equal to <cite>t_stop</cite> will be included.</p>
+<p>If <cite>spiketrain</cite> is a Quantity or Neo SpikeTrain and
+<cite>t_start</cite>, <cite>t_stop</cite> or <cite>sampling_rate</cite> is not, then the arguments that
+are not quantities will be assumed to have the same units as <cite>spiketrain</cite>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="neo_tools.html" title="Utility functions to manipulate Neo objects"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="spike_train_surrogates.html" title="Spike train surrogates"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

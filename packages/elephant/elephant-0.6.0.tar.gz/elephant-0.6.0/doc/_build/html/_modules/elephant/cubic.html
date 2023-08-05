@@ -1,0 +1,305 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.cubic &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.cubic</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">CuBIC is a statistical method for the detection of higher order of</span>
+<span class="sd">correlations in parallel spike trains based on the analysis of the</span>
+<span class="sd">cumulants of the population count.</span>
+<span class="sd">Given a list sts of SpikeTrains, the analysis comprises the following</span>
+<span class="sd">steps:</span>
+
+<span class="sd">1) compute the population histogram (PSTH) with the desired bin size</span>
+<span class="sd">       &gt;&gt;&gt; binsize = 5 * pq.ms</span>
+<span class="sd">       &gt;&gt;&gt; pop_count = elephant.statistics.time_histogram(sts, binsize)</span>
+
+<span class="sd">2) apply CuBIC to the population count</span>
+<span class="sd">       &gt;&gt;&gt; alpha = 0.05  # significance level of the tests used</span>
+<span class="sd">       &gt;&gt;&gt; xi, p_val, k = cubic(data, ximax=100, alpha=0.05, errorval=4.):</span>
+
+<span class="sd">:copyright: Copyright 2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: BSD, see LICENSE.txt for details.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<span class="c1"># Based on matlab code by Benjamin Staude</span>
+<span class="c1"># Adaptation to python by Pietro Quaglio and Emiliano Torre</span>
+
+
+<div class="viewcode-block" id="cubic"><a class="viewcode-back" href="../../reference/cubic.html#elephant.cubic.cubic">[docs]</a><span class="k">def</span> <span class="nf">cubic</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ximax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Performs the CuBIC analysis [1] on a population histogram, calculated from</span>
+<span class="sd">    a population of spiking neurons.</span>
+
+<span class="sd">    The null hypothesis :math:`H_0: k_3(data)&lt;=k^*_{3,\\xi}` is iteratively</span>
+<span class="sd">    tested with increasing correlation order :math:`\\xi` (correspondent to</span>
+<span class="sd">    variable xi) until it is possible to accept, with a significance level alpha,</span>
+<span class="sd">    that :math:`\\hat{\\xi}` (corresponding to variable xi_hat) is the minimum</span>
+<span class="sd">    order of correlation necessary to explain the third cumulant</span>
+<span class="sd">    :math:`k_3(data)`.</span>
+
+<span class="sd">    :math:`k^*_{3,\\xi}` is the maximized third cumulant, supposing a Compund</span>
+<span class="sd">    Poisson Process (CPP) model for correlated spike trains (see [1])</span>
+<span class="sd">    with maximum order of correlation equal to :math:`\\xi`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : neo.AnalogSignal</span>
+<span class="sd">        The population histogram (count of spikes per time bin) of the entire</span>
+<span class="sd">        population of neurons.</span>
+<span class="sd">    ximax : int</span>
+<span class="sd">         The maximum number of iteration of the hypothesis test:</span>
+<span class="sd">         if it is not possible to compute the :math:`\\hat{\\xi}` before ximax</span>
+<span class="sd">         iteration the CuBIC procedure is aborted.</span>
+<span class="sd">         Default: 100</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">         The significance level of the hypothesis tests perfomed.</span>
+<span class="sd">         Default: 0.05</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xi_hat : int</span>
+<span class="sd">        The minimum correlation order estimated by CuBIC, necessary to</span>
+<span class="sd">        explain the value of the third cumulant calculated from the population.</span>
+<span class="sd">    p : list</span>
+<span class="sd">        The ordred list of all the p-values of the hypothesis tests that have</span>
+<span class="sd">        been performed. If the maximum number of iteration ximax is reached the</span>
+<span class="sd">        last p-value is set to -4</span>
+<span class="sd">    kappa : list</span>
+<span class="sd">        The list of the first three cumulants of the data.</span>
+<span class="sd">    test_aborted : bool</span>
+<span class="sd">        Wheter the test was aborted because reached the maximum number of</span>
+<span class="sd">        iteration ximax</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1]Staude, Rotter, Gruen, (2009) J. Comp. Neurosci</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># alpha in in the interval [0,1]</span>
+    <span class="k">if</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">alpha</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;the significance level alpha (= </span><span class="si">%s</span><span class="s1">) has to be in [0,1]&#39;</span> <span class="o">%</span> <span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ximax</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ximax</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;The maximum number of iterations ximax(= </span><span class="si">%i</span><span class="s1">) has to be a positive&#39;</span>
+            <span class="o">%</span> <span class="n">alpha</span> <span class="o">+</span> <span class="s1">&#39; integer&#39;</span><span class="p">)</span>
+
+    <span class="c1"># dict of all possible rate functions</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># compute first three cumulants</span>
+    <span class="n">kappa</span> <span class="o">=</span> <span class="n">_kstat</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">xi_hat</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">xi</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">test_aborted</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># compute xi_hat iteratively</span>
+    <span class="k">while</span> <span class="n">pval</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
+        <span class="n">xi_hat</span> <span class="o">=</span> <span class="n">xi</span>
+        <span class="k">if</span> <span class="n">xi</span> <span class="o">&gt;</span> <span class="n">ximax</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Test aborted, xihat= </span><span class="si">%i</span><span class="s1"> &gt; ximax= </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">ximax</span><span class="p">))</span>
+            <span class="n">test_aborted</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+
+        <span class="c1"># compute p-value</span>
+        <span class="n">pval</span> <span class="o">=</span> <span class="n">_H03xi</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pval</span><span class="p">)</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+    <span class="k">return</span> <span class="n">xi_hat</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">test_aborted</span>
+
+
+<span class="k">def</span> <span class="nf">_H03xi</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Computes the p_value for testing  the :math:`H_0: k_3(data)&lt;=k^*_{3,\\xi}`</span>
+<span class="sd">    hypothesis of CuBIC in the stationary rate version</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----</span>
+<span class="sd">    kappa : list</span>
+<span class="sd">        The first three cumulants of the populaton of spike trains</span>
+<span class="sd">    xi : int</span>
+<span class="sd">        The the maximum order of correlation :math:`\\xi` supposed in the</span>
+<span class="sd">        hypothesis for which is computed the p value of :math:`H_0`</span>
+<span class="sd">    L : float</span>
+<span class="sd">        The length of the orginal population histogram on which is performed</span>
+<span class="sd">        the CuBIC analysis</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----</span>
+<span class="sd">    p : float</span>
+<span class="sd">        The p-value of the hypothesis tests</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># Check the order condition of the cumulants necessary to perform CuBIC</span>
+    <span class="k">if</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="c1"># p = errorval</span>
+        <span class="n">kstar</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;H_0 can not be tested:&#39;</span>
+            <span class="s1">&#39;kappa(2)= </span><span class="si">%f</span><span class="s1">&lt;</span><span class="si">%f</span><span class="s1">=kappa(1)!!!&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">kappa</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># computation of the maximized cumulants</span>
+        <span class="n">kstar</span> <span class="o">=</span> <span class="p">[</span><span class="n">_kappamstar</span><span class="p">(</span><span class="n">kappa</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">i</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]</span>
+        <span class="n">k3star</span> <span class="o">=</span> <span class="n">kstar</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># variance of third cumulant (from Stuart &amp; Ord)</span>
+        <span class="n">sigmak3star</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">kstar</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">/</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">*</span> <span class="p">(</span><span class="n">kstar</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">kstar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">kstar</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span>
+            <span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">L</span> <span class="o">*</span> <span class="n">kstar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">/</span> <span class="p">((</span><span class="n">L</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="c1"># computation of the p-value (the third cumulant is supposed to</span>
+        <span class="c1"># be gaussian istribuited)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">k3star</span><span class="p">,</span> <span class="n">sigmak3star</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">kappa</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+
+<span class="k">def</span> <span class="nf">_kappamstar</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Computes maximized cumulant of order m</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----</span>
+<span class="sd">    kappa : list</span>
+<span class="sd">        The first two cumulants of the data</span>
+<span class="sd">    xi : int</span>
+<span class="sd">        The :math:`\\xi` for which is computed the p value of :math:`H_0`</span>
+<span class="sd">    m : float</span>
+<span class="sd">        The order of the cumulant</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----</span>
+<span class="sd">    k_out : list</span>
+<span class="sd">        The maximized cumulant of order m</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">xi</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">kappa_out</span> <span class="o">=</span> <span class="n">kappa</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kappa_out</span> <span class="o">=</span> \
+            <span class="p">(</span><span class="n">kappa</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">**</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                <span class="n">kappa</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">**</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">xi</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kappa_out</span>
+
+
+<span class="k">def</span> <span class="nf">_kstat</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute first three cumulants of a population count of a population of</span>
+<span class="sd">    spiking</span>
+<span class="sd">    See http://mathworld.wolfram.com/k-Statistic.html</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----</span>
+<span class="sd">    data : numpy.aray</span>
+<span class="sd">        The population histogram of the population on which are computed</span>
+<span class="sd">        the cumulants</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----</span>
+<span class="sd">    kappa : list</span>
+<span class="sd">        The first three cumulants of the population count</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">L</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The input data must be a non-empty array&#39;</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="p">[(</span><span class="n">data</span> <span class="o">**</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">kappa</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">kappa</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+    <span class="n">kappa</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">L</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">L</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">kappa</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">L</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">L</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">S</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">L</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">kappa</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

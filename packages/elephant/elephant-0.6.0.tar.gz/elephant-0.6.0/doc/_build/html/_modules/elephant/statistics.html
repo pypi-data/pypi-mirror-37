@@ -1,0 +1,1302 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.statistics &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.statistics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Statistical measures of spike trains (e.g., Fano factor) and functions to estimate firing rates.</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">from</span> <span class="nn">neo.core</span> <span class="k">import</span> <span class="n">SpikeTrain</span>
+<span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="kn">import</span> <span class="nn">elephant.kernels</span> <span class="k">as</span> <span class="nn">kernels</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="c1"># warnings.simplefilter(&#39;always&#39;, DeprecationWarning)</span>
+
+
+<div class="viewcode-block" id="isi"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.isi">[docs]</a><span class="k">def</span> <span class="nf">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an array containing the inter-spike intervals of the SpikeTrain.</span>
+
+<span class="sd">    Accepts a Neo SpikeTrain, a Quantity array, or a plain NumPy array.</span>
+<span class="sd">    If either a SpikeTrain or Quantity array is provided, the return value will</span>
+<span class="sd">    be a quantities array, otherwise a plain NumPy array. The units of</span>
+<span class="sd">    the quantities array will be the same as spiketrain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    spiketrain : Neo SpikeTrain or Quantity array or NumPy ndarray</span>
+<span class="sd">                 The spike times.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">           The axis along which the difference is taken.</span>
+<span class="sd">           Default is the last axis.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    NumPy array or quantities array.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">):</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">intervals</span>
+
+
+<div class="viewcode-block" id="mean_firing_rate"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.mean_firing_rate">[docs]</a><span class="k">def</span> <span class="nf">mean_firing_rate</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the firing rate of the SpikeTrain.</span>
+
+<span class="sd">    Accepts a Neo SpikeTrain, a Quantity array, or a plain NumPy array.</span>
+<span class="sd">    If either a SpikeTrain or Quantity array is provided, the return value will</span>
+<span class="sd">    be a quantities array, otherwise a plain NumPy array. The units of</span>
+<span class="sd">    the quantities array will be the inverse of the spiketrain.</span>
+
+<span class="sd">    The interval over which the firing rate is calculated can be optionally</span>
+<span class="sd">    controlled with `t_start` and `t_stop`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    spiketrain : Neo SpikeTrain or Quantity array or NumPy ndarray</span>
+<span class="sd">                 The spike times.</span>
+<span class="sd">    t_start : float or Quantity scalar, optional</span>
+<span class="sd">              The start time to use for the interval.</span>
+<span class="sd">              If not specified, retrieved from the``t_start`</span>
+<span class="sd">              attribute of `spiketrain`.  If that is not present, default to</span>
+<span class="sd">              `0`.  Any value from `spiketrain` below this value is ignored.</span>
+<span class="sd">    t_stop : float or Quantity scalar, optional</span>
+<span class="sd">             The stop time to use for the time points.</span>
+<span class="sd">             If not specified, retrieved from the `t_stop`</span>
+<span class="sd">             attribute of `spiketrain`.  If that is not present, default to</span>
+<span class="sd">             the maximum value of `spiketrain`.  Any value from</span>
+<span class="sd">             `spiketrain` above this value is ignored.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">           The axis over which to do the calculation.</span>
+<span class="sd">           Default is `None`, do the calculation over the flattened array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    float, quantities scalar, NumPy array or quantities array.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    If `spiketrain` is a Quantity or Neo SpikeTrain and `t_start` or `t_stop`</span>
+<span class="sd">    are not, `t_start` and `t_stop` are assumed to have the same units as</span>
+<span class="sd">    `spiketrain`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    TypeError</span>
+<span class="sd">        If `spiketrain` is a NumPy array and `t_start` or `t_stop`</span>
+<span class="sd">        is a quantity scalar.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;t_start&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">found_t_start</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;t_stop&#39;</span><span class="p">):</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+            <span class="n">found_t_start</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># figure out what units, if any, we are dealing with</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># convert everything to the same units</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;t_start cannot be a Quantity if &#39;</span>
+                            <span class="s1">&#39;spiketrain is not a quantity&#39;</span><span class="p">)</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">units</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;t_stop cannot be a Quantity if &#39;</span>
+                            <span class="s1">&#39;spiketrain is not a quantity&#39;</span><span class="p">)</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">units</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">axis</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">found_t_start</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">spiketrain</span> <span class="o">&gt;=</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">spiketrain</span> <span class="o">&lt;=</span> <span class="n">t_stop</span><span class="p">),</span>
+                      <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># this is needed to handle broadcasting between spiketrain and t_stop</span>
+        <span class="n">t_stop_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">spiketrain</span> <span class="o">&gt;=</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">spiketrain</span> <span class="o">&lt;=</span> <span class="n">t_stop_test</span><span class="p">),</span></div>
+                      <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span>
+
+
+<span class="c1"># we make `cv` an alias for scipy.stats.variation for the convenience</span>
+<span class="c1"># of former NeuroTools users</span>
+<span class="n">cv</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">variation</span>
+
+
+<div class="viewcode-block" id="fanofactor"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.fanofactor">[docs]</a><span class="k">def</span> <span class="nf">fanofactor</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates the empirical Fano factor F of the spike counts of</span>
+<span class="sd">    a list of `neo.core.SpikeTrain` objects.</span>
+
+<span class="sd">    Given the vector v containing the observed spike counts (one per</span>
+<span class="sd">    spike train) in the time window [t0, t1], F is defined as:</span>
+
+<span class="sd">                        F := var(v)/mean(v).</span>
+
+<span class="sd">    The Fano factor is typically computed for spike trains representing the</span>
+<span class="sd">    activity of the same neuron over different trials. The higher F, the larger</span>
+<span class="sd">    the cross-trial non-stationarity. In theory for a time-stationary Poisson</span>
+<span class="sd">    process, F=1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrains : list of neo.SpikeTrain objects, quantity arrays, numpy arrays or lists</span>
+<span class="sd">        Spike trains for which to compute the Fano factor of spike counts.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fano : float or nan</span>
+<span class="sd">        The Fano factor of the spike counts of the input spike trains. If an</span>
+<span class="sd">        empty list is specified, or if all spike trains are empty, F:=nan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Build array of spike counts (one per spike train)</span>
+    <span class="n">spike_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">])</span>
+
+    <span class="c1"># Compute FF</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">spike_counts</span><span class="p">]):</span>
+        <span class="n">fano</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fano</span> <span class="o">=</span> <span class="n">spike_counts</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">spike_counts</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">fano</span>
+
+
+<div class="viewcode-block" id="lv"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.lv">[docs]</a><span class="k">def</span> <span class="nf">lv</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the measure of local variation LV for</span>
+<span class="sd">    a sequence of time intervals between events.</span>
+
+<span class="sd">    Given a vector v containing a sequence of intervals, the LV is</span>
+<span class="sd">    defined as:</span>
+
+<span class="sd">    .math $$ LV := \\frac{1}{N}\\sum_{i=1}^{N-1}</span>
+
+<span class="sd">                   \\frac{3(isi_i-isi_{i+1})^2}</span>
+<span class="sd">                          {(isi_i+isi_{i+1})^2} $$</span>
+
+<span class="sd">    The LV is typically computed as a substitute for the classical</span>
+<span class="sd">    coefficient of variation for sequences of events which include</span>
+<span class="sd">    some (relatively slow) rate fluctuation.  As with the CV, LV=1 for</span>
+<span class="sd">    a sequence of intervals generated by a Poisson process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    v : quantity array, numpy array or list</span>
+<span class="sd">        Vector of consecutive time intervals</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lvar : float</span>
+<span class="sd">       The LV of the inter-spike interval of the input sequence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    AttributeError :</span>
+<span class="sd">       If an empty list is specified, or if the sequence has less</span>
+<span class="sd">       than two entries, an AttributeError will be raised.</span>
+<span class="sd">    ValueError :</span>
+<span class="sd">        Only vector inputs are supported.  If a matrix is passed to the</span>
+<span class="sd">        function a ValueError will be raised.</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ..[1] Shinomoto, S., Shima, K., &amp; Tanji, J. (2003). Differences in spiking</span>
+<span class="sd">    patterns among cortical neurons. Neural Computation, 15, 2823–2842.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># convert to array, cast to float</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># ensure we have enough entries</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Input size is too small. Please provide &quot;</span>
+                             <span class="s2">&quot;an input with more than 1 entry.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># calculate LV and return result</span>
+    <span class="c1"># raise error if input is multi-dimensional</span></div>
+    <span class="k">return</span> <span class="mf">3.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="mi">2</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="cv2"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.cv2">[docs]</a><span class="k">def</span> <span class="nf">cv2</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the measure of CV2 for a sequence of time intervals between </span>
+<span class="sd">    events.</span>
+
+<span class="sd">    Given a vector v containing a sequence of intervals, the CV2 is</span>
+<span class="sd">    defined as:</span>
+
+<span class="sd">    .math $$ CV2 := \\frac{1}{N}\\sum_{i=1}^{N-1}</span>
+
+<span class="sd">                   \\frac{2|isi_{i+1}-isi_i|}</span>
+<span class="sd">                          {|isi_{i+1}+isi_i|} $$</span>
+
+<span class="sd">    The CV2 is typically computed as a substitute for the classical</span>
+<span class="sd">    coefficient of variation (CV) for sequences of events which include</span>
+<span class="sd">    some (relatively slow) rate fluctuation.  As with the CV, CV2=1 for</span>
+<span class="sd">    a sequence of intervals generated by a Poisson process.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    v : quantity array, numpy array or list</span>
+<span class="sd">        Vector of consecutive time intervals</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cv2 : float</span>
+<span class="sd">       The CV2 of the inter-spike interval of the input sequence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    AttributeError :</span>
+<span class="sd">       If an empty list is specified, or if the sequence has less</span>
+<span class="sd">       than two entries, an AttributeError will be raised.</span>
+<span class="sd">    AttributeError :</span>
+<span class="sd">        Only vector inputs are supported.  If a matrix is passed to the</span>
+<span class="sd">        function an AttributeError will be raised.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ..[1] Holt, G. R., Softky, W. R., Koch, C., &amp; Douglas, R. J. (1996). </span>
+<span class="sd">    Comparison of discharge variability in vitro and in vivo in cat visual </span>
+<span class="sd">    cortex neurons. Journal of neurophysiology, 75(5), 1806-1814.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># convert to array, cast to float</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># ensure the input ia a vector</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Input shape is larger than 1. Please provide &quot;</span>
+                             <span class="s2">&quot;a vector in input.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ensure we have enough entries</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Input size is too small. Please provide &quot;</span>
+                             <span class="s2">&quot;an input with more than 1 entry.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># calculate CV2 and return result</span></div>
+    <span class="k">return</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+
+<span class="c1"># sigma2kw and kw2sigma only needed for oldfct_instantaneous_rate!</span>
+<span class="c1"># to finally be taken out of Elephant</span>
+<span class="k">def</span> <span class="nf">sigma2kw</span><span class="p">(</span><span class="n">form</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;BOX&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;TRI&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;EPA&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;GAU&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="mf">2.7</span>  <span class="c1"># &gt; 99% of distribution weight</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ALP&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;EXP&#39;</span><span class="p">:</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+    <span class="k">return</span> <span class="n">coeff</span>
+
+
+<span class="k">def</span> <span class="nf">kw2sigma</span><span class="p">(</span><span class="n">form</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">sigma2kw</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="c1"># to finally be taken out of Elephant</span>
+<div class="viewcode-block" id="make_kernel"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.make_kernel">[docs]</a><span class="k">def</span> <span class="nf">make_kernel</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">sampling_period</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates kernel functions for convolution.</span>
+
+<span class="sd">    Constructs a numeric linear convolution kernel of basic shape to be used</span>
+<span class="sd">    for data smoothing (linear low pass filtering) and firing rate estimation</span>
+<span class="sd">    from single trial or trial-averaged spike trains.</span>
+
+<span class="sd">    Exponential and alpha kernels may also be used to represent postynaptic</span>
+<span class="sd">    currents / potentials in a linear (current-based) model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    form : {&#39;BOX&#39;, &#39;TRI&#39;, &#39;GAU&#39;, &#39;EPA&#39;, &#39;EXP&#39;, &#39;ALP&#39;}</span>
+<span class="sd">        Kernel form. Currently implemented forms are BOX (boxcar),</span>
+<span class="sd">        TRI (triangle), GAU (gaussian), EPA (epanechnikov), EXP (exponential),</span>
+<span class="sd">        ALP (alpha function). EXP and ALP are asymmetric kernel forms and</span>
+<span class="sd">        assume optional parameter `direction`.</span>
+<span class="sd">    sigma : Quantity</span>
+<span class="sd">        Standard deviation of the distribution associated with kernel shape.</span>
+<span class="sd">        This parameter defines the time resolution of the kernel estimate</span>
+<span class="sd">        and makes different kernels comparable (cf. [1] for symmetric kernels).</span>
+<span class="sd">        This is used here as an alternative definition to the cut-off</span>
+<span class="sd">        frequency of the associated linear filter.</span>
+<span class="sd">    sampling_period : float</span>
+<span class="sd">        Temporal resolution of input and output.</span>
+<span class="sd">    direction : {-1, 1}</span>
+<span class="sd">        Asymmetric kernels have two possible directions.</span>
+<span class="sd">        The values are -1 or 1, default is 1. The</span>
+<span class="sd">        definition here is that for direction = 1 the</span>
+<span class="sd">        kernel represents the impulse response function</span>
+<span class="sd">        of the linear filter. Default value is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    kernel : numpy.ndarray</span>
+<span class="sd">        Array of kernel. The length of this array is always an odd</span>
+<span class="sd">        number to represent symmetric kernels such that the center bin</span>
+<span class="sd">        coincides with the median of the numeric array, i.e for a</span>
+<span class="sd">        triangle, the maximum will be at the center bin with equal</span>
+<span class="sd">        number of bins to the right and to the left.</span>
+<span class="sd">    norm : float</span>
+<span class="sd">        For rate estimates. The kernel vector is normalized such that</span>
+<span class="sd">        the sum of all entries equals unity sum(kernel)=1. When</span>
+<span class="sd">        estimating rate functions from discrete spike data (0/1) the</span>
+<span class="sd">        additional parameter `norm` allows for the normalization to</span>
+<span class="sd">        rate in spikes per second.</span>
+
+<span class="sd">        For example:</span>
+<span class="sd">        ``rate = norm * scipy.signal.lfilter(kernel, 1, spike_data)``</span>
+<span class="sd">    m_idx : int</span>
+<span class="sd">        Index of the numerically determined median (center of gravity)</span>
+<span class="sd">        of the kernel function.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    To obtain single trial rate function of trial one should use::</span>
+
+<span class="sd">        r = norm * scipy.signal.fftconvolve(sua, kernel)</span>
+
+<span class="sd">    To obtain trial-averaged spike train one should use::</span>
+
+<span class="sd">        r_avg = norm * scipy.signal.fftconvolve(sua, np.mean(X,1))</span>
+
+<span class="sd">    where `X` is an array of shape `(l,n)`, `n` is the number of trials and</span>
+<span class="sd">    `l` is the length of each trial.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    elephant.statistics.instantaneous_rate</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Meier R, Egert U, Aertsen A, Nawrot MP, &quot;FIND - a unified framework</span>
+<span class="sd">       for neural data analysis&quot;; Neural Netw. 2008 Oct; 21(8):1085-93.</span>
+
+<span class="sd">    .. [2] Nawrot M, Aertsen A, Rotter S, &quot;Single-trial estimation of neuronal</span>
+<span class="sd">       firing rates - from single neuron spike trains to population activity&quot;;</span>
+<span class="sd">       J. Neurosci Meth 94: 81-92; 1999.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">forms_abbreviated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;BOX&#39;</span><span class="p">,</span> <span class="s1">&#39;TRI&#39;</span><span class="p">,</span> <span class="s1">&#39;GAU&#39;</span><span class="p">,</span> <span class="s1">&#39;EPA&#39;</span><span class="p">,</span> <span class="s1">&#39;EXP&#39;</span><span class="p">,</span> <span class="s1">&#39;ALP&#39;</span><span class="p">])</span>
+    <span class="n">forms_verbose</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;boxcar&#39;</span><span class="p">,</span> <span class="s1">&#39;triangle&#39;</span><span class="p">,</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;epanechnikov&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;exponential&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms_verbose</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">forms_abbreviated</span><span class="p">[</span><span class="n">forms_verbose</span> <span class="o">==</span> <span class="n">form</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">assert</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;BOX&#39;</span><span class="p">,</span> <span class="s1">&#39;TRI&#39;</span><span class="p">,</span> <span class="s1">&#39;GAU&#39;</span><span class="p">,</span> <span class="s1">&#39;EPA&#39;</span><span class="p">,</span> <span class="s1">&#39;EXP&#39;</span><span class="p">,</span> <span class="s1">&#39;ALP&#39;</span><span class="p">),</span> \
+        <span class="s2">&quot;form must be one of either &#39;BOX&#39;,&#39;TRI&#39;,&#39;GAU&#39;,&#39;EPA&#39;,&#39;EXP&#39; or &#39;ALP&#39;!&quot;</span>
+
+    <span class="k">assert</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;direction must be either 1 or -1&quot;</span>
+
+    <span class="c1"># conversion to SI units (s)</span>
+    <span class="k">if</span> <span class="n">sigma</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sigma must be positive!&#39;</span><span class="p">)</span>
+
+    <span class="n">SI_sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">SI_time_stamp_resolution</span> <span class="o">=</span> <span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span>
+
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;BOX&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">SI_sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># always odd number of bins</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">width</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span> <span class="o">*</span> <span class="n">height</span>  <span class="c1"># area = 1</span>
+
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;TRI&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">SI_sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">halfwidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span><span class="p">)</span>
+        <span class="n">trileft</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">halfwidth</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">triright</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">halfwidth</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># odd number of bins</span>
+        <span class="n">triangle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trileft</span><span class="p">,</span> <span class="n">triright</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">triangle</span> <span class="o">/</span> <span class="n">triangle</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># area = 1</span>
+
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;EPA&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">SI_sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">halfwidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span><span class="p">)</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">halfwidth</span><span class="p">,</span> <span class="n">halfwidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">parabula</span> <span class="o">=</span> <span class="n">base</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">epanech</span> <span class="o">=</span> <span class="n">parabula</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">parabula</span>  <span class="c1"># inverse parabula</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">epanech</span> <span class="o">/</span> <span class="n">epanech</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># area = 1</span>
+
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;GAU&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">SI_sigma</span> <span class="o">*</span> <span class="mf">2.7</span>  <span class="c1"># &gt; 99% of distribution weight</span>
+        <span class="n">halfwidth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span><span class="p">)</span>  <span class="c1"># always odd</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">halfwidth</span><span class="p">,</span> <span class="n">halfwidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">SI_time_stamp_resolution</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">base</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">SI_sigma</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">g</span> <span class="o">/</span> <span class="n">g</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># area = 1</span>
+
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ALP&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">SI_sigma</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+                <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+            <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">SI_time_stamp_resolution</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">SI_sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">SI_sigma</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">/</span> <span class="n">alpha</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># normalization</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;EXP&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">SI_sigma</span>
+        <span class="n">expo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+                <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">w</span> <span class="o">/</span> <span class="n">SI_time_stamp_resolution</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+            <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">SI_time_stamp_resolution</span>
+        <span class="n">expo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">expo</span> <span class="o">/</span> <span class="n">SI_sigma</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">expo</span> <span class="o">/</span> <span class="n">expo</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">m_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+</div>
+    <span class="k">return</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="n">m_idx</span>
+
+
+<span class="c1"># to finally be taken out of Elephant</span>
+<div class="viewcode-block" id="oldfct_instantaneous_rate"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.oldfct_instantaneous_rate">[docs]</a><span class="k">def</span> <span class="nf">oldfct_instantaneous_rate</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">sampling_period</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span>
+                       <span class="n">sigma</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">acausal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate instantaneous firing rate by kernel convolution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    spiketrain: &#39;neo.SpikeTrain&#39;</span>
+<span class="sd">        Neo object that contains spike times, the unit of the time stamps</span>
+<span class="sd">        and t_start and t_stop of the spike train.</span>
+<span class="sd">    sampling_period : Quantity</span>
+<span class="sd">        time stamp resolution of the spike times. the same resolution will</span>
+<span class="sd">        be assumed for the kernel</span>
+<span class="sd">    form : {&#39;BOX&#39;, &#39;TRI&#39;, &#39;GAU&#39;, &#39;EPA&#39;, &#39;EXP&#39;, &#39;ALP&#39;}</span>
+<span class="sd">        Kernel form. Currently implemented forms are BOX (boxcar),</span>
+<span class="sd">        TRI (triangle), GAU (gaussian), EPA (epanechnikov), EXP (exponential),</span>
+<span class="sd">        ALP (alpha function). EXP and ALP are asymmetric kernel forms and</span>
+<span class="sd">        assume optional parameter `direction`.</span>
+<span class="sd">    sigma : string or Quantity</span>
+<span class="sd">        Standard deviation of the distribution associated with kernel shape.</span>
+<span class="sd">        This parameter defines the time resolution of the kernel estimate</span>
+<span class="sd">        and makes different kernels comparable (cf. [1] for symmetric kernels).</span>
+<span class="sd">        This is used here as an alternative definition to the cut-off</span>
+<span class="sd">        frequency of the associated linear filter.</span>
+<span class="sd">        Default value is &#39;auto&#39;. In this case, the optimized kernel width for</span>
+<span class="sd">        the rate estimation is calculated according to [1]. Note that the</span>
+<span class="sd">        automatized calculation of the kernel width ONLY works for gaussian</span>
+<span class="sd">        kernel shapes!</span>
+<span class="sd">    t_start : Quantity (Optional)</span>
+<span class="sd">        start time of the interval used to compute the firing rate, if None</span>
+<span class="sd">        assumed equal to spiketrain.t_start</span>
+<span class="sd">        Default:None</span>
+<span class="sd">    t_stop : Qunatity</span>
+<span class="sd">        End time of the interval used to compute the firing rate (included).</span>
+<span class="sd">        If none assumed equal to spiketrain.t_stop</span>
+<span class="sd">        Default:None</span>
+<span class="sd">    acausal : bool</span>
+<span class="sd">        if True, acausal filtering is used, i.e., the gravity center of the</span>
+<span class="sd">        filter function is aligned with the spike to convolve</span>
+<span class="sd">        Default:None</span>
+<span class="sd">    m_idx : int</span>
+<span class="sd">        index of the value in the kernel function vector that corresponds</span>
+<span class="sd">        to its gravity center. this parameter is not mandatory for</span>
+<span class="sd">        symmetrical kernels but it is required when asymmetrical kernels</span>
+<span class="sd">        are to be aligned at their gravity center with the event times if None</span>
+<span class="sd">        is assumed to be the median value of the kernel support</span>
+<span class="sd">        Default : None</span>
+<span class="sd">    trim : bool</span>
+<span class="sd">        if True, only the &#39;valid&#39; region of the convolved</span>
+<span class="sd">        signal are returned, i.e., the points where there</span>
+<span class="sd">        isn&#39;t complete overlap between kernel and spike train</span>
+<span class="sd">        are discarded</span>
+<span class="sd">        NOTE: if True and an asymmetrical kernel is provided</span>
+<span class="sd">        the output will not be aligned with [t_start, t_stop]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : neo.AnalogSignal</span>
+<span class="sd">        Contains the rate estimation in unit hertz (Hz).</span>
+<span class="sd">        Has a property &#39;rate.times&#39; which contains the time axis of the rate</span>
+<span class="sd">        estimate. The unit of this property is the same as the resolution that</span>
+<span class="sd">        is given as an argument to the function.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError:</span>
+<span class="sd">        If argument value for the parameter `sigma` is not a quantity object</span>
+<span class="sd">        or string &#39;auto&#39;.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    elephant.statistics.make_kernel</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ..[1] H. Shimazaki, S. Shinomoto, J Comput Neurosci (2010) 29:171–182.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sigma</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="s1">&#39;GAU&#39;</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">kernel_width</span> <span class="o">=</span> <span class="n">sskernel</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">tin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;optw&#39;</span><span class="p">]</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">kw2sigma</span><span class="p">(</span><span class="n">form</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel_width</span> <span class="o">*</span> <span class="n">unit</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;sigma must be either a quantities object or &quot;auto&quot;.&#39;</span>
+                        <span class="s1">&#39; Found: </span><span class="si">%s</span><span class="s1">, value </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sigma</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">sigma</span><span class="p">)))</span>
+
+    <span class="n">kernel</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="n">m_idx</span> <span class="o">=</span> <span class="n">make_kernel</span><span class="p">(</span><span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span>
+                                      <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="p">)</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">CompoundUnit</span><span class="p">(</span>
+        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*s&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+    <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="n">time_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">spikes_slice</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span> \
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="n">spikes_slice</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">spike</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">))</span>
+        <span class="n">time_vector</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">time_vector</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Instantaneous firing rate approximation contains &#39;</span>
+                      <span class="s1">&#39;negative values, possibly caused due to machine &#39;</span>
+                      <span class="s1">&#39;precision errors&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">acausal</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">trim</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">m_idx</span><span class="p">:</span><span class="o">-</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)]</span>
+
+        <span class="k">elif</span> <span class="n">trim</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m_idx</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)]</span>
+            <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span> <span class="o">+</span> <span class="n">m_idx</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span> <span class="o">-</span> <span class="p">((</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">trim</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">m_idx</span><span class="p">:</span><span class="o">-</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)]</span>
+
+        <span class="k">elif</span> <span class="n">trim</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m_idx</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)]</span>
+            <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span> <span class="o">+</span> <span class="n">m_idx</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span> <span class="o">-</span> <span class="p">((</span><span class="n">kernel</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">-</span> <span class="n">m_idx</span><span class="p">)</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                 <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="p">,</span>
+                                 <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">rate</span><span class="p">,</span> <span class="n">sigma</span>
+
+
+<div class="viewcode-block" id="instantaneous_rate"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.instantaneous_rate">[docs]</a><span class="k">def</span> <span class="nf">instantaneous_rate</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">sampling_period</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+                       <span class="n">cutoff</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimates instantaneous firing rate by kernel convolution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    spiketrain : &#39;neo.SpikeTrain&#39;</span>
+<span class="sd">        Neo object that contains spike times, the unit of the time stamps</span>
+<span class="sd">        and t_start and t_stop of the spike train.</span>
+<span class="sd">    sampling_period : Time Quantity</span>
+<span class="sd">        Time stamp resolution of the spike times. The same resolution will</span>
+<span class="sd">        be assumed for the kernel</span>
+<span class="sd">    kernel : string &#39;auto&#39; or callable object of :class:`Kernel` from module</span>
+<span class="sd">        &#39;kernels.py&#39;. Currently implemented kernel forms are rectangular,</span>
+<span class="sd">        triangular, epanechnikovlike, gaussian, laplacian, exponential,</span>
+<span class="sd">        and alpha function.</span>
+<span class="sd">        Example: kernel = kernels.RectangularKernel(sigma=10*ms, invert=False)</span>
+<span class="sd">        The kernel is used for convolution with the spike train and its</span>
+<span class="sd">        standard deviation determines the time resolution of the instantaneous</span>
+<span class="sd">        rate estimation.</span>
+<span class="sd">        Default: &#39;auto&#39;. In this case, the optimized kernel width for the </span>
+<span class="sd">        rate estimation is calculated according to [1] and with this width</span>
+<span class="sd">        a gaussian kernel is constructed. Automatized calculation of the </span>
+<span class="sd">        kernel width is not available for other than gaussian kernel shapes.</span>
+<span class="sd">    cutoff : float</span>
+<span class="sd">        This factor determines the cutoff of the probability distribution of</span>
+<span class="sd">        the kernel, i.e., the considered width of the kernel in terms of </span>
+<span class="sd">        multiples of the standard deviation sigma.</span>
+<span class="sd">        Default: 5.0</span>
+<span class="sd">    t_start : Time Quantity (optional)</span>
+<span class="sd">        Start time of the interval used to compute the firing rate. If None</span>
+<span class="sd">        assumed equal to spiketrain.t_start</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    t_stop : Time Quantity (optional)</span>
+<span class="sd">        End time of the interval used to compute the firing rate (included).</span>
+<span class="sd">        If None assumed equal to spiketrain.t_stop</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    trim : bool</span>
+<span class="sd">        if False, the output of the Fast Fourier Transformation being a longer</span>
+<span class="sd">        vector than the input vector by the size of the kernel is reduced back</span>
+<span class="sd">        to the original size of the considered time interval of the spiketrain</span>
+<span class="sd">        using the median of the kernel.</span>
+<span class="sd">        if True, only the region of the convolved signal is returned, where</span>
+<span class="sd">        there is complete overlap between kernel and spike train. This is</span>
+<span class="sd">        achieved by reducing the length of the output of the Fast Fourier</span>
+<span class="sd">        Transformation by a total of two times the size of the kernel, and</span>
+<span class="sd">        t_start and t_stop are adjusted.</span>
+<span class="sd">        Default: False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rate : neo.AnalogSignal</span>
+<span class="sd">        Contains the rate estimation in unit hertz (Hz).</span>
+<span class="sd">        Has a property &#39;rate.times&#39; which contains the time axis of the rate</span>
+<span class="sd">        estimate. The unit of this property is the same as the resolution that</span>
+<span class="sd">        is given via the argument &#39;sampling_period&#39; to the function.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError:</span>
+<span class="sd">        If `spiketrain` is not an instance of :class:`SpikeTrain` of Neo.</span>
+<span class="sd">        If `sampling_period` is not a time quantity.</span>
+<span class="sd">        If `kernel` is neither instance of :class:`Kernel` or string &#39;auto&#39;.</span>
+<span class="sd">        If `cutoff` is neither float nor int.</span>
+<span class="sd">        If `t_start` and `t_stop` are neither None nor a time quantity.</span>
+<span class="sd">        If `trim` is not bool.</span>
+
+<span class="sd">    ValueError:</span>
+<span class="sd">        If `sampling_period` is smaller than zero.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    --------</span>
+<span class="sd">    kernel = kernels.AlphaKernel(sigma = 0.05*s, invert = True)</span>
+<span class="sd">    rate = instantaneous_rate(spiketrain, sampling_period = 2*ms, kernel)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ..[1] H. Shimazaki, S. Shinomoto, J Comput Neurosci (2010) 29:171–182.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Checks of input variables:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">SpikeTrain</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;spiketrain must be instance of :class:`SpikeTrain` of Neo!</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    Found: </span><span class="si">%s</span><span class="s2">, value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">sampling_period</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">sampling_period</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">==</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;The sampling period must be a time quantity!</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    Found: </span><span class="si">%s</span><span class="s2">, value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sampling_period</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">sampling_period</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">sampling_period</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The sampling period must be larger than zero.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kernel</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">kernel_width</span> <span class="o">=</span> <span class="n">sskernel</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">tin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">bootstrap</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;optw&#39;</span><span class="p">]</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="mf">2.7</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel_width</span> <span class="o">*</span> <span class="n">unit</span>
+        <span class="c1"># factor 2.0 connects kernel width with its half width,</span>
+        <span class="c1"># factor 2.7 connects half width of Gaussian distribution with</span>
+        <span class="c1">#             99% probability mass with its standard deviation.</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">GaussianKernel</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">kernels</span><span class="o">.</span><span class="n">Kernel</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;kernel must be either instance of :class:`Kernel` &quot;</span>
+            <span class="s2">&quot;or the string &#39;auto&#39;!</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    Found: </span><span class="si">%s</span><span class="s2">, value </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kernel</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">cutoff</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cutoff</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cutoff must be float or integer!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">t_start</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">==</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;t_start must be a time quantity!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">t_stop</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">==</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;t_stop must be a time quantity!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">trim</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;trim must be bool!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># main function:</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">CompoundUnit</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*s&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+    <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="n">time_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">spikes_slice</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span> \
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="n">spikes_slice</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">spike</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">))</span>
+        <span class="n">time_vector</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">cutoff</span> <span class="o">&lt;</span> <span class="n">kernel</span><span class="o">.</span><span class="n">min_cutoff</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">min_cutoff</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The width of the kernel was adjusted to a minimally &quot;</span>
+                      <span class="s2">&quot;allowed width.&quot;</span><span class="p">)</span>
+
+    <span class="n">t_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">cutoff</span> <span class="o">*</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                      <span class="n">cutoff</span> <span class="o">*</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">+</span>
+                      <span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                      <span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">*</span> <span class="n">units</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">time_vector</span><span class="p">,</span>
+                                 <span class="n">kernel</span><span class="p">(</span><span class="n">t_arr</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Instantaneous firing rate approximation contains &quot;</span>
+                      <span class="s2">&quot;negative values, possibly caused due to machine &quot;</span>
+                      <span class="s2">&quot;precision errors.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">trim</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">):</span><span class="o">-</span><span class="p">(</span><span class="n">kernel</span><span class="p">(</span><span class="n">t_arr</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span>
+                                           <span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="n">trim</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">):</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">kernel</span><span class="p">(</span><span class="n">t_arr</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span>
+                                                   <span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">))]</span>
+        <span class="n">t_start</span> <span class="o">+=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">)</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">t_stop</span> <span class="o">-=</span> <span class="p">(</span><span class="n">kernel</span><span class="p">(</span><span class="n">t_arr</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span>
+                   <span class="n">kernel</span><span class="o">.</span><span class="n">median_index</span><span class="p">(</span><span class="n">t_arr</span><span class="p">))</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="p">,</span>
+                            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">rate</span>
+
+
+<div class="viewcode-block" id="time_histogram"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.time_histogram">[docs]</a><span class="k">def</span> <span class="nf">time_histogram</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">output</span><span class="o">=</span><span class="s1">&#39;counts&#39;</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Time Histogram of a list of :attr:`neo.SpikeTrain` objects.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrains : List of neo.SpikeTrain objects</span>
+<span class="sd">        Spiketrains with a common time axis (same `t_start` and `t_stop`)</span>
+<span class="sd">    binsize : quantities.Quantity</span>
+<span class="sd">        Width of the histogram&#39;s time bins.</span>
+<span class="sd">    t_start, t_stop : Quantity (optional)</span>
+<span class="sd">        Start and stop time of the histogram. Only events in the input</span>
+<span class="sd">        `spiketrains` falling between `t_start` and `t_stop` (both included)</span>
+<span class="sd">        are considered in the histogram. If `t_start` and/or `t_stop` are not</span>
+<span class="sd">        specified, the maximum `t_start` of all :attr:spiketrains is used as</span>
+<span class="sd">        `t_start`, and the minimum `t_stop` is used as `t_stop`.</span>
+<span class="sd">        Default: t_start = t_stop = None</span>
+<span class="sd">    output : str (optional)</span>
+<span class="sd">        Normalization of the histogram. Can be one of:</span>
+<span class="sd">        * `counts`&#39;`: spike counts at each bin (as integer numbers)</span>
+<span class="sd">        * `mean`: mean spike counts per spike train</span>
+<span class="sd">        * `rate`: mean spike rate per spike train. Like &#39;mean&#39;, but the</span>
+<span class="sd">          counts are additionally normalized by the bin width.</span>
+<span class="sd">    binary : bool (optional)</span>
+<span class="sd">        If **True**, indicates whether all spiketrain objects should first</span>
+<span class="sd">        binned to a binary representation (using the `BinnedSpikeTrain` class</span>
+<span class="sd">        in the `conversion` module) and the calculation of the histogram is</span>
+<span class="sd">        based on this representation.</span>
+<span class="sd">        Note that the output is not binary, but a histogram of the converted,</span>
+<span class="sd">        binary representation.</span>
+<span class="sd">        Default: False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    time_hist : neo.AnalogSignal</span>
+<span class="sd">        A neo.AnalogSignal object containing the histogram values.</span>
+<span class="sd">        `AnalogSignal[j]` is the histogram computed between</span>
+<span class="sd">        `t_start + j * binsize` and `t_start + (j + 1) * binsize`.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    elephant.conversion.BinnedSpikeTrain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_tstop</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Find the internal range for t_start, where all spike trains are</span>
+        <span class="c1"># defined; cut all spike trains taking that time range only</span>
+        <span class="n">max_tstart</span><span class="p">,</span> <span class="n">min_tstop</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">_get_start_stop_from_input</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">max_tstart</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">max_tstart</span> <span class="o">==</span> <span class="n">t</span><span class="o">.</span><span class="n">t_start</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Spiketrains have different t_start values -- &quot;</span>
+                <span class="s2">&quot;using maximum t_start as t_start.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Find the internal range for t_stop</span>
+        <span class="k">if</span> <span class="n">min_tstop</span><span class="p">:</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">min_tstop</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">min_tstop</span> <span class="o">==</span> <span class="n">t</span><span class="o">.</span><span class="n">t_stop</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;Spiketrains have different t_stop values -- &quot;</span>
+                    <span class="s2">&quot;using minimum t_stop as t_stop.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">min_tstop</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">_get_start_stop_from_input</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">t_stop</span> <span class="o">=</span> <span class="n">min_tstop</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">min_tstop</span> <span class="o">==</span> <span class="n">t</span><span class="o">.</span><span class="n">t_stop</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;Spiketrains have different t_stop values -- &quot;</span>
+                    <span class="s2">&quot;using minimum t_stop as t_stop.&quot;</span><span class="p">)</span>
+
+    <span class="n">sts_cut</span> <span class="o">=</span> <span class="p">[</span><span class="n">st</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">)</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span>
+               <span class="n">spiketrains</span><span class="p">]</span>
+
+    <span class="c1"># Bin the spike trains and sum across columns</span>
+    <span class="n">bs</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="n">sts_cut</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">,</span>
+                               <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+        <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">to_sparse_bool_array</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Flatten array</span>
+    <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">bin_hist</span><span class="p">)</span>
+    <span class="c1"># Renormalise the histogram</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s1">&#39;counts&#39;</span><span class="p">:</span>
+        <span class="c1"># Raw</span>
+        <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">bin_hist</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span>
+    <span class="k">elif</span> <span class="n">output</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
+        <span class="c1"># Divide by number of input spike trains</span>
+        <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">bin_hist</span> <span class="o">*</span> <span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span>
+    <span class="k">elif</span> <span class="n">output</span> <span class="o">==</span> <span class="s1">&#39;rate&#39;</span><span class="p">:</span>
+        <span class="c1"># Divide by number of input spike trains and bin width</span>
+        <span class="n">bin_hist</span> <span class="o">=</span> <span class="n">bin_hist</span> <span class="o">*</span> <span class="mf">1.</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Parameter output is not valid.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">signal</span><span class="o">=</span><span class="n">bin_hist</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">bin_hist</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                 <span class="n">sampling_period</span><span class="o">=</span><span class="n">binsize</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">bin_hist</span><span class="o">.</span><span class="n">units</span><span class="p">,</span></div>
+                                 <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="complexity_pdf"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.complexity_pdf">[docs]</a><span class="k">def</span> <span class="nf">complexity_pdf</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="n">binsize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complexity Distribution [1] of a list of :attr:`neo.SpikeTrain` objects.</span>
+
+<span class="sd">    Probability density computed from the complexity histogram which is the</span>
+<span class="sd">    histogram of the entries of the population histogram of clipped (binary)</span>
+<span class="sd">    spike trains computed with a bin width of binsize.</span>
+<span class="sd">    It provides for each complexity (== number of active neurons per bin) the</span>
+<span class="sd">    number of occurrences. The normalization of that histogram to 1 is the</span>
+<span class="sd">    probability density.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrains : List of neo.SpikeTrain objects</span>
+<span class="sd">    Spiketrains with a common time axis (same `t_start` and `t_stop`)</span>
+<span class="sd">    binsize : quantities.Quantity</span>
+<span class="sd">    Width of the histogram&#39;s time bins.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    time_hist : neo.AnalogSignal</span>
+<span class="sd">    A neo.AnalogSignal object containing the histogram values.</span>
+<span class="sd">    `AnalogSignal[j]` is the histogram computed between .</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    elephant.conversion.BinnedSpikeTrain</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1]Gruen, S., Abeles, M., &amp; Diesmann, M. (2008). Impact of higher-order</span>
+<span class="sd">    correlations on coincidence distributions of massively parallel data.</span>
+<span class="sd">    In Dynamic Brain-from Neural Spikes to Behaviors (pp. 96-114).</span>
+<span class="sd">    Springer Berlin Heidelberg.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Computing the population histogram with parameter binary=True to clip the</span>
+    <span class="c1"># spike trains before summing</span>
+    <span class="n">pophist</span> <span class="o">=</span> <span class="n">time_histogram</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Computing the histogram of the entries of pophist (=Complexity histogram)</span>
+    <span class="n">complexity_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+        <span class="n">pophist</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Normalization of the Complexity Histogram to 1 (probabilty distribution)</span>
+    <span class="n">complexity_hist</span> <span class="o">=</span> <span class="n">complexity_hist</span> <span class="o">/</span> <span class="n">complexity_hist</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="c1"># Convert the Complexity pdf to an neo.AnalogSignal</span>
+    <span class="n">complexity_distribution</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">complexity_hist</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">complexity_hist</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span>
+        <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">,</span>
+        <span class="n">sampling_period</span><span class="o">=</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">complexity_distribution</span>
+
+
+<span class="sd">&quot;&quot;&quot;Kernel Bandwidth Optimization.</span>
+
+<span class="sd">Python implementation by Subhasis Ray.</span>
+
+<span class="sd">Original matlab code (sskernel.m) here:</span>
+<span class="sd">http://2000.jukuin.keio.ac.jp/shimazaki/res/kernel.html</span>
+
+<span class="sd">This was translated into Python by Subhasis Ray, NCBS. Tue Jun 10</span>
+<span class="sd">23:01:43 IST 2014</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="nextpow2"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.nextpow2">[docs]</a><span class="k">def</span> <span class="nf">nextpow2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the smallest integral power of 2 that &gt;= x &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">while</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span></div>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+<div class="viewcode-block" id="fftkernel"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.fftkernel">[docs]</a><span class="k">def</span> <span class="nf">fftkernel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    y = fftkernel(x,w)</span>
+
+<span class="sd">    Function `fftkernel&#39; applies the Gauss kernel smoother to an input</span>
+<span class="sd">    signal using FFT algorithm.</span>
+
+<span class="sd">    Input argument</span>
+<span class="sd">    x:    Sample signal vector.</span>
+<span class="sd">    w: 	Kernel bandwidth (the standard deviation) in unit of</span>
+<span class="sd">    the sampling resolution of x.</span>
+
+<span class="sd">    Output argument</span>
+<span class="sd">    y: 	Smoothed signal.</span>
+
+<span class="sd">    MAY 5/23, 2012 Author Hideaki Shimazaki</span>
+<span class="sd">    RIKEN Brain Science Insitute</span>
+<span class="sd">    http://2000.jukuin.keio.ac.jp/shimazaki</span>
+
+<span class="sd">    Ported to Python: Subhasis Ray, NCBS. Tue Jun 10 10:42:38 IST 2014</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">Lmax</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">w</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">nextpow2</span><span class="p">(</span><span class="n">Lmax</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="o">-</span><span class="n">f</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">f</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">X</span> <span class="o">*</span> <span class="n">K</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:</span><span class="n">L</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">y</span>
+
+
+<span class="k">def</span> <span class="nf">logexp</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e2</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">return</span> <span class="n">y</span>
+
+
+<span class="k">def</span> <span class="nf">ilogexp</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="n">e2</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">return</span> <span class="n">y</span>
+
+
+<div class="viewcode-block" id="cost_function"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.cost_function">[docs]</a><span class="k">def</span> <span class="nf">cost_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    The cost function</span>
+<span class="sd">    Cn(w) = sum_{i,j} int k(x - x_i) k(x - x_j) dx - 2 sum_{i~=j} k(x_i - x_j)</span>
+
+<span class="sd">     &quot;&quot;&quot;</span>
+    <span class="n">yh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fftkernel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">/</span> <span class="n">dt</span><span class="p">))</span>  <span class="c1"># density</span>
+    <span class="c1"># formula for density</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">yh</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">yh</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> \
+               <span class="n">dt</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">/</span> <span class="n">w</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">N</span>
+    <span class="c1"># formula for rate</span>
+    <span class="c1"># C = dt*sum( yh.^2 - 2*yh.*y_hist + 2/sqrt(2*pi)/w*y_hist )</span></div>
+    <span class="k">return</span> <span class="n">C</span><span class="p">,</span> <span class="n">yh</span>
+
+
+<div class="viewcode-block" id="sskernel"><a class="viewcode-back" href="../../reference/statistics.html#elephant.statistics.sskernel">[docs]</a><span class="k">def</span> <span class="nf">sskernel</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">,</span> <span class="n">tin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Calculates optimal fixed kernel bandwidth.</span>
+
+<span class="sd">    spiketimes: sequence of spike times (sorted to be ascending).</span>
+
+<span class="sd">    tin: (optional) time points at which the kernel bandwidth is to be estimated.</span>
+
+<span class="sd">    w: (optional) vector of kernel bandwidths. If specified, optimal</span>
+<span class="sd">    bandwidth is selected from this.</span>
+
+<span class="sd">    bootstrap (optional): whether to calculate the 95% confidence</span>
+<span class="sd">    interval. (default False)</span>
+
+<span class="sd">    Returns</span>
+
+<span class="sd">    A dictionary containing the following key value pairs:</span>
+
+<span class="sd">    &#39;y&#39;: estimated density,</span>
+<span class="sd">    &#39;t&#39;: points at which estimation was computed,</span>
+<span class="sd">    &#39;optw&#39;: optimal kernel bandwidth,</span>
+<span class="sd">    &#39;w&#39;: kernel bandwidths examined,</span>
+<span class="sd">    &#39;C&#39;: cost functions of w,</span>
+<span class="sd">    &#39;confb95&#39;: (lower bootstrap confidence level, upper bootstrap confidence level),</span>
+<span class="sd">    &#39;yb&#39;: bootstrap samples.</span>
+
+
+<span class="sd">    Ref: Shimazaki, Hideaki, and Shigeru Shinomoto. 2010. Kernel</span>
+<span class="sd">    Bandwidth Optimization in Spike Rate Estimation. Journal of</span>
+<span class="sd">    Computational Neuroscience 29 (1-2):</span>
+<span class="sd">    171-82. doi:10.1007/s10827-009-0180-4.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">tin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span>
+        <span class="n">isi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span>
+        <span class="n">isi</span> <span class="o">=</span> <span class="n">isi</span><span class="p">[</span><span class="n">isi</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">isi</span><span class="p">)</span>
+        <span class="n">tin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">),</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">),</span>
+                          <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span> <span class="o">/</span> <span class="n">dt</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">),</span> <span class="mi">1000</span><span class="p">))</span>  <span class="c1"># The 1000 seems somewhat arbitrary</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">tin</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">tin</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">tin</span><span class="p">)</span>
+        <span class="n">spiketimes</span> <span class="o">=</span> <span class="n">spiketimes</span><span class="p">[(</span><span class="n">spiketimes</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">tin</span><span class="p">))</span> <span class="o">&amp;</span>
+                                <span class="p">(</span><span class="n">spiketimes</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">tin</span><span class="p">))]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">isi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span>
+        <span class="n">isi</span> <span class="o">=</span> <span class="n">isi</span><span class="p">[</span><span class="n">isi</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">isi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dt</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">tin</span><span class="p">)):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">tin</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">tin</span><span class="p">),</span>
+                            <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span> <span class="o">/</span> <span class="n">dt</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">),</span> <span class="mi">1000</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">tin</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">tin</span><span class="p">))</span>
+    <span class="n">yhist</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">dt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">yhist</span><span class="p">)</span>
+    <span class="n">yhist</span> <span class="o">=</span> <span class="n">yhist</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>  <span class="c1"># density</span>
+    <span class="n">optw</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+        <span class="n">Cmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">w_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+            <span class="n">C</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">yh</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">yhist</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">w_</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">C</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">Cmin</span><span class="p">:</span>
+                <span class="n">Cmin</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">optw</span> <span class="o">=</span> <span class="n">w_</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">yh</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Golden section search on a log-exp scale</span>
+        <span class="n">wmin</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">wmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">spiketimes</span><span class="p">)</span>
+        <span class="n">imax</span> <span class="o">=</span> <span class="mi">20</span>  <span class="c1"># max iterations</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">imax</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">imax</span><span class="p">)</span>
+        <span class="n">tolerance</span> <span class="o">=</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># The Golden ratio</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ilogexp</span><span class="p">(</span><span class="n">wmin</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ilogexp</span><span class="p">(</span><span class="n">wmax</span><span class="p">)</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="p">(</span><span class="n">phi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">phi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span>
+        <span class="n">f1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">yhist</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c1</span><span class="p">),</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="n">f2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">yhist</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c2</span><span class="p">),</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">c2</span><span class="p">))))</span>\
+              <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="o">&lt;</span> <span class="n">imax</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">f1</span> <span class="o">&lt;</span> <span class="n">f2</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">c2</span>
+                <span class="n">c2</span> <span class="o">=</span> <span class="n">c1</span>
+                <span class="n">c1</span> <span class="o">=</span> <span class="p">(</span><span class="n">phi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span>
+                <span class="n">f2</span> <span class="o">=</span> <span class="n">f1</span>
+                <span class="n">f1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">yhist</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c1</span><span class="p">),</span> <span class="n">dt</span><span class="p">)</span>
+                <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+                <span class="n">C</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">f1</span>
+                <span class="n">optw</span> <span class="o">=</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y1</span> <span class="o">*</span> <span class="n">dt</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">c1</span>
+                <span class="n">c1</span> <span class="o">=</span> <span class="n">c2</span>
+                <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">phi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span>
+                <span class="n">f1</span> <span class="o">=</span> <span class="n">f2</span>
+                <span class="n">f2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">(</span><span class="n">yhist</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c2</span><span class="p">),</span> <span class="n">dt</span><span class="p">)</span>
+                <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
+                <span class="n">C</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">f2</span>
+                <span class="n">optw</span> <span class="o">=</span> <span class="n">logexp</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># Bootstrap confidence intervals</span>
+    <span class="n">confb95</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">yb</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">bootstrap</span><span class="p">:</span>
+        <span class="n">nbs</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">yb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nbs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tin</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbs</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">xb</span> <span class="o">=</span> <span class="n">spiketimes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">y_histb</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span>
+                <span class="n">xb</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="n">dt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">/</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">dt</span> <span class="o">/</span> <span class="n">N</span>
+            <span class="n">yb_buf</span> <span class="o">=</span> <span class="n">fftkernel</span><span class="p">(</span><span class="n">y_histb</span><span class="p">,</span> <span class="n">optw</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+            <span class="n">yb_buf</span> <span class="o">=</span> <span class="n">yb_buf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">yb_buf</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">yb</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">tin</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">yb_buf</span><span class="p">)</span>
+        <span class="n">ybsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">yb</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">y95b</span> <span class="o">=</span> <span class="n">ybsort</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">*</span> <span class="n">nbs</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="p">:]</span>
+        <span class="n">y95u</span> <span class="o">=</span> <span class="n">ybsort</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">0.95</span> <span class="o">*</span> <span class="n">nbs</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="p">:]</span>
+        <span class="n">confb95</span> <span class="o">=</span> <span class="p">(</span><span class="n">y95b</span><span class="p">,</span> <span class="n">y95u</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">tin</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">ret</span><span class="p">,</span>
+            <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="n">tin</span><span class="p">,</span>
+            <span class="s1">&#39;optw&#39;</span><span class="p">:</span> <span class="n">optw</span><span class="p">,</span>
+            <span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="n">w</span><span class="p">,</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">C</span><span class="p">,</span>
+            <span class="s1">&#39;confb95&#39;</span><span class="p">:</span> <span class="n">confb95</span><span class="p">,</span></div>
+            <span class="s1">&#39;yb&#39;</span><span class="p">:</span> <span class="n">yb</span><span class="p">}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

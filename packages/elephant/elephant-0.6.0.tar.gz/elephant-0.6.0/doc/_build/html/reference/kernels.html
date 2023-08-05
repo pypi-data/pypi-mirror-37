@@ -1,0 +1,878 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Kernels &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spike train dissimilarity / spike train synchrony" href="spike_train_dissimilarity.html" />
+    <link rel="prev" title="Current source density analysis" href="current_source_density.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_dissimilarity.html" title="Spike train dissimilarity / spike train synchrony"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="current_source_density.html" title="Current source density analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="current_source_density.html"
+                        title="previous chapter">Current source density analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spike_train_dissimilarity.html"
+                        title="next chapter">Spike train dissimilarity / spike train synchrony</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/kernels.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.kernels">
+<span id="kernels"></span><h1>Kernels<a class="headerlink" href="#module-elephant.kernels" title="Permalink to this headline">¶</a></h1>
+<p>Definition of a hierarchy of classes for kernel functions to be used
+in convolution, e.g., for data smoothing (low pass filtering) or
+firing rate estimation.</p>
+<dl class="docutils">
+<dt>Examples of usage:</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kernel1</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">GaussianKernel</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mi">100</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kernel2</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">ExponentialKernel</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mi">8</span><span class="o">*</span><span class="n">mm</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="class">
+<dt id="elephant.kernels.AlphaKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">AlphaKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#AlphaKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.AlphaKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for alpha kernels</p>
+<div class="math">
+<p><img src="../_images/math/84bc2a6b9a8b270175b6a8ea9821c910d2bec204.png" alt="K(t) = \left\{\begin{array}{ll} (1 / \tau^2)
+\ t\ \exp{(-t / \tau)}, &amp; t &gt; 0 \\
+0, &amp; t \leq 0 \end{array} \right."/></p>
+</div><p>with <img class="math" src="../_images/math/8fa8f45a0999959bd9355918dcd30208983a349e.png" alt="\tau = \sigma / \sqrt{2}"/>.</p>
+<p>For the alpha kernel an analytical expression for the boundary of the
+integral as a function of the area under the alpha kernel function
+cannot be given. Hence in this case the value of the boundary is
+determined by kernel-approximating numerical integration, inherited
+from the Kernel class.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.EpanechnikovLikeKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">EpanechnikovLikeKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#EpanechnikovLikeKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.EpanechnikovLikeKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for epanechnikov-like kernels</p>
+<div class="math">
+<p><img src="../_images/math/451da7e33784018d7092899b603ba5588534761b.png" alt="K(t) = \left\{\begin{array}{ll} (3 /(4 d)) (1 - (t / d)^2),
+&amp; |t| &lt; d \\
+0, &amp; |t| \geq d \end{array} \right."/></p>
+</div><p>with <img class="math" src="../_images/math/62ee4dcab98dad1fb84cd55a8f647d813d36b424.png" alt="d = \sqrt{5} \sigma"/> being the half width of the kernel.</p>
+<p>The Epanechnikov kernel under full consideration of its axioms has a half
+width of <img class="math" src="../_images/math/c385cbc7b290bde906e7bacabb6e181986b486e2.png" alt="\sqrt{5}"/>. Ignoring one axiom also the respective kernel
+with half width = 1 can be called Epanechnikov kernel.
+( <a class="reference external" href="https://de.wikipedia.org/wiki/Epanechnikov-Kern">https://de.wikipedia.org/wiki/Epanechnikov-Kern</a> )
+However, arbitrary width of this type of kernel is here preferred to be
+called ‘Epanechnikov-like’ kernel.</p>
+<p>Besides the standard deviation <cite>sigma</cite>, for consistency of interfaces the
+parameter <cite>invert</cite> needed for asymmetric kernels also exists without
+having any effect in the case of symmetric kernels.</p>
+<p>Derived from:</p>
+<p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.EpanechnikovLikeKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#EpanechnikovLikeKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.EpanechnikovLikeKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote>
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+<p>For Epanechnikov-like kernels, integration of its density within</p>
+<p>the boundaries 0 and <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/>, and then solving for <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> leads</p>
+<p>to the problem of finding the roots of a polynomial of third order.</p>
+<p>The implemented formulas are based on the solution of this problem</p>
+<p>given in <a class="reference external" href="https://en.wikipedia.org/wiki/Cubic_function">https://en.wikipedia.org/wiki/Cubic_function</a>,</p>
+<p>where the following 3 solutions are given:</p>
+<blockquote>
+<div><ul class="simple">
+<li><img class="math" src="../_images/math/3641a2beb6956f85e79add77d5606fff2438a52b.png" alt="u_1 = 1"/>: Solution on negative side</li>
+<li><img class="math" src="../_images/math/79e8e932512fcee716d2e037f5e45fa333061c96.png" alt="u_2 = \frac{-1 + i\sqrt{3}}{2}"/>: Solution for larger
+values than zero crossing of the density</li>
+<li><img class="math" src="../_images/math/56743dbfbd96793aaaf7f6c551a9e49167357c04.png" alt="u_3 = \frac{-1 - i\sqrt{3}}{2}"/>: Solution for smaller
+values than zero crossing of the density</li>
+</ul>
+</div></blockquote>
+<p>The solution <img class="math" src="../_images/math/4507c94131fe903f9e617c7502d3e702d3abab7d.png" alt="u_3"/> is the relevant one for the problem at hand,</p>
+<p class="last">since it involves only positive area contributions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.ExponentialKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">ExponentialKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#ExponentialKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.ExponentialKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for exponential kernels</p>
+<div class="math">
+<p><img src="../_images/math/f0d8f949ded3378a390c68063ce4282622cd366c.png" alt="K(t) = \left\{\begin{array}{ll} (1 / \tau) \exp{(-t / \tau)},
+&amp; t &gt; 0 \\
+0, &amp; t \leq 0 \end{array} \right."/></p>
+</div><p>with <img class="math" src="../_images/math/46911867989e0d6f8366660f26471770c85dbc48.png" alt="\tau = \sigma"/>.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.ExponentialKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#ExponentialKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.ExponentialKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.GaussianKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">GaussianKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#GaussianKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.GaussianKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for gaussian kernels</p>
+<div class="math">
+<p><img src="../_images/math/cb57b4ba82f29b1f7042dc6dde5a05987f816aad.png" alt="K(t) = (\frac{1}{\sigma \sqrt{2 \pi}})
+\exp(-\frac{t^2}{2 \sigma^2})"/></p>
+</div><p>with <img class="math" src="../_images/math/011e5790a6c33043ceadca81d9657dde6c61d769.png" alt="\sigma"/> being the standard deviation.</p>
+<p>Besides the standard deviation <cite>sigma</cite>, for consistency of interfaces the
+parameter <cite>invert</cite> needed for asymmetric kernels also exists without
+having any effect in the case of symmetric kernels.</p>
+<p>Derived from:</p>
+<p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.GaussianKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#GaussianKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.GaussianKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.Kernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">Kernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#Kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.Kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.Kernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#Kernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.Kernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.kernels.Kernel.is_symmetric">
+<code class="descname">is_symmetric</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#Kernel.is_symmetric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.Kernel.is_symmetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>In the case of symmetric kernels, this method is overwritten in the
+class SymmetricKernel, where it returns ‘True’, hence leaving the
+here returned value ‘False’ for the asymmetric kernels.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="elephant.kernels.Kernel.median_index">
+<code class="descname">median_index</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#Kernel.median_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.Kernel.median_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the index of the Median of the kernel.
+This parameter is not mandatory for symmetrical kernels but it is
+required when asymmetrical kernels have to be aligned at their median.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
+<blockquote class="last">
+<div><p>Index of the estimated value of the kernel median.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.LaplacianKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">LaplacianKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#LaplacianKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.LaplacianKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for laplacian kernels</p>
+<div class="math">
+<p><img src="../_images/math/599dd046fac6b05cdd521846b3637a282d692da1.png" alt="K(t) = \frac{1}{2 \tau} \exp(-|\frac{t}{\tau}|)"/></p>
+</div><p>with <img class="math" src="../_images/math/8fa8f45a0999959bd9355918dcd30208983a349e.png" alt="\tau = \sigma / \sqrt{2}"/>.</p>
+<p>Besides the standard deviation <cite>sigma</cite>, for consistency of interfaces the
+parameter <cite>invert</cite> needed for asymmetric kernels also exists without
+having any effect in the case of symmetric kernels.</p>
+<p>Derived from:</p>
+<p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.LaplacianKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#LaplacianKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.LaplacianKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.RectangularKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">RectangularKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#RectangularKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.RectangularKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for rectangular kernels</p>
+<div class="math">
+<p><img src="../_images/math/b6acb5c5ab237fdc543e6f4d6e6c0152f371bdc7.png" alt="K(t) = \left\{\begin{array}{ll} \frac{1}{2 \tau}, &amp; |t| &lt; \tau \\
+0, &amp; |t| \geq \tau \end{array} \right."/></p>
+</div><p>with <img class="math" src="../_images/math/6a2fb9a48f0c1a45ab633b44e47805f62bbd3499.png" alt="\tau = \sqrt{3} \sigma"/> corresponding to the half width
+of the kernel.</p>
+<p>Besides the standard deviation <cite>sigma</cite>, for consistency of interfaces the
+parameter <cite>invert</cite> needed for asymmetric kernels also exists without
+having any effect in the case of symmetric kernels.</p>
+<p>Derived from:</p>
+<p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.RectangularKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#RectangularKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.RectangularKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.SymmetricKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">SymmetricKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#SymmetricKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.SymmetricKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.SymmetricKernel.is_symmetric">
+<code class="descname">is_symmetric</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#SymmetricKernel.is_symmetric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.SymmetricKernel.is_symmetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>In the case of symmetric kernels, this method is overwritten in the
+class SymmetricKernel, where it returns ‘True’, hence leaving the
+here returned value ‘False’ for the asymmetric kernels.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="elephant.kernels.TriangularKernel">
+<em class="property">class </em><code class="descclassname">elephant.kernels.</code><code class="descname">TriangularKernel</code><span class="sig-paren">(</span><em>sigma</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#TriangularKernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.TriangularKernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for triangular kernels</p>
+<div class="math">
+<p><img src="../_images/math/9302def7485f6e6def0676687a263f0dccc92170.png" alt="K(t) = \left\{ \begin{array}{ll} \frac{1}{\tau} (1
+- \frac{|t|}{\tau}), &amp; |t| &lt; \tau \\
+ 0, &amp; |t| \geq \tau \end{array} \right."/></p>
+</div><p>with <img class="math" src="../_images/math/4006262881be6c4a304287b40d8d1a96d1d7a730.png" alt="\tau = \sqrt{6} \sigma"/> corresponding to the half width of 
+the kernel.</p>
+<p>Besides the standard deviation <cite>sigma</cite>, for consistency of interfaces the
+parameter <cite>invert</cite> needed for asymmetric kernels also exists without
+having any effect in the case of symmetric kernels.</p>
+<p>Derived from:</p>
+<p>Base class for symmetric kernels.</p>
+<p>Derived from:</p>
+<p>This is the base class for commonly used kernels.</p>
+<p>General definition of kernel:
+A function <img class="math" src="../_images/math/77843dcfb2ded5e36f03ea5a5d4b819056a8f91f.png" alt="K(x, y)"/> is called a kernel function if
+<img class="math" src="../_images/math/aa502ca52093bd730edb34e6efff9eb3320b634f.png" alt="\int K(x, y) g(x) g(y)\ \textrm{d}x\ \textrm{d}y
+\ \geq 0\ \ \ \forall\ g \in L_2"/></p>
+<dl class="docutils">
+<dt>Currently implemented kernels are:</dt>
+<dd><ul class="first last simple">
+<li>rectangular</li>
+<li>triangular</li>
+<li>epanechnikovlike</li>
+<li>gaussian</li>
+<li>laplacian</li>
+<li>exponential (asymmetric)</li>
+<li>alpha function (asymmetric)</li>
+</ul>
+</dd>
+</dl>
+<p>In neuroscience a popular application of kernels is in performing smoothing
+operations via convolution. In this case, the kernel has the properties of
+a probability density, i.e., it is positive and normalized to one. Popular
+choices are the rectangular or Gaussian kernels.</p>
+<p>Exponential and alpha kernels may also be used to represent the postynaptic
+current / potentials in a linear (current-based) model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sigma</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Standard deviation of the kernel.</p>
+</div></blockquote>
+<p><strong>invert: bool, optional</strong></p>
+<blockquote class="last">
+<div><p>If true, asymmetric kernels (e.g., exponential
+or alpha kernels) are inverted along the time axis.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="elephant.kernels.TriangularKernel.boundary_enclosing_area_fraction">
+<code class="descname">boundary_enclosing_area_fraction</code><span class="sig-paren">(</span><em>fraction</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#TriangularKernel.boundary_enclosing_area_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.TriangularKernel.boundary_enclosing_area_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the boundary <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> so that the integral from
+<img class="math" src="../_images/math/567d4ff8a7a46773f92b7b70ac706f8045813040.png" alt="-b"/> to <img class="math" src="../_images/math/57c9d14bb082716df9000146882ce365335d08f1.png" alt="b"/> encloses a certain fraction of the
+integral over the complete kernel. By definition the returned value
+of the method boundary_enclosing_area_fraction is hence non-negative,
+even if the whole probability mass of the kernel is concentrated over
+negative support for inverted kernels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Quantity scalar</p>
+<blockquote class="last">
+<div><p>Boundary of the kernel containing area <cite>fraction</cite> under the
+kernel density.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.kernels.inherit_docstring">
+<code class="descclassname">elephant.kernels.</code><code class="descname">inherit_docstring</code><span class="sig-paren">(</span><em>fromfunc</em>, <em>sep=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/kernels.html#inherit_docstring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.kernels.inherit_docstring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator: Copy the docstring of <cite>fromfunc</cite></p>
+<p>based on:
+<a class="reference external" href="http://stackoverflow.com/questions/13741998/">http://stackoverflow.com/questions/13741998/</a>
+is-there-a-way-to-let-classes-inherit-the-documentation-of-their-superclass-with</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_dissimilarity.html" title="Spike train dissimilarity / spike train synchrony"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="current_source_density.html" title="Current source density analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

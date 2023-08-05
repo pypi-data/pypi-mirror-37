@@ -1,0 +1,401 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.sta &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.sta</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Functions to calculate spike-triggered average and spike-field coherence of</span>
+<span class="sd">analog signals.</span>
+
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">from</span> <span class="nn">neo.core</span> <span class="k">import</span> <span class="n">AnalogSignal</span><span class="p">,</span> <span class="n">SpikeTrain</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">.conversion</span> <span class="k">import</span> <span class="n">BinnedSpikeTrain</span>
+
+
+<div class="viewcode-block" id="spike_triggered_average"><a class="viewcode-back" href="../../reference/sta.html#elephant.sta.spike_triggered_average">[docs]</a><span class="k">def</span> <span class="nf">spike_triggered_average</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">spiketrains</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the spike-triggered averages of analog signals in a time window</span>
+<span class="sd">    relative to the spike times of a corresponding spiketrain for multiple</span>
+<span class="sd">    signals each. The function receives n analog signals and either one or</span>
+<span class="sd">    n spiketrains. In case it is one spiketrain this one is muliplied n-fold</span>
+<span class="sd">    and used for each of the n analog signals.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signal : neo AnalogSignal object</span>
+<span class="sd">        &#39;signal&#39; contains n analog signals.</span>
+<span class="sd">    spiketrains : one SpikeTrain or one numpy ndarray or a list of n of either of these.</span>
+<span class="sd">        &#39;spiketrains&#39; contains the times of the spikes in the spiketrains.</span>
+<span class="sd">    window : tuple of 2 Quantity objects with dimensions of time.</span>
+<span class="sd">        &#39;window&#39; is the start time and the stop time, relative to a spike, of</span>
+<span class="sd">        the time interval for signal averaging.</span>
+<span class="sd">        If the window size is not a multiple of the sampling interval of the </span>
+<span class="sd">        signal the window will be extended to the next multiple. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result_sta : neo AnalogSignal object</span>
+<span class="sd">        &#39;result_sta&#39; contains the spike-triggered averages of each of the</span>
+<span class="sd">        analog signals with respect to the spikes in the corresponding</span>
+<span class="sd">        spiketrains. The length of &#39;result_sta&#39; is calculated as the number</span>
+<span class="sd">        of bins from the given start and stop time of the averaging interval</span>
+<span class="sd">        and the sampling rate of the analog signal. If for an analog signal</span>
+<span class="sd">        no spike was either given or all given spikes had to be ignored</span>
+<span class="sd">        because of a too large averaging interval, the corresponding returned</span>
+<span class="sd">        analog signal has all entries as nan. The number of used spikes and</span>
+<span class="sd">        unused spikes for each analog signal are returned as annotations to </span>
+<span class="sd">        the returned AnalogSignal object.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; signal = neo.AnalogSignal(np.array([signal1, signal2]).T, units=&#39;mV&#39;,</span>
+<span class="sd">    ...                                sampling_rate=10/ms)</span>
+<span class="sd">    &gt;&gt;&gt; stavg = spike_triggered_average(signal, [spiketrain1, spiketrain2],</span>
+<span class="sd">    ...                                 (-5 * ms, 10 * ms))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># checking compatibility of data and data types</span>
+    <span class="c1"># window_starttime: time to specify the start time of the averaging</span>
+    <span class="c1"># interval relative to a spike</span>
+    <span class="c1"># window_stoptime: time to specify the stop time of the averaging</span>
+    <span class="c1"># interval relative to a spike</span>
+    <span class="n">window_starttime</span><span class="p">,</span> <span class="n">window_stoptime</span> <span class="o">=</span> <span class="n">window</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">window_starttime</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">window_starttime</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">==</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The start time of the window (window[0]) &quot;</span>
+                        <span class="s2">&quot;must be a time quantity.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">window_stoptime</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">window_stoptime</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">==</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The stop time of the window (window[1]) &quot;</span>
+                        <span class="s2">&quot;must be a time quantity.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">window_stoptime</span> <span class="o">&lt;=</span> <span class="n">window_starttime</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The start time of the window (window[0]) must be &quot;</span>
+                         <span class="s2">&quot;earlier than the stop time of the window (window[1]).&quot;</span><span class="p">)</span>
+
+    <span class="c1"># checks on signal</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Signal must be an AnalogSignal, not </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">signal</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># num_signals: number of analog signals</span>
+        <span class="n">num_signals</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty analog signal, hence no averaging possible.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">window_stoptime</span> <span class="o">-</span> <span class="n">window_starttime</span> <span class="o">&gt;</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The chosen time window is larger than the &quot;</span>
+                         <span class="s2">&quot;time duration of the signal.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># spiketrains type check</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">SpikeTrain</span><span class="p">)):</span>
+        <span class="n">spiketrains</span> <span class="o">=</span> <span class="p">[</span><span class="n">spiketrains</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">SpikeTrain</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;spiketrains must be a SpikeTrain, a numpy ndarray, or a &quot;</span>
+                    <span class="s2">&quot;list of one of those, not </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;spiketrains must be a SpikeTrain, a numpy ndarray, or a list of &quot;</span>
+            <span class="s2">&quot;one of those, not </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">))</span>
+
+    <span class="c1"># multiplying spiketrain in case only a single spiketrain is given</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">num_signals</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">spiketrains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">spiketrains</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_signals</span><span class="p">):</span>
+            <span class="n">spiketrains</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+
+    <span class="c1"># checking for matching numbers of signals and spiketrains</span>
+    <span class="k">if</span> <span class="n">num_signals</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The number of signals and spiketrains has to be the same.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># checking the times of signal and spiketrains</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_signals</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">spiketrains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">t_start</span> <span class="o">&lt;</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The spiketrain indexed by </span><span class="si">%i</span><span class="s2"> starts earlier than &quot;</span>
+                <span class="s2">&quot;the analog signal.&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spiketrains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">&gt;</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_stop</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The spiketrain indexed by </span><span class="si">%i</span><span class="s2"> stops later than &quot;</span>
+                <span class="s2">&quot;the analog signal.&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># *** Main algorithm: ***</span>
+
+    <span class="c1"># window_bins: number of bins of the chosen averaging interval</span>
+    <span class="n">window_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(((</span><span class="n">window_stoptime</span> <span class="o">-</span> <span class="n">window_starttime</span><span class="p">)</span> <span class="o">*</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">))</span>
+    <span class="c1"># result_sta: array containing finally the spike-triggered averaged signal</span>
+    <span class="n">result_sta</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">window_bins</span><span class="p">,</span> <span class="n">num_signals</span><span class="p">)),</span>
+        <span class="n">sampling_rate</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+    <span class="c1"># setting of correct times of the spike-triggered average</span>
+    <span class="c1"># relative to the spike</span>
+    <span class="n">result_sta</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">window_starttime</span>
+    <span class="n">used_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_signals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">unused_spikes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_signals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">total_used_spikes</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_signals</span><span class="p">):</span>
+        <span class="c1"># summing over all respective signal intervals around spiketimes</span>
+        <span class="k">for</span> <span class="n">spiketime</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="c1"># checks for sufficient signal data around spiketime</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">spiketime</span> <span class="o">+</span> <span class="n">window_starttime</span> <span class="o">&gt;=</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span> <span class="ow">and</span>
+                    <span class="n">spiketime</span> <span class="o">+</span> <span class="n">window_stoptime</span> <span class="o">&lt;=</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_stop</span><span class="p">):</span>
+                <span class="c1"># calculating the startbin in the analog signal of the</span>
+                <span class="c1"># averaging window for spike</span>
+                <span class="n">startbin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(((</span><span class="n">spiketime</span> <span class="o">+</span> <span class="n">window_starttime</span> <span class="o">-</span>
+                    <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">))</span>
+                <span class="c1"># adds the signal in selected interval relative to the spike</span>
+                <span class="n">result_sta</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">signal</span><span class="p">[</span>
+                    <span class="n">startbin</span><span class="p">:</span> <span class="n">startbin</span> <span class="o">+</span> <span class="n">window_bins</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="c1"># counting of the used spikes</span>
+                <span class="n">used_spikes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># counting of the unused spikes</span>
+                <span class="n">unused_spikes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># normalization</span>
+        <span class="n">result_sta</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">result_sta</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">used_spikes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">total_used_spikes</span> <span class="o">+=</span> <span class="n">used_spikes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">total_used_spikes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;No spike at all was either found or used for averaging&quot;</span><span class="p">)</span>
+    <span class="n">result_sta</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">used_spikes</span><span class="o">=</span><span class="n">used_spikes</span><span class="p">,</span> <span class="n">unused_spikes</span><span class="o">=</span><span class="n">unused_spikes</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">result_sta</span>
+
+
+<div class="viewcode-block" id="spike_field_coherence"><a class="viewcode-back" href="../../reference/sta.html#elephant.sta.spike_field_coherence">[docs]</a><span class="k">def</span> <span class="nf">spike_field_coherence</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">spiketrain</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the spike-field coherence between a analog signal(s) and a</span>
+<span class="sd">    (binned) spike train.</span>
+
+<span class="sd">    The current implementation makes use of scipy.signal.coherence(). Additional</span>
+<span class="sd">    kwargs will will be directly forwarded to scipy.signal.coherence(),</span>
+<span class="sd">    except for the axis parameter and the sampling frequency, which will be</span>
+<span class="sd">    extracted from the input signals.</span>
+
+<span class="sd">    The spike_field_coherence function receives an analog signal array and</span>
+<span class="sd">    either a binned spike train or a spike train containing the original spike</span>
+<span class="sd">    times. In case of original spike times the spike train is binned according</span>
+<span class="sd">    to the sampling rate of the analog signal array.</span>
+
+<span class="sd">    The AnalogSignal object can contain one or multiple signal traces. In case</span>
+<span class="sd">    of multiple signal traces, the spike field coherence is calculated</span>
+<span class="sd">    individually for each signal trace and the spike train.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signal : neo AnalogSignal object</span>
+<span class="sd">        &#39;signal&#39; contains n analog signals.</span>
+<span class="sd">    spiketrain : SpikeTrain or BinnedSpikeTrain</span>
+<span class="sd">        Single spike train to perform the analysis on. The binsize of the</span>
+<span class="sd">        binned spike train must match the sampling_rate of signal.</span>
+
+<span class="sd">    KWArgs</span>
+<span class="sd">    ------</span>
+<span class="sd">    All KWArgs are passed to scipy.signal.coherence().</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    coherence : complex Quantity array</span>
+<span class="sd">        contains the coherence values calculated for each analog signal trace</span>
+<span class="sd">        in combination with the spike train. The first dimension corresponds to</span>
+<span class="sd">        the frequency, the second to the number of the signal trace.</span>
+<span class="sd">    frequencies : Quantity array</span>
+<span class="sd">        contains the frequency values corresponding to the first dimension of</span>
+<span class="sd">        the &#39;coherence&#39; array</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    Plot the SFC between a regular spike train at 20 Hz, and two sinusoidal</span>
+<span class="sd">    time series at 20 Hz and 23 Hz, respectively.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; from quantities import ms, mV, Hz, kHz</span>
+<span class="sd">    &gt;&gt;&gt; import neo, elephant</span>
+
+<span class="sd">    &gt;&gt;&gt; t = pq.Quantity(range(10000),units=&#39;ms&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; f1, f2 = 20. * Hz, 23. * Hz</span>
+<span class="sd">    &gt;&gt;&gt; signal = neo.AnalogSignal(np.array([</span>
+<span class="sd">            np.sin(f1 * 2. * np.pi * t.rescale(s)),</span>
+<span class="sd">            np.sin(f2 * 2. * np.pi * t.rescale(s))]).T,</span>
+<span class="sd">            units=pq.mV, sampling_rate=1. * kHz)</span>
+<span class="sd">    &gt;&gt;&gt; spiketrain = neo.SpikeTrain(</span>
+<span class="sd">        range(t[0], t[-1], 50), units=&#39;ms&#39;,</span>
+<span class="sd">        t_start=t[0], t_stop=t[-1])</span>
+<span class="sd">    &gt;&gt;&gt; sfc, freqs = elephant.sta.spike_field_coherence(</span>
+<span class="sd">        signal, spiketrain, window=&#39;boxcar&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; plt.plot(freqs, sfc[:,0])</span>
+<span class="sd">    &gt;&gt;&gt; plt.plot(freqs, sfc[:,1])</span>
+<span class="sd">    &gt;&gt;&gt; plt.xlabel(&#39;Frequency [Hz]&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.ylabel(&#39;SFC&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; plt.xlim((0, 60))</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="p">,</span> <span class="s1">&#39;coherence&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;scipy.signal.coherence is not available. The sfc &#39;</span>
+                             <span class="s1">&#39;function uses scipy.signal.coherence for &#39;</span>
+                             <span class="s1">&#39;the coherence calculation. This function is &#39;</span>
+                             <span class="s1">&#39;available for scipy version 0.16 or newer. &#39;</span>
+                             <span class="s1">&#39;Please update you scipy version.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># spiketrains type check</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="p">(</span><span class="n">SpikeTrain</span><span class="p">,</span> <span class="n">BinnedSpikeTrain</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;spiketrain must be of type SpikeTrain or BinnedSpikeTrain, &quot;</span>
+            <span class="s2">&quot;not </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">))</span>
+
+    <span class="c1"># checks on analogsignal</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Signal must be an AnalogSignal, not </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">signal</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># num_signals: number of individual traces in the analog signal</span>
+        <span class="n">num_signals</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">num_signals</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty analog signal.&quot;</span><span class="p">)</span>
+    <span class="n">len_signals</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># bin spiketrain if necessary</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">SpikeTrain</span><span class="p">):</span>
+        <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span>
+            <span class="n">spiketrain</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">sampling_period</span><span class="p">)</span>
+
+    <span class="c1"># check the start and stop times of signal and spike trains</span>
+    <span class="k">if</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">&lt;</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The spiketrain starts earlier than the analog signal.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">&gt;</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_stop</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The spiketrain stops later than the analog signal.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># check equal time resolution for both signals</span>
+    <span class="k">if</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">binsize</span> <span class="o">!=</span> <span class="n">signal</span><span class="o">.</span><span class="n">sampling_period</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The spiketrain and signal must have a &quot;</span>
+            <span class="s2">&quot;common sampling frequency / binsize&quot;</span><span class="p">)</span>
+
+    <span class="c1"># calculate how many bins to add on the left of the binned spike train</span>
+    <span class="n">delta_t</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">-</span> <span class="n">signal</span><span class="o">.</span><span class="n">t_start</span>
+    <span class="k">if</span> <span class="n">delta_t</span> <span class="o">%</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">binsize</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">left_edge</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">delta_t</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incompatible binning of spike train and LFP&quot;</span><span class="p">)</span>
+    <span class="n">right_edge</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">left_edge</span> <span class="o">+</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span>
+
+    <span class="c1"># duplicate spike trains</span>
+    <span class="n">spiketrain_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">len_signals</span><span class="p">))</span>
+    <span class="n">spiketrain_array</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">left_edge</span><span class="p">:</span><span class="n">right_edge</span><span class="p">]</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">to_array</span><span class="p">()</span>
+    <span class="n">spiketrains_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">spiketrain_array</span><span class="p">,</span> <span class="n">repeats</span><span class="o">=</span><span class="n">num_signals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+    <span class="c1"># calculate coherence</span>
+    <span class="n">frequencies</span><span class="p">,</span> <span class="n">sfc</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">coherence</span><span class="p">(</span>
+        <span class="n">spiketrains_array</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+        <span class="n">fs</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">sfc</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">),</span></div>
+            <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">frequencies</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

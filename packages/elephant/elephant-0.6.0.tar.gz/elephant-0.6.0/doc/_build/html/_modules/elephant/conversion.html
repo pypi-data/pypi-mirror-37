@@ -1,0 +1,898 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.conversion &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.conversion</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module allows to convert standard data representations</span>
+<span class="sd">(e.g., a spike train stored as Neo SpikeTrain object)</span>
+<span class="sd">into other representations useful to perform calculations on the data.</span>
+<span class="sd">An example is the representation of a spike train as a sequence of 0-1 values</span>
+<span class="sd">(binned spike train).</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sps</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+
+
+<div class="viewcode-block" id="binarize"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.binarize">[docs]</a><span class="k">def</span> <span class="nf">binarize</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">return_times</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an array indicating if spikes occured at individual time points.</span>
+
+<span class="sd">    The array contains boolean values identifying whether one or more spikes</span>
+<span class="sd">    happened in the corresponding time bin.  Time bins start at `t_start`</span>
+<span class="sd">    and end at `t_stop`, spaced in `1/sampling_rate` intervals.</span>
+
+<span class="sd">    Accepts either a Neo SpikeTrain, a Quantity array, or a plain NumPy array.</span>
+<span class="sd">    Returns a boolean array with each element being the presence or absence of</span>
+<span class="sd">    a spike in that time bin.  The number of spikes in a time bin is not</span>
+<span class="sd">    considered.</span>
+
+<span class="sd">    Optionally also returns an array of time points corresponding to the</span>
+<span class="sd">    elements of the boolean array.  The units of this array will be the same as</span>
+<span class="sd">    the units of the SpikeTrain, if any.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    spiketrain : Neo SpikeTrain or Quantity array or NumPy array</span>
+<span class="sd">                 The spike times.  Does not have to be sorted.</span>
+<span class="sd">    sampling_rate : float or Quantity scalar, optional</span>
+<span class="sd">                    The sampling rate to use for the time points.</span>
+<span class="sd">                    If not specified, retrieved from the `sampling_rate`</span>
+<span class="sd">                    attribute of `spiketrain`.</span>
+<span class="sd">    t_start : float or Quantity scalar, optional</span>
+<span class="sd">              The start time to use for the time points.</span>
+<span class="sd">              If not specified, retrieved from the `t_start`</span>
+<span class="sd">              attribute of `spiketrain`.  If that is not present, default to</span>
+<span class="sd">              `0`.  Any value from `spiketrain` below this value is</span>
+<span class="sd">              ignored.</span>
+<span class="sd">    t_stop : float or Quantity scalar, optional</span>
+<span class="sd">             The start time to use for the time points.</span>
+<span class="sd">             If not specified, retrieved from the `t_stop`</span>
+<span class="sd">             attribute of `spiketrain`.  If that is not present, default to</span>
+<span class="sd">             the maximum value of `sspiketrain`.  Any value from</span>
+<span class="sd">             `spiketrain` above this value is ignored.</span>
+<span class="sd">    return_times : bool</span>
+<span class="sd">                   If True, also return the corresponding time points.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    values : NumPy array of bools</span>
+<span class="sd">             A ``True`` value at a particular index indicates the presence of</span>
+<span class="sd">             one or more spikes at the corresponding time point.</span>
+<span class="sd">    times : NumPy array or Quantity array, optional</span>
+<span class="sd">            The time points.  This will have the same units as `spiketrain`.</span>
+<span class="sd">            If `spiketrain` has no units, this will be an NumPy array.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Spike times are placed in the bin of the closest time point, going to the</span>
+<span class="sd">    higher bin if exactly between two bins.</span>
+
+<span class="sd">    So in the case where the bins are `5.5` and `6.5`, with the spike time</span>
+<span class="sd">    being `6.0`, the spike will be placed in the `6.5` bin.</span>
+
+<span class="sd">    The upper edge of the last bin, equal to `t_stop`, is inclusive.  That is,</span>
+<span class="sd">    a spike time exactly equal to `t_stop` will be included.</span>
+
+<span class="sd">    If `spiketrain` is a Quantity or Neo SpikeTrain and</span>
+<span class="sd">    `t_start`, `t_stop` or `sampling_rate` is not, then the arguments that</span>
+<span class="sd">    are not quantities will be assumed to have the same units as `spiketrain`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    TypeError</span>
+<span class="sd">        If `spiketrain` is a NumPy array and `t_start`, `t_stop`, or</span>
+<span class="sd">        `sampling_rate` is a Quantity..</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        `t_start` and `t_stop` can be inferred from `spiketrain` if</span>
+<span class="sd">        not explicitly defined and not an attribute of `spiketrain`.</span>
+<span class="sd">        `sampling_rate` cannot, so an exception is raised if it is not</span>
+<span class="sd">        explicitly defined and not present as an attribute of `spiketrain`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get the values from spiketrain if they are not specified.</span>
+    <span class="k">if</span> <span class="n">sampling_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sampling_rate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;sampling_rate&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sampling_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sampling_rate must either be explicitly defined &#39;</span>
+                             <span class="s1">&#39;or must be an attribute of spiketrain&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;t_start&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;t_stop&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">))</span>
+
+    <span class="c1"># we don&#39;t actually want the sampling rate, we want the sampling period</span>
+    <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">sampling_rate</span>
+
+    <span class="c1"># figure out what units, if any, we are dealing with</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># convert everything to the same units, then get the magnitude</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sampling_period</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;sampling_period cannot be a Quantity if &#39;</span>
+                            <span class="s1">&#39;spiketrain is not a quantity&#39;</span><span class="p">)</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="n">sampling_period</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;t_start cannot be a Quantity if &#39;</span>
+                            <span class="s1">&#39;spiketrain is not a quantity&#39;</span><span class="p">)</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;t_stop cannot be a Quantity if &#39;</span>
+                            <span class="s1">&#39;spiketrain is not a quantity&#39;</span><span class="p">)</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+
+    <span class="c1"># figure out the bin edges</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_start</span> <span class="o">-</span> <span class="n">sampling_period</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">+</span> <span class="n">sampling_period</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                      <span class="n">sampling_period</span><span class="p">)</span>
+    <span class="c1"># we don&#39;t want to count any spikes before t_start or after t_stop</span>
+    <span class="k">if</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">t_stop</span><span class="p">:</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">t_start</span><span class="p">:</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_start</span>
+    <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_stop</span>
+
+    <span class="c1"># this is where we actually get the binarized spike train</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">edges</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+
+    <span class="c1"># figure out what to output</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_times</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span>
+    <span class="k">elif</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">+</span> <span class="n">sampling_period</span><span class="p">,</span> <span class="n">sampling_period</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span> <span class="o">+</span> <span class="n">sampling_period</span><span class="p">,</span></div>
+                                          <span class="n">sampling_period</span><span class="p">),</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>
+
+<span class="c1">###########################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># Methods to calculate parameters, t_start, t_stop, bin size,</span>
+<span class="c1"># number of bins</span>
+<span class="c1">#</span>
+<span class="c1">###########################################################################</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_tstart</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the start point from given parameter.</span>
+
+<span class="sd">    Calculates the start point :attr:`t_start` from the three parameter</span>
+<span class="sd">    :attr:`t_stop`, :attr:`num_bins` and :attr`binsize`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins</span>
+<span class="sd">    binsize: quantities.Quantity</span>
+<span class="sd">        Size of Bins</span>
+<span class="sd">    t_stop: quantities.Quantity</span>
+<span class="sd">        Stop time</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t_start : quantities.Quantity</span>
+<span class="sd">        Starting point calculated from given parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">binsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_bins</span> <span class="o">*</span> <span class="n">binsize</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_tstop</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">t_start</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the stop point from given parameter.</span>
+
+<span class="sd">    Calculates the stop point :attr:`t_stop` from the three parameter</span>
+<span class="sd">    :attr:`t_start`, :attr:`num_bins` and :attr`binsize`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins</span>
+<span class="sd">    binsize: quantities.Quantity</span>
+<span class="sd">        Size of bins</span>
+<span class="sd">    t_start: quantities.Quantity</span>
+<span class="sd">        Start time</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t_stop : quantities.Quantity</span>
+<span class="sd">        Stoping point calculated from given parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">binsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">+</span> <span class="n">num_bins</span> <span class="o">*</span> <span class="n">binsize</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_num_bins</span><span class="p">(</span><span class="n">binsize</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the number of bins from given parameter.</span>
+
+<span class="sd">    Calculates the number of bins :attr:`num_bins` from the three parameter</span>
+<span class="sd">    :attr:`t_start`, :attr:`t_stop` and :attr`binsize`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    binsize: quantities.Quantity</span>
+<span class="sd">        Size of Bins</span>
+<span class="sd">    t_start : quantities.Quantity</span>
+<span class="sd">        Start time</span>
+<span class="sd">    t_stop: quantities.Quantity</span>
+<span class="sd">        Stop time</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    num_bins : int</span>
+<span class="sd">       Number of bins  calculated from given parameter.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError :</span>
+<span class="sd">        Raised when :attr:`t_stop` is smaller than :attr:`t_start`&quot;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">binsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">t_stop</span> <span class="o">&lt;</span> <span class="n">t_start</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;t_stop (</span><span class="si">%s</span><span class="s2">) is smaller than t_start (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+            <span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_binsize</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the stop point from given parameter.</span>
+
+<span class="sd">    Calculates the size of bins :attr:`binsize` from the three parameter</span>
+<span class="sd">    :attr:`num_bins`, :attr:`t_start` and :attr`t_stop`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_bins: int</span>
+<span class="sd">        Number of bins</span>
+<span class="sd">    t_start: quantities.Quantity</span>
+<span class="sd">        Start time</span>
+<span class="sd">    t_stop</span>
+<span class="sd">       Stop time</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    binsize : quantities.Quantity</span>
+<span class="sd">        Size of bins calculated from given parameter.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError :</span>
+<span class="sd">        Raised when :attr:`t_stop` is smaller than :attr:`t_start`&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">t_stop</span> <span class="o">&lt;</span> <span class="n">t_start</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;t_stop (</span><span class="si">%s</span><span class="s2">) is smaller than t_start (</span><span class="si">%s</span><span class="s2">)&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_bins</span>
+
+
+<span class="k">def</span> <span class="nf">_get_start_stop_from_input</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the start :attr:`t_start`and stop :attr:`t_stop` point</span>
+<span class="sd">    from given input.</span>
+
+<span class="sd">    If one neo.SpikeTrain objects is given the start :attr:`t_stop `and stop</span>
+<span class="sd">    :attr:`t_stop` of the spike train is returned.</span>
+<span class="sd">    Otherwise the aligned times are returned, which are the maximal start point</span>
+<span class="sd">    and minimal stop point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrains: neo.SpikeTrain object, list or array of neo.core.SpikeTrain</span>
+<span class="sd">                 objects</span>
+<span class="sd">        List of neo.core SpikeTrain objects to extract `t_start` and</span>
+<span class="sd">        `t_stop` from.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    start : quantities.Quantity</span>
+<span class="sd">        Start point extracted from input :attr:`spiketrains`</span>
+<span class="sd">    stop : quantities.Quantity</span>
+<span class="sd">        Stop point extracted from input :attr:`spiketrains`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spiketrains</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">spiketrains</span><span class="o">.</span><span class="n">t_stop</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">elem</span><span class="o">.</span><span class="n">t_start</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">])</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">elem</span><span class="o">.</span><span class="n">t_stop</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span>
+
+
+<div class="viewcode-block" id="BinnedSpikeTrain"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain">[docs]</a><span class="k">class</span> <span class="nc">BinnedSpikeTrain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class which calculates a binned spike train and provides methods to</span>
+<span class="sd">    transform the binned spike train to a boolean matrix or a matrix with</span>
+<span class="sd">    counted time points.</span>
+
+<span class="sd">    A binned spike train represents the occurrence of spikes in a certain time</span>
+<span class="sd">    frame.</span>
+<span class="sd">    I.e., a time series like [0.5, 0.7, 1.2, 3.1, 4.3, 5.5, 6.7] is</span>
+<span class="sd">    represented as [0, 0, 1, 3, 4, 5, 6]. The outcome is dependent on given</span>
+<span class="sd">    parameter such as size of bins, number of bins, start and stop points.</span>
+
+<span class="sd">    A boolean matrix represents the binned spike train in a binary (True/False)</span>
+<span class="sd">    manner.</span>
+<span class="sd">    Its rows represent the number of spike trains</span>
+<span class="sd">    and the columns represent the binned index position of a spike in a</span>
+<span class="sd">    spike train.</span>
+<span class="sd">    The calculated matrix columns contains **Trues**, which indicate</span>
+<span class="sd">    a spike.</span>
+
+<span class="sd">    A matrix with counted time points is calculated the same way, but its</span>
+<span class="sd">    columns contain the number of spikes that occurred in the spike train(s).</span>
+<span class="sd">    It counts the occurrence of the timing of a spike in its respective</span>
+<span class="sd">    spike train.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrains : List of `neo.SpikeTrain` or a `neo.SpikeTrain` object</span>
+<span class="sd">        Spiketrain(s)to be binned.</span>
+<span class="sd">    binsize : quantities.Quantity</span>
+<span class="sd">        Width of each time bin.</span>
+<span class="sd">        Default is `None`</span>
+<span class="sd">    num_bins : int</span>
+<span class="sd">        Number of bins of the binned spike train.</span>
+<span class="sd">        Default is `None`</span>
+<span class="sd">    t_start : quantities.Quantity</span>
+<span class="sd">        Time of the first bin (left extreme; included).</span>
+<span class="sd">        Default is `None`</span>
+<span class="sd">    t_stop : quantities.Quantity</span>
+<span class="sd">        Stopping time of the last bin (right extreme; excluded).</span>
+<span class="sd">        Default is `None`</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    _convert_to_binned</span>
+<span class="sd">    spike_indices</span>
+<span class="sd">    to_bool_array</span>
+<span class="sd">    to_array</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There are four cases the given parameters must fulfill.</span>
+<span class="sd">    Each parameter must be a combination of following order or it will raise</span>
+<span class="sd">    a value error:</span>
+<span class="sd">    * t_start, num_bins, binsize</span>
+<span class="sd">    * t_start, num_bins, t_stop</span>
+<span class="sd">    * t_start, bin_size, t_stop</span>
+<span class="sd">    * t_stop, num_bins, binsize</span>
+
+<span class="sd">    It is possible to give the SpikeTrain objects and one parameter</span>
+<span class="sd">    (:attr:`num_bins` or :attr:`binsize`). The start and stop time will be</span>
+<span class="sd">    calculated from given SpikeTrain objects (max start and min stop point).</span>
+<span class="sd">    Missing parameter will also be calculated automatically.</span>
+<span class="sd">    All parameters will be checked for consistency. A corresponding error will</span>
+<span class="sd">    be raised, if one of the four parameters does not match the consistency</span>
+<span class="sd">    requirements.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spiketrains</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines a binned spike train class</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Converting spiketrains to a list, if spiketrains is one</span>
+        <span class="c1"># SpikeTrain object</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">):</span>
+            <span class="n">spiketrains</span> <span class="o">=</span> <span class="p">[</span><span class="n">spiketrains</span><span class="p">]</span>
+
+        <span class="c1"># Check that spiketrains is a list of neo Spike trains.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span> <span class="o">==</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">SpikeTrain</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;All elements of the input list must be neo.core.SpikeTrain &quot;</span>
+                <span class="s2">&quot;objects &quot;</span><span class="p">)</span>
+        <span class="c1"># Link to input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lst_input</span> <span class="o">=</span> <span class="n">spiketrains</span>
+        <span class="c1"># Set given parameter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">t_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">=</span> <span class="n">t_stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">=</span> <span class="n">num_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span> <span class="o">=</span> <span class="n">binsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix_columns</span> <span class="o">=</span> <span class="n">num_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span>
+        <span class="c1"># Empty matrix for storage, time points matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Check all parameter, set also missing values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_start_stop</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_init_params</span><span class="p">(</span><span class="n">binsize</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_consistency</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Variables to store the sparse matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Now create sparse matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_binned</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># There are four cases the given parameters must fulfill</span>
+    <span class="c1"># Each parameter must be a combination of following order or it will raise</span>
+    <span class="c1"># a value error:</span>
+    <span class="c1"># t_start, num_bins, binsize</span>
+    <span class="c1"># t_start, num_bins, t_stop</span>
+    <span class="c1"># t_start, bin_size, t_stop</span>
+    <span class="c1"># t_stop, num_bins, binsize</span>
+    <span class="c1"># ==========================================================================</span>
+
+    <span class="k">def</span> <span class="nf">_check_init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks given parameter.</span>
+<span class="sd">        Calculates also missing parameter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        binsize : quantity.Quantity</span>
+<span class="sd">            Size of Bins</span>
+<span class="sd">        num_bins : int</span>
+<span class="sd">            Number of Bins</span>
+<span class="sd">        t_start: quantity.Quantity</span>
+<span class="sd">            Start time of the spike</span>
+<span class="sd">        t_stop: quantity.Quantity</span>
+<span class="sd">            Stop time of the spike</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError :</span>
+<span class="sd">            If all parameters are `None`, a ValueError is raised.</span>
+<span class="sd">        TypeError:</span>
+<span class="sd">            If type of :attr:`num_bins` is not an Integer.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if num_bins is an integer (special case)</span>
+        <span class="k">if</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;num_bins is not an integer!&quot;</span><span class="p">)</span>
+        <span class="c1"># Check if all parameters can be calculated, otherwise raise ValueError</span>
+        <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">_calc_tstart</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">=</span> <span class="n">_calc_tstop</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">t_start</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">num_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">=</span> <span class="n">_calc_num_bins</span><span class="p">(</span><span class="n">binsize</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">matrix_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span>
+        <span class="k">elif</span> <span class="n">binsize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span> <span class="o">=</span> <span class="n">_calc_binsize</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_calc_start_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spiketrains</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates start, stop from given spike trains.</span>
+
+<span class="sd">        The start and stop points are calculated from given spike trains, only</span>
+<span class="sd">        if they are not calculable from given parameter or the number of</span>
+<span class="sd">        parameters is less than three.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_params</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">_get_start_stop_from_input</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">start</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">=</span> <span class="n">stop</span>
+
+    <span class="k">def</span> <span class="nf">_count_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Counts up if one parameter is not `None` and returns **True** if the</span>
+<span class="sd">        count is greater or equal `3`.</span>
+
+<span class="sd">        The calculation of the binned matrix is only possible if there are at</span>
+<span class="sd">        least three parameter (fourth parameter will be calculated out of</span>
+<span class="sd">        them).</span>
+<span class="sd">        This method checks if the necessary parameter are not `None` and</span>
+<span class="sd">        returns **True** if the count is greater or equal to `3`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool :</span>
+<span class="sd">            True, if the count is greater or equal to `3`.</span>
+<span class="sd">            False, otherwise.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                   <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">_check_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spiketrains</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span>
+                           <span class="n">t_stop</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the given parameters for consistency</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError :</span>
+<span class="sd">            A ValueError is raised if an inconsistency regarding the parameter</span>
+<span class="sd">            appears.</span>
+<span class="sd">        AttributeError :</span>
+<span class="sd">            An AttributeError is raised if there is an insufficient number of</span>
+<span class="sd">            parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_params</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Too less parameter given. Please provide &quot;</span>
+                                 <span class="s2">&quot;at least one of the parameter which are &quot;</span>
+                                 <span class="s2">&quot;None.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="s2">&quot;t_start: </span><span class="si">%s</span><span class="s2">, t_stop: </span><span class="si">%s</span><span class="s2">, binsize: </span><span class="si">%s</span><span class="s2">, &quot;</span>
+                                 <span class="s2">&quot;numb_bins: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">))</span>
+        <span class="n">t_starts</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span><span class="o">.</span><span class="n">t_start</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]</span>
+        <span class="n">t_stops</span> <span class="o">=</span> <span class="p">[</span><span class="n">elem</span><span class="o">.</span><span class="n">t_stop</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">spiketrains</span><span class="p">]</span>
+        <span class="n">max_tstart</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">t_starts</span><span class="p">)</span>
+        <span class="n">min_tstop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t_stops</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_tstart</span> <span class="o">&gt;=</span> <span class="n">min_tstop</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Starting time of each spike train must be smaller than each &quot;</span>
+                <span class="s2">&quot;stopping time&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">t_start</span> <span class="o">&lt;</span> <span class="n">max_tstart</span> <span class="ow">or</span> <span class="n">t_start</span> <span class="o">&gt;</span> <span class="n">min_tstop</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;some spike trains are not defined in the time given &#39;</span>
+                <span class="s1">&#39;by t_start&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">num_bins</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">((</span>
+                <span class="p">(</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Inconsistent arguments t_start (</span><span class="si">%s</span><span class="s2">), &quot;</span> <span class="o">%</span> <span class="n">t_start</span> <span class="o">+</span>
+                <span class="s2">&quot;t_stop (</span><span class="si">%s</span><span class="s2">), binsize (</span><span class="si">%d</span><span class="s2">) &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span> <span class="o">+</span>
+                <span class="s2">&quot;and num_bins (</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">num_bins</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">t_start</span> <span class="o">&lt;</span> <span class="n">t_stop</span> <span class="o">&lt;=</span> <span class="n">min_tstop</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;too many / too large time bins. Some spike trains are &#39;</span>
+                <span class="s1">&#39;not defined in the ending time&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">num_bins</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">num_bins</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Number of bins (num_bins) is not an integer or &lt; 0: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">num_bins</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all time edges with :attr:`num_bins` bins as a quantity array.</span>
+
+<span class="sd">        The borders of all time steps between start and stop [start, stop]</span>
+<span class="sd">        with:attr:`num_bins` bins are regarded as edges.</span>
+<span class="sd">        The border of the last bin is included.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bin_edges : quantities.Quantity array</span>
+<span class="sd">            All edges in interval [start, stop] with :attr:`num_bins` bins</span>
+<span class="sd">            are returned as a quantity array.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                           <span class="n">units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bin_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns each center time point of all bins between start and stop</span>
+<span class="sd">        points.</span>
+
+<span class="sd">        The center of each bin of all time steps between start and stop</span>
+<span class="sd">        (start, stop).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bin_edges : quantities.Quantity array</span>
+<span class="sd">            All center edges in interval (start, stop) are returned as</span>
+<span class="sd">            a quantity array.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span> <span class="o">/</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="BinnedSpikeTrain.to_sparse_array"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain.to_sparse_array">[docs]</a>    <span class="k">def</span> <span class="nf">to_sparse_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Getter for sparse matrix with time points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matrix: scipy.sparse.csr_matrix</span>
+<span class="sd">            Sparse matrix, counted version.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        scipy.sparse.csr_matrix</span>
+<span class="sd">        to_array</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span>
+
+<div class="viewcode-block" id="BinnedSpikeTrain.to_sparse_bool_array"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain.to_sparse_bool_array">[docs]</a>    <span class="k">def</span> <span class="nf">to_sparse_bool_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Getter for **boolean** version of the sparse matrix, calculated from</span>
+<span class="sd">        sparse matrix with counted time points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matrix: scipy.sparse.csr_matrix</span>
+<span class="sd">            Sparse matrix, binary, boolean version.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        scipy.sparse.csr_matrix</span>
+<span class="sd">        to_bool_array</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return sparse Matrix as a copy</span>
+        <span class="n">tmp_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">tmp_mat</span><span class="p">[</span><span class="n">tmp_mat</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()]</span> <span class="o">=</span> <span class="mi">1</span></div>
+        <span class="k">return</span> <span class="n">tmp_mat</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spike_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A list of lists for each spike train (i.e., rows of the binned matrix),</span>
+<span class="sd">        that in turn contains for each spike the index into the binned matrix</span>
+<span class="sd">        where this spike enters.</span>
+
+<span class="sd">        In contrast to `to_sparse_array().nonzero()`, this function will report</span>
+<span class="sd">        two spikes falling in the same bin as two entries.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import elephant.conversion as conv</span>
+<span class="sd">        &gt;&gt;&gt; import neo as n</span>
+<span class="sd">        &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">        &gt;&gt;&gt; st = n.SpikeTrain([0.5, 0.7, 1.2, 3.1, 4.3, 5.5, 6.7] * pq.s, t_stop=10.0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; x = conv.BinnedSpikeTrain(st, num_bins=10, binsize=1 * pq.s, t_start=0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; print(x.spike_indices)</span>
+<span class="sd">        [[0, 0, 1, 3, 4, 5, 6]]</span>
+<span class="sd">        &gt;&gt;&gt; print(x.to_sparse_array().nonzero()[1])</span>
+<span class="sd">        [0 1 3 4 5 6]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spike_idx</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># Extract each non-zeros column index and how often it exists,</span>
+            <span class="c1"># i.e., how many spikes fall in this column</span>
+            <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">row</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                <span class="c1"># Append the column index for each spike</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">col</span><span class="p">]</span> <span class="o">*</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">spike_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spike_idx</span>
+
+<div class="viewcode-block" id="BinnedSpikeTrain.to_bool_array"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain.to_bool_array">[docs]</a>    <span class="k">def</span> <span class="nf">to_bool_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a dense matrix (`scipy.sparse.csr_matrix`), which rows</span>
+<span class="sd">        represent the number of spike trains and the columns represent the</span>
+<span class="sd">        binned index position of a spike in a spike train.</span>
+<span class="sd">        The matrix columns contain **True**, which indicate a spike and</span>
+<span class="sd">        **False** for non spike.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool matrix : numpy.ndarray</span>
+<span class="sd">            Returns a dense matrix representation of the sparse matrix,</span>
+<span class="sd">            with **True** indicating a spike and **False*** for</span>
+<span class="sd">            non spike.</span>
+<span class="sd">            The **Trues** in the columns represent the index</span>
+<span class="sd">            position of the spike in the spike train and rows represent the</span>
+<span class="sd">            number of spike trains.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import elephant.conversion as conv</span>
+<span class="sd">        &gt;&gt;&gt; import neo as n</span>
+<span class="sd">        &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">        &gt;&gt;&gt; a = n.SpikeTrain([0.5, 0.7, 1.2, 3.1, 4.3, 5.5, 6.7] * pq.s, t_stop=10.0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; x = conv.BinnedSpikeTrain(a, num_bins=10, binsize=1 * pq.s, t_start=0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; print(x.to_bool_array())</span>
+<span class="sd">        [[ True  True False  True  True  True  True False False False]]</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        scipy.sparse.csr_matrix</span>
+<span class="sd">        scipy.sparse.csr_matrix.toarray</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_array</span><span class="p">()))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BinnedSpikeTrain.to_array"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain.to_array">[docs]</a>    <span class="k">def</span> <span class="nf">to_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store_array</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a dense matrix, calculated from the sparse matrix with counted</span>
+<span class="sd">        time points, which rows represents the number of spike trains and the</span>
+<span class="sd">        columns represents the binned index position of a spike in a</span>
+<span class="sd">        spike train.</span>
+<span class="sd">        The  matrix columns contain the number of spikes that</span>
+<span class="sd">        occurred in the spike train(s).</span>
+<span class="sd">        If the **boolean** :attr:`store_array` is set to **True** the matrix</span>
+<span class="sd">        will be stored in memory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matrix : numpy.ndarray</span>
+<span class="sd">            Matrix with spike times. Columns represent the index position of</span>
+<span class="sd">            the binned spike and rows represent the number of spike trains.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import elephant.conversion as conv</span>
+<span class="sd">        &gt;&gt;&gt; import neo as n</span>
+<span class="sd">        &gt;&gt;&gt; a = n.SpikeTrain([0.5, 0.7, 1.2, 3.1, 4.3, 5.5, 6.7] * pq.s, t_stop=10.0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; x = conv.BinnedSpikeTrain(a, num_bins=10, binsize=1 * pq.s, t_start=0 * pq.s)</span>
+<span class="sd">        &gt;&gt;&gt; print(x.to_array())</span>
+<span class="sd">        [[2 1 0 1 1 1 1 0 0 0]]</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        scipy.sparse.csr_matrix</span>
+<span class="sd">        scipy.sparse.csr_matrix.toarray</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span>
+        <span class="k">if</span> <span class="n">store_array</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store_array</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span>
+        <span class="c1"># Matrix on demand</span>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_store_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the matrix with counted time points in memory.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BinnedSpikeTrain.remove_stored_array"><a class="viewcode-back" href="../../reference/conversion.html#elephant.conversion.BinnedSpikeTrain.remove_stored_array">[docs]</a>    <span class="k">def</span> <span class="nf">remove_stored_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the matrix with counted time points from memory.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat_u</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_binned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spiketrains</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts neo.core.SpikeTrain objects to a sparse matrix</span>
+<span class="sd">        (`scipy.sparse.csr_matrix`), which contains the binned times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spiketrains : neo.SpikeTrain object or list of SpikeTrain objects</span>
+<span class="sd">           The binned time array :attr:`spike_indices` is calculated from a</span>
+<span class="sd">           SpikeTrain object or from a list of SpikeTrain objects.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">distutils.version</span> <span class="k">import</span> <span class="n">StrictVersion</span>
+        <span class="c1"># column</span>
+        <span class="n">filled</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># row</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># data</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># to be downwards compatible compare numpy versions, if the used</span>
+        <span class="c1"># version is smaller than v1.9 use different functions</span>
+        <span class="n">smaller_version</span> <span class="o">=</span> <span class="n">StrictVersion</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="s1">&#39;1.9.0&#39;</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spiketrains</span><span class="p">):</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="n">ev</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">ev</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">),</span>
+                               <span class="n">ev</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">))</span>
+            <span class="n">filled_tmp</span> <span class="o">=</span> <span class="n">scale</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+            <span class="n">filled_tmp</span> <span class="o">=</span> <span class="n">filled_tmp</span><span class="p">[</span><span class="n">filled_tmp</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">smaller_version</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">filled_tmp</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">filled_tmp</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">filled_tmp</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">filled</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+        <span class="n">csr_matrix</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">((</span><span class="n">counts</span><span class="p">,</span> <span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">filled</span><span class="p">)),</span>
+                                    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix_rows</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">matrix_columns</span><span class="p">),</span>
+                                    <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sparse_mat_u</span> <span class="o">=</span> <span class="n">csr_matrix</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

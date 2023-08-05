@@ -1,0 +1,551 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.spectral &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.spectral</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Identification of spectral properties in analog signals (e.g., the power</span>
+<span class="sd">spectrum).</span>
+
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+<span class="kn">import</span> <span class="nn">scipy.fftpack</span> <span class="k">as</span> <span class="nn">fftpack</span>
+<span class="kn">import</span> <span class="nn">scipy.signal.signaltools</span> <span class="k">as</span> <span class="nn">signaltools</span>
+<span class="kn">from</span> <span class="nn">scipy.signal.windows</span> <span class="k">import</span> <span class="n">get_window</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="k">import</span> <span class="n">string_types</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+
+
+<span class="k">def</span> <span class="nf">_welch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;hanning&#39;</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">noverlap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+          <span class="n">nfft</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">scaling</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A helper function to estimate cross spectral density using Welch&#39;s method.</span>
+<span class="sd">    This function is a slightly modified version of `scipy.signal.welch()` with</span>
+<span class="sd">    modifications based on `matplotlib.mlab._spectral_helper()`.</span>
+
+<span class="sd">    Welch&#39;s method [1]_ computes an estimate of the cross spectral density</span>
+<span class="sd">    by dividing the data into overlapping segments, computing a modified</span>
+<span class="sd">    periodogram for each segment and averaging the cross-periodograms.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y : array_like</span>
+<span class="sd">        Time series of measurement values</span>
+<span class="sd">    fs : float, optional</span>
+<span class="sd">        Sampling frequency of the `x` and `y` time series in units of Hz.</span>
+<span class="sd">        Defaults to 1.0.</span>
+<span class="sd">    window : str or tuple or array_like, optional</span>
+<span class="sd">        Desired window to use. See `get_window` for a list of windows and</span>
+<span class="sd">        required parameters. If `window` is array_like it will be used</span>
+<span class="sd">        directly as the window and its length will be used for nperseg.</span>
+<span class="sd">        Defaults to &#39;hanning&#39;.</span>
+<span class="sd">    nperseg : int, optional</span>
+<span class="sd">        Length of each segment.  Defaults to 256.</span>
+<span class="sd">    noverlap: int, optional</span>
+<span class="sd">        Number of points to overlap between segments. If None,</span>
+<span class="sd">        ``noverlap = nperseg / 2``.  Defaults to None.</span>
+<span class="sd">    nfft : int, optional</span>
+<span class="sd">        Length of the FFT used, if a zero padded FFT is desired.  If None,</span>
+<span class="sd">        the FFT length is `nperseg`. Defaults to None.</span>
+<span class="sd">    detrend : str or function, optional</span>
+<span class="sd">        Specifies how to detrend each segment. If `detrend` is a string,</span>
+<span class="sd">        it is passed as the ``type`` argument to `detrend`. If it is a</span>
+<span class="sd">        function, it takes a segment and returns a detrended segment.</span>
+<span class="sd">        Defaults to &#39;constant&#39;.</span>
+<span class="sd">    scaling : { &#39;density&#39;, &#39;spectrum&#39; }, optional</span>
+<span class="sd">        Selects between computing the power spectral density (&#39;density&#39;)</span>
+<span class="sd">        where Pxx has units of V**2/Hz if x is measured in V and computing</span>
+<span class="sd">        the power spectrum (&#39;spectrum&#39;) where Pxx has units of V**2 if x is</span>
+<span class="sd">        measured in V. Defaults to &#39;density&#39;.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        Axis along which the periodogram is computed; the default is over</span>
+<span class="sd">        the last axis (i.e. ``axis=-1``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    f : ndarray</span>
+<span class="sd">        Array of sample frequencies.</span>
+<span class="sd">    Pxy : ndarray</span>
+<span class="sd">        Cross spectral density or cross spectrum of x and y.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    An appropriate amount of overlap will depend on the choice of window</span>
+<span class="sd">    and on your requirements.  For the default &#39;hanning&#39; window an</span>
+<span class="sd">    overlap of 50% is a reasonable trade off between accurately estimating</span>
+<span class="sd">    the signal power, while not over counting any of the data.  Narrower</span>
+<span class="sd">    windows may require a larger overlap.</span>
+
+<span class="sd">    If `noverlap` is 0, this method is equivalent to Bartlett&#39;s method [2]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] P. Welch, &quot;The use of the fast Fourier transform for the</span>
+<span class="sd">           estimation of power spectra: A method based on time averaging</span>
+<span class="sd">           over short, modified periodograms&quot;, IEEE Trans. Audio</span>
+<span class="sd">           Electroacoust. vol. 15, pp. 70-73, 1967.</span>
+<span class="sd">    .. [2] M.S. Bartlett, &quot;Periodogram Analysis and Continuous Spectra&quot;,</span>
+<span class="sd">           Biometrika, vol. 37, pp. 1-16, 1950.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: This function should be replaced by `scipy.signal.csd()`, which</span>
+    <span class="c1"># will appear in SciPy 0.16.0.</span>
+
+    <span class="c1"># The checks for if y is x are so that we can use the same function to</span>
+    <span class="c1"># obtain both power spectrum and cross spectrum without doing extra</span>
+    <span class="c1"># calculations.</span>
+    <span class="n">same_data</span> <span class="o">=</span> <span class="n">y</span> <span class="ow">is</span> <span class="n">x</span>
+    <span class="c1"># Make sure we&#39;re dealing with a numpy array. If y and x were the same</span>
+    <span class="c1"># object to start with, keep them that way</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">same_data</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x and y must be of the same shape.&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">same_data</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">nperseg</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;nperseg = </span><span class="si">%d</span><span class="s1">, is greater than x.shape[</span><span class="si">%d</span><span class="s1">] = </span><span class="si">%d</span><span class="s1">, using &#39;</span>
+                      <span class="s1">&#39;nperseg = x.shape[</span><span class="si">%d</span><span class="s1">]&#39;</span>
+                      <span class="o">%</span> <span class="p">(</span><span class="n">nperseg</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">],</span> <span class="n">axis</span><span class="p">))</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">window</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">get_window</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">nperseg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;window must be 1-D&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">win</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;window is longer than x.&#39;</span><span class="p">)</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="n">win</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">scaling</span> <span class="o">==</span> <span class="s1">&#39;density&#39;</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">fs</span> <span class="o">*</span> <span class="p">(</span><span class="n">win</span> <span class="o">*</span> <span class="n">win</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="n">scaling</span> <span class="o">==</span> <span class="s1">&#39;spectrum&#39;</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">win</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown scaling: </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">scaling</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">noverlap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">noverlap</span> <span class="o">=</span> <span class="n">nperseg</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">noverlap</span> <span class="o">&gt;=</span> <span class="n">nperseg</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;noverlap must be less than nperseg.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nfft</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nfft</span> <span class="o">=</span> <span class="n">nperseg</span>
+    <span class="k">elif</span> <span class="n">nfft</span> <span class="o">&lt;</span> <span class="n">nperseg</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nfft must be greater than or equal to nperseg.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">detrend</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+        <span class="n">detrend_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">seg</span><span class="p">:</span> <span class="n">signaltools</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">detrend</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">axis</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Wrap this function so that it receives a shape that it could</span>
+        <span class="c1"># reasonably expect to receive.</span>
+        <span class="k">def</span> <span class="nf">detrend_func</span><span class="p">(</span><span class="n">seg</span><span class="p">):</span>
+            <span class="n">seg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+            <span class="n">seg</span> <span class="o">=</span> <span class="n">detrend</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seg</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">detrend_func</span> <span class="o">=</span> <span class="n">detrend</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">nperseg</span> <span class="o">-</span> <span class="n">noverlap</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">nperseg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+        <span class="n">x_dt</span> <span class="o">=</span> <span class="n">detrend_func</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ind</span><span class="p">:</span><span class="n">ind</span> <span class="o">+</span> <span class="n">nperseg</span><span class="p">])</span>
+        <span class="n">xft</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">x_dt</span> <span class="o">*</span> <span class="n">win</span><span class="p">,</span> <span class="n">nfft</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">same_data</span><span class="p">:</span>
+            <span class="n">yft</span> <span class="o">=</span> <span class="n">xft</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y_dt</span> <span class="o">=</span> <span class="n">detrend_func</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ind</span><span class="p">:</span><span class="n">ind</span> <span class="o">+</span> <span class="n">nperseg</span><span class="p">])</span>
+            <span class="n">yft</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">y_dt</span> <span class="o">*</span> <span class="n">win</span><span class="p">,</span> <span class="n">nfft</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">Pxy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xft</span> <span class="o">*</span> <span class="n">yft</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Pxy</span> <span class="o">*=</span> <span class="n">k</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">Pxy</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xft</span> <span class="o">*</span> <span class="n">yft</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">Pxy</span> <span class="o">*=</span> <span class="n">scale</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">fftfreq</span><span class="p">(</span><span class="n">nfft</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">fs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">Pxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">Pxy</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">Pxy</span>
+
+
+<div class="viewcode-block" id="welch_psd"><a class="viewcode-back" href="../../reference/spectral.html#elephant.spectral.welch_psd">[docs]</a><span class="k">def</span> <span class="nf">welch_psd</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">num_seg</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">len_seg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">freq_res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+              <span class="n">fs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;hanning&#39;</span><span class="p">,</span> <span class="n">nfft</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+              <span class="n">return_onesided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scaling</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimates power spectrum density (PSD) of a given AnalogSignal using</span>
+<span class="sd">    Welch&#39;s method, which works in the following steps:</span>
+<span class="sd">        1. cut the given data into several overlapping segments. The degree of</span>
+<span class="sd">            overlap can be specified by parameter *overlap* (default is 0.5,</span>
+<span class="sd">            i.e. segments are overlapped by the half of their length).</span>
+<span class="sd">            The number and the length of the segments are determined according</span>
+<span class="sd">            to parameter *num_seg*, *len_seg* or *freq_res*. By default, the</span>
+<span class="sd">            data is cut into 8 segments.</span>
+<span class="sd">        2. apply a window function to each segment. Hanning window is used by</span>
+<span class="sd">            default. This can be changed by giving a window function or an</span>
+<span class="sd">            array as parameter *window* (for details, see the docstring of</span>
+<span class="sd">            `scipy.signal.welch()`)</span>
+<span class="sd">        3. compute the periodogram of each segment</span>
+<span class="sd">        4. average the obtained periodograms to yield PSD estimate</span>
+<span class="sd">    These steps are implemented in `scipy.signal`, and this function is a</span>
+<span class="sd">    wrapper which provides a proper set of parameters to</span>
+<span class="sd">    `scipy.signal.welch()`. Some parameters for scipy.signal.welch(), such as</span>
+<span class="sd">    `nfft`, `detrend`, `window`, `return_onesided` and `scaling`, also works</span>
+<span class="sd">    for this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signal: Neo AnalogSignal or Quantity array or Numpy ndarray</span>
+<span class="sd">        Time series data, of which PSD is estimated. When a Quantity array or</span>
+<span class="sd">        Numpy ndarray is given, sampling frequency should be given through the</span>
+<span class="sd">        keyword argument `fs`, otherwise the default value (`fs=1.0`) is used.</span>
+<span class="sd">    num_seg: int, optional</span>
+<span class="sd">        Number of segments. The length of segments is adjusted so that</span>
+<span class="sd">        overlapping segments cover the entire stretch of the given data. This</span>
+<span class="sd">        parameter is ignored if *len_seg* or *freq_res* is given. Default is 8.</span>
+<span class="sd">    len_seg: int, optional</span>
+<span class="sd">        Length of segments. This parameter is ignored if *freq_res* is given.</span>
+<span class="sd">        Default is None (determined from other parameters).</span>
+<span class="sd">    freq_res: Quantity or float, optional</span>
+<span class="sd">        Desired frequency resolution of the obtained PSD estimate in terms of</span>
+<span class="sd">        the interval between adjacent frequency bins. When given as a float, it</span>
+<span class="sd">        is taken as frequency in Hz. Default is None (determined from other</span>
+<span class="sd">        parameters).</span>
+<span class="sd">    overlap: float, optional</span>
+<span class="sd">        Overlap between segments represented as a float number between 0 (no</span>
+<span class="sd">        overlap) and 1 (complete overlap). Default is 0.5 (half-overlapped).</span>
+<span class="sd">    fs: Quantity array or float, optional</span>
+<span class="sd">        Specifies the sampling frequency of the input time series. When the</span>
+<span class="sd">        input is given as an AnalogSignal, the sampling frequency is taken</span>
+<span class="sd">        from its attribute and this parameter is ignored. Default is 1.0.</span>
+<span class="sd">    window, nfft, detrend, return_onesided, scaling, axis: optional</span>
+<span class="sd">        These arguments are directly passed on to scipy.signal.welch(). See the</span>
+<span class="sd">        respective descriptions in the docstring of `scipy.signal.welch()` for</span>
+<span class="sd">        usage.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    freqs: Quantity array or Numpy ndarray</span>
+<span class="sd">        Frequencies associated with the power estimates in `psd`. `freqs` is</span>
+<span class="sd">        always a 1-dimensional array irrespective of the shape of the input</span>
+<span class="sd">        data. Quantity array is returned if `signal` is AnalogSignal or</span>
+<span class="sd">        Quantity array. Otherwise Numpy ndarray containing frequency in Hz is</span>
+<span class="sd">        returned.</span>
+<span class="sd">    psd: Quantity array or Numpy ndarray</span>
+<span class="sd">        PSD estimates of the time series in `signal`. Quantity array is</span>
+<span class="sd">        returned if `data` is AnalogSignal or Quantity array. Otherwise</span>
+<span class="sd">        Numpy ndarray is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># initialize a parameter dict (to be given to scipy.signal.welch()) with</span>
+    <span class="c1"># the parameters directly passed on to scipy.signal.welch()</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;window&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">,</span> <span class="s1">&#39;nfft&#39;</span><span class="p">:</span> <span class="n">nfft</span><span class="p">,</span>
+              <span class="s1">&#39;detrend&#39;</span><span class="p">:</span> <span class="n">detrend</span><span class="p">,</span> <span class="s1">&#39;return_onesided&#39;</span><span class="p">:</span> <span class="n">return_onesided</span><span class="p">,</span>
+              <span class="s1">&#39;scaling&#39;</span><span class="p">:</span> <span class="n">scaling</span><span class="p">,</span> <span class="s1">&#39;axis&#39;</span><span class="p">:</span> <span class="n">axis</span><span class="p">}</span>
+
+    <span class="c1"># add the input data to params. When the input is AnalogSignal, the</span>
+    <span class="c1"># data is added after rolling the axis for time index to the last</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="c1"># if the data is given as AnalogSignal, use its attribute to specify</span>
+    <span class="c1"># the sampling frequency</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s1">&#39;sampling_rate&#39;</span><span class="p">):</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs</span>
+
+    <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;overlap must be greater than or equal to 0&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">overlap</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;overlap must be less then 1&quot;</span><span class="p">)</span>
+
+    <span class="c1"># determine the length of segments (i.e. *nperseg*) according to given</span>
+    <span class="c1"># parameters</span>
+    <span class="k">if</span> <span class="n">freq_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">freq_res</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;freq_res must be positive&quot;</span><span class="p">)</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="n">freq_res</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> \
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">freq_res</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">freq_res</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">dF</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nperseg</span> <span class="o">&gt;</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;freq_res is too high for the given data size&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">len_seg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">len_seg</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len_seg must be a positive number&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">len_seg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len_seg must be shorter than the data length&quot;</span><span class="p">)</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="n">len_seg</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_seg</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_seg must be a positive number&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">num_seg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_seg must be smaller than the data length&quot;</span><span class="p">)</span>
+        <span class="c1"># when only *num_seg* is given, *nperseg* is determined by solving the</span>
+        <span class="c1"># following equation:</span>
+        <span class="c1">#  num_seg * nperseg - (num_seg-1) * overlap * nperseg = data.shape[-1]</span>
+        <span class="c1">#  -----------------   ===============================   ^^^^^^^^^^^</span>
+        <span class="c1"># summed segment lengths        total overlap            data length</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_seg</span> <span class="o">-</span> <span class="n">overlap</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_seg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nperseg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nperseg</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;noverlap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nperseg</span> <span class="o">*</span> <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># attach proper units to return values</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;scaling&#39;</span> <span class="ow">in</span> <span class="n">params</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scaling&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="s1">&#39;spectrum&#39;</span><span class="p">:</span>
+            <span class="n">psd</span> <span class="o">=</span> <span class="n">psd</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">units</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">units</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">psd</span> <span class="o">=</span> <span class="n">psd</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">units</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">units</span> <span class="o">/</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">freqs</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+</div>
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span>
+
+
+<div class="viewcode-block" id="welch_cohere"><a class="viewcode-back" href="../../reference/spectral.html#elephant.spectral.welch_cohere">[docs]</a><span class="k">def</span> <span class="nf">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">num_seg</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">len_seg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">freq_res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+           <span class="n">fs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;hanning&#39;</span><span class="p">,</span> <span class="n">nfft</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+           <span class="n">scaling</span><span class="o">=</span><span class="s1">&#39;density&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimates coherence between a given pair of analog signals. The estimation</span>
+<span class="sd">    is performed with Welch&#39;s method: the given pair of data are cut into short</span>
+<span class="sd">    segments, cross-spectra are calculated for each pair of segments, and the</span>
+<span class="sd">    cross-spectra are averaged and normalized by respective auto_spectra. By</span>
+<span class="sd">    default the data are cut into 8 segments with 50% overlap between</span>
+<span class="sd">    neighboring segments. These numbers can be changed through respective</span>
+<span class="sd">    parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y: Neo AnalogSignal or Quantity array or Numpy ndarray</span>
+<span class="sd">        A pair of time series data, between which coherence is computed. The</span>
+<span class="sd">        shapes and the sampling frequencies of `x` and `y` must be identical.</span>
+<span class="sd">        When `x` and `y` are not of AnalogSignal, sampling frequency</span>
+<span class="sd">        should be specified through the keyword argument `fs`, otherwise the</span>
+<span class="sd">        default value (`fs=1.0`) is used.</span>
+<span class="sd">    num_seg: int, optional</span>
+<span class="sd">        Number of segments. The length of segments is adjusted so that</span>
+<span class="sd">        overlapping segments cover the entire stretch of the given data. This</span>
+<span class="sd">        parameter is ignored if *len_seg* or *freq_res* is given. Default is 8.</span>
+<span class="sd">    len_seg: int, optional</span>
+<span class="sd">        Length of segments. This parameter is ignored if *freq_res* is given.</span>
+<span class="sd">        Default is None (determined from other parameters).</span>
+<span class="sd">    freq_res: Quantity or float, optional</span>
+<span class="sd">        Desired frequency resolution of the obtained coherence estimate in</span>
+<span class="sd">        terms of the interval between adjacent frequency bins. When given as a</span>
+<span class="sd">        float, it is taken as frequency in Hz. Default is None (determined from</span>
+<span class="sd">        other parameters).</span>
+<span class="sd">    overlap: float, optional</span>
+<span class="sd">        Overlap between segments represented as a float number between 0 (no</span>
+<span class="sd">        overlap) and 1 (complete overlap). Default is 0.5 (half-overlapped).</span>
+<span class="sd">    fs: Quantity array or float, optional</span>
+<span class="sd">        Specifies the sampling frequency of the input time series. When the</span>
+<span class="sd">        input time series are given as AnalogSignal, the sampling</span>
+<span class="sd">        frequency is taken from their attribute and this parameter is ignored.</span>
+<span class="sd">        Default is 1.0.</span>
+<span class="sd">    window, nfft, detrend, scaling, axis: optional</span>
+<span class="sd">        These arguments are directly passed on to a helper function</span>
+<span class="sd">        `elephant.spectral._welch()`. See the respective descriptions in the</span>
+<span class="sd">        docstring of `elephant.spectral._welch()` for usage.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    freqs: Quantity array or Numpy ndarray</span>
+<span class="sd">        Frequencies associated with the estimates of coherency and phase lag.</span>
+<span class="sd">        `freqs` is always a 1-dimensional array irrespective of the shape of</span>
+<span class="sd">        the input data. Quantity array is returned if `x` and `y` are of</span>
+<span class="sd">        AnalogSignal or Quantity array. Otherwise Numpy ndarray containing</span>
+<span class="sd">        frequency in Hz is returned.</span>
+<span class="sd">    coherency: Numpy ndarray</span>
+<span class="sd">        Estimate of coherency between the input time series. For each frequency</span>
+<span class="sd">        coherency takes a value between 0 and 1, with 0 or 1 representing no or</span>
+<span class="sd">        perfect coherence, respectively. When the input arrays `x` and `y` are</span>
+<span class="sd">        multi-dimensional, `coherency` is of the same shape as the inputs and</span>
+<span class="sd">        frequency is indexed along either the first or the last axis depending</span>
+<span class="sd">        on the type of the input: when the input is AnalogSignal, the</span>
+<span class="sd">        first axis indexes frequency, otherwise the last axis does.</span>
+<span class="sd">    phase_lag: Quantity array or Numpy ndarray</span>
+<span class="sd">        Estimate of phase lag in radian between the input time series. For each</span>
+<span class="sd">        frequency phase lag takes a value between -PI and PI, positive values</span>
+<span class="sd">        meaning phase precession of `x` ahead of `y` and vice versa. Quantity</span>
+<span class="sd">        array is returned if `x` and `y` are of AnalogSignal or Quantity</span>
+<span class="sd">        array. Otherwise Numpy ndarray containing phase lag in radian is</span>
+<span class="sd">        returned. The axis for frequency index is determined in the same way as</span>
+<span class="sd">        for `coherency`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># initialize a parameter dict (to be given to _welch()) with</span>
+    <span class="c1"># the parameters directly passed on to _welch()</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;window&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">,</span> <span class="s1">&#39;nfft&#39;</span><span class="p">:</span> <span class="n">nfft</span><span class="p">,</span>
+              <span class="s1">&#39;detrend&#39;</span><span class="p">:</span> <span class="n">detrend</span><span class="p">,</span> <span class="s1">&#39;scaling&#39;</span><span class="p">:</span> <span class="n">scaling</span><span class="p">,</span> <span class="s1">&#39;axis&#39;</span><span class="p">:</span> <span class="n">axis</span><span class="p">}</span>
+
+    <span class="c1"># When the input is AnalogSignal, the axis for time index is rolled to</span>
+    <span class="c1"># the last</span>
+    <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">ydata</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ydata</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="c1"># if the data is given as AnalogSignal, use its attribute to specify</span>
+    <span class="c1"># the sampling frequency</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;sampling_rate&#39;</span><span class="p">):</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs</span>
+
+    <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;overlap must be greater than or equal to 0&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">overlap</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;overlap must be less then 1&quot;</span><span class="p">)</span>
+
+    <span class="c1"># determine the length of segments (i.e. *nperseg*) according to given</span>
+    <span class="c1"># parameters</span>
+    <span class="k">if</span> <span class="n">freq_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">freq_res</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;freq_res must be positive&quot;</span><span class="p">)</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="n">freq_res</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> \
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">freq_res</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">freq_res</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;fs&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">dF</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nperseg</span> <span class="o">&gt;</span> <span class="n">xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;freq_res is too high for the given data size&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">len_seg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">len_seg</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len_seg must be a positive number&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">len_seg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len_seg must be shorter than the data length&quot;</span><span class="p">)</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="n">len_seg</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_seg</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_seg must be a positive number&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">num_seg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_seg must be smaller than the data length&quot;</span><span class="p">)</span>
+        <span class="c1"># when only *num_seg* is given, *nperseg* is determined by solving the</span>
+        <span class="c1"># following equation:</span>
+        <span class="c1">#  num_seg * nperseg - (num_seg-1) * overlap * nperseg = data.shape[-1]</span>
+        <span class="c1">#  -----------------   ===============================   ^^^^^^^^^^^</span>
+        <span class="c1"># summed segment lengths        total overlap            data length</span>
+        <span class="n">nperseg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_seg</span> <span class="o">-</span> <span class="n">overlap</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_seg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nperseg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nperseg</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;noverlap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nperseg</span> <span class="o">*</span> <span class="n">overlap</span><span class="p">)</span>
+
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">Pxy</span> <span class="o">=</span> <span class="n">_welch</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">_welch</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">Pyy</span> <span class="o">=</span> <span class="n">_welch</span><span class="p">(</span><span class="n">ydata</span><span class="p">,</span> <span class="n">ydata</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">coherency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Pxy</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Pxx</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Pyy</span><span class="p">))</span>
+    <span class="n">phase_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">Pxy</span><span class="p">)</span>
+
+    <span class="c1"># attach proper units to return values</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">freqs</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">phase_lag</span> <span class="o">=</span> <span class="n">phase_lag</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">rad</span>
+
+    <span class="c1"># When the input is AnalogSignal, the axis for frequency index is</span>
+    <span class="c1"># rolled to the first to comply with the Neo convention about time axis</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="n">coherency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">coherency</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">phase_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">phase_lag</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">coherency</span><span class="p">,</span> <span class="n">phase_lag</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

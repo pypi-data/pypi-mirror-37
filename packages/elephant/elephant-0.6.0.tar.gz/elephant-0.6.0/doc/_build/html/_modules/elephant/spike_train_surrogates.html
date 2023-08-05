@@ -1,0 +1,607 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.spike_train_surrogates &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.spike_train_surrogates</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to generate surrogates of a spike train by randomising its spike times</span>
+<span class="sd">in different ways (see [1]). Different methods destroy different features of</span>
+<span class="sd">the original data:</span>
+
+<span class="sd">* randomise_spikes:</span>
+<span class="sd">    randomly reposition all spikes inside the time interval (t_start, t_stop).</span>
+<span class="sd">    Keeps spike count, generates Poisson spike trains with time-stationary</span>
+<span class="sd">    firing rate</span>
+<span class="sd">* dither_spikes:</span>
+<span class="sd">    dither each spike time around original position by a random amount;</span>
+<span class="sd">    keeps spike count and firing rates computed on a slow temporal scale;</span>
+<span class="sd">    destroys ISIs, making them more exponentially distributed</span>
+<span class="sd">* dither_spike_train:</span>
+<span class="sd">    dither the whole input spike train (i.e. all spikes equally) by a random</span>
+<span class="sd">    amount; keeps spike count, ISIs, and firing rates computed on a slow</span>
+<span class="sd">    temporal scale</span>
+<span class="sd">* jitter_spikes:</span>
+<span class="sd">    discretise the full time interval (t_start, t_stop) into time segments</span>
+<span class="sd">    and locally randomise the spike times (see randomise_spikes) inside each</span>
+<span class="sd">    segment. Keeps spike count inside each segment and creates locally Poisson</span>
+<span class="sd">    spike trains with locally time-stationary rates</span>
+<span class="sd">* shuffle_isis:</span>
+<span class="sd">    shuffle the inter-spike intervals (ISIs) of the spike train randomly,</span>
+<span class="sd">    keeping the first spike time fixed and generating the others from the</span>
+<span class="sd">    new sequence of ISIs. Keeps spike count and ISIs, flattens the firing rate</span>
+<span class="sd">    profile</span>
+
+<span class="sd">[1] Louis et al (2010) Surrogate Spike Train Generation Through Dithering in</span>
+<span class="sd">    Operational Time. Front Comput Neurosci. 2010; 4: 127.</span>
+
+<span class="sd">Original implementation by: Emiliano Torre [e.torre@fz-juelich.de]</span>
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">elephant.statistics</span> <span class="k">as</span> <span class="nn">es</span>
+    <span class="n">isi</span> <span class="o">=</span> <span class="n">es</span><span class="o">.</span><span class="n">isi</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.statistics</span> <span class="k">import</span> <span class="n">isi</span>  <span class="c1"># Convenience when in elephant working dir.</span>
+
+
+<div class="viewcode-block" id="dither_spikes"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.dither_spikes">[docs]</a><span class="k">def</span> <span class="nf">dither_spikes</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">dither</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a spike train by spike dithering.</span>
+
+<span class="sd">    The surrogates are obtained by uniformly dithering times around the</span>
+<span class="sd">    original position. The dithering is performed independently for each</span>
+<span class="sd">    surrogate.</span>
+
+<span class="sd">    The surrogates retain the :attr:`t_start` and :attr:`t_stop` of the</span>
+<span class="sd">    original `SpikeTrain` object. Spikes moved beyond this range are lost or</span>
+<span class="sd">    moved to the range&#39;s ends, depending on the parameter edge.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    dither : quantities.Quantity</span>
+<span class="sd">        Amount of dithering. A spike at time t is placed randomly within</span>
+<span class="sd">        ]t-dither, t+dither[.</span>
+<span class="sd">    n : int (optional)</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    decimals : int or None (optional)</span>
+<span class="sd">        Number of decimal points for every spike time in the surrogates</span>
+<span class="sd">        If None, machine precision is used.</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    edges : bool (optional)</span>
+<span class="sd">        For surrogate spikes falling outside the range</span>
+<span class="sd">        `[spiketrain.t_start, spiketrain.t_stop)`, whether to drop them out</span>
+<span class="sd">        (for edges = True) or set that to the range&#39;s closest end</span>
+<span class="sd">        (for edges = False).</span>
+<span class="sd">        Default: True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of neo.SpikeTrain</span>
+<span class="sd">      A list of `neo.SpikeTrain`, each obtained from :attr:`spiketrain` by</span>
+<span class="sd">      randomly dithering its spikes. The range of the surrogate spike trains</span>
+<span class="sd">      is the same as :attr:`spiketrain`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">    &gt;&gt;&gt; import neo</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; st = neo.SpikeTrain([100, 250, 600, 800]*pq.ms, t_stop=1*pq.s)</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spikes(st, dither = 20*pq.ms)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  96.53801903,  248.57047376,  601.48865767,</span>
+<span class="sd">     815.67209811]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spikes(st, dither = 20*pq.ms, n=2)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([ 104.24942044,  246.0317873 ,  584.55938657,</span>
+<span class="sd">        818.84446913]) * ms, [0.0 ms, 1000.0 ms])&gt;,</span>
+<span class="sd">     &lt;SpikeTrain(array([ 111.36693058,  235.15750163,  618.87388515,</span>
+<span class="sd">        786.1807108 ]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spikes(st, dither = 20*pq.ms, decimals=0)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  81.,  242.,  595.,  799.]) * ms,</span>
+<span class="sd">        [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Transform spiketrain into a Quantity object (needed for matrix algebra)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+
+    <span class="c1"># Main: generate the surrogates</span>
+    <span class="n">surr</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dither</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span> <span class="o">-</span> <span class="n">dither</span>
+
+    <span class="c1"># Round the surrogate data to decimal position, if requested</span>
+    <span class="k">if</span> <span class="n">decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># Move all spikes outside [spiketrain.t_start, spiketrain.t_stop] to</span>
+        <span class="c1"># the range&#39;s ends</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">surr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Leave out all spikes outside [spiketrain.t_start, spiketrain.t_stop]</span>
+        <span class="n">tstart</span><span class="p">,</span> <span class="n">tstop</span> <span class="o">=</span> <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> \
+                        <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="n">s</span> <span class="o">&gt;=</span> <span class="n">tstart</span><span class="p">,</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="n">tstop</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)])</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">surr</span><span class="o">.</span><span class="n">base</span><span class="p">]</span>
+
+    <span class="c1"># Return the surrogates as SpikeTrains</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">(</span><span class="n">s</span><span class="p">,</span>
+                           <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                           <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span></div>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">surr</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="randomise_spikes"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.randomise_spikes">[docs]</a><span class="k">def</span> <span class="nf">randomise_spikes</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a spike trains by spike time randomisation.</span>
+
+<span class="sd">    The surrogates are obtained by keeping the spike count of the original</span>
+<span class="sd">    `SpikeTrain` object, but placing them randomly into the interval</span>
+<span class="sd">    `[spiketrain.t_start, spiketrain.t_stop]`.</span>
+<span class="sd">    This generates independent Poisson neo.SpikeTrain objects (exponentially</span>
+<span class="sd">    distributed inter-spike intervals) while keeping the spike count as in</span>
+<span class="sd">    :attr:`spiketrain`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    n : int (optional)</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    decimals : int or None (optional)</span>
+<span class="sd">        Number of decimal points for every spike time in the surrogates</span>
+<span class="sd">        If None, machine precision is used.</span>
+<span class="sd">        Default: None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of neo.SpikeTrain object(s)</span>
+<span class="sd">      A list of `neo.SpikeTrain` objects, each obtained from :attr:`spiketrain`</span>
+<span class="sd">      by randomly dithering its spikes. The range of the surrogate spike trains</span>
+<span class="sd">      is the same as :attr:`spiketrain`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">    &gt;&gt;&gt; import neo</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; st = neo.SpikeTrain([100, 250, 600, 800]*pq.ms, t_stop=1*pq.s)</span>
+<span class="sd">    &gt;&gt;&gt; print randomise_spikes(st)   # doctest: +SKIP</span>
+<span class="sd">        [&lt;SpikeTrain(array([ 131.23574603,  262.05062963,  549.84371387,</span>
+<span class="sd">                            940.80503832]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print randomise_spikes(st, n=2)   # doctest: +SKIP</span>
+<span class="sd">        [&lt;SpikeTrain(array([  84.53274955,  431.54011743,  733.09605806,</span>
+<span class="sd">              852.32426583]) * ms, [0.0 ms, 1000.0 ms])&gt;,</span>
+<span class="sd">         &lt;SpikeTrain(array([ 197.74596726,  528.93517359,  567.44599968,</span>
+<span class="sd">              775.97843799]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print randomise_spikes(st, decimals=0)   # doctest: +SKIP</span>
+<span class="sd">        [&lt;SpikeTrain(array([  29.,  667.,  720.,  774.]) * ms,</span>
+<span class="sd">              [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create surrogate spike trains as rows of a Quantity array</span>
+    <span class="n">sts</span> <span class="o">=</span> <span class="p">((</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span> <span class="o">*</span>
+           <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)))</span> <span class="o">+</span>
+           <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="c1"># Round the surrogate data to decimal position, if requested</span>
+    <span class="k">if</span> <span class="n">decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sts</span> <span class="o">=</span> <span class="n">sts</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+
+    <span class="c1"># Convert the Quantity array to a list of SpikeTrains, and return them</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">st</span><span class="p">),</span> <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span></div>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sts</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="shuffle_isis"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.shuffle_isis">[docs]</a><span class="k">def</span> <span class="nf">shuffle_isis</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a neo.SpikeTrain object by inter-spike-interval</span>
+<span class="sd">    (ISI) shuffling.</span>
+
+<span class="sd">    The surrogates are obtained by randomly sorting the ISIs of the given input</span>
+<span class="sd">    :attr:`spiketrain`. This generates independent `SpikeTrain` object(s) with</span>
+<span class="sd">    same ISI distribution and spike count as in :attr:`spiketrain`, while</span>
+<span class="sd">    destroying temporal dependencies and firing rate profile.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    n : int (optional)</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    decimals : int or None (optional)</span>
+<span class="sd">        Number of decimal points for every spike time in the surrogates</span>
+<span class="sd">        If None, machine precision is used.</span>
+<span class="sd">        Default: None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of SpikeTrain</span>
+<span class="sd">      A list of spike trains, each obtained from `spiketrain` by random ISI</span>
+<span class="sd">      shuffling. The range of the surrogate `neo.SpikeTrain` objects is the</span>
+<span class="sd">      same as :attr:`spiketrain`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">    &gt;&gt;&gt; import neo</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; st = neo.SpikeTrain([100, 250, 600, 800]*pq.ms, t_stop=1*pq.s)</span>
+<span class="sd">    &gt;&gt;&gt; print shuffle_isis(st)   # doctest: +SKIP</span>
+<span class="sd">        [&lt;SpikeTrain(array([ 200.,  350.,  700.,  800.]) * ms,</span>
+<span class="sd">                 [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print shuffle_isis(st, n=2)   # doctest: +SKIP</span>
+<span class="sd">        [&lt;SpikeTrain(array([ 100.,  300.,  450.,  800.]) * ms,</span>
+<span class="sd">              [0.0 ms, 1000.0 ms])&gt;,</span>
+<span class="sd">         &lt;SpikeTrain(array([ 200.,  350.,  700.,  800.]) * ms,</span>
+<span class="sd">              [0.0 ms, 1000.0 ms])&gt;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">isi0</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span>
+        <span class="n">ISIs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">isi0</span><span class="p">,</span> <span class="n">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)])</span>
+
+        <span class="c1"># Round the ISIs to decimal position, if requested</span>
+        <span class="k">if</span> <span class="n">decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ISIs</span> <span class="o">=</span> <span class="n">ISIs</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+
+        <span class="c1"># Create list of surrogate spike trains by random ISI permutation</span>
+        <span class="n">sts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">surr_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">ISIs</span><span class="p">))</span> <span class="o">*</span>\
+                <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span> <span class="o">+</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span>
+            <span class="n">sts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">(</span>
+                <span class="n">surr_times</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">))</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">empty_train</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>
+                                     <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                                     <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">sts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_train</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">sts</span>
+
+
+<div class="viewcode-block" id="dither_spike_train"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.dither_spike_train">[docs]</a><span class="k">def</span> <span class="nf">dither_spike_train</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a neo.SpikeTrain by spike train shifting.</span>
+
+<span class="sd">    The surrogates are obtained by shifting the whole spike train by a</span>
+<span class="sd">    random amount (independent for each surrogate). Thus, ISIs and temporal</span>
+<span class="sd">    correlations within the spike train are kept. For small shifts, the</span>
+<span class="sd">    firing rate profile is also kept with reasonable accuracy.</span>
+
+<span class="sd">    The surrogates retain the :attr:`t_start` and :attr:`t_stop` of the</span>
+<span class="sd">    :attr:`spiketrain`. Spikes moved beyond this range are lost or moved to</span>
+<span class="sd">    the range&#39;s ends, depending on the parameter edge.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    shift : quantities.Quantity</span>
+<span class="sd">        Amount of shift. spiketrain is shifted by a random amount uniformly</span>
+<span class="sd">        drawn from the range ]-shift, +shift[.</span>
+<span class="sd">    n : int (optional)</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    decimals : int or None (optional)</span>
+<span class="sd">        Number of decimal points for every spike time in the surrogates</span>
+<span class="sd">        If None, machine precision is used.</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    edges : bool</span>
+<span class="sd">        For surrogate spikes falling outside the range `[spiketrain.t_start,</span>
+<span class="sd">        spiketrain.t_stop)`, whether to drop them out (for edges = True) or set</span>
+<span class="sd">        that to the range&#39;s closest end (for edges = False).</span>
+<span class="sd">        Default: True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of SpikeTrain</span>
+<span class="sd">      A list of spike trains, each obtained from spiketrain by randomly</span>
+<span class="sd">      dithering its spikes. The range of the surrogate spike trains is the</span>
+<span class="sd">      same as :attr:`spiketrain`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">    &gt;&gt;&gt; import neo</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; st = neo.SpikeTrain([100, 250, 600, 800]*pq.ms, t_stop=1*pq.s)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spike_train(st, shift = 20*pq.ms)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  96.53801903,  248.57047376,  601.48865767,</span>
+<span class="sd">     815.67209811]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spike_train(st, shift = 20*pq.ms, n=2)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  92.89084054,  242.89084054,  592.89084054,</span>
+<span class="sd">        792.89084054]) * ms, [0.0 ms, 1000.0 ms])&gt;,</span>
+<span class="sd">     &lt;SpikeTrain(array([  84.61079043,  234.61079043,  584.61079043,</span>
+<span class="sd">        784.61079043]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print dither_spike_train(st, shift = 20*pq.ms, decimals=0)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  82.,  232.,  582.,  782.]) * ms,</span>
+<span class="sd">        [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Transform spiketrain into a Quantity object (needed for matrix algebra)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+
+    <span class="c1"># Main: generate the surrogates by spike train shifting</span>
+    <span class="n">surr</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">shift</span> <span class="o">*</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="n">shift</span>
+
+    <span class="c1"># Round the surrogate data to decimal position, if requested</span>
+    <span class="k">if</span> <span class="n">decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># Move all spikes outside [spiketrain.t_start, spiketrain.t_stop] to</span>
+        <span class="c1"># the range&#39;s ends</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">surr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Leave out all spikes outside [spiketrain.t_start, spiketrain.t_stop]</span>
+        <span class="n">tstart</span><span class="p">,</span> <span class="n">tstop</span> <span class="o">=</span> <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>\
+                        <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">/</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">base</span>
+        <span class="n">surr</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="n">s</span> <span class="o">&gt;=</span> <span class="n">tstart</span><span class="p">,</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="n">tstop</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">surr</span><span class="o">.</span><span class="n">base</span><span class="p">]</span>
+
+    <span class="c1"># Return the surrogates as SpikeTrains</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                           <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span></div>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">surr</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="jitter_spikes"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.jitter_spikes">[docs]</a><span class="k">def</span> <span class="nf">jitter_spikes</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a :attr:`spiketrain` by spike jittering.</span>
+
+<span class="sd">    The surrogates are obtained by defining adjacent time bins spanning the</span>
+<span class="sd">    :attr:`spiketrain` range, and random re-positioning (independently for each</span>
+<span class="sd">    surrogate) each spike in the time bin it falls into.</span>
+
+<span class="sd">    The surrogates retain the :attr:`t_start and :attr:`t_stop` of the</span>
+<span class="sd">    :attr:`spike train`. Note that within each time bin the surrogate</span>
+<span class="sd">    `neo.SpikeTrain` objects are locally poissonian (the inter-spike-interval</span>
+<span class="sd">    are exponentially distributed).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    binsize : quantities.Quantity</span>
+<span class="sd">        Size of the time bins within which to randomise the spike times.</span>
+<span class="sd">        Note: the last bin arrives until `spiketrain.t_stop` and might have</span>
+<span class="sd">        width different from `binsize`.</span>
+<span class="sd">    n : int (optional)</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of SpikeTrain</span>
+<span class="sd">      A list of spike trains, each obtained from `spiketrain` by randomly</span>
+<span class="sd">      replacing its spikes within bins of user-defined width. The range of the</span>
+<span class="sd">      surrogate spike trains is the same as `spiketrain`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import quantities as pq</span>
+<span class="sd">    &gt;&gt;&gt; import neo</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; st = neo.SpikeTrain([80, 150, 320, 480]*pq.ms, t_stop=1*pq.s)</span>
+<span class="sd">    &gt;&gt;&gt; print jitter_spikes(st, binsize=100*pq.ms)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  98.82898293,  178.45805954,  346.93993867,</span>
+<span class="sd">        461.34268507]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print jitter_spikes(st, binsize=100*pq.ms, n=2)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  97.15720041,  199.06945744,  397.51928207,</span>
+<span class="sd">        402.40065162]) * ms, [0.0 ms, 1000.0 ms])&gt;,</span>
+<span class="sd">     &lt;SpikeTrain(array([  80.74513157,  173.69371317,  338.05860962,</span>
+<span class="sd">        495.48869981]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; print jitter_spikes(st, binsize=100*pq.ms)   # doctest: +SKIP</span>
+<span class="sd">    [&lt;SpikeTrain(array([  4.55064897e-01,   1.31927046e+02,   3.57846265e+02,</span>
+<span class="sd">         4.69370604e+02]) * ms, [0.0 ms, 1000.0 ms])&gt;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define standard time unit; all time Quantities are converted to</span>
+    <span class="c1"># scalars after being rescaled to this unit, to use the power of numpy</span>
+    <span class="n">std_unit</span> <span class="o">=</span> <span class="n">binsize</span><span class="o">.</span><span class="n">units</span>
+
+    <span class="c1"># Compute bin edges for the jittering procedure</span>
+    <span class="c1"># !: the last bin arrives until spiketrain.t_stop and might have</span>
+    <span class="c1"># size != binsize</span>
+    <span class="n">start_dl</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">std_unit</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">stop_dl</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">std_unit</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+
+    <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">start_dl</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start_dl</span><span class="p">,</span> <span class="n">stop_dl</span><span class="p">,</span> <span class="n">binsize</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+    <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">bin_edges</span><span class="p">,</span> <span class="n">stop_dl</span><span class="p">])</span>
+
+    <span class="c1"># Create n surrogates with spikes randomly placed in the interval (0,1)</span>
+    <span class="n">surr_poiss01</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)))</span>
+
+    <span class="c1"># Compute the bin id of each spike</span>
+    <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">/</span>
+         <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># Compute the size of each time bin (as a numpy array)</span>
+    <span class="n">bin_sizes_dl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span>
+
+    <span class="c1"># For each spike compute its offset (the left end of the bin it falls</span>
+    <span class="c1"># into) and the size of the bin it falls into</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">start_dl</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bin_edges</span><span class="p">[</span><span class="n">bin_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">bin_id</span> <span class="ow">in</span> <span class="n">bin_ids</span><span class="p">])</span>
+    <span class="n">dilats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">bin_sizes_dl</span><span class="p">[</span><span class="n">bin_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">bin_id</span> <span class="ow">in</span> <span class="n">bin_ids</span><span class="p">])</span>
+
+    <span class="c1"># Compute each surrogate by dilatating and shifting each spike s in the</span>
+    <span class="c1"># poisson 0-1 spike trains to dilat * s + offset. Attach time unit again</span>
+    <span class="n">surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">surr_poiss01</span> <span class="o">*</span> <span class="n">dilats</span> <span class="o">+</span> <span class="n">offsets</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">std_unit</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                           <span class="n">t_stop</span><span class="o">=</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span></div>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">surr</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="surrogates"><a class="viewcode-back" href="../../reference/spike_train_surrogates.html#elephant.spike_train_surrogates.surrogates">[docs]</a><span class="k">def</span> <span class="nf">surrogates</span><span class="p">(</span>
+        <span class="n">spiketrain</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">surr_method</span><span class="o">=</span><span class="s1">&#39;dither_spike_train&#39;</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">edges</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates surrogates of a :attr:`spiketrain` by a desired generation</span>
+<span class="sd">    method.</span>
+
+<span class="sd">    This routine is a wrapper for the other surrogate generators in the</span>
+<span class="sd">    module.</span>
+
+<span class="sd">    The surrogates retain the :attr:`t_start` and :attr:`t_stop` of the</span>
+<span class="sd">    original :attr:`spiketrain`.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spiketrain :  neo.SpikeTrain</span>
+<span class="sd">        The spike train from which to generate the surrogates</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        Number of surrogates to be generated.</span>
+<span class="sd">        Default: 1</span>
+<span class="sd">    surr_method : str, optional</span>
+<span class="sd">        The method to use to generate surrogate spike trains. Can be one of:</span>
+<span class="sd">        * &#39;dither_spike_train&#39;: see surrogates.dither_spike_train() [dt needed]</span>
+<span class="sd">        * &#39;dither_spikes&#39;: see surrogates.dither_spikes() [dt needed]</span>
+<span class="sd">        * &#39;jitter_spikes&#39;: see surrogates.jitter_spikes() [dt needed]</span>
+<span class="sd">        * &#39;randomise_spikes&#39;: see surrogates.randomise_spikes()</span>
+<span class="sd">        * &#39;shuffle_isis&#39;: see surrogates.shuffle_isis()</span>
+<span class="sd">        Default: &#39;dither_spike_train&#39;</span>
+<span class="sd">    dt : quantities.Quantity, optional</span>
+<span class="sd">        For methods shifting spike times randomly around their original time</span>
+<span class="sd">        (spike dithering, train shifting) or replacing them randomly within a</span>
+<span class="sd">        certain window (spike jittering), dt represents the size of that</span>
+<span class="sd">        shift / window. For other methods, dt is ignored.</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    decimals : int or None, optional</span>
+<span class="sd">        Number of decimal points for every spike time in the surrogates</span>
+<span class="sd">        If None, machine precision is used.</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    edges : bool</span>
+<span class="sd">        For surrogate spikes falling outside the range `[spiketrain.t_start,</span>
+<span class="sd">        spiketrain.t_stop)`, whether to drop them out (for edges = True) or set</span>
+<span class="sd">        that to the range&#39;s closest end (for edges = False).</span>
+<span class="sd">        Default: True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of neo.SpikeTrain objects</span>
+<span class="sd">      A list of spike trains, each obtained from `spiketrain` by randomly</span>
+<span class="sd">      dithering its spikes. The range of the surrogate `neo.SpikeTrain`</span>
+<span class="sd">      object(s) is the same as `spiketrain`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define the surrogate function to use, depending on the specified method</span>
+    <span class="n">surrogate_types</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;dither_spike_train&#39;</span><span class="p">:</span> <span class="n">dither_spike_train</span><span class="p">,</span>
+        <span class="s1">&#39;dither_spikes&#39;</span><span class="p">:</span> <span class="n">dither_spikes</span><span class="p">,</span>
+        <span class="s1">&#39;jitter_spikes&#39;</span><span class="p">:</span> <span class="n">jitter_spikes</span><span class="p">,</span>
+        <span class="s1">&#39;randomise_spikes&#39;</span><span class="p">:</span> <span class="n">randomise_spikes</span><span class="p">,</span>
+        <span class="s1">&#39;shuffle_isis&#39;</span><span class="p">:</span> <span class="n">shuffle_isis</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">surr_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">surrogate_types</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;specified surr_method (=</span><span class="si">%s</span><span class="s1">) not valid&#39;</span> <span class="o">%</span> <span class="n">surr_method</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">surr_method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dither_spike_train&#39;</span><span class="p">,</span> <span class="s1">&#39;dither_spikes&#39;</span><span class="p">,</span> <span class="s1">&#39;jitter_spikes&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">surrogate_types</span><span class="p">[</span><span class="n">surr_method</span><span class="p">](</span>
+            <span class="n">spiketrain</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">surr_method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;randomise_spikes&#39;</span><span class="p">,</span> <span class="s1">&#39;shuffle_isis&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">surrogate_types</span><span class="p">[</span><span class="n">surr_method</span><span class="p">](</span></div>
+            <span class="n">spiketrain</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

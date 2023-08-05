@@ -1,0 +1,889 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.unitary_event_analysis &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.unitary_event_analysis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unitary Event (UE) analysis is a statistical method that</span>
+<span class="sd"> enables to analyze in a time resolved manner excess spike correlation</span>
+<span class="sd"> between simultaneously recorded neurons by comparing the empirical</span>
+<span class="sd"> spike coincidences (precision of a few ms) to the expected number</span>
+<span class="sd"> based on the firing rates of the neurons.</span>
+
+<span class="sd">References:</span>
+<span class="sd">  - Gruen, Diesmann, Grammont, Riehle, Aertsen (1999) J Neurosci Methods,</span>
+<span class="sd">    94(1): 67-79.</span>
+<span class="sd">  - Gruen, Diesmann, Aertsen (2002a,b) Neural Comput, 14(1): 43-80; 81-19.</span>
+<span class="sd">  - Gruen S, Riehle A, and Diesmann M (2003) Effect of cross-trial</span>
+<span class="sd">    nonstationarity on joint-spike events Biological Cybernetics 88(5):335-351.</span>
+<span class="sd">  - Gruen S (2009) Data-driven significance estimation of precise spike</span>
+<span class="sd">    correlation. J Neurophysiology 101:1126-1140 (invited review)</span>
+
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+
+
+<div class="viewcode-block" id="hash_from_pattern"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.hash_from_pattern">[docs]</a><span class="k">def</span> <span class="nf">hash_from_pattern</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate for a spike pattern or a matrix of spike patterns</span>
+<span class="sd">    (provide each pattern as a column) composed of N neurons a</span>
+<span class="sd">    unique number.</span>
+
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    m: 2-dim ndarray</span>
+<span class="sd">           spike patterns represented as a binary matrix (i.e., matrix of 0&#39;s and 1&#39;s). </span>
+<span class="sd">           Rows and columns correspond to patterns and neurons, respectively.</span>
+<span class="sd">    N: integer</span>
+<span class="sd">           number of neurons is required to be equal to the number</span>
+<span class="sd">           of rows</span>
+<span class="sd">    base: integer</span>
+<span class="sd">           base for calculation of hash values from binary</span>
+<span class="sd">           sequences (= pattern).</span>
+<span class="sd">           Default is 2</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    list of integers:</span>
+<span class="sd">           An array containing the hash values of each pattern,</span>
+<span class="sd">           shape: (number of patterns)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    -------</span>
+<span class="sd">       ValueError: if matrix m has wrong orientation</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    descriptive example:</span>
+<span class="sd">    m = [0</span>
+<span class="sd">         1</span>
+<span class="sd">         1]</span>
+<span class="sd">    N = 3</span>
+<span class="sd">    base = 2</span>
+<span class="sd">    hash = 0*2^2 + 1*2^1 + 1*2^0 = 3</span>
+
+<span class="sd">    second example:</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; m = np.array([[0, 1, 0, 0, 1, 1, 0, 1],</span>
+<span class="sd">                         [0, 0, 1, 0, 1, 0, 1, 1],</span>
+<span class="sd">                         [0, 0, 0, 1, 0, 1, 1, 1]])</span>
+
+<span class="sd">    &gt;&gt;&gt; hash_from_pattern(m,N=3)</span>
+<span class="sd">        array([0, 4, 2, 1, 6, 5, 3, 7])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check the consistency between shape of m and number neurons N</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;patterns in the matrix should be column entries&#39;</span><span class="p">)</span>
+
+    <span class="c1"># check the entries of the matrix</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;patterns should be zero or one&#39;</span><span class="p">)</span>
+
+    <span class="c1"># generate the representation</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">base</span><span class="o">**</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+    <span class="c1"># reverse the order</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">v</span><span class="p">)]</span>
+    <span class="c1"># calculate the binary number by use of scalar product</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="inverse_hash_from_pattern"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.inverse_hash_from_pattern">[docs]</a><span class="k">def</span> <span class="nf">inverse_hash_from_pattern</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the 0-1 spike patterns (matrix) from hash values</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    h: list of integers</span>
+<span class="sd">           list or array of hash values, length: number of patterns</span>
+<span class="sd">    N: integer</span>
+<span class="sd">           number of neurons</span>
+<span class="sd">    base: integer</span>
+<span class="sd">           base for calculation of the number from binary</span>
+<span class="sd">           sequences (= pattern).</span>
+<span class="sd">           Default is 2</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    -------</span>
+<span class="sd">       ValueError: if the hash is not compatible with the number</span>
+<span class="sd">       of neurons hash value should not be larger than the biggest</span>
+<span class="sd">       possible hash number with given number of neurons</span>
+<span class="sd">       (e.g. for N = 2, max(hash) = 2^1 + 2^0 = 3</span>
+<span class="sd">            , or for N = 4, max(hash) = 2^3 + 2^2 + 2^1 + 2^0 = 15)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">       numpy.array:</span>
+<span class="sd">           A matrix of shape: (N, number of patterns)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; h = np.array([3,7])</span>
+<span class="sd">    &gt;&gt;&gt; N = 4</span>
+<span class="sd">    &gt;&gt;&gt; inverse_hash_from_pattern(h,N)</span>
+<span class="sd">        array([[1, 1],</span>
+<span class="sd">               [1, 1],</span>
+<span class="sd">               [0, 1],</span>
+<span class="sd">               [0, 0]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># check if the hash values are not greater than the greatest possible</span>
+    <span class="c1"># value for N neurons with the given base</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">h</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">base</span><span class="o">**</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;hash value is not compatible with the number of neurons N&quot;</span><span class="p">)</span>
+    <span class="c1"># check if the hash values are integer</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="o">==</span> <span class="n">h</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hash values are not integers&quot;</span><span class="p">)</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">hh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">hh</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">hh</span> <span class="o">%</span> <span class="n">base</span>
+            <span class="n">hh</span> <span class="o">/=</span> <span class="n">base</span>
+            <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span></div>
+    <span class="k">return</span> <span class="n">m</span>
+
+
+<div class="viewcode-block" id="n_emp_mat"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.n_emp_mat">[docs]</a><span class="k">def</span> <span class="nf">n_emp_mat</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Count the occurrences of spike coincidence patterns </span>
+<span class="sd">    in the given spike trains.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    mat: 2-dim ndarray</span>
+<span class="sd">           binned spike trains of N neurons. Rows and columns correspond </span>
+<span class="sd">           to neurons and temporal bins, respectively.</span>
+<span class="sd">    N: integer</span>
+<span class="sd">           number of neurons</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">           hash values representing the spike coincidence patterns </span>
+<span class="sd">           of which occurrences are counted.</span>
+<span class="sd">    base: integer</span>
+<span class="sd">           Base which was used to generate the hash values.</span>
+<span class="sd">           Default is 2</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    N_emp: list of integers</span>
+<span class="sd">           number of occurrences of the given patterns in the given spike trains</span>
+<span class="sd">    indices: list of lists of integers</span>
+<span class="sd">           indices indexing the bins where the given spike patterns are found </span>
+<span class="sd">           in `mat`. Same length as `pattern_hash`</span>
+<span class="sd">           indices[i] = N_emp[i] = pattern_hash[i]</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    -------</span>
+<span class="sd">       ValueError: if mat is not zero-one matrix</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[1, 0, 0, 1, 1],</span>
+<span class="sd">                        [1, 0, 0, 1, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; pattern_hash = np.array([1,3])</span>
+<span class="sd">    &gt;&gt;&gt; n_emp, n_emp_indices = N_emp_mat(mat, N,pattern_hash)</span>
+<span class="sd">    &gt;&gt;&gt; print n_emp</span>
+<span class="sd">    [ 0.  2.]</span>
+<span class="sd">    &gt;&gt;&gt; print n_emp_indices</span>
+<span class="sd">    [array([]), array([0, 3])]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check if the mat is zero-one matrix</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;entries of mat should be either one or zero&quot;</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">hash_from_pattern</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">N_emp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">))</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx_ph</span><span class="p">,</span> <span class="n">ph</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">):</span>
+        <span class="n">indices_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h</span> <span class="o">==</span> <span class="n">ph</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indices_tmp</span><span class="p">)</span>
+        <span class="n">N_emp</span><span class="p">[</span><span class="n">idx_ph</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices_tmp</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">N_emp</span><span class="p">,</span> <span class="n">indices</span>
+
+
+<div class="viewcode-block" id="n_emp_mat_sum_trial"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.n_emp_mat_sum_trial">[docs]</a><span class="k">def</span> <span class="nf">n_emp_mat_sum_trial</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates empirical number of observed patterns summed across trials</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    mat: 3d numpy array or elephant BinnedSpikeTrain object</span>
+<span class="sd">           Binned spike trains represented as a binary matrix (i.e., matrix of 0&#39;s and 1&#39;s), </span>
+<span class="sd">           segmented into trials. Trials should contain an identical number of neurons and </span>
+<span class="sd">           an identical number of time bins.</span>
+<span class="sd">            the entries are zero or one</span>
+<span class="sd">            0-axis --&gt; trials</span>
+<span class="sd">            1-axis --&gt; neurons</span>
+<span class="sd">            2-axis --&gt; time bins</span>
+<span class="sd">    N: integer</span>
+<span class="sd">            number of neurons</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">            array of hash values, length: number of patterns</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    N_emp: list of integers</span>
+<span class="sd">           numbers of occurences of the given spike patterns in the given spike trains, </span>
+<span class="sd">           summed across trials. Same length as `pattern_hash`.</span>
+<span class="sd">    idx_trials: list of lists of integers</span>
+<span class="sd">           list of indices of mat for each trial in which</span>
+<span class="sd">           the specific pattern has been observed.</span>
+<span class="sd">           0-axis --&gt; trial</span>
+<span class="sd">           1-axis --&gt; list of indices for the chosen trial per</span>
+<span class="sd">           entry of `pattern_hash`</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    -------</span>
+<span class="sd">       ValueError: if matrix mat has wrong orientation</span>
+<span class="sd">       ValueError: if mat is not zero-one matrix</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[[1, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 0, 1]],</span>
+
+<span class="sd">                       [[1, 1, 1, 1, 1],</span>
+<span class="sd">                        [0, 1, 1, 1, 1],</span>
+<span class="sd">                        [1, 1, 0, 1, 0]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; pattern_hash = np.array([4,6])</span>
+<span class="sd">    &gt;&gt;&gt; N = 3</span>
+<span class="sd">    &gt;&gt;&gt; n_emp_sum_trial, n_emp_sum_trial_idx =</span>
+<span class="sd">                             n_emp_mat_sum_trial(mat, N,pattern_hash)</span>
+<span class="sd">    &gt;&gt;&gt; n_emp_sum_trial</span>
+<span class="sd">        array([ 1.,  3.])</span>
+<span class="sd">    &gt;&gt;&gt; n_emp_sum_trial_idx</span>
+<span class="sd">        [[array([0]), array([3])], [array([], dtype=int64), array([2, 4])]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check the consistency between shape of m and number neurons N</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mat</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the entries of mat should be a list of a&#39;</span>
+                         <span class="s1">&#39;list where 0-axis is trials and 1-axis is neurons&#39;</span><span class="p">)</span>
+
+    <span class="n">num_patt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">)</span>
+    <span class="n">N_emp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_patt</span><span class="p">)</span>
+
+    <span class="n">idx_trials</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># check if the mat is zero-one matrix</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;entries of mat should be either one or zero&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">mat_tr</span> <span class="ow">in</span> <span class="n">mat</span><span class="p">:</span>
+        <span class="n">N_emp_tmp</span><span class="p">,</span> <span class="n">indices_tmp</span> <span class="o">=</span> <span class="n">n_emp_mat</span><span class="p">(</span><span class="n">mat_tr</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">idx_trials</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indices_tmp</span><span class="p">)</span>
+        <span class="n">N_emp</span> <span class="o">+=</span> <span class="n">N_emp_tmp</span>
+</div>
+    <span class="k">return</span> <span class="n">N_emp</span><span class="p">,</span> <span class="n">idx_trials</span>
+
+
+<span class="k">def</span> <span class="nf">_n_exp_mat_analytic</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the expected joint probability for each spike pattern analyticaly</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">marg_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="c1"># marg_prob needs to be a column vector, so we</span>
+    <span class="c1"># build a two dimensional array with 1 column</span>
+    <span class="c1"># and len(marg_prob) rows</span>
+    <span class="n">marg_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">marg_prob</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">marg_prob</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">inverse_hash_from_pattern</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="n">nrep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">m</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># multipyling the marginal probability of neurons with regard to the</span>
+    <span class="c1"># pattern</span>
+    <span class="n">pmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">marg_prob</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrep</span><span class="p">)))</span> <span class="o">+</span>\
+        <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">marg_prob</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrep</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">pmat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mat</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_n_exp_mat_surrogate</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the expected joint probability for each spike pattern with spike</span>
+<span class="sd">    time randomization surrogate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;surrogate method works only for one pattern!&#39;</span><span class="p">)</span>
+    <span class="n">N_exp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_surr</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">rz_idx</span><span class="p">,</span> <span class="n">rz</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_surr</span><span class="p">)):</span>
+        <span class="c1"># shuffling all elements of zero-one matrix</span>
+        <span class="n">mat_surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">mat_surr</span><span class="p">]</span>
+        <span class="n">N_exp_array</span><span class="p">[</span><span class="n">rz_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_emp_mat</span><span class="p">(</span><span class="n">mat_surr</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">N_exp_array</span>
+
+
+<div class="viewcode-block" id="n_exp_mat"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.n_exp_mat">[docs]</a><span class="k">def</span> <span class="nf">n_exp_mat</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the expected joint probability for each spike pattern</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    mat: 2d numpy array</span>
+<span class="sd">            the entries are zero or one</span>
+<span class="sd">            0-axis --&gt; neurons</span>
+<span class="sd">            1-axis --&gt; time bins</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">            array of hash values, length: number of patterns</span>
+<span class="sd">    method: string</span>
+<span class="sd">            method with which the expectency should be caculated</span>
+<span class="sd">            &#39;analytic&#39; -- &gt; analytically</span>
+<span class="sd">            &#39;surr&#39; -- &gt; with surrogates (spike time randomization)</span>
+<span class="sd">            Default is &#39;analytic&#39;</span>
+<span class="sd">    n_surr: integer</span>
+<span class="sd">            number of surrogates for constructing the distribution of expected joint probability.</span>
+<span class="sd">            Default is 1 and this number is needed only when method = &#39;surr&#39;</span>
+
+<span class="sd">    kwargs:</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    -------</span>
+<span class="sd">       ValueError: if matrix m has wrong orientation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    if method is analytic:</span>
+<span class="sd">        numpy.array:</span>
+<span class="sd">           An array containing the expected joint probability of each pattern,</span>
+<span class="sd">           shape: (number of patterns,)</span>
+<span class="sd">    if method is surr:</span>
+<span class="sd">        numpy.ndarray, 0-axis --&gt; different realizations,</span>
+<span class="sd">                       length = number of surrogates</span>
+<span class="sd">                       1-axis --&gt; patterns</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[1, 1, 1, 1],</span>
+<span class="sd">                       [0, 1, 0, 1],</span>
+<span class="sd">                       [0, 0, 1, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; pattern_hash = np.array([5,6])</span>
+<span class="sd">    &gt;&gt;&gt; N = 3</span>
+<span class="sd">    &gt;&gt;&gt; n_exp_anal = n_exp_mat(mat,N, pattern_hash, method = &#39;analytic&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; n_exp_anal</span>
+<span class="sd">        [ 0.5 1.5 ]</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; n_exp_surr = n_exp_mat(</span>
+<span class="sd">                  mat, N,pattern_hash, method = &#39;surr&#39;, n_surr = 5000)</span>
+<span class="sd">    &gt;&gt;&gt; print n_exp_surr</span>
+<span class="sd">    [[ 1.  1.]</span>
+<span class="sd">     [ 2.  0.]</span>
+<span class="sd">     [ 2.  0.]</span>
+<span class="sd">     ...,</span>
+<span class="sd">     [ 2.  0.]</span>
+<span class="sd">     [ 2.  0.]</span>
+<span class="sd">     [ 1.  1.]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check if the mat is zero-one matrix</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mat</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mat</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;entries of mat should be either one or zero&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_n_exp_mat_analytic</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;surr&#39;</span><span class="p">:</span></div>
+        <span class="k">return</span> <span class="n">_n_exp_mat_surrogate</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">n_surr</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="n_exp_mat_sum_trial"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.n_exp_mat_sum_trial">[docs]</a><span class="k">def</span> <span class="nf">n_exp_mat_sum_trial</span><span class="p">(</span>
+        <span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic_TrialByTrial&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the expected joint probability</span>
+<span class="sd">    for each spike pattern sum over trials</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    mat: 3d numpy array or elephant BinnedSpikeTrain object</span>
+<span class="sd">           Binned spike trains represented as a binary matrix (i.e., matrix of 0&#39;s and 1&#39;s), </span>
+<span class="sd">           segmented into trials. Trials should contain an identical number of neurons and </span>
+<span class="sd">           an identical number of time bins.</span>
+<span class="sd">            the entries are zero or one</span>
+<span class="sd">            0-axis --&gt; trials</span>
+<span class="sd">            1-axis --&gt; neurons</span>
+<span class="sd">            2-axis --&gt; time bins</span>
+<span class="sd">    N: integer</span>
+<span class="sd">           number of neurons</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">            array of hash values, length: number of patterns</span>
+<span class="sd">    method: string</span>
+<span class="sd">            method with which the unitary events whould be computed</span>
+<span class="sd">            &#39;analytic_TrialByTrial&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            (analytically) on each trial, then sum over all trials.</span>
+<span class="sd">            &#39;analytic_TrialAverage&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            by averaging over trials.</span>
+<span class="sd">            (cf. Gruen et al. 2003)</span>
+<span class="sd">            &#39;surrogate_TrialByTrial&#39; -- &gt; calculate the distribution </span>
+<span class="sd">            of expected coincidences by spike time randomzation in </span>
+<span class="sd">            each trial and sum over trials.</span>
+<span class="sd">            Default is &#39;analytic_trialByTrial&#39;</span>
+
+<span class="sd">    kwargs:</span>
+<span class="sd">    -------</span>
+<span class="sd">    n_surr: integer</span>
+<span class="sd">            number of surrogate to be used</span>
+<span class="sd">            Default is 1</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.array:</span>
+<span class="sd">       An array containing the expected joint probability of</span>
+<span class="sd">       each pattern summed over trials,shape: (number of patterns,)</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[[1, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 0, 1]],</span>
+
+<span class="sd">                       [[1, 1, 1, 1, 1],</span>
+<span class="sd">                        [0, 1, 1, 1, 1],</span>
+<span class="sd">                        [1, 1, 0, 1, 0]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; pattern_hash = np.array([5,6])</span>
+<span class="sd">    &gt;&gt;&gt; N = 3</span>
+<span class="sd">    &gt;&gt;&gt; n_exp_anal = n_exp_mat_sum_trial(mat, N, pattern_hash)</span>
+<span class="sd">    &gt;&gt;&gt; print n_exp_anal</span>
+<span class="sd">        array([ 1.56,  2.56])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check the consistency between shape of m and number neurons N</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mat</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the entries of mat should be a list of a&#39;</span>
+                         <span class="s1">&#39;list where 0-axis is trials and 1-axis is neurons&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialByTrial&#39;</span><span class="p">:</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern_hash</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">mat_tr</span> <span class="ow">in</span> <span class="n">mat</span><span class="p">:</span>
+            <span class="n">n_exp</span> <span class="o">+=</span> <span class="n">n_exp_mat</span><span class="p">(</span><span class="n">mat_tr</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialAverage&#39;</span><span class="p">:</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">n_exp_mat</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mat</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;surrogate_TrialByTrial&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;n_surr&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_surr&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_surr</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mat_tr</span> <span class="ow">in</span> <span class="n">mat</span><span class="p">:</span>
+            <span class="n">n_exp</span> <span class="o">+=</span> <span class="n">n_exp_mat</span><span class="p">(</span><span class="n">mat_tr</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span>
+                               <span class="n">method</span><span class="o">=</span><span class="s1">&#39;surr&#39;</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="n">n_surr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The method only works on the zero_one matrix at the moment&quot;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">n_exp</span>
+
+
+<div class="viewcode-block" id="gen_pval_anal"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.gen_pval_anal">[docs]</a><span class="k">def</span> <span class="nf">gen_pval_anal</span><span class="p">(</span>
+        <span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic_TrialByTrial&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    computes the expected coincidences and a function to calculate</span>
+<span class="sd">    p-value for given empirical coincidences</span>
+
+<span class="sd">    this function generate a poisson distribution with the expected</span>
+<span class="sd">    value calculated by mat. it returns a function which gets</span>
+<span class="sd">    the empirical coincidences, `n_emp`,  and calculates a p-value</span>
+<span class="sd">    as the area under the poisson distribution from `n_emp` to infinity</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    mat: 3d numpy array or elephant BinnedSpikeTrain object</span>
+<span class="sd">           Binned spike trains represented as a binary matrix (i.e., matrix of 0&#39;s and 1&#39;s), </span>
+<span class="sd">           segmented into trials. Trials should contain an identical number of neurons and </span>
+<span class="sd">           an identical number of time bins.</span>
+<span class="sd">            the entries are zero or one</span>
+<span class="sd">            0-axis --&gt; trials</span>
+<span class="sd">            1-axis --&gt; neurons</span>
+<span class="sd">            2-axis --&gt; time bins</span>
+<span class="sd">    N: integer</span>
+<span class="sd">           number of neurons</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">            array of hash values, length: number of patterns</span>
+<span class="sd">    method: string</span>
+<span class="sd">            method with which the unitary events whould be computed</span>
+<span class="sd">            &#39;analytic_TrialByTrial&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            (analytically) on each trial, then sum over all trials.</span>
+<span class="sd">            &#39;&#39;analytic_TrialAverage&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            by averaging over trials.</span>
+<span class="sd">            Default is &#39;analytic_trialByTrial&#39;</span>
+<span class="sd">            (cf. Gruen et al. 2003)</span>
+
+<span class="sd">    kwargs:</span>
+<span class="sd">    -------</span>
+<span class="sd">    n_surr: integer</span>
+<span class="sd">            number of surrogate to be used</span>
+<span class="sd">            Default is 1</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    pval_anal:</span>
+<span class="sd">            a function which calculates the p-value for</span>
+<span class="sd">            the given empirical coincidences</span>
+<span class="sd">    n_exp: list of floats</span>
+<span class="sd">            expected coincidences</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; mat = np.array([[[1, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 1, 0],</span>
+<span class="sd">                       [0, 1, 1, 0, 1]],</span>
+
+<span class="sd">                       [[1, 1, 1, 1, 1],</span>
+<span class="sd">                        [0, 1, 1, 1, 1],</span>
+<span class="sd">                        [1, 1, 0, 1, 0]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; pattern_hash = np.array([5,6])</span>
+<span class="sd">    &gt;&gt;&gt; N = 3</span>
+<span class="sd">    &gt;&gt;&gt; pval_anal,n_exp = gen_pval_anal(mat, N,pattern_hash)</span>
+<span class="sd">    &gt;&gt;&gt; n_exp</span>
+<span class="sd">        array([ 1.56,  2.56])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialByTrial&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialAverage&#39;</span><span class="p">:</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">n_exp_mat_sum_trial</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">pval</span><span class="p">(</span><span class="n">n_emp</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">gammaincc</span><span class="p">(</span><span class="n">n_emp</span><span class="p">,</span> <span class="n">n_exp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">p</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;surrogate_TrialByTrial&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;n_surr&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_surr&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">n_exp_mat_sum_trial</span><span class="p">(</span>
+            <span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="n">n_surr</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">pval</span><span class="p">(</span><span class="n">n_emp</span><span class="p">):</span>
+            <span class="n">hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">n_exp</span><span class="p">))</span>
+            <span class="n">exp_dist</span> <span class="o">=</span> <span class="n">hist</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_emp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;in surrogate method the p_value can be calculated only for one pattern!&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exp_dist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n_emp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):])</span>
+</div>
+    <span class="k">return</span> <span class="n">pval</span><span class="p">,</span> <span class="n">n_exp</span>
+
+
+<div class="viewcode-block" id="jointJ"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.jointJ">[docs]</a><span class="k">def</span> <span class="nf">jointJ</span><span class="p">(</span><span class="n">p_val</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Surprise measurement</span>
+
+<span class="sd">    logarithmic transformation of joint-p-value into surprise measure</span>
+<span class="sd">    for better visualization as the highly significant events are</span>
+<span class="sd">    indicated by very low joint-p-values</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    p_val: list of floats</span>
+<span class="sd">        p-values of statistical tests for different pattern.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    J: list of floats</span>
+<span class="sd">        list of surprise measure</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; p_val = np.array([0.31271072,  0.01175031])</span>
+<span class="sd">    &gt;&gt;&gt; jointJ(p_val)</span>
+<span class="sd">        array([0.3419968 ,  1.92481736])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p_val</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Js</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_arr</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">p_arr</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeWarning</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+    <span class="k">return</span> <span class="n">Js</span>
+
+
+<span class="k">def</span> <span class="nf">_rate_mat_avg_trial</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    calculates the average firing rate of each neurons across trials</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_tr</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">nbins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="n">psth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tr</span><span class="p">,</span> <span class="n">mat_tr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+        <span class="n">psth</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mat_tr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">psth</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_tr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_bintime</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">binsize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    change the real time to bintime</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_dl</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">binsize_dl</span> <span class="o">=</span> <span class="n">binsize</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t_dl</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize_dl</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_winpos</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">winsize</span><span class="p">,</span> <span class="n">winstep</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;left-edge&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the position of the analysis window</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t_start_dl</span> <span class="o">=</span> <span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">t_stop_dl</span> <span class="o">=</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">winsize_dl</span> <span class="o">=</span> <span class="n">winsize</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">winstep_dl</span> <span class="o">=</span> <span class="n">winstep</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+
+    <span class="c1"># left side of the window time</span>
+    <span class="k">if</span> <span class="n">position</span> <span class="o">==</span> <span class="s1">&#39;left-edge&#39;</span><span class="p">:</span>
+        <span class="n">ts_winpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="n">t_start_dl</span><span class="p">,</span> <span class="n">t_stop_dl</span> <span class="o">-</span> <span class="n">winsize_dl</span> <span class="o">+</span> <span class="n">winstep_dl</span><span class="p">,</span> <span class="n">winstep_dl</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;the current version only returns left-edge of the window&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ts_winpos</span>
+
+
+<span class="k">def</span> <span class="nf">_UE</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic_TrialByTrial&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the default results of unitary events analysis</span>
+<span class="sd">    (Surprise, empirical coincidences and index of where it happened</span>
+<span class="sd">    in the given mat, n_exp and average rate of neurons)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rate_avg</span> <span class="o">=</span> <span class="n">_rate_mat_avg_trial</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="n">n_emp</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">n_emp_mat_sum_trial</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;surrogate_TrialByTrial&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;n_surr&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_surr&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_surr</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">dist_exp</span><span class="p">,</span> <span class="n">n_exp</span> <span class="o">=</span> <span class="n">gen_pval_anal</span><span class="p">(</span>
+            <span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="n">n_surr</span><span class="p">)</span>
+        <span class="n">n_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_exp</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialByTrial&#39;</span> <span class="ow">or</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;analytic_TrialAverage&#39;</span><span class="p">:</span>
+        <span class="n">dist_exp</span><span class="p">,</span> <span class="n">n_exp</span> <span class="o">=</span> <span class="n">gen_pval_anal</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="n">dist_exp</span><span class="p">(</span><span class="n">n_emp</span><span class="p">)</span>
+    <span class="n">Js</span> <span class="o">=</span> <span class="n">jointJ</span><span class="p">(</span><span class="n">pval</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Js</span><span class="p">,</span> <span class="n">rate_avg</span><span class="p">,</span> <span class="n">n_exp</span><span class="p">,</span> <span class="n">n_emp</span><span class="p">,</span> <span class="n">indices</span>
+
+
+<div class="viewcode-block" id="jointJ_window_analysis"><a class="viewcode-back" href="../../reference/unitary_event_analysis.html#elephant.unitary_event_analysis.jointJ_window_analysis">[docs]</a><span class="k">def</span> <span class="nf">jointJ_window_analysis</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">winsize</span><span class="p">,</span> <span class="n">winstep</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;analytic_TrialByTrial&#39;</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the joint surprise in a sliding window fashion</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: list of neo.SpikeTrain objects</span>
+<span class="sd">          list of spike trains in different trials</span>
+<span class="sd">                                        0-axis --&gt; Trials</span>
+<span class="sd">                                        1-axis --&gt; Neurons</span>
+<span class="sd">                                        2-axis --&gt; Spike times</span>
+<span class="sd">    binsize: Quantity scalar with dimension time</span>
+<span class="sd">           size of bins for descritizing spike trains</span>
+<span class="sd">    winsize: Quantity scalar with dimension time</span>
+<span class="sd">           size of the window of analysis</span>
+<span class="sd">    winstep: Quantity scalar with dimension time</span>
+<span class="sd">           size of the window step</span>
+<span class="sd">    pattern_hash: list of integers</span>
+<span class="sd">           list of interested patterns in hash values</span>
+<span class="sd">           (see hash_from_pattern and inverse_hash_from_pattern functions)</span>
+<span class="sd">    method: string</span>
+<span class="sd">            method with which the unitary events whould be computed</span>
+<span class="sd">            &#39;analytic_TrialByTrial&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            (analytically) on each trial, then sum over all trials.</span>
+<span class="sd">            &#39;analytic_TrialAverage&#39; -- &gt; calculate the expectency</span>
+<span class="sd">            by averaging over trials.</span>
+<span class="sd">            (cf. Gruen et al. 2003)</span>
+<span class="sd">            &#39;surrogate_TrialByTrial&#39; -- &gt; calculate the distribution </span>
+<span class="sd">            of expected coincidences by spike time randomzation in </span>
+<span class="sd">            each trial and sum over trials.</span>
+<span class="sd">            Default is &#39;analytic_trialByTrial&#39;</span>
+<span class="sd">    t_start: float or Quantity scalar, optional</span>
+<span class="sd">             The start time to use for the time points.</span>
+<span class="sd">             If not specified, retrieved from the `t_start`</span>
+<span class="sd">             attribute of `spiketrain`.</span>
+<span class="sd">    t_stop: float or Quantity scalar, optional</span>
+<span class="sd">            The start time to use for the time points.</span>
+<span class="sd">            If not specified, retrieved from the `t_stop`</span>
+<span class="sd">            attribute of `spiketrain`.</span>
+
+<span class="sd">    kwargs:</span>
+<span class="sd">    -------</span>
+<span class="sd">    n_surr: integer</span>
+<span class="sd">            number of surrogate to be used</span>
+<span class="sd">            Default is 100</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">    -------</span>
+<span class="sd">    result: dictionary</span>
+<span class="sd">          Js: list of float</span>
+<span class="sd">                 JointSurprise of different given patterns within each window</span>
+<span class="sd">                 shape: different pattern hash --&gt; 0-axis</span>
+<span class="sd">                        different window --&gt; 1-axis</span>
+<span class="sd">          indices: list of list of integers</span>
+<span class="sd">                 list of indices of pattern within each window</span>
+<span class="sd">                 shape: different pattern hash --&gt; 0-axis</span>
+<span class="sd">                        different window --&gt; 1-axis</span>
+<span class="sd">          n_emp: list of integers</span>
+<span class="sd">                 empirical number of each observed pattern.</span>
+<span class="sd">                 shape: different pattern hash --&gt; 0-axis</span>
+<span class="sd">                        different window --&gt; 1-axis</span>
+<span class="sd">          n_exp: list of floats</span>
+<span class="sd">                 expeced number of each pattern.</span>
+<span class="sd">                 shape: different pattern hash --&gt; 0-axis</span>
+<span class="sd">                        different window --&gt; 1-axis</span>
+<span class="sd">          rate_avg: list of floats</span>
+<span class="sd">                 average firing rate of each neuron</span>
+<span class="sd">                 shape: different pattern hash --&gt; 0-axis</span>
+<span class="sd">                        different window --&gt; 1-axis</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;structure of the data is not correct: 0-axis should be trials, 1-axis units and 2-axis neo spike trains&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;ms&#39;</span><span class="p">)</span>
+
+    <span class="c1"># position of all windows (left edges)</span>
+    <span class="n">t_winpos</span> <span class="o">=</span> <span class="n">_winpos</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">winsize</span><span class="p">,</span> <span class="n">winstep</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;left-edge&#39;</span><span class="p">)</span>
+    <span class="n">t_winpos_bintime</span> <span class="o">=</span> <span class="n">_bintime</span><span class="p">(</span><span class="n">t_winpos</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+
+    <span class="n">winsize_bintime</span> <span class="o">=</span> <span class="n">_bintime</span><span class="p">(</span><span class="n">winsize</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+    <span class="n">winstep_bintime</span> <span class="o">=</span> <span class="n">_bintime</span><span class="p">(</span><span class="n">winstep</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">winsize_bintime</span> <span class="o">*</span> <span class="n">binsize</span> <span class="o">!=</span> <span class="n">winsize</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;ratio between winsize and binsize is not integer -- &quot;</span>
+            <span class="s2">&quot;the actual number for window size is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">winsize_bintime</span> <span class="o">*</span> <span class="n">binsize</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">winstep_bintime</span> <span class="o">*</span> <span class="n">binsize</span> <span class="o">!=</span> <span class="n">winstep</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;ratio between winsize and binsize is not integer -- &quot;</span>
+            <span class="s2">&quot;the actual number for window size is&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">winstep_bintime</span> <span class="o">*</span> <span class="n">binsize</span><span class="p">))</span>
+
+    <span class="n">num_tr</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">data</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">n_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">t_stop</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span>
+
+    <span class="n">mat_tr_unit_spt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">tr</span><span class="p">,</span> <span class="n">sts</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span>
+            <span class="n">sts</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">binary</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">to_bool_array</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The method only works on the zero_one matrix at the moment&quot;</span><span class="p">)</span>
+        <span class="n">mat_tr_unit_spt</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat</span>
+
+    <span class="n">num_win</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_winpos</span><span class="p">)</span>
+    <span class="n">Js_win</span><span class="p">,</span> <span class="n">n_exp_win</span><span class="p">,</span> <span class="n">n_emp_win</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_win</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+    <span class="n">rate_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_win</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="n">indices_win</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_tr</span><span class="p">):</span>
+        <span class="n">indices_win</span><span class="p">[</span><span class="s1">&#39;trial&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">win_pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t_winpos_bintime</span><span class="p">):</span>
+        <span class="n">mat_win</span> <span class="o">=</span> <span class="n">mat_tr_unit_spt</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">win_pos</span><span class="p">:</span><span class="n">win_pos</span> <span class="o">+</span> <span class="n">winsize_bintime</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;surrogate_TrialByTrial&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;n_surr&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">n_surr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_surr&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">n_surr</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">Js_win</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rate_avg</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n_exp_win</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n_emp_win</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">indices_lst</span> <span class="o">=</span> <span class="n">_UE</span><span class="p">(</span>
+                <span class="n">mat_win</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">n_surr</span><span class="o">=</span><span class="n">n_surr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Js_win</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rate_avg</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n_exp_win</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n_emp_win</span><span class="p">[</span>
+                <span class="n">i</span><span class="p">],</span> <span class="n">indices_lst</span> <span class="o">=</span> <span class="n">_UE</span><span class="p">(</span><span class="n">mat_win</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">pattern_hash</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_tr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices_lst</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">indices_win</span><span class="p">[</span>
+                    <span class="s1">&#39;trial&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indices_win</span><span class="p">[</span><span class="s1">&#39;trial&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)],</span> <span class="n">indices_lst</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">win_pos</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;Js&#39;</span><span class="p">:</span> <span class="n">Js_win</span><span class="p">,</span> <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">indices_win</span><span class="p">,</span> <span class="s1">&#39;n_emp&#39;</span><span class="p">:</span> <span class="n">n_emp_win</span><span class="p">,</span> <span class="s1">&#39;n_exp&#39;</span><span class="p">:</span> <span class="n">n_exp_win</span><span class="p">,</span> <span class="s1">&#39;rate_avg&#39;</span><span class="p">:</span> <span class="n">rate_avg</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

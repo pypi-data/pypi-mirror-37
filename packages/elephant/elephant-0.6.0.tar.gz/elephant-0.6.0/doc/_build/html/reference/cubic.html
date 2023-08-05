@@ -1,0 +1,203 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cumulant Based Inference of higher-order Correlation (CuBIC) &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analysis of Sequences of Synchronous EvenTs (ASSET)" href="asset.html" />
+    <link rel="prev" title="Unitary Event (UE) Analysis" href="unitary_event_analysis.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="asset.html" title="Analysis of Sequences of Synchronous EvenTs (ASSET)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="unitary_event_analysis.html" title="Unitary Event (UE) Analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="unitary_event_analysis.html"
+                        title="previous chapter">Unitary Event (UE) Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="asset.html"
+                        title="next chapter">Analysis of Sequences of Synchronous EvenTs (ASSET)</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/cubic.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.cubic">
+<span id="cumulant-based-inference-of-higher-order-correlation-cubic"></span><h1>Cumulant Based Inference of higher-order Correlation (CuBIC)<a class="headerlink" href="#module-elephant.cubic" title="Permalink to this headline">¶</a></h1>
+<p>CuBIC is a statistical method for the detection of higher order of
+correlations in parallel spike trains based on the analysis of the
+cumulants of the population count.
+Given a list sts of SpikeTrains, the analysis comprises the following
+steps:</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>compute the population histogram (PSTH) with the desired bin size</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binsize</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pop_count</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">time_histogram</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>apply CuBIC to the population count</dt>
+<dd><div class="first last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># significance level of the tests used</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xi</span><span class="p">,</span> <span class="n">p_val</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">cubic</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ximax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">errorval</span><span class="o">=</span><span class="mf">4.</span><span class="p">):</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ol>
+<dl class="function">
+<dt id="elephant.cubic.cubic">
+<code class="descclassname">elephant.cubic.</code><code class="descname">cubic</code><span class="sig-paren">(</span><em>data</em>, <em>ximax=100</em>, <em>alpha=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/cubic.html#cubic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.cubic.cubic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the CuBIC analysis [1] on a population histogram, calculated from
+a population of spiking neurons.</p>
+<p>The null hypothesis <img class="math" src="../_images/math/566a094848059fc3108a7fc3a522d5ae25acbfd8.png" alt="H_0: k_3(data)&lt;=k^*_{3,\xi}"/> is iteratively
+tested with increasing correlation order <img class="math" src="../_images/math/c6e4ff26b53b5d382fc8d80b602a9c95be59adc4.png" alt="\xi"/> (correspondent to
+variable xi) until it is possible to accept, with a significance level alpha,
+that <img class="math" src="../_images/math/2f34e7fad948c11ae69a521d863704cb0af6ceab.png" alt="\hat{\xi}"/> (corresponding to variable xi_hat) is the minimum
+order of correlation necessary to explain the third cumulant
+<img class="math" src="../_images/math/39cff6a270fea3ea7b9056d6b0d1b4ae74dc75c0.png" alt="k_3(data)"/>.</p>
+<p><img class="math" src="../_images/math/59ab103803b91e1720d868ca4c57e427205c3f54.png" alt="k^*_{3,\xi}"/> is the maximized third cumulant, supposing a Compund
+Poisson Process (CPP) model for correlated spike trains (see [1])
+with maximum order of correlation equal to <img class="math" src="../_images/math/c6e4ff26b53b5d382fc8d80b602a9c95be59adc4.png" alt="\xi"/>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : neo.AnalogSignal</p>
+<blockquote>
+<div><p>The population histogram (count of spikes per time bin) of the entire
+population of neurons.</p>
+</div></blockquote>
+<p><strong>ximax</strong> : int</p>
+<blockquote>
+<div><p>The maximum number of iteration of the hypothesis test:
+if it is not possible to compute the <img class="math" src="../_images/math/2f34e7fad948c11ae69a521d863704cb0af6ceab.png" alt="\hat{\xi}"/> before ximax
+iteration the CuBIC procedure is aborted.
+Default: 100</p>
+</div></blockquote>
+<p><strong>alpha</strong> : float</p>
+<blockquote>
+<div><p>The significance level of the hypothesis tests perfomed.
+Default: 0.05</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>xi_hat</strong> : int</p>
+<blockquote>
+<div><p>The minimum correlation order estimated by CuBIC, necessary to
+explain the value of the third cumulant calculated from the population.</p>
+</div></blockquote>
+<p><strong>p</strong> : list</p>
+<blockquote>
+<div><p>The ordred list of all the p-values of the hypothesis tests that have
+been performed. If the maximum number of iteration ximax is reached the
+last p-value is set to -4</p>
+</div></blockquote>
+<p><strong>kappa</strong> : list</p>
+<blockquote>
+<div><p>The list of the first three cumulants of the data.</p>
+</div></blockquote>
+<p><strong>test_aborted</strong> : bool</p>
+<blockquote class="last">
+<div><p>Wheter the test was aborted because reached the maximum number of
+iteration ximax</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>[1]Staude, Rotter, Gruen, (2009) J. Comp. Neurosci</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="asset.html" title="Analysis of Sequences of Synchronous EvenTs (ASSET)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="unitary_event_analysis.html" title="Unitary Event (UE) Analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tutorials &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Function Reference by Module" href="modules.html" />
+    <link rel="prev" title="Prerequisites / Installation" href="install.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Function Reference by Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Prerequisites / Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Elephant 0.4.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Prerequisites / Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">Function Reference by Module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tutorial.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>In this first tutorial, we will go through a very simple example of how to use Elephant. We will numerically verify that the coefficient of variation (CV), a measure of the variability of inter-spike intervals, of a spike train that is modeled as a random (stochastic) Poisson process is 1.</p>
+<p>As a first step, install Elephant and its dependencies as outlined in <a class="reference internal" href="install.html#install"><span class="std std-ref">Prerequisites / Installation</span></a>. Next, start up your Python shell. Under Windows, you can likely launch a Python shell from the Start menu. Under Linux or Mac, you may start Python by typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python
+</pre></div>
+</div>
+<p>As a first step, we want to generate spike train data modeled as a stochastic Poisson process. For this purpose, we can use the <a class="reference internal" href="reference/spike_train_generation.html#module-elephant.spike_train_generation" title="elephant.spike_train_generation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">elephant.spike_train_generation</span></code></a> module, which provides the <code class="xref py py-func docutils literal notranslate"><span class="pre">homogeneous_poisson_process()</span></code> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.spike_train_generation</span> <span class="k">import</span> <span class="n">homogeneous_poisson_process</span>
+</pre></div>
+</div>
+<p>Use the <a class="reference external" href="https://docs.python.org/3/library/functions.html#help" title="(in Python v3.6)"><code class="xref py py-func docutils literal notranslate"><span class="pre">help()</span></code></a> function of Python to display the documentation for this function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">homogeneous_poisson_process</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As you can see, the function requires three parameters: the firing rate of the Poisson process, the start time and the stop time. These three parameters are specified as <code class="xref py py-class docutils literal notranslate"><span class="pre">Quantity</span></code> objects: these are essentially arrays or numbers with a unit of measurement attached. We will see how to use these objects in a second. You can quit the help screen by typing <code class="docutils literal notranslate"><span class="pre">q</span></code>.</p>
+<p>Let us now generate 100 independent Poisson spike trains for 100 seconds each with a rate of 10 Hz for which we later will calculate the CV. For simplicity, we will store the spike trains in a list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">quantities</span> <span class="k">import</span> <span class="n">Hz</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spiketrain_list</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="n">homogeneous_poisson_process</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">10.0</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mf">0.0</span><span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mf">100.0</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Notice that the units <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">Hz</span></code> have both been imported from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">quantities</span></code> library and can be directly attached to the values by multiplication. The output is a list of 100 Neo <code class="xref py py-class docutils literal notranslate"><span class="pre">SpikeTrain</span></code> objects:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spiketrain_list</span><span class="p">))</span>
+<span class="go">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">spiketrain_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="go">&lt;class &#39;neo.core.spiketrain.SpikeTrain&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Before we continue, let us (optionally) have a look at the spike trains in a spike raster plot. This can be created, e.g., using the <a class="reference external" href="http://matplotlib.org/">matplotlib</a> framework (you may need to install this library, as it is not one of the dependencies of Elephant):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">spiketrain</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spiketrain_list</span><span class="p">):</span>
+<span class="go">        t = spiketrain.rescale(ms)</span>
+<span class="go">        plt.plot(t, i * np.ones_like(t), &#39;k.&#39;, markersize=2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Time (ms)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Spike Train Index&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Notice how the spike times of each spike train are extracted from each of the spike trains in the for-loop. The <code class="xref py py-meth docutils literal notranslate"><span class="pre">rescale()</span></code> operation of the quantities library is used to transform units to milliseconds. In order to aid the visualization, we restrict the plot to the first 1000 ms (<code class="xref py py-func docutils literal notranslate"><span class="pre">xlim()</span></code> function). The <code class="xref py py-func docutils literal notranslate"><span class="pre">show()</span></code> command plots the spike raster in a new figure window on the screen.</p>
+<div class="figure align-center" id="id1" style="width: 80%">
+<a class="reference internal image-reference" href="_images/tutorial_1_figure_1.png"><img alt="_images/tutorial_1_figure_1.png" src="_images/tutorial_1_figure_1.png" style="width: 600px;" /></a>
+<p class="caption"><span class="caption-text">Spike raster plot of the 100 Poisson spike trains showing the first second of data.</span></p>
+</div>
+<p>From the plot you can see the random nature of each Poisson spike train. Let us now calculate the distribution of the 100 CVs obtained from inter-spike intervals (ISIs) of these spike trains. Close the graphics window to get back to the Python prompt. The functions to calculate the list of ISIs and the CV are both located in the <a class="reference internal" href="reference/statistics.html#module-elephant.statistics" title="elephant.statistics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">elephant.statistics</span></code></a> module. Thus, for each spike train in our list, we first call the <code class="xref py py-func docutils literal notranslate"><span class="pre">isi()</span></code> function which returns an array of all <em>N-1</em> ISIs for the <em>N</em> spikes in the input spike train (refer to the online help using <code class="docutils literal notranslate"><span class="pre">help(isi)</span></code>). We then feed the list of ISIs into the <code class="xref py py-func docutils literal notranslate"><span class="pre">cv()</span></code> function, which returns a single value for the coefficient of variation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.statistics</span> <span class="k">import</span> <span class="n">isi</span><span class="p">,</span> <span class="n">cv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cv_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">cv</span><span class="p">(</span><span class="n">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">))</span> <span class="k">for</span> <span class="n">spiketrain</span> <span class="ow">in</span> <span class="n">spiketrain_list</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In a final step, let’s plot a histogram of the obtained CVs (again illustrated using the matplotlib framework for plotting):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">cv_list</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;CV&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>As predicted by theory, the CV values are clustered around 1. This concludes our first “getting started” tutorial on the use of Elephant. More tutorials will be added soon.</p>
+<div class="figure align-center" id="id2" style="width: 80%">
+<a class="reference internal image-reference" href="_images/tutorial_1_figure_2.png"><img alt="_images/tutorial_1_figure_2.png" src="_images/tutorial_1_figure_2.png" style="width: 600px;" /></a>
+<p class="caption"><span class="caption-text">Distribution of CV values of the ISIs of 100 Poisson spike trains.</span></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Function Reference by Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Prerequisites / Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Elephant 0.4.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

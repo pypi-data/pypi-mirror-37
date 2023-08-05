@@ -1,0 +1,247 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spike train dissimilarity / spike train synchrony &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spike-triggered average" href="sta.html" />
+    <link rel="prev" title="Kernels" href="kernels.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sta.html" title="Spike-triggered average"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kernels.html" title="Kernels"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kernels.html"
+                        title="previous chapter">Kernels</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sta.html"
+                        title="next chapter">Spike-triggered average</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/spike_train_dissimilarity.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.spike_train_dissimilarity">
+<span id="spike-train-dissimilarity-spike-train-synchrony"></span><h1>Spike train dissimilarity / spike train synchrony<a class="headerlink" href="#module-elephant.spike_train_dissimilarity" title="Permalink to this headline">¶</a></h1>
+<p>In neuroscience one often wants to evaluate, how similar or dissimilar pairs
+or even large sets of spiketrains are. For this purpose various different
+spike train dissimilarity measures were introduced in the literature.
+They differ, e.g., by the properties of having the mathematical properties of
+a metric or by being time-scale dependent or not. Well known representatives
+of spike train dissimilarity measures are the Victor-Purpura distance and the
+Van Rossum distance implemented in this module, which both are metrics in the
+mathematical sense and time-scale dependent.</p>
+<dl class="function">
+<dt id="elephant.spike_train_dissimilarity.van_rossum_dist">
+<code class="descclassname">elephant.spike_train_dissimilarity.</code><code class="descname">van_rossum_dist</code><span class="sig-paren">(</span><em>trains</em>, <em>tau=array(1.0) * s</em>, <em>sort=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spike_train_dissimilarity.html#van_rossum_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spike_train_dissimilarity.van_rossum_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the van Rossum distance.</p>
+<p>It is defined as Euclidean distance of the spike trains convolved with a
+causal decaying exponential smoothing filter. A detailed description can
+be found in <em>Rossum, M. C. W. (2001). A novel spike distance. Neural
+Computation, 13(4), 751-763.</em> This implementation is normalized to yield
+a distance of 1.0 for the distance between an empty spike train and a
+spike train with a single spike. Divide the result by sqrt(2.0) to get
+the normalization used in the cited paper.</p>
+<p>Given <img class="math" src="../_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> spike trains with <img class="math" src="../_images/math/e11f2701c4a39c7fe543a6c4150b421d50f1c159.png" alt="n"/> spikes on average the run-time
+complexity of this function is <img class="math" src="../_images/math/9fa822691181ccbd058ff2d8a2cfae17046bddb0.png" alt="O(N^2 n)"/>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>trains</strong> : Sequence of <code class="xref py py-class docutils literal notranslate"><span class="pre">neo.core.SpikeTrain</span></code> objects of</p>
+<blockquote>
+<div><p>which the van Rossum distance will be calculated pairwise.</p>
+</div></blockquote>
+<p><strong>tau</strong> : Quantity scalar</p>
+<blockquote>
+<div><p>Decay rate of the exponential function as time scalar. Controls for
+which time scale the metric will be sensitive. This parameter will
+be ignored if <cite>kernel</cite> is not <cite>None</cite>. May also be <code class="xref py py-const docutils literal notranslate"><span class="pre">scipy.inf</span></code>
+which will lead to only measuring differences in spike count.
+Default: 1.0 * pq.s</p>
+</div></blockquote>
+<p><strong>sort</strong> : bool</p>
+<blockquote>
+<div><p>Spike trains with sorted spike times might be needed for the
+calculation. You can set <cite>sort</cite> to <cite>False</cite> if you know that your
+spike trains are already sorted to decrease calculation time.
+Default: True</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D array</p>
+<blockquote class="last">
+<div><p>Matrix containing the van Rossum distances for all pairs of
+spike trains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spike_train_dissimilarity.victor_purpura_dist">
+<code class="descclassname">elephant.spike_train_dissimilarity.</code><code class="descname">victor_purpura_dist</code><span class="sig-paren">(</span><em>trains</em>, <em>q=array(1.0) * Hz</em>, <em>kernel=None</em>, <em>sort=True</em>, <em>algorithm='fast'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spike_train_dissimilarity.html#victor_purpura_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spike_train_dissimilarity.victor_purpura_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the Victor-Purpura’s (VP) distance. It is often denoted as
+<img class="math" src="../_images/math/7e00cb28b4b3676b3107580eadde52053964b94e.png" alt="D^{\text{spike}}[q]"/>.</p>
+<p>It is defined as the minimal cost of transforming spike train <cite>a</cite> into
+spike train <cite>b</cite> by using the following operations:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Inserting or deleting a spike (cost 1.0).</li>
+<li>Shifting a spike from <img class="math" src="../_images/math/5ec053cf70dc1c98cc297322250569eda193e7a4.png" alt="t"/> to <img class="math" src="../_images/math/0faecae10158369bbaa372f72451809c79095d2f.png" alt="t'"/> (cost <img class="math" src="../_images/math/b6bdd4eb773b230bec90499270d051beeae8a506.png" alt="q
+\cdot |t - t'|"/>).</li>
+</ul>
+</div></blockquote>
+<p>A detailed description can be found in
+<em>Victor, J. D., &amp; Purpura, K. P. (1996). Nature and precision of
+temporal coding in visual cortex: a metric-space analysis. Journal of
+Neurophysiology.</em></p>
+<p>Given the average number of spikes <img class="math" src="../_images/math/e11f2701c4a39c7fe543a6c4150b421d50f1c159.png" alt="n"/> in a spike train and
+<img class="math" src="../_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> spike trains the run-time complexity of this function is
+<img class="math" src="../_images/math/8349f037969b793dbf4aa914b312b4dc1ea5f681.png" alt="O(N^2 n^2)"/> and <img class="math" src="../_images/math/b9d150cb0db69492699e5e24e68d291b148865f9.png" alt="O(N^2 + n^2)"/> memory will be needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>trains</strong> : Sequence of <code class="xref py py-class docutils literal notranslate"><span class="pre">neo.core.SpikeTrain</span></code> objects of</p>
+<blockquote>
+<div><p>which the distance will be calculated pairwise.</p>
+</div></blockquote>
+<p><strong>q: Quantity scalar</strong></p>
+<blockquote>
+<div><p>Cost factor for spike shifts as inverse time scalar.
+Extreme values <img class="math" src="../_images/math/1644b89f7873a009877eb49446f0cb832fd05be7.png" alt="q=0"/> meaning no cost for any shift of
+spikes, or :math: <cite>q=np.inf</cite> meaning infinite cost for any
+spike shift and hence exclusion of spike shifts, are explicitly
+allowed. If <cite>kernel</cite> is not <cite>None</cite>, <img class="math" src="../_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png" alt="q"/> will be ignored.
+Default: 1.0 * pq.Hz</p>
+</div></blockquote>
+<p><strong>kernel: :class:`.kernels.Kernel`</strong></p>
+<blockquote>
+<div><p>Kernel to use in the calculation of the distance. If <cite>kernel</cite> is
+<cite>None</cite>, an unnormalized triangular kernel with standard deviation
+of :math:‘2.0/(q * sqrt(6.0))’ corresponding to a half width of
+<img class="math" src="../_images/math/1315bdea3c3433c2638ef1a101e5a617d030ec94.png" alt="2.0/q"/> will be used. Usage of the default value calculates
+the Victor-Purpura distance correctly with a triangular kernel of
+the suitable width. The choice of another kernel is enabled, but
+this leaves the framework of Victor-Purpura distances.
+Default: None</p>
+</div></blockquote>
+<p><strong>sort: bool</strong></p>
+<blockquote>
+<div><p>Spike trains with sorted spike times will be needed for the
+calculation. You can set <cite>sort</cite> to <cite>False</cite> if you know that your
+spike trains are already sorted to decrease calculation time.
+Default: True</p>
+</div></blockquote>
+<p><strong>algorithm: string</strong></p>
+<blockquote>
+<div><p>Allowed values are ‘fast’ or ‘intuitive’, each selecting an
+algorithm with which to calculate the pairwise Victor-Purpura distance.
+Typically ‘fast’ should be used, because while giving always the
+same result as ‘intuitive’, within the temporary structure of
+Python and add-on modules as numpy it is faster.
+Default: ‘fast’</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D array</p>
+<blockquote class="last">
+<div><p>Matrix containing the VP distance of all pairs of spike trains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sta.html" title="Spike-triggered average"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kernels.html" title="Kernels"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

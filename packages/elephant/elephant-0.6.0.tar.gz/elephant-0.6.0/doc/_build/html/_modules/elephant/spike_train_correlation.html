@@ -1,0 +1,709 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.spike_train_correlation &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.spike_train_correlation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This modules provides functions to calculate correlations between spike trains.</span>
+
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+
+
+<div class="viewcode-block" id="covariance"><a class="viewcode-back" href="../../reference/spike_train_correlation.html#elephant.spike_train_correlation.covariance">[docs]</a><span class="k">def</span> <span class="nf">covariance</span><span class="p">(</span><span class="n">binned_sts</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the NxN matrix of pairwise covariances between all combinations</span>
+<span class="sd">    of N binned spike trains.</span>
+
+<span class="sd">    For each pair of spike trains :math:`(i,j)`, the covariance :math:`C[i,j]`</span>
+<span class="sd">    is obtained by binning :math:`i` and :math:`j` at the desired bin size. Let</span>
+<span class="sd">    :math:`b_i` and :math:`b_j` denote the binary vectors and :math:`m_i` and</span>
+<span class="sd">    :math:`m_j` their respective averages. Then</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">         C[i,j] = &lt;b_i-m_i, b_j-m_j&gt; / (l-1)</span>
+
+<span class="sd">    where &lt;..,.&gt; is the scalar product of two vectors.</span>
+
+<span class="sd">    For an input of n spike trains, a n x n matrix is returned containing the</span>
+<span class="sd">    covariances for each combination of input spike trains.</span>
+
+<span class="sd">    If binary is True, the binned spike trains are clipped to 0 or 1 before</span>
+<span class="sd">    computing the covariance, so that the binned vectors :math:`b_i` and</span>
+<span class="sd">    :math:`b_j` are binary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    binned_sts : elephant.conversion.BinnedSpikeTrain</span>
+<span class="sd">        A binned spike train containing the spike trains to be evaluated.</span>
+<span class="sd">    binary : bool, optional</span>
+<span class="sd">        If True, two spikes of a particular spike train falling in the same bin</span>
+<span class="sd">        are counted as 1, resulting in binary binned vectors :math:`b_i`. If</span>
+<span class="sd">        False, the binned vectors :math:`b_i` contain the spike counts per bin.</span>
+<span class="sd">        Default: False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C : ndarrray</span>
+<span class="sd">        The square matrix of covariances. The element :math:`C[i,j]=C[j,i]` is</span>
+<span class="sd">        the covariance between binned_sts[i] and binned_sts[j].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Generate two Poisson spike trains</span>
+
+<span class="sd">    &gt;&gt;&gt; from elephant.spike_train_generation import homogeneous_poisson_process</span>
+<span class="sd">    &gt;&gt;&gt; st1 = homogeneous_poisson_process(</span>
+<span class="sd">            rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+<span class="sd">    &gt;&gt;&gt; st2 = homogeneous_poisson_process(</span>
+<span class="sd">            rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+
+<span class="sd">    Calculate the covariance matrix.</span>
+
+<span class="sd">    &gt;&gt;&gt; from elephant.conversion import BinnedSpikeTrain</span>
+<span class="sd">    &gt;&gt;&gt; cov_matrix = covariance(BinnedSpikeTrain([st1, st2], binsize=5*ms))</span>
+
+<span class="sd">    The covariance between the spike trains is stored in cc_matrix[0,1] (or</span>
+<span class="sd">    cov_matrix[1,0]).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * The spike trains in the binned structure are assumed to all cover the</span>
+<span class="sd">      complete time span of binned_sts [t_start,t_stop).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">__calculate_correlation_or_covariance</span><span class="p">(</span></div>
+        <span class="n">binned_sts</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">corrcoef_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="corrcoef"><a class="viewcode-back" href="../../reference/spike_train_correlation.html#elephant.spike_train_correlation.corrcoef">[docs]</a><span class="k">def</span> <span class="nf">corrcoef</span><span class="p">(</span><span class="n">binned_sts</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the NxN matrix of pairwise Pearson&#39;s correlation coefficients</span>
+<span class="sd">    between all combinations of N binned spike trains.</span>
+
+<span class="sd">    For each pair of spike trains :math:`(i,j)`, the correlation coefficient</span>
+<span class="sd">    :math:`C[i,j]` is obtained by binning :math:`i` and :math:`j` at the</span>
+<span class="sd">    desired bin size. Let :math:`b_i` and :math:`b_j` denote the binary vectors</span>
+<span class="sd">    and :math:`m_i` and :math:`m_j` their respective averages. Then</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">         C[i,j] = &lt;b_i-m_i, b_j-m_j&gt; /</span>
+<span class="sd">                      \sqrt{&lt;b_i-m_i, b_i-m_i&gt;*&lt;b_j-m_j,b_j-m_j&gt;}</span>
+
+<span class="sd">    where &lt;..,.&gt; is the scalar product of two vectors.</span>
+
+<span class="sd">    For an input of n spike trains, a n x n matrix is returned.</span>
+<span class="sd">    Each entry in the matrix is a real number ranging between -1 (perfectly</span>
+<span class="sd">    anti-correlated spike trains) and +1 (perfectly correlated spike trains).</span>
+
+<span class="sd">    If binary is True, the binned spike trains are clipped to 0 or 1 before</span>
+<span class="sd">    computing the correlation coefficients, so that the binned vectors</span>
+<span class="sd">    :math:`b_i` and :math:`b_j` are binary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    binned_sts : elephant.conversion.BinnedSpikeTrain</span>
+<span class="sd">        A binned spike train containing the spike trains to be evaluated.</span>
+<span class="sd">    binary : bool, optional</span>
+<span class="sd">        If True, two spikes of a particular spike train falling in the same bin</span>
+<span class="sd">        are counted as 1, resulting in binary binned vectors :math:`b_i`. If</span>
+<span class="sd">        False, the binned vectors :math:`b_i` contain the spike counts per bin.</span>
+<span class="sd">        Default: False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C : ndarrray</span>
+<span class="sd">        The square matrix of correlation coefficients. The element</span>
+<span class="sd">        :math:`C[i,j]=C[j,i]` is the Pearson&#39;s correlation coefficient between</span>
+<span class="sd">        binned_sts[i] and binned_sts[j]. If binned_sts contains only one</span>
+<span class="sd">        SpikeTrain, C=1.0.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Generate two Poisson spike trains</span>
+
+<span class="sd">    &gt;&gt;&gt; from elephant.spike_train_generation import homogeneous_poisson_process</span>
+<span class="sd">    &gt;&gt;&gt; st1 = homogeneous_poisson_process(</span>
+<span class="sd">            rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+<span class="sd">    &gt;&gt;&gt; st2 = homogeneous_poisson_process(</span>
+<span class="sd">            rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+
+<span class="sd">    Calculate the correlation matrix.</span>
+
+<span class="sd">    &gt;&gt;&gt; from elephant.conversion import BinnedSpikeTrain</span>
+<span class="sd">    &gt;&gt;&gt; cc_matrix = corrcoef(BinnedSpikeTrain([st1, st2], binsize=5*ms))</span>
+
+<span class="sd">    The correlation coefficient between the spike trains is stored in</span>
+<span class="sd">    cc_matrix[0,1] (or cc_matrix[1,0]).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * The spike trains in the binned structure are assumed to all cover the</span>
+<span class="sd">      complete time span of binned_sts [t_start,t_stop).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">__calculate_correlation_or_covariance</span><span class="p">(</span></div>
+        <span class="n">binned_sts</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">corrcoef_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">__calculate_correlation_or_covariance</span><span class="p">(</span><span class="n">binned_sts</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">corrcoef_norm</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Helper function for covariance() and corrcoef() that performs the complete</span>
+<span class="sd">    calculation for either the covariance (corrcoef_norm=False) or correlation</span>
+<span class="sd">    coefficient (corrcoef_norm=True). Both calculations differ only by the</span>
+<span class="sd">    denominator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    binned_sts : elephant.conversion.BinnedSpikeTrain</span>
+<span class="sd">        See covariance() or corrcoef(), respectively.</span>
+<span class="sd">    binary : bool</span>
+<span class="sd">        See covariance() or corrcoef(), respectively.</span>
+<span class="sd">    corrcoef_norm : bool</span>
+<span class="sd">        Use normalization factor for the correlation coefficient rather than</span>
+<span class="sd">        for the covariance.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">num_neurons</span> <span class="o">=</span> <span class="n">binned_sts</span><span class="o">.</span><span class="n">matrix_rows</span>
+
+    <span class="c1"># Pre-allocate correlation matrix</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_neurons</span><span class="p">,</span> <span class="n">num_neurons</span><span class="p">))</span>
+
+    <span class="c1"># Retrieve unclipped matrix</span>
+    <span class="n">spmat</span> <span class="o">=</span> <span class="n">binned_sts</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span>
+
+    <span class="c1"># For each row, extract the nonzero column indices and the corresponding</span>
+    <span class="c1"># data in the matrix (for performance reasons)</span>
+    <span class="n">bin_idx_unique</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bin_counts_unique</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spmat</span><span class="p">:</span>
+            <span class="n">bin_idx_unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spmat</span><span class="p">:</span>
+            <span class="n">bin_counts_unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># All combinations of spike trains</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_neurons</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">num_neurons</span><span class="p">):</span>
+            <span class="c1"># Enumerator:</span>
+            <span class="c1"># $$ &lt;b_i-m_i, b_j-m_j&gt;</span>
+            <span class="c1">#      = &lt;b_i, b_j&gt; + l*m_i*m_j - &lt;b_i, M_j&gt; - &lt;b_j, M_i&gt;</span>
+            <span class="c1">#      =:    ij     + l*m_i*m_j - n_i * m_j  - n_j * m_i</span>
+            <span class="c1">#      =     ij     - n_i*n_j/l                         $$</span>
+            <span class="c1"># where $n_i$ is the spike count of spike train $i$,</span>
+            <span class="c1"># $l$ is the number of bins used (i.e., length of $b_i$ or $b_j$),</span>
+            <span class="c1"># and $M_i$ is a vector [m_i, m_i,..., m_i].</span>
+            <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+                <span class="c1"># Intersect indices to identify number of coincident spikes in</span>
+                <span class="c1"># i and j (more efficient than directly using the dot product)</span>
+                <span class="n">ij</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span>
+                    <span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+                <span class="c1"># Number of spikes in i and j</span>
+                <span class="n">n_i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">n_j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Calculate dot product b_i*b_j between unclipped matrices</span>
+                <span class="n">ij</span> <span class="o">=</span> <span class="n">spmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">spmat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Number of spikes in i and j</span>
+                <span class="n">n_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">n_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="n">enumerator</span> <span class="o">=</span> <span class="n">ij</span> <span class="o">-</span> <span class="n">n_i</span> <span class="o">*</span> <span class="n">n_j</span> <span class="o">/</span> <span class="n">binned_sts</span><span class="o">.</span><span class="n">num_bins</span>
+
+            <span class="c1"># Denominator:</span>
+            <span class="k">if</span> <span class="n">corrcoef_norm</span><span class="p">:</span>
+                <span class="c1"># Correlation coefficient</span>
+
+                <span class="c1"># Note:</span>
+                <span class="c1"># $$ &lt;b_i-m_i, b_i-m_i&gt;</span>
+                <span class="c1">#      = &lt;b_i, b_i&gt; + m_i^2 - 2 &lt;b_i, M_i&gt;</span>
+                <span class="c1">#      =:    ii     + m_i^2 - 2 n_i * m_i</span>
+                <span class="c1">#      =     ii     - n_i^2 /               $$</span>
+                <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+                    <span class="c1"># Here, b_i*b_i is just the number of filled bins (since</span>
+                    <span class="c1"># each filled bin of a clipped spike train has value equal</span>
+                    <span class="c1"># to 1)</span>
+                    <span class="n">ii</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">jj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_idx_unique</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># directly calculate the dot product based on the counts of</span>
+                    <span class="c1"># all filled entries (more efficient than using the dot</span>
+                    <span class="c1"># product of the rows of the sparse matrix)</span>
+                    <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">jj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">bin_counts_unique</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+                <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">ii</span> <span class="o">-</span> <span class="p">(</span><span class="n">n_i</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">binned_sts</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span> <span class="o">*</span>
+                    <span class="p">(</span><span class="n">jj</span> <span class="o">-</span> <span class="p">(</span><span class="n">n_j</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">binned_sts</span><span class="o">.</span><span class="n">num_bins</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Covariance</span>
+
+                <span class="c1"># $$ l-1 $$</span>
+                <span class="n">denominator</span> <span class="o">=</span> <span class="p">(</span><span class="n">binned_sts</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Fill entry of correlation matrix</span>
+            <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">enumerator</span> <span class="o">/</span> <span class="n">denominator</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cross_correlation_histogram"><a class="viewcode-back" href="../../reference/spike_train_correlation.html#elephant.spike_train_correlation.cross_correlation_histogram">[docs]</a><span class="k">def</span> <span class="nf">cross_correlation_histogram</span><span class="p">(</span>
+        <span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">border_correction</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;speed&#39;</span><span class="p">,</span> <span class="n">cross_corr_coef</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the cross-correlation histogram (CCH) between two binned spike</span>
+<span class="sd">    trains binned_st1 and binned_st2.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    binned_st1, binned_st2 : BinnedSpikeTrain</span>
+<span class="sd">        Binned spike trains to cross-correlate. The two spike trains must have</span>
+<span class="sd">        same t_start and t_stop</span>
+<span class="sd">    window : string or list (optional)</span>
+<span class="sd">        ‘full’: This returns the crosscorrelation at each point of overlap,</span>
+<span class="sd">        with an output shape of (N+M-1,). At the end-points of the</span>
+<span class="sd">        cross-correlogram, the signals do not overlap completely, and</span>
+<span class="sd">        boundary effects may be seen.</span>
+<span class="sd">        ‘valid’: Mode valid returns output of length max(M, N) - min(M, N) + 1.</span>
+<span class="sd">        The cross-correlation product is only given for points where the</span>
+<span class="sd">        signals overlap completely.</span>
+<span class="sd">        Values outside the signal boundary have no effect.</span>
+<span class="sd">        Default: &#39;full&#39;</span>
+<span class="sd">        list of integer of of quantities (window[0]=minimum, window[1]=maximum</span>
+<span class="sd">        lag): The  entries of window can be integer (number of bins) or</span>
+<span class="sd">        quantities (time units of the lag), in the second case they have to be</span>
+<span class="sd">        a multiple of the binsize</span>
+<span class="sd">        Default: &#39;Full&#39;</span>
+<span class="sd">    border_correction : bool (optional)</span>
+<span class="sd">        whether to correct for the border effect. If True, the value of the</span>
+<span class="sd">        CCH at bin b (for b=-H,-H+1, ...,H, where H is the CCH half-length)</span>
+<span class="sd">        is multiplied by the correction factor:</span>
+<span class="sd">                            (H+1)/(H+1-|b|),</span>
+<span class="sd">        which linearly corrects for loss of bins at the edges.</span>
+<span class="sd">        Default: False</span>
+<span class="sd">    binary : bool (optional)</span>
+<span class="sd">        whether to binary spikes from the same spike train falling in the</span>
+<span class="sd">        same bin. If True, such spikes are considered as a single spike;</span>
+<span class="sd">        otherwise they are considered as different spikes.</span>
+<span class="sd">        Default: False.</span>
+<span class="sd">    kernel : array or None (optional)</span>
+<span class="sd">        A one dimensional array containing an optional smoothing kernel applied</span>
+<span class="sd">        to the resulting CCH. The length N of the kernel indicates the</span>
+<span class="sd">        smoothing window. The smoothing window cannot be larger than the</span>
+<span class="sd">        maximum lag of the CCH. The kernel is normalized to unit area before</span>
+<span class="sd">        being applied to the resulting CCH. Popular choices for the kernel are</span>
+<span class="sd">          * normalized boxcar kernel: numpy.ones(N)</span>
+<span class="sd">          * hamming: numpy.hamming(N)</span>
+<span class="sd">          * hanning: numpy.hanning(N)</span>
+<span class="sd">          * bartlett: numpy.bartlett(N)</span>
+<span class="sd">        If None is specified, the CCH is not smoothed.</span>
+<span class="sd">        Default: None</span>
+<span class="sd">    method : string (optional)</span>
+<span class="sd">        Defines the algorithm to use. &quot;speed&quot; uses numpy.correlate to calculate</span>
+<span class="sd">        the correlation between two binned spike trains using a non-sparse data</span>
+<span class="sd">        representation. Due to various optimizations, it is the fastest</span>
+<span class="sd">        realization. In contrast, the option &quot;memory&quot; uses an own</span>
+<span class="sd">        implementation to calculate the correlation based on sparse matrices,</span>
+<span class="sd">        which is more memory efficient but slower than the &quot;speed&quot; option.</span>
+<span class="sd">        Default: &quot;speed&quot;</span>
+<span class="sd">    cross_corr_coef : bool (optional)</span>
+<span class="sd">        Normalizes the CCH to obtain the cross-correlation  coefficient </span>
+<span class="sd">        function ranging from -1 to 1 according to Equation (5.10) in </span>
+<span class="sd">        &quot;Analysis of parallel spike trains&quot;, 2010, Gruen &amp; Rotter, Vol 7</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cch : AnalogSignal</span>
+<span class="sd">        Containing the cross-correlation histogram between binned_st1 and binned_st2.</span>
+
+<span class="sd">        The central bin of the histogram represents correlation at zero</span>
+<span class="sd">        delay. Offset bins correspond to correlations at a delay equivalent</span>
+<span class="sd">        to the difference between the spike times of binned_st1 and those of binned_st2: an</span>
+<span class="sd">        entry at positive lags corresponds to a spike in binned_st2 following a</span>
+<span class="sd">        spike in binned_st1 bins to the right, and an entry at negative lags</span>
+<span class="sd">        corresponds to a spike in binned_st1 following a spike in binned_st2.</span>
+
+<span class="sd">        To illustrate this definition, consider the two spike trains:</span>
+<span class="sd">        binned_st1: 0 0 0 0 1 0 0 0 0 0 0</span>
+<span class="sd">        binned_st2: 0 0 0 0 0 0 0 1 0 0 0</span>
+<span class="sd">        Here, the CCH will have an entry of 1 at lag h=+3.</span>
+
+<span class="sd">        Consistent with the definition of AnalogSignals, the time axis</span>
+<span class="sd">        represents the left bin borders of each histogram bin. For example,</span>
+<span class="sd">        the time axis might be:</span>
+<span class="sd">        np.array([-2.5 -1.5 -0.5 0.5 1.5]) * ms</span>
+<span class="sd">    bin_ids : ndarray of int</span>
+<span class="sd">        Contains the IDs of the individual histogram bins, where the central</span>
+<span class="sd">        bin has ID 0, bins the left have negative IDs and bins to the right</span>
+<span class="sd">        have positive IDs, e.g.,:</span>
+<span class="sd">        np.array([-3, -2, -1, 0, 1, 2, 3])</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">        Plot the cross-correlation histogram between two Poisson spike trains</span>
+<span class="sd">        &gt;&gt;&gt; import elephant</span>
+<span class="sd">        &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">        &gt;&gt;&gt; import quantities as pq</span>
+
+<span class="sd">        &gt;&gt;&gt; binned_st1 = elephant.conversion.BinnedSpikeTrain(</span>
+<span class="sd">                elephant.spike_train_generation.homogeneous_poisson_process(</span>
+<span class="sd">                    10. * pq.Hz, t_start=0 * pq.ms, t_stop=5000 * pq.ms),</span>
+<span class="sd">                binsize=5. * pq.ms)</span>
+<span class="sd">        &gt;&gt;&gt; binned_st2 = elephant.conversion.BinnedSpikeTrain(</span>
+<span class="sd">                elephant.spike_train_generation.homogeneous_poisson_process(</span>
+<span class="sd">                    10. * pq.Hz, t_start=0 * pq.ms, t_stop=5000 * pq.ms),</span>
+<span class="sd">                binsize=5. * pq.ms)</span>
+
+<span class="sd">        &gt;&gt;&gt; cc_hist = elephant.spike_train_correlation.cross_correlation_histogram(</span>
+<span class="sd">                binned_st1, binned_st2, window=[-30,30],</span>
+<span class="sd">                border_correction=False,</span>
+<span class="sd">                binary=False, kernel=None, method=&#39;memory&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; plt.bar(</span>
+<span class="sd">                left=cc_hist[0].times.magnitude,</span>
+<span class="sd">                height=cc_hist[0][:, 0].magnitude,</span>
+<span class="sd">                width=cc_hist[0].sampling_period.magnitude)</span>
+<span class="sd">        &gt;&gt;&gt; plt.xlabel(&#39;time (&#39; + str(cc_hist[0].times.units) + &#39;)&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; plt.ylabel(&#39;cross-correlation histogram&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; plt.axis(&#39;tight&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; plt.show()</span>
+
+<span class="sd">    Alias</span>
+<span class="sd">    -----</span>
+<span class="sd">    cch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">def</span> <span class="nf">_cross_corr_coef</span><span class="p">(</span><span class="n">cch_result</span><span class="p">,</span> <span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">):</span>
+        <span class="c1"># Normalizes the CCH to obtain the cross-correlation </span>
+        <span class="c1"># coefficient function ranging from -1 to 1</span>
+        <span class="n">N</span>  <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span>
+        <span class="n">Nx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">spike_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">Ny</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">binned_st2</span><span class="o">.</span><span class="n">spike_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">spmat</span> <span class="o">=</span> <span class="p">[</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">(),</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()]</span>
+        <span class="n">bin_counts_unique</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spmat</span><span class="p">:</span>
+            <span class="n">bin_counts_unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bin_counts_unique</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">jj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bin_counts_unique</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bin_counts_unique</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">rho_xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">cch_result</span> <span class="o">-</span> <span class="n">Nx</span><span class="o">*</span><span class="n">Ny</span><span class="o">/</span><span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="p">(</span><span class="n">ii</span><span class="o">-</span><span class="n">Nx</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">jj</span><span class="o">-</span><span class="n">Ny</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">rho_xy</span>
+        
+        
+    <span class="k">def</span> <span class="nf">_border_correction</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">max_num_bins</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="c1"># Correct the values taking into account lacking contributes</span>
+        <span class="c1"># at the edges</span>
+        <span class="n">correction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_num_bins</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">max_num_bins</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">counts</span> <span class="o">*</span> <span class="n">correction</span>
+
+    <span class="k">def</span> <span class="nf">_kernel_smoothing</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">kern</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="c1"># Define the kern for smoothing as an ndarray</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kern</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;The length of the kernel cannot be larger than the &#39;</span>
+                    <span class="s1">&#39;length </span><span class="si">%d</span><span class="s1"> of the resulting CCH.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">kern</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">kern</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">*</span> <span class="n">kern</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">kern</span><span class="p">)</span>
+        <span class="c1"># Check kern parameter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid smoothing kernel.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Smooth the cross-correlation histogram with the kern</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">kern</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_cch_memory</span><span class="p">(</span><span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">,</span> <span class="n">win</span><span class="p">,</span> <span class="n">border_corr</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">kern</span><span class="p">):</span>
+
+        <span class="c1"># Retrieve unclipped matrix</span>
+        <span class="n">st1_spmat</span> <span class="o">=</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span>
+        <span class="n">st2_spmat</span> <span class="o">=</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">to_sparse_array</span><span class="p">()</span>
+        <span class="n">binsize</span> <span class="o">=</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span>
+        <span class="n">max_num_bins</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span>
+
+        <span class="c1"># Set the time window in which is computed the cch</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Window parameter given in number of bins (integer)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="c1"># Check the window parameter values</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">max_num_bins</span> \
+                        <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_num_bins</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The window exceeds the length of the spike trains&quot;</span><span class="p">)</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Window parameter given in time units</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check the window parameter values</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">%</span> \
+                    <span class="n">binsize</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+                        <span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">%</span> <span class="n">binsize</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The window has to be a multiple of the binsize&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">max_num_bins</span> <span class="o">*</span> <span class="n">binsize</span> \
+                        <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_num_bins</span> <span class="o">*</span> <span class="n">binsize</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The window exceeds the length of the&quot;</span>
+                                     <span class="s2">&quot; spike trains&quot;</span><span class="p">)</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span>
+        <span class="c1"># Case without explicit window parameter</span>
+        <span class="k">elif</span> <span class="n">window</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+            <span class="c1"># cch computed for all the possible entries</span>
+            <span class="c1"># Assign left and right edges of the cch</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="c1"># cch compute only for the entries that completely overlap</span>
+        <span class="k">elif</span> <span class="n">window</span> <span class="o">==</span> <span class="s1">&#39;valid&#39;</span><span class="p">:</span>
+            <span class="c1"># cch computed only for valid entries</span>
+            <span class="c1"># Assign left and right edges of the cch</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Check the mode parameter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid window parameter&quot;</span><span class="p">)</span>
+
+        <span class="c1"># For each row, extract the nonzero column indices</span>
+        <span class="c1"># and the corresponding # data in the matrix (for performance reasons)</span>
+        <span class="n">st1_bin_idx_unique</span> <span class="o">=</span> <span class="n">st1_spmat</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">st2_bin_idx_unique</span> <span class="o">=</span> <span class="n">st2_spmat</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Case with binary entries</span>
+        <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+            <span class="n">st1_bin_counts_unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">st1_spmat</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">st2_bin_counts_unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">st2_spmat</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="c1"># Case with all values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st1_bin_counts_unique</span> <span class="o">=</span> <span class="n">st1_spmat</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">st2_bin_counts_unique</span> <span class="o">=</span> <span class="n">st2_spmat</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="c1"># Initialize the counts to an array of zeroes,</span>
+        <span class="c1"># and the bin IDs to integers</span>
+        <span class="c1"># spanning the time axis</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Compute the CCH at lags in l,...,r only</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">st1_bin_idx_unique</span><span class="p">):</span>
+            <span class="n">il</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">st2_bin_idx_unique</span><span class="p">,</span> <span class="n">l</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">ir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">st2_bin_idx_unique</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+            <span class="n">timediff</span> <span class="o">=</span> <span class="n">st2_bin_idx_unique</span><span class="p">[</span><span class="n">il</span><span class="p">:</span><span class="n">ir</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span>
+            <span class="k">assert</span> <span class="p">((</span><span class="n">timediff</span> <span class="o">&gt;=</span> <span class="n">l</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">timediff</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">&#39;Not all the &#39;</span>
+            <span class="s1">&#39;entries of cch lie in the window&#39;</span>
+            <span class="n">counts</span><span class="p">[</span><span class="n">timediff</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">st1_bin_counts_unique</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span>
+                                             <span class="n">st2_bin_counts_unique</span><span class="p">[</span><span class="n">il</span><span class="p">:</span><span class="n">ir</span><span class="p">])</span>
+            <span class="n">st2_bin_idx_unique</span> <span class="o">=</span> <span class="n">st2_bin_idx_unique</span><span class="p">[</span><span class="n">il</span><span class="p">:]</span>
+            <span class="n">st2_bin_counts_unique</span> <span class="o">=</span> <span class="n">st2_bin_counts_unique</span><span class="p">[</span><span class="n">il</span><span class="p">:]</span>
+        <span class="c1"># Border correction</span>
+        <span class="k">if</span> <span class="n">border_corr</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">_border_correction</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">max_num_bins</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kern</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Smoothing</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">_kernel_smoothing</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">kern</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="c1"># Transform the array count into an AnalogSignal</span>
+        <span class="n">cch_result</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">signal</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="p">(</span><span class="n">bin_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span><span class="p">)</span>
+        <span class="c1"># Return only the hist_bins bins and counts before and after the</span>
+        <span class="c1"># central one</span>
+        <span class="k">return</span> <span class="n">cch_result</span><span class="p">,</span> <span class="n">bin_ids</span>
+
+    <span class="k">def</span> <span class="nf">_cch_speed</span><span class="p">(</span><span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">,</span> <span class="n">win</span><span class="p">,</span> <span class="n">border_corr</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">kern</span><span class="p">):</span>
+
+        <span class="c1"># Retrieve the array of the binne spik train</span>
+        <span class="n">st1_arr</span> <span class="o">=</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">to_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">st2_arr</span> <span class="o">=</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">to_array</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">binsize</span> <span class="o">=</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span>
+
+        <span class="c1"># Convert the to binary version</span>
+        <span class="k">if</span> <span class="n">binary</span><span class="p">:</span>
+            <span class="n">st1_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">st1_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">st2_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">st2_arr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">max_num_bins</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">st1_arr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st2_arr</span><span class="p">))</span>
+
+        <span class="c1"># Cross correlate the spiketrains</span>
+
+        <span class="c1"># Case explicit temporal window</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Window parameter given in number of bins (integer)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="c1"># Check the window parameter values</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">max_num_bins</span> \
+                        <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_num_bins</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The window exceed the length of the spike trains&quot;</span><span class="p">)</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">win</span>
+            <span class="c1"># Window parameter given in time units</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check the window parameter values</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">%</span> \
+                    <span class="n">binsize</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+                        <span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">%</span> <span class="n">binsize</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;The window has to be a multiple of the binsize&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">max_num_bins</span> <span class="o">*</span> <span class="n">binsize</span> \
+                        <span class="ow">or</span> <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">max_num_bins</span> <span class="o">*</span> <span class="n">binsize</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The window exceed the length of the&quot;</span>
+                                     <span class="s2">&quot; spike trains&quot;</span><span class="p">)</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">win</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">win</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">binsize</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span>
+
+            <span class="c1"># Zero padding</span>
+            <span class="n">st1_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+                <span class="n">st1_arr</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">l</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">])),</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
+            <span class="n">cch_mode</span> <span class="o">=</span> <span class="s1">&#39;valid&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Assign the edges of the cch for the different mode parameters</span>
+            <span class="k">if</span> <span class="n">win</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="c1"># cch compute only for the entries that completely overlap</span>
+            <span class="k">elif</span> <span class="n">win</span> <span class="o">==</span> <span class="s1">&#39;valid&#39;</span><span class="p">:</span>
+                <span class="c1"># Assign left and right edges of the cch</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">binned_st2</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">-</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">cch_mode</span> <span class="o">=</span> <span class="n">win</span>
+
+        <span class="c1"># Cross correlate the spike trains</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">st2_arr</span><span class="p">,</span> <span class="n">st1_arr</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">cch_mode</span><span class="p">)</span>
+        <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">l</span><span class="p">:</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Border correction</span>
+        <span class="k">if</span> <span class="n">border_corr</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">_border_correction</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">max_num_bins</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kern</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Smoothing</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">_kernel_smoothing</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">kern</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="c1"># Transform the array count into an AnalogSignal</span>
+        <span class="n">cch_result</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">signal</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="p">(</span><span class="n">bin_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span><span class="p">)</span>
+        <span class="c1"># Return only the hist_bins bins and counts before and after the</span>
+        <span class="c1"># central one</span>
+        <span class="k">return</span> <span class="n">cch_result</span><span class="p">,</span> <span class="n">bin_ids</span>
+
+    <span class="c1"># Check that the spike trains are binned with the same temporal</span>
+    <span class="c1"># resolution</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">matrix_rows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Spike train must be one dimensional&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">matrix_rows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Spike train must be one dimensional&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">binsize</span> <span class="o">==</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">binsize</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Bin sizes must be equal&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check t_start and t_stop identical (to drop once that the</span>
+    <span class="c1"># pad functionality wil be available in the BinnedSpikeTrain classe)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">t_start</span> <span class="o">==</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">t_start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Spike train must have same t start&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binned_st1</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">==</span> <span class="n">binned_st2</span><span class="o">.</span><span class="n">t_stop</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Spike train must have same t stop&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;memory&quot;</span><span class="p">:</span>
+        <span class="n">cch_result</span><span class="p">,</span> <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">_cch_memory</span><span class="p">(</span>
+            <span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">border_correction</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span>
+            <span class="n">kernel</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;speed&quot;</span><span class="p">:</span>
+
+        <span class="n">cch_result</span><span class="p">,</span> <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">_cch_speed</span><span class="p">(</span>
+            <span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">border_correction</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span>
+            <span class="n">kernel</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cross_corr_coef</span><span class="p">:</span>
+        <span class="n">cch_result</span> <span class="o">=</span> <span class="n">_cross_corr_coef</span><span class="p">(</span><span class="n">cch_result</span><span class="p">,</span> <span class="n">binned_st1</span><span class="p">,</span> <span class="n">binned_st2</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">cch_result</span><span class="p">,</span> <span class="n">bin_ids</span>
+
+<span class="c1"># Alias for common abbreviation</span>
+<span class="n">cch</span> <span class="o">=</span> <span class="n">cross_correlation_histogram</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

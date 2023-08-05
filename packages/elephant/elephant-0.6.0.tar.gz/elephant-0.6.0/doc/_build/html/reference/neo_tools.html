@@ -1,0 +1,246 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Utility functions to manipulate Neo objects &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bridge to the pandas library" href="pandas_bridge.html" />
+    <link rel="prev" title="Data format conversions" href="conversion.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pandas_bridge.html" title="Bridge to the pandas library"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="conversion.html" title="Data format conversions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="conversion.html"
+                        title="previous chapter">Data format conversions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pandas_bridge.html"
+                        title="next chapter">Bridge to the pandas library</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/neo_tools.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.neo_tools">
+<span id="utility-functions-to-manipulate-neo-objects"></span><h1>Utility functions to manipulate Neo objects<a class="headerlink" href="#module-elephant.neo_tools" title="Permalink to this headline">¶</a></h1>
+<p>Tools to manipulate Neo objects.</p>
+<dl class="function">
+<dt id="elephant.neo_tools.extract_neo_attrs">
+<code class="descclassname">elephant.neo_tools.</code><code class="descname">extract_neo_attrs</code><span class="sig-paren">(</span><em>obj</em>, <em>parents=True</em>, <em>child_first=True</em>, <em>skip_array=False</em>, <em>skip_none=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/neo_tools.html#extract_neo_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.neo_tools.extract_neo_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a neo object, return a dictionary of attributes and annotations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obj</strong> : neo object</p>
+<p><strong>parents</strong> : bool, optional</p>
+<blockquote>
+<div><p>Also include attributes and annotations from parent neo
+objects (if any).</p>
+</div></blockquote>
+<p><strong>child_first</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True (default True), values of child attributes are used
+over parent attributes in the event of a name conflict.
+If False, parent attributes are used.
+This parameter does nothing if <cite>parents</cite> is False.</p>
+</div></blockquote>
+<p><strong>skip_array</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True (default False), skip attributes that store non-scalar
+array values.</p>
+</div></blockquote>
+<p><strong>skip_none</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True (default False), skip annotations and attributes that
+have a value of <cite>None</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
+<blockquote class="last">
+<div><p>A dictionary where the keys are annotations or attribute names and
+the values are the corresponding annotation or attribute value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.neo_tools.get_all_epochs">
+<code class="descclassname">elephant.neo_tools.</code><code class="descname">get_all_epochs</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/neo_tools.html#get_all_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.neo_tools.get_all_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all <cite>neo.Epoch</cite> objects from a container.</p>
+<p>The objects can be any list, dict, or other iterable or mapping containing
+epochs, as well as any neo object that can hold epochs:
+<cite>neo.Block</cite> and <cite>neo.Segment</cite>.</p>
+<p>Containers are searched recursively, so the objects can be nested
+(such as a list of blocks).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>container</strong> : list, tuple, iterable, dict, neo Block, neo Segment</p>
+<blockquote>
+<div><p>The container for the epochs.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>A list of the unique <cite>neo.Epoch</cite> objects in <cite>container</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.neo_tools.get_all_events">
+<code class="descclassname">elephant.neo_tools.</code><code class="descname">get_all_events</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/neo_tools.html#get_all_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.neo_tools.get_all_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all <cite>neo.Event</cite> objects from a container.</p>
+<p>The objects can be any list, dict, or other iterable or mapping containing
+events, as well as any neo object that can hold events:
+<cite>neo.Block</cite> and <cite>neo.Segment</cite>.</p>
+<p>Containers are searched recursively, so the objects can be nested
+(such as a list of blocks).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>container</strong> : list, tuple, iterable, dict, neo Block, neo Segment</p>
+<blockquote>
+<div><p>The container for the events.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>A list of the unique <cite>neo.Event</cite> objects in <cite>container</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.neo_tools.get_all_spiketrains">
+<code class="descclassname">elephant.neo_tools.</code><code class="descname">get_all_spiketrains</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/neo_tools.html#get_all_spiketrains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.neo_tools.get_all_spiketrains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all <cite>neo.Spiketrain</cite> objects from a container.</p>
+<p>The objects can be any list, dict, or other iterable or mapping containing
+spiketrains, as well as any neo object that can hold spiketrains:
+<cite>neo.Block</cite>, <cite>neo.ChannelIndex</cite>, <cite>neo.Unit</cite>, and <cite>neo.Segment</cite>.</p>
+<p>Containers are searched recursively, so the objects can be nested
+(such as a list of blocks).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>container</strong> : list, tuple, iterable, dict,</p>
+<blockquote>
+<div><p>neo Block, neo Segment, neo Unit, neo ChannelIndex
+The container for the spiketrains.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>A list of the unique <cite>neo.SpikeTrain</cite> objects in <cite>container</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pandas_bridge.html" title="Bridge to the pandas library"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="conversion.html" title="Data format conversions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

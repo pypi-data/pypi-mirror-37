@@ -1,0 +1,418 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.signal_processing &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.signal_processing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Basic processing procedures for analog signals (e.g., performing a z-score of a</span>
+<span class="sd">signal, or filtering a signal).</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+
+
+<div class="viewcode-block" id="zscore"><a class="viewcode-back" href="../../reference/signal_processing.html#elephant.signal_processing.zscore">[docs]</a><span class="k">def</span> <span class="nf">zscore</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply a z-score operation to one or several AnalogSignal objects.</span>
+
+<span class="sd">    The z-score operation subtracts the mean :math:`\\mu` of the signal, and</span>
+<span class="sd">    divides by its standard deviation :math:`\\sigma`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">         Z(x(t))= \\frac{x(t)-\\mu}{\\sigma}</span>
+
+<span class="sd">    If an AnalogSignal containing multiple signals is provided, the</span>
+<span class="sd">    z-transform is always calculated for each signal individually.</span>
+
+<span class="sd">    If a list of AnalogSignal objects is supplied, the mean and standard</span>
+<span class="sd">    deviation are calculated across all objects of the list. Thus, all list</span>
+<span class="sd">    elements are z-transformed by the same values of :math:`\\mu` and</span>
+<span class="sd">    :math:`\\sigma`. For AnalogSignals, each signal of the array is</span>
+<span class="sd">    treated separately across list elements. Therefore, the number of signals</span>
+<span class="sd">    must be identical for each AnalogSignal of the list.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signal : neo.AnalogSignal or list of neo.AnalogSignal</span>
+<span class="sd">        Signals for which to calculate the z-score.</span>
+<span class="sd">    inplace : bool</span>
+<span class="sd">        If True, the contents of the input signal(s) is replaced by the</span>
+<span class="sd">        z-transformed signal. Otherwise, a copy of the original</span>
+<span class="sd">        AnalogSignal(s) is returned. Default: True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    neo.AnalogSignal or list of neo.AnalogSignal</span>
+<span class="sd">        The output format matches the input format: for each supplied</span>
+<span class="sd">        AnalogSignal object a corresponding object is returned containing</span>
+<span class="sd">        the z-transformed signal with the unit dimensionless.</span>
+
+<span class="sd">    Use Case</span>
+<span class="sd">    --------</span>
+<span class="sd">    You may supply a list of AnalogSignal objects, where each object in</span>
+<span class="sd">    the list contains the data of one trial of the experiment, and each signal</span>
+<span class="sd">    of the AnalogSignal corresponds to the recordings from one specific</span>
+<span class="sd">    electrode in a particular trial. In this scenario, you will z-transform the</span>
+<span class="sd">    signal of each electrode separately, but transform all trials of a given</span>
+<span class="sd">    electrode in the same way.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; a = neo.AnalogSignal(</span>
+<span class="sd">    ...       np.array([1, 2, 3, 4, 5, 6]).reshape(-1,1)*mV,</span>
+<span class="sd">    ...       t_start=0*s, sampling_rate=1000*Hz)</span>
+
+<span class="sd">    &gt;&gt;&gt; b = neo.AnalogSignal(</span>
+<span class="sd">    ...       np.transpose([[1, 2, 3, 4, 5, 6], [11, 12, 13, 14, 15, 16]])*mV,</span>
+<span class="sd">    ...       t_start=0*s, sampling_rate=1000*Hz)</span>
+
+<span class="sd">    &gt;&gt;&gt; c = neo.AnalogSignal(</span>
+<span class="sd">    ...       np.transpose([[21, 22, 23, 24, 25, 26], [31, 32, 33, 34, 35, 36]])*mV,</span>
+<span class="sd">    ...       t_start=0*s, sampling_rate=1000*Hz)</span>
+
+<span class="sd">    &gt;&gt;&gt; print zscore(a)</span>
+<span class="sd">    [[-1.46385011]</span>
+<span class="sd">     [-0.87831007]</span>
+<span class="sd">     [-0.29277002]</span>
+<span class="sd">     [ 0.29277002]</span>
+<span class="sd">     [ 0.87831007]</span>
+<span class="sd">     [ 1.46385011]] dimensionless</span>
+
+<span class="sd">    &gt;&gt;&gt; print zscore(b)</span>
+<span class="sd">    [[-1.46385011 -1.46385011]</span>
+<span class="sd">     [-0.87831007 -0.87831007]</span>
+<span class="sd">     [-0.29277002 -0.29277002]</span>
+<span class="sd">     [ 0.29277002  0.29277002]</span>
+<span class="sd">     [ 0.87831007  0.87831007]</span>
+<span class="sd">     [ 1.46385011  1.46385011]] dimensionless</span>
+
+<span class="sd">    &gt;&gt;&gt; print zscore([b,c])</span>
+<span class="sd">    [&lt;AnalogSignal(array([[-1.11669108, -1.08361877],</span>
+<span class="sd">       [-1.0672076 , -1.04878252],</span>
+<span class="sd">       [-1.01772411, -1.01394628],</span>
+<span class="sd">       [-0.96824063, -0.97911003],</span>
+<span class="sd">       [-0.91875714, -0.94427378],</span>
+<span class="sd">       [-0.86927366, -0.90943753]]) * dimensionless, [0.0 s, 0.006 s],</span>
+<span class="sd">       sampling rate: 1000.0 Hz)&gt;,</span>
+<span class="sd">       &lt;AnalogSignal(array([[ 0.78170952,  0.84779261],</span>
+<span class="sd">       [ 0.86621866,  0.90728682],</span>
+<span class="sd">       [ 0.9507278 ,  0.96678104],</span>
+<span class="sd">       [ 1.03523694,  1.02627526],</span>
+<span class="sd">       [ 1.11974608,  1.08576948],</span>
+<span class="sd">       [ 1.20425521,  1.1452637 ]]) * dimensionless, [0.0 s, 0.006 s],</span>
+<span class="sd">       sampling rate: 1000.0 Hz)&gt;]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Transform input to a list</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="p">[</span><span class="n">signal</span><span class="p">]</span>
+
+    <span class="c1"># Calculate mean and standard deviation</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">signal</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">signal</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
+        <span class="c1"># Create new signal instance</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signal</span><span class="p">:</span>
+            <span class="n">sig_dimless</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">duplicate_with_new_array</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">-</span> <span class="n">m</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">sig</span><span class="o">.</span><span class="n">units</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig_dimless</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Overwrite signal</span>
+        <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signal</span><span class="p">:</span>
+            <span class="n">sig</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">-</span> <span class="n">m</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">sig</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="n">sig_dimless</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">/</span> <span class="n">sig</span><span class="o">.</span><span class="n">units</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig_dimless</span><span class="p">)</span>
+    <span class="c1"># Return single object, or list of objects</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span></div>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="butter"><a class="viewcode-back" href="../../reference/signal_processing.html#elephant.signal_processing.butter">[docs]</a><span class="k">def</span> <span class="nf">butter</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">highpass_freq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lowpass_freq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+           <span class="n">filter_function</span><span class="o">=</span><span class="s1">&#39;filtfilt&#39;</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Butterworth filtering function for neo.AnalogSignal. Filter type is</span>
+<span class="sd">    determined according to how values of `highpass_freq` and `lowpass_freq`</span>
+<span class="sd">    are given (see Parameters section for details).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    signal : AnalogSignal or Quantity array or NumPy ndarray</span>
+<span class="sd">        Time series data to be filtered. When given as Quantity array or NumPy</span>
+<span class="sd">        ndarray, the sampling frequency should be given through the keyword</span>
+<span class="sd">        argument `fs`.</span>
+<span class="sd">    highpass_freq, lowpass_freq : Quantity or float</span>
+<span class="sd">        High-pass and low-pass cut-off frequencies, respectively. When given as</span>
+<span class="sd">        float, the given value is taken as frequency in Hz.</span>
+<span class="sd">        Filter type is determined depending on values of these arguments:</span>
+<span class="sd">            * highpass_freq only (lowpass_freq = None):    highpass filter</span>
+<span class="sd">            * lowpass_freq only (highpass_freq = None):    lowpass filter</span>
+<span class="sd">            * highpass_freq &lt; lowpass_freq:    bandpass filter</span>
+<span class="sd">            * highpass_freq &gt; lowpass_freq:    bandstop filter</span>
+<span class="sd">    order : int</span>
+<span class="sd">        Order of Butterworth filter. Default is 4.</span>
+<span class="sd">    filter_function : string</span>
+<span class="sd">        Filtering function to be used. Either &#39;filtfilt&#39;</span>
+<span class="sd">        (`scipy.signal.filtfilt()`) or &#39;lfilter&#39; (`scipy.signal.lfilter()`). In</span>
+<span class="sd">        most applications &#39;filtfilt&#39; should be used, because it doesn&#39;t bring</span>
+<span class="sd">        about phase shift due to filtering. Default is &#39;filtfilt&#39;.</span>
+<span class="sd">    fs : Quantity or float</span>
+<span class="sd">        The sampling frequency of the input time series. When given as float,</span>
+<span class="sd">        its value is taken as frequency in Hz. When the input is given as neo</span>
+<span class="sd">        AnalogSignal, its attribute is used to specify the sampling</span>
+<span class="sd">        frequency and this parameter is ignored. Default is 1.0.</span>
+<span class="sd">    axis : int</span>
+<span class="sd">        Axis along which filter is applied. Default is -1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filtered_signal : AnalogSignal or Quantity array or NumPy ndarray</span>
+<span class="sd">        Filtered input data. The shape and type is identical to those of the</span>
+<span class="sd">        input.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_design_butterworth_filter</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">hpfreq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lpfreq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="c1"># set parameters for filter design</span>
+        <span class="n">Fn</span> <span class="o">=</span> <span class="n">Fs</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="c1"># - filter type is determined according to the values of cut-off</span>
+        <span class="c1"># frequencies</span>
+        <span class="k">if</span> <span class="n">lpfreq</span> <span class="ow">and</span> <span class="n">hpfreq</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hpfreq</span> <span class="o">&lt;</span> <span class="n">lpfreq</span><span class="p">:</span>
+                <span class="n">Wn</span> <span class="o">=</span> <span class="p">(</span><span class="n">hpfreq</span> <span class="o">/</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">lpfreq</span> <span class="o">/</span> <span class="n">Fn</span><span class="p">)</span>
+                <span class="n">btype</span> <span class="o">=</span> <span class="s1">&#39;bandpass&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Wn</span> <span class="o">=</span> <span class="p">(</span><span class="n">lpfreq</span> <span class="o">/</span> <span class="n">Fn</span><span class="p">,</span> <span class="n">hpfreq</span> <span class="o">/</span> <span class="n">Fn</span><span class="p">)</span>
+                <span class="n">btype</span> <span class="o">=</span> <span class="s1">&#39;bandstop&#39;</span>
+        <span class="k">elif</span> <span class="n">lpfreq</span><span class="p">:</span>
+            <span class="n">Wn</span> <span class="o">=</span> <span class="n">lpfreq</span> <span class="o">/</span> <span class="n">Fn</span>
+            <span class="n">btype</span> <span class="o">=</span> <span class="s1">&#39;lowpass&#39;</span>
+        <span class="k">elif</span> <span class="n">hpfreq</span><span class="p">:</span>
+            <span class="n">Wn</span> <span class="o">=</span> <span class="n">hpfreq</span> <span class="o">/</span> <span class="n">Fn</span>
+            <span class="n">btype</span> <span class="o">=</span> <span class="s1">&#39;highpass&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Either highpass_freq or lowpass_freq must be given&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># return filter coefficients</span>
+        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">Wn</span><span class="p">,</span> <span class="n">btype</span><span class="o">=</span><span class="n">btype</span><span class="p">)</span>
+
+    <span class="c1"># design filter</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> \
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s1">&#39;sampling_rate&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">fs</span>
+    <span class="n">Fh</span> <span class="o">=</span> <span class="n">highpass_freq</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> \
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">highpass_freq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">highpass_freq</span>
+    <span class="n">Fl</span> <span class="o">=</span> <span class="n">lowpass_freq</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> \
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lowpass_freq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">lowpass_freq</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">_design_butterworth_filter</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">Fh</span><span class="p">,</span> <span class="n">Fl</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+
+    <span class="c1"># When the input is AnalogSignal, the axis for time index (i.e. the</span>
+    <span class="c1"># first axis) needs to be rolled to the last</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="c1"># apply filter</span>
+    <span class="k">if</span> <span class="n">filter_function</span> <span class="ow">is</span> <span class="s1">&#39;lfilter&#39;</span><span class="p">:</span>
+        <span class="n">filtered_data</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">lfilter</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filter_function</span> <span class="ow">is</span> <span class="s1">&#39;filtfilt&#39;</span><span class="p">:</span>
+        <span class="n">filtered_data</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;filter_func must to be either &#39;filtfilt&#39; or &#39;lfilter&#39;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">signal</span><span class="o">.</span><span class="n">duplicate_with_new_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">filtered_data</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">filtered_data</span> <span class="o">*</span> <span class="n">signal</span><span class="o">.</span><span class="n">units</span>
+    <span class="k">else</span><span class="p">:</span></div>
+        <span class="k">return</span> <span class="n">filtered_data</span>
+
+
+<div class="viewcode-block" id="hilbert"><a class="viewcode-back" href="../../reference/signal_processing.html#elephant.signal_processing.hilbert">[docs]</a><span class="k">def</span> <span class="nf">hilbert</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="s1">&#39;nextpow&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply a Hilbert transform to an AnalogSignal object in order to obtain its</span>
+<span class="sd">    (complex) analytic signal.</span>
+
+<span class="sd">    The time series of the instantaneous angle and amplitude can be obtained as</span>
+<span class="sd">    the angle (np.angle) and absolute value (np.abs) of the complex analytic</span>
+<span class="sd">    signal, respectively.</span>
+
+<span class="sd">    By default, the function will zero-pad the signal to a length corresponding</span>
+<span class="sd">    to the next higher power of 2. This will provide higher computational</span>
+<span class="sd">    efficiency at the expense of memory. In addition, this circumvents a</span>
+<span class="sd">    situation where for some specific choices of the length of the input,</span>
+<span class="sd">    scipy.signal.hilbert() will not terminate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    signal : neo.AnalogSignal</span>
+<span class="sd">        Signal(s) to transform</span>
+<span class="sd">    N : string or int</span>
+<span class="sd">        Defines whether the signal is zero-padded.</span>
+<span class="sd">            &#39;none&#39;: no padding</span>
+<span class="sd">            &#39;nextpow&#39;:  zero-pad to the next length that is a power of 2</span>
+<span class="sd">            int: directly specify the length to zero-pad to (indicates the</span>
+<span class="sd">                number of Fourier components, see parameter N of</span>
+<span class="sd">                scipy.signal.hilbert()).</span>
+<span class="sd">        Default: &#39;nextpow&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    neo.AnalogSignal</span>
+<span class="sd">        Contains the complex analytic signal(s) corresponding to the input</span>
+<span class="sd">        signals. The unit of the analytic signal is dimensionless.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    Create a sine signal at 5 Hz with increasing amplitude and calculate the</span>
+<span class="sd">    instantaneous phases</span>
+
+<span class="sd">    &gt;&gt;&gt; t = np.arange(0, 5000) * ms</span>
+<span class="sd">    &gt;&gt;&gt; f = 5. * Hz</span>
+<span class="sd">    &gt;&gt;&gt; a = neo.AnalogSignal(</span>
+<span class="sd">    ...       np.array(</span>
+<span class="sd">    ...           (1 + t.magnitude / t[-1].magnitude) * np.sin(</span>
+<span class="sd">    ...               2. * np.pi * f * t.rescale(s))).reshape((-1,1))*mV,</span>
+<span class="sd">    ...       t_start=0*s, sampling_rate=1000*Hz)</span>
+
+<span class="sd">    &gt;&gt;&gt; analytic_signal = hilbert(a, N=&#39;nextpow&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; angles = np.angle(analytic_signal)</span>
+<span class="sd">    &gt;&gt;&gt; amplitudes = np.abs(analytic_signal)</span>
+<span class="sd">    &gt;&gt;&gt; print angles</span>
+<span class="sd">            [[-1.57079633]</span>
+<span class="sd">             [-1.51334228]</span>
+<span class="sd">             [-1.46047675]</span>
+<span class="sd">             ...,</span>
+<span class="sd">             [-1.73112977]</span>
+<span class="sd">             [-1.68211683]</span>
+<span class="sd">             [-1.62879501]]</span>
+<span class="sd">    &gt;&gt;&gt; plt.plot(t,angles)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Length of input signals</span>
+    <span class="n">n_org</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Right-pad signal to desired length using the signal itself</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># User defined padding</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="k">elif</span> <span class="n">N</span> <span class="o">==</span> <span class="s1">&#39;nextpow&#39;</span><span class="p">:</span>
+        <span class="c1"># To speed up calculation of the Hilbert transform, make sure we change</span>
+        <span class="c1"># the signal to be of a length that is a power of two. Failure to do so</span>
+        <span class="c1"># results in computations of certain signal lengths to not finish (or</span>
+        <span class="c1"># finish in absurd time). This might be a bug in scipy (0.16), e.g.,</span>
+        <span class="c1"># the following code will not terminate for this value of k:</span>
+        <span class="c1">#</span>
+        <span class="c1"># import numpy</span>
+        <span class="c1"># import scipy.signal</span>
+        <span class="c1"># k=679346</span>
+        <span class="c1"># t = np.arange(0, k) / 1000.</span>
+        <span class="c1"># a = (1 + t / t[-1]) * np.sin(2 * np.pi * 5 * t)</span>
+        <span class="c1"># analytic_signal = scipy.signal.hilbert(a)</span>
+        <span class="c1">#</span>
+        <span class="c1"># For this reason, nextpow is the default setting for now.</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">n_org</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">N</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+        <span class="c1"># No padding</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n_org</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is an unknown N.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="n">output</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">duplicate_with_new_array</span><span class="p">(</span>
+        <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[:</span><span class="n">n_org</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">output</span> <span class="o">/</span> <span class="n">output</span><span class="o">.</span><span class="n">units</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

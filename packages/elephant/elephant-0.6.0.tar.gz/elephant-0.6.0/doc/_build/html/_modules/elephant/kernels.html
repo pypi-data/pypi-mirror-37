@@ -1,0 +1,609 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>elephant.kernels &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for elephant.kernels</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Definition of a hierarchy of classes for kernel functions to be used</span>
+<span class="sd">in convolution, e.g., for data smoothing (low pass filtering) or</span>
+<span class="sd">firing rate estimation.</span>
+
+<span class="sd">Examples of usage:</span>
+<span class="sd">    &gt;&gt;&gt; kernel1 = kernels.GaussianKernel(sigma=100*ms)</span>
+<span class="sd">    &gt;&gt;&gt; kernel2 = kernels.ExponentialKernel(sigma=8*mm, invert=True)</span>
+<span class="sd">    </span>
+<span class="sd">:copyright: Copyright 2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span>
+
+
+<div class="viewcode-block" id="inherit_docstring"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.inherit_docstring">[docs]</a><span class="k">def</span> <span class="nf">inherit_docstring</span><span class="p">(</span><span class="n">fromfunc</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator: Copy the docstring of `fromfunc`</span>
+
+<span class="sd">    based on:</span>
+<span class="sd">    http://stackoverflow.com/questions/13741998/</span>
+<span class="sd">    is-there-a-way-to-let-classes-inherit-the-documentation-of-their-superclass-with</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">parent_doc</span> <span class="o">=</span> <span class="n">fromfunc</span><span class="o">.</span><span class="n">__doc__</span>
+        <span class="k">if</span> <span class="n">func</span><span class="o">.</span><span class="n">__doc__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">parent_doc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">parent_doc</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">__doc__</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+    <span class="k">return</span> <span class="n">_decorator</span>
+
+
+<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the base class for commonly used kernels.</span>
+
+<span class="sd">    General definition of kernel:</span>
+<span class="sd">    A function :math:`K(x, y)` is called a kernel function if</span>
+<span class="sd">    :math:`\\int K(x, y) g(x) g(y)\\ \\textrm{d}x\\ \\textrm{d}y</span>
+<span class="sd">    \\ \\geq 0\\ \\ \\ \\forall\\ g \\in L_2`</span>
+
+<span class="sd">    Currently implemented kernels are:</span>
+<span class="sd">        - rectangular</span>
+<span class="sd">        - triangular</span>
+<span class="sd">        - epanechnikovlike</span>
+<span class="sd">        - gaussian</span>
+<span class="sd">        - laplacian</span>
+<span class="sd">        - exponential (asymmetric)</span>
+<span class="sd">        - alpha function (asymmetric)</span>
+
+<span class="sd">    In neuroscience a popular application of kernels is in performing smoothing</span>
+<span class="sd">    operations via convolution. In this case, the kernel has the properties of</span>
+<span class="sd">    a probability density, i.e., it is positive and normalized to one. Popular</span>
+<span class="sd">    choices are the rectangular or Gaussian kernels.</span>
+
+<span class="sd">    Exponential and alpha kernels may also be used to represent the postynaptic</span>
+<span class="sd">    current / potentials in a linear (current-based) model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sigma : Quantity scalar</span>
+<span class="sd">        Standard deviation of the kernel.</span>
+<span class="sd">    invert: bool, optional</span>
+<span class="sd">        If true, asymmetric kernels (e.g., exponential</span>
+<span class="sd">        or alpha kernels) are inverted along the time axis.</span>
+<span class="sd">        Default: False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;sigma must be a quantity!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">sigma</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;sigma cannot be negative!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">invert</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invert must be bool!&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invert</span> <span class="o">=</span> <span class="n">invert</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the kernel at all points in the array `t`.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        t : Quantity 1D</span>
+<span class="sd">            Interval on which the kernel is evaluated, not necessarily</span>
+<span class="sd">            a time interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            Quantity 1D</span>
+<span class="sd">            The result of the kernel evaluations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The argument of the kernel callable must be &quot;</span>
+                            <span class="s2">&quot;of type quantity!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The dimensionality of sigma and the input array &quot;</span>
+                            <span class="s2">&quot;to the callable kernel object must be the same. &quot;</span>
+                            <span class="s2">&quot;Otherwise a normalization to 1 of the kernel &quot;</span>
+                            <span class="s2">&quot;cannot be performed.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="c1"># A hidden variable _sigma_scaled is introduced here in order to avoid</span>
+        <span class="c1"># accumulation of floating point errors of sigma upon multiple</span>
+        <span class="c1"># usages of the __call__ - function for the same Kernel instance.</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the kernel.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        t : Quantity 1D</span>
+<span class="sd">            Interval on which the kernel is evaluated, not necessarily</span>
+<span class="sd">            a time interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            Quantity 1D</span>
+<span class="sd">            The result of the kernel evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The Kernel class should not be used directly, &quot;</span>
+                                  <span class="s2">&quot;instead the subclasses for the single kernels.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Kernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.Kernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the boundary :math:`b` so that the integral from</span>
+<span class="sd">        :math:`-b` to :math:`b` encloses a certain fraction of the</span>
+<span class="sd">        integral over the complete kernel. By definition the returned value</span>
+<span class="sd">        of the method boundary_enclosing_area_fraction is hence non-negative,</span>
+<span class="sd">        even if the whole probability mass of the kernel is concentrated over</span>
+<span class="sd">        negative support for inverted kernels.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        fraction : float</span>
+<span class="sd">            Fraction of the whole area which has to be enclosed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            Quantity scalar</span>
+<span class="sd">            Boundary of the kernel containing area `fraction` under the</span>
+<span class="sd">            kernel density.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+        <span class="n">sigma_division</span> <span class="o">=</span> <span class="mi">500</span>            <span class="c1"># arbitrary choice</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">/</span> <span class="n">sigma_division</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">area</span> <span class="o">&lt;</span> <span class="n">fraction</span><span class="p">:</span>
+            <span class="n">area</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">((</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">interval</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="n">counter</span> <span class="o">*</span> <span class="n">interval</span><span class="p">))</span> <span class="o">*</span> <span class="n">interval</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">area</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">interval</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">counter</span> <span class="o">*</span> <span class="n">interval</span><span class="p">))</span> <span class="o">*</span> <span class="n">interval</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">counter</span> <span class="o">&gt;</span> <span class="mi">250000</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fraction was chosen too close to one such &quot;</span>
+                                 <span class="s2">&quot;that in combination with integral &quot;</span>
+                                 <span class="s2">&quot;approximation errors the calculation of a &quot;</span>
+                                 <span class="s2">&quot;boundary was not possible.&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">counter</span> <span class="o">*</span> <span class="n">interval</span>
+
+    <span class="k">def</span> <span class="nf">_check_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the input variable of the method boundary_enclosing_area_fraction</span>
+<span class="sd">        for validity of type and value.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        fraction : float or int</span>
+<span class="sd">            Fraction of the area under the kernel function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;`fraction` must be float or integer!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">fraction</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fraction` must be in the interval [0, 1)!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Kernel.median_index"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.Kernel.median_index">[docs]</a>    <span class="k">def</span> <span class="nf">median_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimates the index of the Median of the kernel.</span>
+<span class="sd">        This parameter is not mandatory for symmetrical kernels but it is</span>
+<span class="sd">        required when asymmetrical kernels have to be aligned at their median.</span>
+
+<span class="sd">        Parameter</span>
+<span class="sd">        ---------</span>
+<span class="sd">        t : Quantity 1D</span>
+<span class="sd">            Interval on which the kernel is evaluated,</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            int</span>
+<span class="sd">            Index of the estimated value of the kernel median.</span>
+
+<span class="sd">        Remarks</span>
+<span class="sd">        -------</span>
+<span class="sd">        The formula in this method using retrieval of the sampling interval</span>
+<span class="sd">        from t only works for t with equidistant intervals!</span>
+<span class="sd">        The formula calculates the Median slightly wrong by the potentially</span>
+<span class="sd">        ignored probability in the distribution corresponding to lower values</span>
+<span class="sd">        than the minimum in the array t.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="bp">self</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">*</span></div>
+                          <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Kernel.is_symmetric"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.Kernel.is_symmetric">[docs]</a>    <span class="k">def</span> <span class="nf">is_symmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        In the case of symmetric kernels, this method is overwritten in the</span>
+<span class="sd">        class SymmetricKernel, where it returns &#39;True&#39;, hence leaving the</span>
+<span class="sd">        here returned value &#39;False&#39; for the asymmetric kernels.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="SymmetricKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.SymmetricKernel">[docs]</a><span class="k">class</span> <span class="nc">SymmetricKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">Kernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+<div class="viewcode-block" id="SymmetricKernel.is_symmetric"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.SymmetricKernel.is_symmetric">[docs]</a>    <span class="k">def</span> <span class="nf">is_symmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div></div>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="RectangularKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.RectangularKernel">[docs]</a><span class="k">class</span> <span class="nc">RectangularKernel</span><span class="p">(</span><span class="n">SymmetricKernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for rectangular kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\left\\{\\begin{array}{ll} \\frac{1}{2 \\tau}, &amp; |t| &lt; \\tau \\\\</span>
+<span class="sd">        0, &amp; |t| \\geq \\tau \\end{array} \\right.</span>
+
+<span class="sd">    with :math:`\\tau = \\sqrt{3} \\sigma` corresponding to the half width</span>
+<span class="sd">    of the kernel.</span>
+
+<span class="sd">    Besides the standard deviation `sigma`, for consistency of interfaces the</span>
+<span class="sd">    parameter `invert` needed for asymmetric kernels also exists without</span>
+<span class="sd">    having any effect in the case of symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">SymmetricKernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span> <span class="o">*</span> \
+               <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RectangularKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.RectangularKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">fraction</span>
+
+
+<div class="viewcode-block" id="TriangularKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.TriangularKernel">[docs]</a><span class="k">class</span> <span class="nc">TriangularKernel</span><span class="p">(</span><span class="n">SymmetricKernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for triangular kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\left\\{ \\begin{array}{ll} \\frac{1}{\\tau} (1</span>
+<span class="sd">        - \\frac{|t|}{\\tau}), &amp; |t| &lt; \\tau \\\\</span>
+<span class="sd">         0, &amp; |t| \\geq \\tau \\end{array} \\right.</span>
+
+<span class="sd">    with :math:`\\tau = \\sqrt{6} \\sigma` corresponding to the half width of </span>
+<span class="sd">    the kernel.</span>
+
+<span class="sd">    Besides the standard deviation `sigma`, for consistency of interfaces the</span>
+<span class="sd">    parameter `invert` needed for asymmetric kernels also exists without</span>
+<span class="sd">    having any effect in the case of symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">SymmetricKernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">/</span>
+                    <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TriangularKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.TriangularKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">6.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fraction</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="EpanechnikovLikeKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.EpanechnikovLikeKernel">[docs]</a><span class="k">class</span> <span class="nc">EpanechnikovLikeKernel</span><span class="p">(</span><span class="n">SymmetricKernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for epanechnikov-like kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\left\\{\\begin{array}{ll} (3 /(4 d)) (1 - (t / d)^2),</span>
+<span class="sd">        &amp; |t| &lt; d \\\\</span>
+<span class="sd">        0, &amp; |t| \\geq d \\end{array} \\right.</span>
+
+<span class="sd">    with :math:`d = \\sqrt{5} \\sigma` being the half width of the kernel.</span>
+
+<span class="sd">    The Epanechnikov kernel under full consideration of its axioms has a half</span>
+<span class="sd">    width of :math:`\\sqrt{5}`. Ignoring one axiom also the respective kernel</span>
+<span class="sd">    with half width = 1 can be called Epanechnikov kernel.</span>
+<span class="sd">    ( https://de.wikipedia.org/wiki/Epanechnikov-Kern )</span>
+<span class="sd">    However, arbitrary width of this type of kernel is here preferred to be</span>
+<span class="sd">    called &#39;Epanechnikov-like&#39; kernel.</span>
+
+<span class="sd">    Besides the standard deviation `sigma`, for consistency of interfaces the</span>
+<span class="sd">    parameter `invert` needed for asymmetric kernels also exists without</span>
+<span class="sd">    having any effect in the case of symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">SymmetricKernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EpanechnikovLikeKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.EpanechnikovLikeKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For Epanechnikov-like kernels, integration of its density within</span>
+<span class="sd">        the boundaries 0 and :math:`b`, and then solving for :math:`b` leads</span>
+<span class="sd">        to the problem of finding the roots of a polynomial of third order.</span>
+<span class="sd">        The implemented formulas are based on the solution of this problem</span>
+<span class="sd">        given in https://en.wikipedia.org/wiki/Cubic_function,</span>
+<span class="sd">        where the following 3 solutions are given:</span>
+<span class="sd">            - :math:`u_1 = 1`: Solution on negative side</span>
+<span class="sd">            - :math:`u_2 = \\frac{-1 + i\\sqrt{3}}{2}`: Solution for larger</span>
+<span class="sd">              values than zero crossing of the density</span>
+<span class="sd">            - :math:`u_3 = \\frac{-1 - i\\sqrt{3}}{2}`: Solution for smaller</span>
+<span class="sd">              values than zero crossing of the density</span>
+<span class="sd">        The solution :math:`u_3` is the relevant one for the problem at hand,</span>
+<span class="sd">        since it involves only positive area contributions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+        <span class="c1"># Python&#39;s complex-operator cannot handle quantities, hence the</span>
+        <span class="c1"># following construction on quantities is necessary:</span>
+        <span class="n">Delta_0</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">5.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">magnitude</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> \
+                  <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">units</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">Delta_1</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">fraction</span> <span class="o">/</span>
+                          <span class="p">(</span><span class="mf">25.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">magnitude</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> \
+                  <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">.</span><span class="n">units</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="p">((</span><span class="n">Delta_1</span> <span class="o">+</span> <span class="p">(</span><span class="n">Delta_1</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">Delta_0</span><span class="o">**</span><span class="mf">3.0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">/</span>
+             <span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+        <span class="n">u_3</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">u_3</span> <span class="o">*</span> <span class="n">C</span> <span class="o">+</span> <span class="n">Delta_0</span> <span class="o">/</span> <span class="p">(</span><span class="n">u_3</span> <span class="o">*</span> <span class="n">C</span><span class="p">))</span></div></div>
+        <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">real</span>
+
+
+<div class="viewcode-block" id="GaussianKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.GaussianKernel">[docs]</a><span class="k">class</span> <span class="nc">GaussianKernel</span><span class="p">(</span><span class="n">SymmetricKernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for gaussian kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = (\\frac{1}{\\sigma \\sqrt{2 \\pi}})</span>
+<span class="sd">        \\exp(-\\frac{t^2}{2 \\sigma^2})</span>
+
+<span class="sd">    with :math:`\\sigma` being the standard deviation.</span>
+
+<span class="sd">    Besides the standard deviation `sigma`, for consistency of interfaces the</span>
+<span class="sd">    parameter `invert` needed for asymmetric kernels also exists without</span>
+<span class="sd">    having any effect in the case of symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">SymmetricKernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="mf">3.0</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GaussianKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.GaussianKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">erfinv</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LaplacianKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.LaplacianKernel">[docs]</a><span class="k">class</span> <span class="nc">LaplacianKernel</span><span class="p">(</span><span class="n">SymmetricKernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for laplacian kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\frac{1}{2 \\tau} \\exp(-|\\frac{t}{\\tau}|)</span>
+
+<span class="sd">    with :math:`\\tau = \\sigma / \\sqrt{2}`.</span>
+
+<span class="sd">    Besides the standard deviation `sigma`, for consistency of interfaces the</span>
+<span class="sd">    parameter `invert` needed for asymmetric kernels also exists without</span>
+<span class="sd">    having any effect in the case of symmetric kernels.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">SymmetricKernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="mf">3.0</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LaplacianKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.LaplacianKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">fraction</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+
+
+<span class="c1"># Potential further symmetric kernels from Wiki Kernels (statistics):</span>
+<span class="c1"># Quartic (biweight), Triweight, Tricube, Cosine, Logistics, Silverman</span>
+
+
+<div class="viewcode-block" id="ExponentialKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.ExponentialKernel">[docs]</a><span class="k">class</span> <span class="nc">ExponentialKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for exponential kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\left\\{\\begin{array}{ll} (1 / \\tau) \\exp{(-t / \\tau)},</span>
+<span class="sd">        &amp; t &gt; 0 \\\\</span>
+<span class="sd">        0, &amp; t \\leq 0 \\end{array} \\right.</span>
+
+<span class="sd">    with :math:`\\tau = \\sigma`.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">Kernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="mf">3.0</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">*</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="o">-</span><span class="n">t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="o">.</span><span class="n">units</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">*</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="o">.</span><span class="n">units</span>
+        <span class="k">return</span> <span class="n">kernel</span>
+
+<div class="viewcode-block" id="ExponentialKernel.boundary_enclosing_area_fraction"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.ExponentialKernel.boundary_enclosing_area_fraction">[docs]</a>    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">boundary_enclosing_area_fraction</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">boundary_enclosing_area_fraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fraction</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fraction</span><span class="p">(</span><span class="n">fraction</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">fraction</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AlphaKernel"><a class="viewcode-back" href="../../reference/kernels.html#elephant.kernels.AlphaKernel">[docs]</a><span class="k">class</span> <span class="nc">AlphaKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for alpha kernels</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        K(t) = \\left\\{\\begin{array}{ll} (1 / \\tau^2)</span>
+<span class="sd">        \\ t\\ \\exp{(-t / \\tau)}, &amp; t &gt; 0 \\\\</span>
+<span class="sd">        0, &amp; t \\leq 0 \\end{array} \\right.</span>
+
+<span class="sd">    with :math:`\\tau = \\sigma / \\sqrt{2}`.</span>
+
+<span class="sd">    For the alpha kernel an analytical expression for the boundary of the</span>
+<span class="sd">    integral as a function of the area under the alpha kernel function</span>
+<span class="sd">    cannot be given. Hence in this case the value of the boundary is</span>
+<span class="sd">    determined by kernel-approximating numerical integration, inherited</span>
+<span class="sd">    from the Kernel class.</span>
+
+<span class="sd">    Derived from:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__doc__</span> <span class="o">+=</span> <span class="n">Kernel</span><span class="o">.</span><span class="n">__doc__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_cutoff</span> <span class="o">=</span> <span class="mf">3.0</span>
+        <span class="k">return</span> <span class="n">min_cutoff</span>
+
+    <span class="nd">@inherit_docstring</span><span class="p">(</span><span class="n">Kernel</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span>
+                    <span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="o">.</span><span class="n">units</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert</span><span class="p">:</span>
+            <span class="n">kernel</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span>
+                    <span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma_scaled</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="o">.</span><span class="n">units</span></div>
+        <span class="k">return</span> <span class="n">kernel</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

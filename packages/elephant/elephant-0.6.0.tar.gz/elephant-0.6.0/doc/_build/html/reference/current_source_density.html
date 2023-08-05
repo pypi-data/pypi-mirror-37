@@ -1,0 +1,274 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Current source density analysis &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Kernels" href="kernels.html" />
+    <link rel="prev" title="Spectral analysis" href="spectral.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kernels.html" title="Kernels"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="spectral.html" title="Spectral analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="spectral.html"
+                        title="previous chapter">Spectral analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kernels.html"
+                        title="next chapter">Kernels</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/current_source_density.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.current_source_density">
+<span id="current-source-density-analysis"></span><h1>Current source density analysis<a class="headerlink" href="#module-elephant.current_source_density" title="Permalink to this headline">¶</a></h1>
+<p>‘Current Source Density analysis (CSD) is a class of methods of analysis of
+extracellular electric potentials recorded at multiple sites leading to
+estimates of current sources generating the measured potentials. It is usually
+applied to low-frequency part of the potential (called the Local Field
+Potential, LFP) and to simultaneous recordings or to recordings taken with
+fixed time reference to the onset of specific stimulus (Evoked Potentials)’
+(Definition by Prof.Daniel K. Wójcik for Encyclopedia of Computational
+Neuroscience)</p>
+<p>CSD is also called as Source Localization or Source Imaging in the EEG circles.
+Here are CSD methods for different types of electrode configurations.</p>
+<p>1D - laminar probe like electrodes.
+2D - Microelectrode Array like
+3D - UtahArray or multiple laminar probes.</p>
+<p>The following methods have been implemented so far</p>
+<p>1D - StandardCSD, DeltaiCSD, SplineiCSD, StepiCSD, KCSD1D
+2D - KCSD2D, MoIKCSD (Saline layer on top of slice)
+3D - KCSD3D</p>
+<p>Each of these methods listed have some advantages. The KCSD methods for
+instance can handle broken or irregular electrode configurations electrode</p>
+<p>Keywords: LFP; CSD; Multielectrode; Laminar electrode; Barrel cortex</p>
+<p>Citation Policy: See ./current_source_density_src/README.md</p>
+<p>Contributors to this  current source density estimation module are:
+Chaitanya Chintaluri(CC), Espen Hagen(EH) and Michał Czerwinski(MC).
+EH implemented the iCSD methods and StandardCSD
+CC implemented the kCSD methods, kCSD1D(MC and CC)
+CC and EH developed the interface to elephant.</p>
+<dl class="function">
+<dt id="elephant.current_source_density.estimate_csd">
+<code class="descclassname">elephant.current_source_density.</code><code class="descname">estimate_csd</code><span class="sig-paren">(</span><em>lfp</em>, <em>coords=None</em>, <em>method=None</em>, <em>process_estimate=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/current_source_density.html#estimate_csd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.current_source_density.estimate_csd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fuction call to compute the current source density (CSD) from extracellular
+potential recordings(local-field potentials - LFP) using laminar electrodes
+or multi-contact electrodes with 2D or 3D geometries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lfp</strong> : neo.AnalogSignal</p>
+<blockquote>
+<div><p>positions of electrodes can be added as neo.RecordingChannel
+coordinate or sent externally as a func argument (See coords)</p>
+</div></blockquote>
+<p><strong>coords</strong> : [Optional] corresponding spatial coordinates of the electrodes</p>
+<blockquote>
+<div><p>Defaults to None
+Otherwise looks for RecordingChannels coordinate</p>
+</div></blockquote>
+<p><strong>method</strong> : string</p>
+<blockquote>
+<div><p>Pick a method corresonding to the setup, in this implementation
+For Laminar probe style (1D), use ‘KCSD1D’ or ‘StandardCSD’,</p>
+<blockquote>
+<div><p>or ‘DeltaiCSD’ or ‘StepiCSD’ or ‘SplineiCSD’</p>
+</div></blockquote>
+<p>For MEA probe style (2D),  use ‘KCSD2D’, or ‘MoIKCSD’
+For array of laminar probes (3D), use ‘KCSD3D’
+Defaults to None</p>
+</div></blockquote>
+<p><strong>process_estimate</strong> : bool</p>
+<blockquote>
+<div><p>In the py_iCSD_toolbox this corresponds to the filter_csd -
+the parameters are passed as kwargs here ie., f_type and f_order
+In the kcsd methods this corresponds to cross_validate -
+the parameters are passed as kwargs here ie., lambdas and Rs
+Defaults to True</p>
+</div></blockquote>
+<p><strong>kwargs</strong> : parameters to each method</p>
+<blockquote>
+<div><p>The parameters corresponding to the method chosen
+See the documentation of the individual method
+Default is {} - picks the best parameters,</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Estimated CSD</p>
+<blockquote>
+<div><p>neo.AnalogSignal object
+annotated with the spatial coordinates</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>AttributeError</strong></p>
+<blockquote>
+<div><p>No units specified for electrode spatial coordinates</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>Invalid function arguments, wrong method name, or
+mismatching coordinates</p>
+</div></blockquote>
+<p><strong>TypeError</strong></p>
+<blockquote class="last">
+<div><p>Invalid cv_param argument passed</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.current_source_density.generate_lfp">
+<code class="descclassname">elephant.current_source_density.</code><code class="descname">generate_lfp</code><span class="sig-paren">(</span><em>csd_profile, ele_xx, ele_yy=None, ele_zz=None, xlims=[0.0, 1.0], ylims=[0.0, 1.0], zlims=[0.0, 1.0], res=50</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/current_source_density.html#generate_lfp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.current_source_density.generate_lfp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward modelling for the getting the potentials for testing CSD</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>csd_profile</strong> : fuction that computes True CSD profile</p>
+<blockquote>
+<div><p>Available options are (see ./csd/utility_functions.py)
+1D : gauss_1d_dipole
+2D : large_source_2D and small_source_2D
+3D : gauss_3d_dipole</p>
+</div></blockquote>
+<p><strong>ele_xx</strong> : np.array</p>
+<blockquote>
+<div><p>Positions of the x coordinates of the electrodes</p>
+</div></blockquote>
+<p><strong>ele_yy</strong> : np.array</p>
+<blockquote>
+<div><p>Positions of the y coordinates of the electrodes
+Defaults ot None, use in 2D or 3D cases only</p>
+</div></blockquote>
+<p><strong>ele_zz</strong> : np.array</p>
+<blockquote>
+<div><p>Positions of the z coordinates of the electrodes
+Defaults ot None, use in 3D case only</p>
+</div></blockquote>
+<p><strong>x_lims</strong> : [start, end]</p>
+<blockquote>
+<div><p>The starting spatial coordinate and the ending for integration
+Defaults to [0.,1.]</p>
+</div></blockquote>
+<p><strong>y_lims</strong> : [start, end]</p>
+<blockquote>
+<div><p>The starting spatial coordinate and the ending for integration
+Defaults to [0.,1.], use only in 2D and 3D case</p>
+</div></blockquote>
+<p><strong>z_lims</strong> : [start, end]</p>
+<blockquote>
+<div><p>The starting spatial coordinate and the ending for integration
+Defaults to [0.,1.], use only in 3D case</p>
+</div></blockquote>
+<p><strong>res</strong> : int</p>
+<blockquote>
+<div><p>The resolution of the integration
+Defaults to 50</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>LFP</strong> : neo.AnalogSignal object</p>
+<blockquote class="last">
+<div><p>The potentials created by the csd profile at the electrode positions
+The electrode postions are attached as RecordingChannel’s coordinate</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kernels.html" title="Kernels"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="spectral.html" title="Spectral analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

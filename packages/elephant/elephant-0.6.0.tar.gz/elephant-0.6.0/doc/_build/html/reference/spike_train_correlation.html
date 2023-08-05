@@ -1,0 +1,482 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spike train correlation &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Unitary Event (UE) Analysis" href="unitary_event_analysis.html" />
+    <link rel="prev" title="Spike-triggered average" href="sta.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="unitary_event_analysis.html" title="Unitary Event (UE) Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sta.html" title="Spike-triggered average"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sta.html"
+                        title="previous chapter">Spike-triggered average</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="unitary_event_analysis.html"
+                        title="next chapter">Unitary Event (UE) Analysis</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/spike_train_correlation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spike-train-correlation">
+<h1>Spike train correlation<a class="headerlink" href="#spike-train-correlation" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-elephant.spike_train_correlation"></span><p>This modules provides functions to calculate correlations between spike trains.</p>
+<dl class="function">
+<dt id="elephant.spike_train_correlation.cch">
+<code class="descclassname">elephant.spike_train_correlation.</code><code class="descname">cch</code><span class="sig-paren">(</span><em>binned_st1</em>, <em>binned_st2</em>, <em>window='full'</em>, <em>border_correction=False</em>, <em>binary=False</em>, <em>kernel=None</em>, <em>method='speed'</em>, <em>cross_corr_coef=False</em><span class="sig-paren">)</span><a class="headerlink" href="#elephant.spike_train_correlation.cch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cross-correlation histogram (CCH) between two binned spike
+trains binned_st1 and binned_st2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>binned_st1, binned_st2</strong> : BinnedSpikeTrain</p>
+<blockquote>
+<div><p>Binned spike trains to cross-correlate. The two spike trains must have
+same t_start and t_stop</p>
+</div></blockquote>
+<p><strong>window</strong> : string or list (optional)</p>
+<blockquote>
+<div><p>‘full’: This returns the crosscorrelation at each point of overlap,
+with an output shape of (N+M-1,). At the end-points of the
+cross-correlogram, the signals do not overlap completely, and
+boundary effects may be seen.
+‘valid’: Mode valid returns output of length max(M, N) - min(M, N) + 1.
+The cross-correlation product is only given for points where the
+signals overlap completely.
+Values outside the signal boundary have no effect.
+Default: ‘full’
+list of integer of of quantities (window[0]=minimum, window[1]=maximum
+lag): The  entries of window can be integer (number of bins) or
+quantities (time units of the lag), in the second case they have to be
+a multiple of the binsize
+Default: ‘Full’</p>
+</div></blockquote>
+<p><strong>border_correction</strong> : bool (optional)</p>
+<blockquote>
+<div><p>whether to correct for the border effect. If True, the value of the
+CCH at bin b (for b=-H,-H+1, …,H, where H is the CCH half-length)
+is multiplied by the correction factor:</p>
+<blockquote>
+<div><p>(H+1)/(H+1-<a href="#id1"><span class="problematic" id="id2">|b|</span></a>),</p>
+</div></blockquote>
+<p>which linearly corrects for loss of bins at the edges.
+Default: False</p>
+</div></blockquote>
+<p><strong>binary</strong> : bool (optional)</p>
+<blockquote>
+<div><p>whether to binary spikes from the same spike train falling in the
+same bin. If True, such spikes are considered as a single spike;
+otherwise they are considered as different spikes.
+Default: False.</p>
+</div></blockquote>
+<p><strong>kernel</strong> : array or None (optional)</p>
+<blockquote>
+<div><p>A one dimensional array containing an optional smoothing kernel applied
+to the resulting CCH. The length N of the kernel indicates the
+smoothing window. The smoothing window cannot be larger than the
+maximum lag of the CCH. The kernel is normalized to unit area before
+being applied to the resulting CCH. Popular choices for the kernel are</p>
+<blockquote>
+<div><ul class="simple">
+<li>normalized boxcar kernel: numpy.ones(N)</li>
+<li>hamming: numpy.hamming(N)</li>
+<li>hanning: numpy.hanning(N)</li>
+<li>bartlett: numpy.bartlett(N)</li>
+</ul>
+</div></blockquote>
+<p>If None is specified, the CCH is not smoothed.
+Default: None</p>
+</div></blockquote>
+<p><strong>method</strong> : string (optional)</p>
+<blockquote>
+<div><p>Defines the algorithm to use. “speed” uses numpy.correlate to calculate
+the correlation between two binned spike trains using a non-sparse data
+representation. Due to various optimizations, it is the fastest
+realization. In contrast, the option “memory” uses an own
+implementation to calculate the correlation based on sparse matrices,
+which is more memory efficient but slower than the “speed” option.
+Default: “speed”</p>
+</div></blockquote>
+<p><strong>cross_corr_coef</strong> : bool (optional)</p>
+<blockquote>
+<div><p>Normalizes the CCH to obtain the cross-correlation  coefficient 
+function ranging from -1 to 1 according to Equation (5.10) in 
+“Analysis of parallel spike trains”, 2010, Gruen &amp; Rotter, Vol 7</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cch</strong> : AnalogSignal</p>
+<blockquote>
+<div><p>Containing the cross-correlation histogram between binned_st1 and binned_st2.</p>
+<p>The central bin of the histogram represents correlation at zero
+delay. Offset bins correspond to correlations at a delay equivalent
+to the difference between the spike times of binned_st1 and those of binned_st2: an
+entry at positive lags corresponds to a spike in binned_st2 following a
+spike in binned_st1 bins to the right, and an entry at negative lags
+corresponds to a spike in binned_st1 following a spike in binned_st2.</p>
+<p>To illustrate this definition, consider the two spike trains:
+binned_st1: 0 0 0 0 1 0 0 0 0 0 0
+binned_st2: 0 0 0 0 0 0 0 1 0 0 0
+Here, the CCH will have an entry of 1 at lag h=+3.</p>
+<p>Consistent with the definition of AnalogSignals, the time axis
+represents the left bin borders of each histogram bin. For example,
+the time axis might be:
+np.array([-2.5 -1.5 -0.5 0.5 1.5]) * ms</p>
+</div></blockquote>
+<p><strong>bin_ids</strong> : ndarray of int</p>
+<blockquote class="last">
+<div><p>Contains the IDs of the individual histogram bins, where the central
+bin has ID 0, bins the left have negative IDs and bins to the right
+have positive IDs, e.g.,:
+np.array([-3, -2, -1, 0, 1, 2, 3])</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spike_train_correlation.corrcoef">
+<code class="descclassname">elephant.spike_train_correlation.</code><code class="descname">corrcoef</code><span class="sig-paren">(</span><em>binned_sts</em>, <em>binary=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spike_train_correlation.html#corrcoef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spike_train_correlation.corrcoef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the NxN matrix of pairwise Pearson’s correlation coefficients
+between all combinations of N binned spike trains.</p>
+<p>For each pair of spike trains <img class="math" src="../_images/math/c07d7ddf20cb31710d4f0e8022b1822fc60ae9bc.png" alt="(i,j)"/>, the correlation coefficient
+<img class="math" src="../_images/math/1082c4969f62b5076632ea6a85f4db4467a765aa.png" alt="C[i,j]"/> is obtained by binning <img class="math" src="../_images/math/df0deb143e5ac127f00bd248ee8001ecae572adc.png" alt="i"/> and <img class="math" src="../_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/> at the
+desired bin size. Let <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> and <img class="math" src="../_images/math/5b52fcb06663d301b215366c4da9a066dbb42039.png" alt="b_j"/> denote the binary vectors
+and <img class="math" src="../_images/math/a9850fd3cf70d5ac90a474d257041fe9dcf965e7.png" alt="m_i"/> and <img class="math" src="../_images/math/afd1d18b958d1de3d2b40c935825bc8cff6c872b.png" alt="m_j"/> their respective averages. Then</p>
+<div class="math">
+<p><img src="../_images/math/67f627b395a5c7d1b7845b0b13769e0eb0c4ddd0.png" alt="C[i,j] = &lt;b_i-m_i, b_j-m_j&gt; /
+             \sqrt{&lt;b_i-m_i, b_i-m_i&gt;*&lt;b_j-m_j,b_j-m_j&gt;}"/></p>
+</div><p>where &lt;..,.&gt; is the scalar product of two vectors.</p>
+<p>For an input of n spike trains, a n x n matrix is returned.
+Each entry in the matrix is a real number ranging between -1 (perfectly
+anti-correlated spike trains) and +1 (perfectly correlated spike trains).</p>
+<p>If binary is True, the binned spike trains are clipped to 0 or 1 before
+computing the correlation coefficients, so that the binned vectors
+<img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> and <img class="math" src="../_images/math/5b52fcb06663d301b215366c4da9a066dbb42039.png" alt="b_j"/> are binary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>binned_sts</strong> : elephant.conversion.BinnedSpikeTrain</p>
+<blockquote>
+<div><p>A binned spike train containing the spike trains to be evaluated.</p>
+</div></blockquote>
+<p><strong>binary</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, two spikes of a particular spike train falling in the same bin
+are counted as 1, resulting in binary binned vectors <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/>. If
+False, the binned vectors <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> contain the spike counts per bin.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>C</strong> : ndarrray</p>
+<blockquote class="last">
+<div><p>The square matrix of correlation coefficients. The element
+<img class="math" src="../_images/math/38fa10cf56285072b5f41947f23e3a6cf15d49f8.png" alt="C[i,j]=C[j,i]"/> is the Pearson’s correlation coefficient between
+binned_sts[i] and binned_sts[j]. If binned_sts contains only one
+SpikeTrain, C=1.0.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>The spike trains in the binned structure are assumed to all cover the
+complete time span of binned_sts [t_start,t_stop).</li>
+</ul>
+<p class="rubric">Examples</p>
+<p>Generate two Poisson spike trains</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.spike_train_generation</span> <span class="k">import</span> <span class="n">homogeneous_poisson_process</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st1</span> <span class="o">=</span> <span class="n">homogeneous_poisson_process</span><span class="p">(</span>
+<span class="go">        rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st2</span> <span class="o">=</span> <span class="n">homogeneous_poisson_process</span><span class="p">(</span>
+<span class="go">        rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+</pre></div>
+</div>
+<p>Calculate the correlation matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.conversion</span> <span class="k">import</span> <span class="n">BinnedSpikeTrain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cc_matrix</span> <span class="o">=</span> <span class="n">corrcoef</span><span class="p">(</span><span class="n">BinnedSpikeTrain</span><span class="p">([</span><span class="n">st1</span><span class="p">,</span> <span class="n">st2</span><span class="p">],</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The correlation coefficient between the spike trains is stored in
+cc_matrix[0,1] (or cc_matrix[1,0]).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spike_train_correlation.covariance">
+<code class="descclassname">elephant.spike_train_correlation.</code><code class="descname">covariance</code><span class="sig-paren">(</span><em>binned_sts</em>, <em>binary=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spike_train_correlation.html#covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spike_train_correlation.covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the NxN matrix of pairwise covariances between all combinations
+of N binned spike trains.</p>
+<p>For each pair of spike trains <img class="math" src="../_images/math/c07d7ddf20cb31710d4f0e8022b1822fc60ae9bc.png" alt="(i,j)"/>, the covariance <img class="math" src="../_images/math/1082c4969f62b5076632ea6a85f4db4467a765aa.png" alt="C[i,j]"/>
+is obtained by binning <img class="math" src="../_images/math/df0deb143e5ac127f00bd248ee8001ecae572adc.png" alt="i"/> and <img class="math" src="../_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/> at the desired bin size. Let
+<img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> and <img class="math" src="../_images/math/5b52fcb06663d301b215366c4da9a066dbb42039.png" alt="b_j"/> denote the binary vectors and <img class="math" src="../_images/math/a9850fd3cf70d5ac90a474d257041fe9dcf965e7.png" alt="m_i"/> and
+<img class="math" src="../_images/math/afd1d18b958d1de3d2b40c935825bc8cff6c872b.png" alt="m_j"/> their respective averages. Then</p>
+<div class="math">
+<p><img src="../_images/math/55bfcfed2921e7917b0a93ea78cef9eddcb92b38.png" alt="C[i,j] = &lt;b_i-m_i, b_j-m_j&gt; / (l-1)"/></p>
+</div><p>where &lt;..,.&gt; is the scalar product of two vectors.</p>
+<p>For an input of n spike trains, a n x n matrix is returned containing the
+covariances for each combination of input spike trains.</p>
+<p>If binary is True, the binned spike trains are clipped to 0 or 1 before
+computing the covariance, so that the binned vectors <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> and
+<img class="math" src="../_images/math/5b52fcb06663d301b215366c4da9a066dbb42039.png" alt="b_j"/> are binary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>binned_sts</strong> : elephant.conversion.BinnedSpikeTrain</p>
+<blockquote>
+<div><p>A binned spike train containing the spike trains to be evaluated.</p>
+</div></blockquote>
+<p><strong>binary</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, two spikes of a particular spike train falling in the same bin
+are counted as 1, resulting in binary binned vectors <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/>. If
+False, the binned vectors <img class="math" src="../_images/math/37860764bf414a00477a945cc7f5876a67ae62c3.png" alt="b_i"/> contain the spike counts per bin.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>C</strong> : ndarrray</p>
+<blockquote class="last">
+<div><p>The square matrix of covariances. The element <img class="math" src="../_images/math/38fa10cf56285072b5f41947f23e3a6cf15d49f8.png" alt="C[i,j]=C[j,i]"/> is
+the covariance between binned_sts[i] and binned_sts[j].</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>The spike trains in the binned structure are assumed to all cover the
+complete time span of binned_sts [t_start,t_stop).</li>
+</ul>
+<p class="rubric">Examples</p>
+<p>Generate two Poisson spike trains</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.spike_train_generation</span> <span class="k">import</span> <span class="n">homogeneous_poisson_process</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st1</span> <span class="o">=</span> <span class="n">homogeneous_poisson_process</span><span class="p">(</span>
+<span class="go">        rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st2</span> <span class="o">=</span> <span class="n">homogeneous_poisson_process</span><span class="p">(</span>
+<span class="go">        rate=10.0*Hz, t_start=0.0*s, t_stop=10.0*s)</span>
+</pre></div>
+</div>
+<p>Calculate the covariance matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">elephant.conversion</span> <span class="k">import</span> <span class="n">BinnedSpikeTrain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">covariance</span><span class="p">(</span><span class="n">BinnedSpikeTrain</span><span class="p">([</span><span class="n">st1</span><span class="p">,</span> <span class="n">st2</span><span class="p">],</span> <span class="n">binsize</span><span class="o">=</span><span class="mi">5</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The covariance between the spike trains is stored in cc_matrix[0,1] (or
+cov_matrix[1,0]).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spike_train_correlation.cross_correlation_histogram">
+<code class="descclassname">elephant.spike_train_correlation.</code><code class="descname">cross_correlation_histogram</code><span class="sig-paren">(</span><em>binned_st1</em>, <em>binned_st2</em>, <em>window='full'</em>, <em>border_correction=False</em>, <em>binary=False</em>, <em>kernel=None</em>, <em>method='speed'</em>, <em>cross_corr_coef=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spike_train_correlation.html#cross_correlation_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spike_train_correlation.cross_correlation_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cross-correlation histogram (CCH) between two binned spike
+trains binned_st1 and binned_st2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>binned_st1, binned_st2</strong> : BinnedSpikeTrain</p>
+<blockquote>
+<div><p>Binned spike trains to cross-correlate. The two spike trains must have
+same t_start and t_stop</p>
+</div></blockquote>
+<p><strong>window</strong> : string or list (optional)</p>
+<blockquote>
+<div><p>‘full’: This returns the crosscorrelation at each point of overlap,
+with an output shape of (N+M-1,). At the end-points of the
+cross-correlogram, the signals do not overlap completely, and
+boundary effects may be seen.
+‘valid’: Mode valid returns output of length max(M, N) - min(M, N) + 1.
+The cross-correlation product is only given for points where the
+signals overlap completely.
+Values outside the signal boundary have no effect.
+Default: ‘full’
+list of integer of of quantities (window[0]=minimum, window[1]=maximum
+lag): The  entries of window can be integer (number of bins) or
+quantities (time units of the lag), in the second case they have to be
+a multiple of the binsize
+Default: ‘Full’</p>
+</div></blockquote>
+<p><strong>border_correction</strong> : bool (optional)</p>
+<blockquote>
+<div><p>whether to correct for the border effect. If True, the value of the
+CCH at bin b (for b=-H,-H+1, …,H, where H is the CCH half-length)
+is multiplied by the correction factor:</p>
+<blockquote>
+<div><p>(H+1)/(H+1-<a href="#id3"><span class="problematic" id="id4">|b|</span></a>),</p>
+</div></blockquote>
+<p>which linearly corrects for loss of bins at the edges.
+Default: False</p>
+</div></blockquote>
+<p><strong>binary</strong> : bool (optional)</p>
+<blockquote>
+<div><p>whether to binary spikes from the same spike train falling in the
+same bin. If True, such spikes are considered as a single spike;
+otherwise they are considered as different spikes.
+Default: False.</p>
+</div></blockquote>
+<p><strong>kernel</strong> : array or None (optional)</p>
+<blockquote>
+<div><p>A one dimensional array containing an optional smoothing kernel applied
+to the resulting CCH. The length N of the kernel indicates the
+smoothing window. The smoothing window cannot be larger than the
+maximum lag of the CCH. The kernel is normalized to unit area before
+being applied to the resulting CCH. Popular choices for the kernel are</p>
+<blockquote>
+<div><ul class="simple">
+<li>normalized boxcar kernel: numpy.ones(N)</li>
+<li>hamming: numpy.hamming(N)</li>
+<li>hanning: numpy.hanning(N)</li>
+<li>bartlett: numpy.bartlett(N)</li>
+</ul>
+</div></blockquote>
+<p>If None is specified, the CCH is not smoothed.
+Default: None</p>
+</div></blockquote>
+<p><strong>method</strong> : string (optional)</p>
+<blockquote>
+<div><p>Defines the algorithm to use. “speed” uses numpy.correlate to calculate
+the correlation between two binned spike trains using a non-sparse data
+representation. Due to various optimizations, it is the fastest
+realization. In contrast, the option “memory” uses an own
+implementation to calculate the correlation based on sparse matrices,
+which is more memory efficient but slower than the “speed” option.
+Default: “speed”</p>
+</div></blockquote>
+<p><strong>cross_corr_coef</strong> : bool (optional)</p>
+<blockquote>
+<div><p>Normalizes the CCH to obtain the cross-correlation  coefficient 
+function ranging from -1 to 1 according to Equation (5.10) in 
+“Analysis of parallel spike trains”, 2010, Gruen &amp; Rotter, Vol 7</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cch</strong> : AnalogSignal</p>
+<blockquote>
+<div><p>Containing the cross-correlation histogram between binned_st1 and binned_st2.</p>
+<p>The central bin of the histogram represents correlation at zero
+delay. Offset bins correspond to correlations at a delay equivalent
+to the difference between the spike times of binned_st1 and those of binned_st2: an
+entry at positive lags corresponds to a spike in binned_st2 following a
+spike in binned_st1 bins to the right, and an entry at negative lags
+corresponds to a spike in binned_st1 following a spike in binned_st2.</p>
+<p>To illustrate this definition, consider the two spike trains:
+binned_st1: 0 0 0 0 1 0 0 0 0 0 0
+binned_st2: 0 0 0 0 0 0 0 1 0 0 0
+Here, the CCH will have an entry of 1 at lag h=+3.</p>
+<p>Consistent with the definition of AnalogSignals, the time axis
+represents the left bin borders of each histogram bin. For example,
+the time axis might be:
+np.array([-2.5 -1.5 -0.5 0.5 1.5]) * ms</p>
+</div></blockquote>
+<p><strong>bin_ids</strong> : ndarray of int</p>
+<blockquote class="last">
+<div><p>Contains the IDs of the individual histogram bins, where the central
+bin has ID 0, bins the left have negative IDs and bins to the right
+have positive IDs, e.g.,:
+np.array([-3, -2, -1, 0, 1, 2, 3])</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="unitary_event_analysis.html" title="Unitary Event (UE) Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sta.html" title="Spike-triggered average"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

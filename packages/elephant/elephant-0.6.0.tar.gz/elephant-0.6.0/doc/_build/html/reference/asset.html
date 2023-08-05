@@ -1,0 +1,929 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Analysis of Sequences of Synchronous EvenTs (ASSET) &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Stochastic spike train generation" href="spike_train_generation.html" />
+    <link rel="prev" title="Cumulant Based Inference of higher-order Correlation (CuBIC)" href="cubic.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_generation.html" title="Stochastic spike train generation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cubic.html" title="Cumulant Based Inference of higher-order Correlation (CuBIC)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cubic.html"
+                        title="previous chapter">Cumulant Based Inference of higher-order Correlation (CuBIC)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spike_train_generation.html"
+                        title="next chapter">Stochastic spike train generation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/asset.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elephant.asset">
+<span id="analysis-of-sequences-of-synchronous-events-asset"></span><h1>Analysis of Sequences of Synchronous EvenTs (ASSET)<a class="headerlink" href="#module-elephant.asset" title="Permalink to this headline">¶</a></h1>
+<p>ASSET is a statistical method [1] for the detection of repeating sequences
+of synchronous spiking events in parallel spike trains.
+Given a list <cite>sts</cite> of spike trains, the analysis comprises the following
+steps:</p>
+<ol class="arabic">
+<li><p class="first">Build the intersection matrix <cite>imat</cite> (optional) and the associated
+probability matrix <cite>pmat</cite> with the desired bin size:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binsize</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">imat</span><span class="p">,</span> <span class="n">xedges</span><span class="p">,</span> <span class="n">yedges</span> <span class="o">=</span> <span class="n">intersection_matrix</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pmat</span><span class="p">,</span> <span class="n">xedges</span><span class="p">,</span> <span class="n">yedges</span> <span class="o">=</span> <span class="n">probability_matrix_analytical</span><span class="p">(</span>
+<span class="go">        sts, binsize, dt)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Compute the joint probability matrix jmat, using a suitable filter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filter_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># filter shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nr_neigh</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># nr of largest neighbors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jmat</span> <span class="o">=</span> <span class="n">joint_probability_matrix</span><span class="p">(</span><span class="n">pmat</span><span class="p">,</span> <span class="n">filter_shape</span><span class="p">,</span> <span class="n">nr_neigh</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create from pmat and jmat a masked version of the intersection matrix:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">alpha1</span> <span class="o">=</span> <span class="mf">0.99</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alpha2</span> <span class="o">=</span> <span class="mf">0.99999</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask_matrices</span><span class="p">([</span><span class="n">pmat</span><span class="p">,</span> <span class="n">jmat</span><span class="p">],</span> <span class="p">[</span><span class="n">alpha1</span><span class="p">,</span> <span class="n">alpha2</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Cluster significant elements of imat into diagonal structures (“DSs”):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">epsilon</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minsize</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stretch</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cmat</span> <span class="o">=</span> <span class="n">asset</span><span class="o">.</span><span class="n">cluster_matrix_entries</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">minsize</span><span class="p">,</span> <span class="n">stretch</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Extract sequences of synchronous events associated to each worm</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">extract_sse</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">x_edges</span><span class="p">,</span> <span class="n">y_edges</span><span class="p">,</span> <span class="n">cmat</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>References:</p>
+<p>[1] Torre, Canova, Denker, Gerstein, Helias, Gruen (submitted)</p>
+<dl class="function">
+<dt id="elephant.asset.cluster_matrix_entries">
+<code class="descclassname">elephant.asset.</code><code class="descname">cluster_matrix_entries</code><span class="sig-paren">(</span><em>mat</em>, <em>eps=10</em>, <em>min=2</em>, <em>stretch=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#cluster_matrix_entries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.cluster_matrix_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a matrix mat, replaces its positive elements with integers
+representing different cluster ids. Each cluster comprises close-by
+elements.</p>
+<p>In ASSET analysis, mat is a thresholded (“masked”) version of an
+intersection matrix imat, whose values are those of imat only if
+considered statistically significant, and zero otherwise.</p>
+<p>A cluster is built by pooling elements according to their distance,
+via the DBSCAN algorithm (see sklearn.cluster.dbscan()). Elements form
+a neighbourhood if at least one of them has a distance not larger than
+eps from the others, and if they are at least min. Overlapping
+neighborhoods form a cluster.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Clusters are assigned integers from 1 to the total number k of
+clusters</li>
+<li>Unclustered (“isolated”) positive elements of mat are
+assigned value -1</li>
+<li>Non-positive elements are assigned the value 0.</li>
+</ul>
+</div></blockquote>
+<p>The distance between the positions of two positive elements in mat is
+given by an Euclidean metric which is stretched if the two positions are
+not aligned along the 45 degree direction (the main diagonal direction),
+as more, with maximal stretching along the anti-diagonal. Specifically,
+the Euclidean distance between positions (i1, j1) and (i2, j2) is
+stretched by a factor</p>
+<div class="math">
+<p><img src="../_images/math/2a232f81bec58b8d725fbd48ba6a716eff80908d.png" alt="1 + (\mathtt{stretch} - 1.) *
+\left|\sin((\pi / 4) - \theta)\right|,"/></p>
+</div><p>where <img class="math" src="../_images/math/3be04d4207434584251f6921820c24ac9fa8c6f1.png" alt="\theta"/> is the angle between the pixels and the 45deg
+direction. The stretching factor thus varies between 1 and stretch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mat</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>a matrix whose elements with positive values are to be clustered.</p>
+</div></blockquote>
+<p><strong>eps</strong> : float &gt;=0, optional</p>
+<blockquote>
+<div><p>the maximum distance for two elements in mat to be part of the same
+neighbourhood in the DBSCAN algorithm
+Default: 10</p>
+</div></blockquote>
+<p><strong>min</strong> : int, optional</p>
+<blockquote>
+<div><p>the minimum number of elements to form a neighbourhood.
+Default: 2</p>
+</div></blockquote>
+<p><strong>stretch</strong> : float &gt; 1, optional</p>
+<blockquote>
+<div><p>the stretching factor of the euclidean metric for elements aligned
+along the 135 degree direction (anti-diagonal). The actual stretching
+increases from 1 to stretch as the direction of the two elements
+moves from the 45 to the 135 degree direction.
+Default: 5</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cmat</strong> : numpy.ndarray of integers</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>a matrix with the same shape of mat, each of whose elements is either</dt>
+<dd><ul class="first last simple">
+<li>a positive int (cluster id) if the element is part of a cluster</li>
+<li>0 if the corresponding element in mat was non-positive</li>
+<li>-1 if the element does not belong to any cluster</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.extract_sse">
+<code class="descclassname">elephant.asset.</code><code class="descname">extract_sse</code><span class="sig-paren">(</span><em>spiketrains</em>, <em>x_edges</em>, <em>y_edges</em>, <em>cmat</em>, <em>ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#extract_sse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.extract_sse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of spike trains, two arrays of bin edges and a clustered
+intersection matrix obtained from those spike trains via worms analysis
+using the specified edges, extracts the sequences of synchronous events
+(SSEs) corresponding to clustered elements in the cluster matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spiketrains</strong> : list of neo.SpikeTrain</p>
+<blockquote>
+<div><p>the spike trains analyzed for repeated sequences of synchronous
+events.</p>
+</div></blockquote>
+<p><strong>x_edges</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>the first array of time bins used to compute cmat</p>
+</div></blockquote>
+<p><strong>y_edges</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>the second array of time bins used to compute cmat. Musr have the
+same length as x_array</p>
+</div></blockquote>
+<p><strong>cmat: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>matrix of shape (n, n), where n is the length of x_edges and
+y_edges, representing the cluster matrix in worms analysis
+(see: cluster_matrix_entries())</p>
+</div></blockquote>
+<p><strong>ids</strong> : list or None, optional</p>
+<blockquote>
+<div><p>a list of spike train IDs. If provided, ids[i] is the identity
+of spiketrains[i]. If None, the IDs 0,1,…,n-1 are used
+Default: None</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sse</strong> : dict</p>
+<blockquote class="last">
+<div><p>a dictionary D of SSEs, where each SSE is a sub-dictionary Dk,
+k=1,…,K, where K is the max positive integer in cmat (the
+total number of clusters in cmat):</p>
+<p class="centered">
+<strong>D = {1: D1, 2: D2, …, K: DK}</strong></p><p>Each sub-dictionary Dk represents the k-th diagonal structure
+(i.e. the k-th cluster) in cmat, and is of the form</p>
+<p class="centered">
+<strong>Dk = {(i1, j1): S1, (i2, j2): S2, …, (iL, jL): SL}.</strong></p><p>The keys (i, j) represent the positions (time bin ids) of all
+elements in cmat that compose the SSE, i.e. that take value l (and
+therefore belong to the same cluster), and the values Sk are sets of
+neuron ids representing a repeated synchronous event (i.e. spiking
+at time bins i and j).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.intersection_matrix">
+<code class="descclassname">elephant.asset.</code><code class="descname">intersection_matrix</code><span class="sig-paren">(</span><em>spiketrains</em>, <em>binsize</em>, <em>dt</em>, <em>t_start_x=None</em>, <em>t_start_y=None</em>, <em>norm=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#intersection_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.intersection_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the intersection matrix from a list of spike trains.</p>
+<p>Given a list of SpikeTrains, consider two binned versions of them
+differing for the starting time of the binning (t_start_x and t_start_y
+respectively; the two times can be identical). Then calculate the
+intersection matrix M of the two binned data, where M[i,j] is the overlap
+of bin i in the first binned data and bin j in the second binned data
+(i.e. the number of spike trains spiking both at bin i and at bin j).
+The matrix  entries can be normalized to values between 0 and 1 via
+different normalizations (see below).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spiketrains</strong> : list of neo.SpikeTrains</p>
+<blockquote>
+<div><p>list of SpikeTrains from which to compute the intersection matrix</p>
+</div></blockquote>
+<p><strong>binsize</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>size of the time bins used to define synchronous spikes in the given
+SpikeTrains.</p>
+</div></blockquote>
+<p><strong>dt</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>time span for which to consider the given SpikeTrains</p>
+</div></blockquote>
+<p><strong>t_start_x</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>time start of the binning for the first axis of the intersection
+matrix, respectively.
+If None (default) the attribute t_start of the SpikeTrains is used
+(if the same for all spike trains).
+Default: None</p>
+</div></blockquote>
+<p><strong>t_start_y</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>time start of the binning for the second axis of the intersection
+matrix</p>
+</div></blockquote>
+<p><strong>norm</strong> : int, optional</p>
+<blockquote>
+<div><p>type of normalization to be applied to each entry [i,j] of the
+intersection matrix. Given the sets s_i, s_j of neuron ids in the
+bins i, j respectively, the normalisation coefficient can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li>norm = 0 or None: no normalisation (row counts)</li>
+<li>norm = 1: len(intersection(s_i, s_j))</li>
+<li>norm = 2: sqrt(len(s_1) * len(s_2))</li>
+<li>norm = 3: len(union(s_i, s_j))</li>
+</ul>
+</div></blockquote>
+<p>Default: None</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>imat</strong> : numpy.ndarray of floats</p>
+<blockquote>
+<div><p>the intersection matrix of a list of spike trains. Has shape (n,n),
+where n is the number of bins time was discretized in.</p>
+</div></blockquote>
+<p><strong>x_edges</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>edges of the bins used for the horizontal axis of imat. If imat is
+a matrix of shape (n, n), x_edges has length n+1</p>
+</div></blockquote>
+<p><strong>y_edges</strong> : numpy.ndarray</p>
+<blockquote class="last">
+<div><p>edges of the bins used for the vertical axis of imat. If imat is
+a matrix of shape (n, n), y_edges has length n+1</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.joint_probability_matrix">
+<code class="descclassname">elephant.asset.</code><code class="descname">joint_probability_matrix</code><span class="sig-paren">(</span><em>pmat</em>, <em>filter_shape</em>, <em>nr_largest=None</em>, <em>alpha=0</em>, <em>pvmin=1e-05</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#joint_probability_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.joint_probability_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map a probability matrix pmat to a joint probability matrix jmat, where
+jmat[i, j] is the joint p-value of the largest neighbors of pmat[i, j].</p>
+<p>The values of pmat are assumed to be uniformly distributed in the range
+[alpha, 1] (alpha=0 by default). Centered a rectangular kernel of shape
+filter_shape=(l, w) around each entry pmat[i, j], aligned along the
+diagonal where pmat[i, j] lies into, extracts the nr_largest highest values
+falling within the kernel and computes their joint p-value jmat[i, j]
+(see [1]).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pmat</strong> : ndarray</p>
+<blockquote>
+<div><p>a square matrix of cumulative probability values between alpha and 1.
+The values are assumed to be uniformly distibuted in the said range</p>
+</div></blockquote>
+<p><strong>filter_shape</strong> : tuple</p>
+<blockquote>
+<div><p>a pair (l, w) of integers representing the kernel shape. The</p>
+</div></blockquote>
+<p><strong>nr_largest</strong> : int, optional</p>
+<blockquote>
+<div><p>the number of largest neighbors to collect for each entry in mat
+If None (default) the filter length l is used
+Default: 0</p>
+</div></blockquote>
+<p><strong>alpha</strong> : float in [0, 1), optional</p>
+<blockquote>
+<div><p>the left end of the range [alpha, 1]
+Default: 0</p>
+</div></blockquote>
+<p><strong>pvmin</strong> : flaot in [0, 1), optional</p>
+<blockquote>
+<div><p>minimum p-value for individual entries in pmat. Each pmat[i, j] is
+set to min(pmat[i, j], 1-pvmin) to avoid that a single highly
+significant value in pmat (extreme case: pmat[i, j] = 1) yield
+joint significance of itself and its neighbors.
+Default: 1e-5</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>jmat</strong> : numpy.ndarray</p>
+<blockquote class="last">
+<div><p>joint probability matrix associated to pmat</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>[1] Torre et al (in prep) …</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.mask_matrices">
+<code class="descclassname">elephant.asset.</code><code class="descname">mask_matrices</code><span class="sig-paren">(</span><em>matrices</em>, <em>thresholds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#mask_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.mask_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of matrices and a list of thresholds, return a boolean matrix
+B (“mask”) such that B[i,j] is True if each input matrix in the list
+strictly exceeds the corresponding threshold at that position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>matrices</strong> : list of numpy.ndarrays</p>
+<blockquote>
+<div><p>the matrices which are compared to the respective thresholds to
+build the mask. All matrices must have the same shape.</p>
+</div></blockquote>
+<p><strong>thresholds</strong> : list of floats</p>
+<blockquote>
+<div><p>list of thresholds</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mask</strong> : numpy.ndarray of bools</p>
+<blockquote class="last">
+<div><p>mask matrix with same shape of the input matrices.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.probability_matrix_analytical">
+<code class="descclassname">elephant.asset.</code><code class="descname">probability_matrix_analytical</code><span class="sig-paren">(</span><em>spiketrains</em>, <em>binsize</em>, <em>dt</em>, <em>t_start_x=None</em>, <em>t_start_y=None</em>, <em>fir_rates='estimate'</em>, <em>kernel_width=array(100.0) * ms</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#probability_matrix_analytical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.probability_matrix_analytical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of spike trains, approximates the cumulative probability of
+each entry in their intersection matrix (see: intersection_matrix()).</p>
+<p>The approximation is analytical and works under the assumptions that the
+input spike trains are independent and Poisson. It works as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Bin each spike train at the specified binsize: this yields a binary
+array of 1s (spike in bin) and 0s (no spike in bin) (clipping used)</li>
+<li>If required, estimate the rate profile of each spike train by 
+convolving the binned array with a boxcar kernel of user-defined 
+length</li>
+<li>For each neuron k and each pair of bins i and j, compute the
+probability p_ijk that neuron k fired in both bins i and j.</li>
+<li>Approximate the probability distribution of the intersection value
+at (i, j) by a Poisson distribution with mean parameter
+l = sum_k (p_ijk),
+justified by Le Cam’s approximation of a sum of independent 
+Bernouilli random variables with a Poisson distribution.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spiketrains</strong> : list of neo.SpikeTrains</p>
+<blockquote>
+<div><p>list of spike trains for whose intersection matrix to compute the
+p-values</p>
+</div></blockquote>
+<p><strong>binsize</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>width of the time bins used to compute the probability matrix</p>
+</div></blockquote>
+<p><strong>dt</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>time span for which to consider the given SpikeTrains</p>
+</div></blockquote>
+<p><strong>t_start_x, t_start_y</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>time start of the binning for the first and second axes of the
+intersection matrix, respectively.
+If None (default) the attribute t_start of the SpikeTrains is used
+(if the same for all spike trains).
+Default: None</p>
+</div></blockquote>
+<p><strong>fir_rates: list of neo.AnalogSignals or ‘estimate’, optional</strong></p>
+<blockquote>
+<div><p>if a list, fir_rate[i] is the firing rate of the spike train
+spiketrains[i]. If ‘estimate’, firing rates are estimated by simple
+boxcar kernel convolution, with specified kernel width (see below)
+Default: ‘estimate’</p>
+</div></blockquote>
+<p><strong>kernel_width</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>total width of the kernel used to estimate the rate profiles when
+fir_rates=’estimate’.
+Default: 100 * pq.ms</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool, optional</p>
+<blockquote>
+<div><p>whether to print messages during the computation.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pmat</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>the cumulative probability matrix. pmat[i, j] represents the
+estimated probability of having an overlap between bins i and j
+STRICTLY LOWER THAN the observed overlap, under the null hypothesis
+of independence of the input spike trains.</p>
+</div></blockquote>
+<p><strong>x_edges</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>edges of the bins used for the horizontal axis of pmat. If pmat is
+a matrix of shape (n, n), x_edges has length n+1</p>
+</div></blockquote>
+<p><strong>y_edges</strong> : numpy.ndarray</p>
+<blockquote class="last">
+<div><p>edges of the bins used for the vertical axis of pmat. If pmat is
+a matrix of shape (n, n), y_edges has length n+1</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.probability_matrix_montecarlo">
+<code class="descclassname">elephant.asset.</code><code class="descname">probability_matrix_montecarlo</code><span class="sig-paren">(</span><em>spiketrains</em>, <em>binsize</em>, <em>dt</em>, <em>t_start_x=None</em>, <em>t_start_y=None</em>, <em>surr_method='dither_spike_train'</em>, <em>j=None</em>, <em>n_surr=100</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#probability_matrix_montecarlo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.probability_matrix_montecarlo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Given a list of parallel spike trains, estimate the cumulative probability</dt>
+<dd>of each entry in their intersection matrix (see: intersection_matrix())</dd>
+</dl>
+<p>by a Monte Carlo approach using surrogate data.
+Contrarily to the analytical version (see: probability_matrix_analytical())
+the Monte Carlo one does not incorporate the assumptions of Poissonianity
+in the null hypothesis.</p>
+<p>The method produces surrogate spike trains (using one of several methods
+at disposal, see below) and calculates their intersection matrix M.
+For each entry (i, j), the intersection cdf P[i, j] is then given by:</p>
+<p class="centered">
+<strong>P[i, j] = #(spike_train_surrogates such that M[i, j] &lt; I[i, j]) /
+#(spike_train_surrogates)</strong></p><p>If P[i, j] is large (close to 1), I[i, j] is statistically significant:
+the probability to observe an overlap equal to or larger then I[i, j]
+under the null hypothesis is 1-P[i, j], very small.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sts</strong> : list of neo.SpikeTrains</p>
+<blockquote>
+<div><p>list of spike trains for which to compute the probability matrix</p>
+</div></blockquote>
+<p><strong>binsize</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>width of the time bins used to compute the probability matrix</p>
+</div></blockquote>
+<p><strong>dt</strong> : quantities.Quantity</p>
+<blockquote>
+<div><p>time span for which to consider the given SpikeTrains</p>
+</div></blockquote>
+<p><strong>t_start_x, t_start_y</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>time start of the binning for the first and second axes of the
+intersection matrix, respectively.
+If None (default) the attribute t_start of the SpikeTrains is used
+(if the same for all spike trains).
+Default: None</p>
+</div></blockquote>
+<p><strong>surr_method</strong> : str, optional</p>
+<blockquote>
+<div><p>the method to use to generate surrogate spike trains. Can be one of:</p>
+<blockquote>
+<div><ul class="simple">
+<li>‘dither_spike_train’: see spike_train_surrogates.train_shifting() [dt needed]</li>
+<li>‘spike_dithering’: see spike_train_surrogates.spike_dithering() [dt needed]</li>
+<li>‘spike_jittering’: see spike_train_surrogates.spike_jittering() [dt needed]</li>
+<li>‘spike_time_rand’: see spike_train_surrogates.spike_time_rand()</li>
+<li>‘isi_shuffling’: see spike_train_surrogates.isi_shuffling()</li>
+</ul>
+</div></blockquote>
+<p>Default: ‘dither_spike_train’</p>
+</div></blockquote>
+<p><strong>j</strong> : quantities.Quantity, optional</p>
+<blockquote>
+<div><p>For methods shifting spike times randomly around their original time
+(spike dithering, train shifting) or replacing them randomly within a
+certain window (spike jittering), j represents the size of that
+shift / window. For other methods, j is ignored.
+Default: None</p>
+</div></blockquote>
+<p><strong>n_surr</strong> : int, optional</p>
+<blockquote>
+<div><p>number of spike_train_surrogates to generate for the bootstrap
+procedure. Default: 100</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pmat</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>the cumulative probability matrix. pmat[i, j] represents the
+estimated probability of having an overlap between bins i and j
+STRICTLY LOWER than the observed overlap, under the null hypothesis
+of independence of the input spike trains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#elephant.asset.probability_matrix_analytical" title="elephant.asset.probability_matrix_analytical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">probability_matrix_analytical</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_difference">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_difference</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em>, <em>difference='linkwise'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_difference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_difference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), computes the difference between sse1 and sse2.
+The difference can be performed ‘pixelwise’ or ‘linkwise’:</p>
+<blockquote>
+<div><ul class="simple">
+<li>if ‘pixelwise’, it yields a new SSE which contains all (and only) the
+events in sse1 whose pixel position doesn’t match any pixel in sse2.</li>
+<li>if ‘linkwise’, for each pixel (i, j) in sse1 and corresponding
+synchronous event S1, if (i, j) is a pixel in sse2 corresponding to the
+event S2, it retains the set difference S1 - S2. If (i, j) is not a
+pixel in sse2, it retains the full set S1.</li>
+</ul>
+</div></blockquote>
+<p>Note that in either case the difference is a non-symmetric operation:
+intersection(sse1, sse2) != intersection(sse2, sse1).</p>
+<p>Both sse1 and sse2 must be provided as dictionaries of the type</p>
+<p class="centered">
+<strong>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</strong></p><p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+<p><strong>difference</strong> : str, optional</p>
+<blockquote>
+<div><p>the type of difference to perform between sse1 and sse2. Either
+‘pixelwise’ or ‘linkwise’ (see above).
+Default: ‘linkwise’.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sse</strong> : dict</p>
+<blockquote class="last">
+<div><p>a new SSE (same structure as sse1 and sse2) which retains the
+difference between sse1 and sse2 (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_intersection">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_intersection</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em>, <em>intersection='linkwise'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) <cite>sse1</cite> and <cite>sse2</cite>, each
+consisting of a pool of positions (iK, jK) of matrix entries and
+associated synchronous events SK, finds the intersection among them.
+The intersection can be performed ‘pixelwise’ or ‘linkwise’.</p>
+<blockquote>
+<div><ul class="simple">
+<li>if ‘pixelwise’, it yields a new SSE which retains only events in sse1
+whose pixel position matches a pixel position in sse2. This operation
+is not symmetric: intersection(sse1, sse2) != intersection(sse2, sse1).</li>
+<li>if ‘linkwise’, an additional step is performed where each retained
+synchronous event SK in sse1 is intersected with the corresponding
+event in sse2. This yields a symmetric operation:
+intersection(sse1, sse2) = intersection(sse2, sse1).</li>
+</ul>
+</div></blockquote>
+<p>Both sse1 and sse2 must be provided as dictionaries of the type</p>
+<p class="centered">
+<strong>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</strong></p><p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>each is a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+<p><strong>intersection</strong> : str, optional</p>
+<blockquote>
+<div><p>the type of intersection to perform among the two SSEs. Either
+‘pixelwise’ or ‘linkwise’ (see above).
+Default: ‘linkwise’.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sse</strong> : dict</p>
+<blockquote class="last">
+<div><p>a new SSE (same structure as sse1 and sse2) which retains only the
+events of sse1 associated to keys present both in sse1 and sse2.
+If intersection = ‘linkwise’, such events are additionally
+intersected with the associated events in sse2 (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_isdisjoint">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_isdisjoint</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_isdisjoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_isdisjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), determines whether sse1 and sse2 are disjoint.
+Two SSEs are disjoint if they don’t share pixels, or if the events
+associated to common pixels are disjoint.</p>
+<p>Both sse1 and sse2 must be provided as dictionaries of the type</p>
+<p class="centered">
+<strong>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</strong></p><p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dictionary</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>is_disjoint</strong> : bool</p>
+<blockquote class="last">
+<div><p>returns True if sse1 is disjoint from sse2.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_isequal">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_isequal</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_isequal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_isequal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), determines whether sse1 is strictly contained in sse2.
+sse1 is strictly contained in sse2 if all its pixels are pixels of sse2,
+if its associated events are subsets of the corresponding events
+in sse2, and if sse2 contains events, or neuron ids in some event, which
+do not belong to sse1 (i.e. sse1 and sse2 are not identical)</p>
+<p>Both sse1 and sse2 must be provided as dictionaries of the type</p>
+<p class="centered">
+<strong>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</strong></p><p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>is_equal</strong> : bool</p>
+<blockquote class="last">
+<div><p>returns True if sse1 is identical to sse2</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_issub">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_issub</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_issub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_issub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), determines whether sse1 is strictly contained in sse2.
+sse1 is strictly contained in sse2 if all its pixels are pixels of sse2,
+if its associated events are subsets of the corresponding events
+in sse2, and if sse2 contains non-empty events, or neuron ids in some
+event, which do not belong to sse1 (i.e. sse1 and sse2 are not identical)</p>
+<dl class="docutils">
+<dt>Both sse1 and sse2 must be provided as dictionaries of the type</dt>
+<dd>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</dd>
+</dl>
+<p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>is_sub</strong> : bool</p>
+<blockquote class="last">
+<div><p>returns True if sse1 is a subset of sse2</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_issuper">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_issuper</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_issuper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_issuper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), determines whether sse1 strictly contains sse2.
+sse1 strictly contains sse2 if it contains all pixels of sse2, if all
+associated events in sse1 contain those in sse2, and if sse1 additionally
+contains other pixels / events not contained in sse2.</p>
+<dl class="docutils">
+<dt>Both sse1 and sse2 must be provided as dictionaries of the type</dt>
+<dd>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</dd>
+</dl>
+<p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<p>Note: sse_issuper(sse1, sse2) is identical to sse_issub(sse2, sse1).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>is_super</strong> : bool</p>
+<blockquote class="last">
+<div><p>returns True if sse1 strictly contains sse2.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.asset.sse_overlap">
+<code class="descclassname">elephant.asset.</code><code class="descname">sse_overlap</code><span class="sig-paren">(</span><em>sse1</em>, <em>sse2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/asset.html#sse_overlap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.asset.sse_overlap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two sequences of synchronous events (SSEs) sse1 and sse2, each
+consisting of a pool of pixel positions and associated synchronous events
+(see below), determines whether sse1 strictly contains sse2.
+sse1 strictly contains sse2 if it contains all pixels of sse2, if all
+associated events in sse1 contain those in sse2, and if sse1 additionally
+contains other pixels / events not contained in sse2.</p>
+<dl class="docutils">
+<dt>Both sse1 and sse2 must be provided as dictionaries of the type</dt>
+<dd>{(i1, j1): S1, (i2, j2): S2, …, (iK, jK): SK},</dd>
+</dl>
+<p>where each i, j is an integer and each S is a set of neuron ids.
+(See also: extract_sse() that extracts SSEs from given spiketrains).</p>
+<p>Note: sse_issuper(sse1, sse2) is identical to sse_issub(sse2, sse1).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sse1, sse2</strong> : each a dict</p>
+<blockquote>
+<div><p>a dictionary of pixel positions (i, j) as keys, and sets S of
+synchronous events as values (see above).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>is_super</strong> : bool</p>
+<blockquote class="last">
+<div><p>returns True if sse1 strictly contains sse2.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_generation.html" title="Stochastic spike train generation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cubic.html" title="Cumulant Based Inference of higher-order Correlation (CuBIC)"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>

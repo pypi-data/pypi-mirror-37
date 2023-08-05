@@ -1,0 +1,218 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spike-triggered average &#8212; Elephant 0.4.1 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spike train correlation" href="spike_train_correlation.html" />
+    <link rel="prev" title="Spike train dissimilarity / spike train synchrony" href="spike_train_dissimilarity.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_correlation.html" title="Spike train correlation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="spike_train_dissimilarity.html" title="Spike train dissimilarity / spike train synchrony"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" accesskey="U">Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/elephant_logo_sidebar.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="spike_train_dissimilarity.html"
+                        title="previous chapter">Spike train dissimilarity / spike train synchrony</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spike_train_correlation.html"
+                        title="next chapter">Spike train correlation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/sta.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spike-triggered-average">
+<h1>Spike-triggered average<a class="headerlink" href="#spike-triggered-average" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-elephant.sta"></span><p>Functions to calculate spike-triggered average and spike-field coherence of
+analog signals.</p>
+<dl class="function">
+<dt id="elephant.sta.spike_field_coherence">
+<code class="descclassname">elephant.sta.</code><code class="descname">spike_field_coherence</code><span class="sig-paren">(</span><em>signal</em>, <em>spiketrain</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/sta.html#spike_field_coherence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.sta.spike_field_coherence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the spike-field coherence between a analog signal(s) and a
+(binned) spike train.</p>
+<p>The current implementation makes use of scipy.signal.coherence(). Additional
+kwargs will will be directly forwarded to scipy.signal.coherence(),
+except for the axis parameter and the sampling frequency, which will be
+extracted from the input signals.</p>
+<p>The spike_field_coherence function receives an analog signal array and
+either a binned spike train or a spike train containing the original spike
+times. In case of original spike times the spike train is binned according
+to the sampling rate of the analog signal array.</p>
+<p>The AnalogSignal object can contain one or multiple signal traces. In case
+of multiple signal traces, the spike field coherence is calculated
+individually for each signal trace and the spike train.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>signal</strong> : neo AnalogSignal object</p>
+<blockquote>
+<div><p>‘signal’ contains n analog signals.</p>
+</div></blockquote>
+<p><strong>spiketrain</strong> : SpikeTrain or BinnedSpikeTrain</p>
+<blockquote>
+<div><p>Single spike train to perform the analysis on. The binsize of the
+binned spike train must match the sampling_rate of signal.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>coherence</strong> : complex Quantity array</p>
+<blockquote>
+<div><p>contains the coherence values calculated for each analog signal trace
+in combination with the spike train. The first dimension corresponds to
+the frequency, the second to the number of the signal trace.</p>
+</div></blockquote>
+<p><strong>frequencies</strong> : Quantity array</p>
+<blockquote class="last">
+<div><p>contains the frequency values corresponding to the first dimension of
+the ‘coherence’ array</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.sta.spike_triggered_average">
+<code class="descclassname">elephant.sta.</code><code class="descname">spike_triggered_average</code><span class="sig-paren">(</span><em>signal</em>, <em>spiketrains</em>, <em>window</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/sta.html#spike_triggered_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.sta.spike_triggered_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the spike-triggered averages of analog signals in a time window
+relative to the spike times of a corresponding spiketrain for multiple
+signals each. The function receives n analog signals and either one or
+n spiketrains. In case it is one spiketrain this one is muliplied n-fold
+and used for each of the n analog signals.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>signal</strong> : neo AnalogSignal object</p>
+<blockquote>
+<div><p>‘signal’ contains n analog signals.</p>
+</div></blockquote>
+<p><strong>spiketrains</strong> : one SpikeTrain or one numpy ndarray or a list of n of either of these.</p>
+<blockquote>
+<div><p>‘spiketrains’ contains the times of the spikes in the spiketrains.</p>
+</div></blockquote>
+<p><strong>window</strong> : tuple of 2 Quantity objects with dimensions of time.</p>
+<blockquote>
+<div><p>‘window’ is the start time and the stop time, relative to a spike, of
+the time interval for signal averaging.
+If the window size is not a multiple of the sampling interval of the 
+signal the window will be extended to the next multiple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result_sta</strong> : neo AnalogSignal object</p>
+<blockquote class="last">
+<div><p>‘result_sta’ contains the spike-triggered averages of each of the
+analog signals with respect to the spikes in the corresponding
+spiketrains. The length of ‘result_sta’ is calculated as the number
+of bins from the given start and stop time of the averaging interval
+and the sampling rate of the analog signal. If for an analog signal
+no spike was either given or all given spikes had to be ignored
+because of a too large averaging interval, the corresponding returned
+analog signal has all entries as nan. The number of used spikes and
+unused spikes for each analog signal are returned as annotations to 
+the returned AnalogSignal object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">signal1</span><span class="p">,</span> <span class="n">signal2</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span><span class="o">/</span><span class="n">ms</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stavg</span> <span class="o">=</span> <span class="n">spike_triggered_average</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="p">[</span><span class="n">spiketrain1</span><span class="p">,</span> <span class="n">spiketrain2</span><span class="p">],</span>
+<span class="gp">... </span>                                <span class="p">(</span><span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spike_train_correlation.html" title="Spike train correlation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="spike_train_dissimilarity.html" title="Spike train dissimilarity / spike train synchrony"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Elephant 0.4.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../modules.html" >Function Reference by Module</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, Elephant authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.0.
+    </div>
+  </body>
+</html>
