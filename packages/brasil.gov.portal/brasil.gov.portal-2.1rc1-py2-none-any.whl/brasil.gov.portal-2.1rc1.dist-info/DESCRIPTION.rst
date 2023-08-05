@@ -1,0 +1,565 @@
+*******************************************************
+.gov.br: Portal Padrão da Identidade Digital do Governo
+*******************************************************
+
+.. contents:: Conteúdo
+   :depth: 2
+
+Introdução
+----------
+
+Este complemento provê configurações para implementação da Identidade Digital de Governo em sites Plone do Governo da República Federativa do Brasil.
+
+O desenvolvimento deste complemento foi feito como parte da iniciativa `Portal Padrão <http://portalpadrao.plone.org.br>`_ da comunidade `PloneGov.Br <http://www.softwarelivre.gov.br/plone>`_.
+
+Requisitos
+----------
+
+Para uso deste complemento, seu site deve ter sido construído com:
+
+* Plone 4.3.18
+* Pinagem correta das `dependências <https://github.com/plonegovbr/brasil.gov.portal/blob/master/setup.py#L45>`_ do ``brasil.gov.portal``: cada release possui um ``versions.cfg`` específico em `portalpadrao.release <https://github.com/plonegovbr/portalpadrao.release>`_.
+
+**Atenção**: Leia atentamente `a seção sobre como escolher o seu arquivo de versões de release <https://github.com/plonegovbr/portalpadrao.release/#user-content-como-escolher-corretamente-o-arquivo-de-versões-de-um-release>`_ para entender qual versão usar.
+
+Recomendamos a leitura do `documento <http://identidade-digital-de-governo-plone.readthedocs.org/en/latest/>`_ sobre a instalação deste complemento.
+
+Estado deste complemento
+------------------------
+
+O **brasil.gov.portal** tem testes automatizados e, a cada alteração em seu
+código os testes são executados pelo serviço Travis.
+
+O estado atual do complemento pode ser visto nas imagens a seguir:
+
+.. image:: http://img.shields.io/pypi/v/brasil.gov.portal.svg
+    :target: https://pypi.python.org/pypi/brasil.gov.portal
+
+.. image:: https://img.shields.io/travis/plonegovbr/brasil.gov.portal/master.svg
+    :target: http://travis-ci.org/plonegovbr/brasil.gov.portal
+
+.. image:: https://img.shields.io/coveralls/plonegovbr/brasil.gov.portal/master.svg
+    :target: https://coveralls.io/r/plonegovbr/brasil.gov.portal
+
+.. image:: https://img.shields.io/codacy/grade/aa5a9980a6104e4390be5e6bc4f7460a.svg
+    :target: https://www.codacy.com/project/plonegovbr/brasil.gov.portal/dashboard
+
+Instalação
+----------
+
+Para habilitar a instalação deste complemento em um ambiente que utilize o buildout:
+
+1. Editar o arquivo buildout.cfg (ou outro arquivo de configuração) e adicionar o complemento ``brasil.gov.portal`` à lista de eggs da instalação:
+
+.. code-block:: cfg
+
+      [buildout]
+      ...
+      eggs =
+          brasil.gov.portal
+
+2. Editar o arquivo ``buildout.cfg`` (ou outro arquivo de configuração)
+   referenciando o uso do versions.cfg de acordo com o release presente em
+   `portalpadrao.release <https://github.com/plonegovbr/portalpadrao.release>`_
+
+3. Após alterar o arquivo de configuração é necessário executar
+   ''bin/buildout'', que atualizará sua instalação.
+
+4. Reinicie o Plone
+
+5. Adicione um novo site Plone.
+
+Atualização de 1.x a 2.x
+------------------------
+
+.. Warning::
+    Só atualize para a versão 2.x do complemento depois de atualizar à versão mais recente da branch 1.x.
+
+As atualizações da versão 1.x à 2.x só são suportadas das versões mais recentes de cada branch.
+Antes de atualizar confira que você está efetivamente utilizando a última versão da branch 1.x e que não existem upgrade steps pendentes de serem aplicados.
+
+Rodando o buildout de uma tag antiga do complemento
+---------------------------------------------------
+
+Para atender ao relato de ter vários jobs de integração contínua em complementos brasil.gov.* (ver https://github.com/plonegovbr/portalpadrao.release/issues/11), no fim da seção extends do buildout.cfg de todos os complementos brasil.gov.* temos a seguinte linha:
+
+.. code-block:: cfg
+
+    https://raw.githubusercontent.com/plonegovbr/portal.buildout/master/buildout.d/versions.cfg
+
+Hoje, esse arquivo contém sempre as versões pinadas de um release a ser lançado. Por esse motivo, quando é feito o checkout de uma tag mais antiga provavelmente você não conseguirá rodar o buildout.
+Dessa forma, após fazer o checkout de uma tag antiga, recomendamos que adicione, na última linha do extends, o arquivo de versões do IDG compatível com aquela tag, presente no repositório https://github.com/plonegovbr/portalpadrao.release/.
+
+Exemplo: você clonou o repositório do brasil.gov.portal na sua máquina, e deu checkout na tag 1.0.5. Ao editar o buildout.cfg, ficaria dessa forma, já com a última linha adicionada:
+
+.. code-block:: cfg
+
+    extends =
+        https://raw.github.com/collective/buildout.plonetest/master/test-4.3.x.cfg
+        https://raw.github.com/collective/buildout.plonetest/master/qa.cfg
+        http://downloads.plone.org.br/release/1.0.4/versions.cfg
+        https://raw.githubusercontent.com/plonegovbr/portal.buildout/master/buildout.d/versions.cfg
+        https://raw.githubusercontent.com/plone/plone.app.robotframework/master/versions.cfg
+        https://raw.githubusercontent.com/plonegovbr/portalpadrao.release/master/1.0.5/versions.cfg
+
+Para saber qual arquivo de versões é compatível, no caso do brasil.gov.portal, é simples pois é a mesma versão (no máximo um bug fix, por exemplo, brasil.gov.portal é 1.1.3 e o arquivo de versão é 1.1.3.1).
+Para os demais complementos, recomendamos comparar a data da tag do complemento e a data nos changelog entre uma versão e outra para adivinhar a versão compatível.
+
+Sobrescrita de traduções do domínio plone
+-----------------------------------------
+
+Se você tem um complemento que tem como dependência o brasil.gov.portal e precisa sobrescrever traduções do domínio ``plone`` nesse produto,
+sua diretiva ``<i18n:registerTranslations directory="locales" />`` deve vir antes da diretiva ``<includeDependencies package="." />``,
+ou de qualquer outra diretiva que carrege o ZCML do brasil.gov.portal.
+O seu configure.zcml deve ficar assim:
+
+.. code-block:: xml
+
+    <configure
+        xmlns="http://namespaces.zope.org/zope"
+        ...
+        xmlns:i18n="http://namespaces.zope.org/i18n"
+        i18n_domain="meu.produto">
+
+      <i18n:registerTranslations directory="locales" />
+
+      <includeDependencies package="." />
+
+      ...
+
+   </configure>
+
+O ZCML do brasil.gov.portal carrega o ZCML do Products.CMFPlone, que por sua vez carrega o ZCML do plone.app.locales.
+Assim o locales do seu produto precisa ser carregado antes do ZCML do  brasil.gov.portal para que as traduções do seu produto possam sobrescrever às do Plone.
+
+Desenvolvimento
+---------------
+
+Utilizamos `webpack <https://webpack.js.org/>`_ para gerenciar o conteúdo estático do tema,
+tomando vantagem das diversas ferramentas e plugins disponíveis para suprir nossas necessidades.
+
+Utilizamos a receita de buildout `sc.recipe.staticresources <https://github.com/simplesconsultoria/sc.recipe.staticresources>`_ para integrar o `webpack`_ no Plone.
+
+Ao desenvolver os temas iniciamos o watcher do `webpack`_ e trabalhamos somente na pasta "webpack" alterando os arquivos;
+o `webpack`_ se encarrega de processar e gerar os arquivos em seu endereço final.
+
+Este pacote adiciona os seguintes comandos na pasta bin do buildout para processar automaticamente os recursos estáticos:
+
+.. code-block:: console
+
+    $ bin/env-brasilgovportal
+
+Este comando adiciona no terminal o node do buildout no PATH do sistema,
+dessa forma voce pode trabalhar com webpack conforme a documentação oficial.
+
+.. code-block:: console
+
+    $ bin/watch-brasilgovportal
+
+Este comando instrui ao `webpack`_ para esperar por qualquer mudança nos arquivos SASS e gera a versão minificada do CSS para a aplicação.
+
+.. code-block:: console
+
+    $ bin/debug-brasilgovportal
+
+Este comando faz o mesmo que o comando watch, mas não minifica o CSS final.
+Utilizado para debugar a geração do CSS.
+
+.. code-block:: console
+
+    $ bin/build-brasilgovportal
+
+Este comando cria os recursos minificados, mas não espera por mudanças.
+
+Fazendo releases com o zest.releaser
+------------------------------------
+
+Os recursos estáticos do pacote são gerados usando o `webpack`_ e não são inclusos no VCS.
+Se você está fazendo release usando o zest.releaser, você precisa fazer `upload manual dos arquivos no PyPI <https://github.com/zestsoftware/zest.releaser/issues/261>`_ ou você vai criar uma distribuição quebrada:
+
+* execute ``longtest``, como de costume
+* execute ``fullrelease``, como de costume, respondendo "não" a pergunta "Check out the tag?" para evitar o upload ao PyPI
+* faça checkout na tag do release que você está liberando
+* execute ``bin/build-brasilgovportal`` para criar os recursos estáticos
+* crie os arquivos da distribuição usando ``python setup.py sdist bdist_wheel``, como de costume
+* faça o upload manual dos arquivos usando ``twine upload dist/*``
+
+Em caso de erro você terá que criar um novo release pois o PyPI Warehouse `não permite reutilizar um nome de arquivo <https://upload.pypi.org/help/#file-name-reuse>`_.
+
+Contribuidores
+-----------------
+
+O ``brasil.gov.portal`` não seria possível sem a contribuição das seguintes pessoas:
+
+- André Nogueira
+- Cleber J. Santos
+- Danilo Barbato
+- Érico Andrei
+- Héctor Velarde
+- Felipe Duardo
+- Rennan Rodrigues
+- Rodrigo Ferreira de Souza
+- Winston Ferreira
+
+Para os testes do tipo áudio utilizamos o arquivo disponível no `Wikimedia Commons <http://commons.wikimedia.org/wiki/File:Thunder.ogg>`_
+
+Para os testes do tipo Conteúdo Externo utilizamos o `arquivo disponível na Wikipedia <http://en.wikipedia.org/wiki/Clube_Atl%C3%A9tico_Juventus#mediaviewer/File:Ju_Jovem.JPG>`_
+
+Changelog
+---------
+
+2.1rc1 (2018-10-17)
+^^^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.temas à versão 2.0b5.
+  [hvelarde]
+
+- Corrige viewlet que mostra link para voltar para o topo.
+  [rodfersou]
+
+- Move scripts do contraste para o pacote brasil.gov.temas.
+  [rodfersou]
+
+- Atualiza configuração do webpack.
+  [rodfersou]
+
+- Corrige entradas do portal actions.
+  [rodfersou]
+
+- Corrige tradução de viewlet de redes.
+  [rodfersou]
+
+- Atualizado collective.fingerpointing à versão 1.8.
+  [hvelarde]
+
+- Atualizado collective.lazysizes à versão 4.1.4.
+  [hvelarde]
+
+- Adiciona viewlet para mostrar texto da licença de uso.
+  [rodfersou]
+
+
+2.1.1b1 (2018-10-05)
+^^^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.temas à versão 2.0b4.
+  [hvelarde]
+
+- Atualizado brasil.gov.barra à versão 3.0.5.
+  [hvelarde]
+
+- Corrige estilos para tiles do collective.cover.
+  [hvelarde]
+
+- Atualizado collective.cover à versão 1.8b2.
+  [hvelarde]
+
+- Adiciona novamente dependência no plone4.csrffixes.
+  [hvelarde]
+
+- Atualizado collective.lazysizes à versão 4.1.2.
+  [hvelarde]
+
+
+2.1b1 (2018-09-28)
+^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.agenda à versão 2.0a7.
+  [hvelarde]
+
+- Atualizado brasil.gov.temas à versão 2.0b3.
+  [hvelarde]
+
+- Atualizado brasil.gov.tiles à versão 2.0b3.
+  [hvelarde]
+
+- Atualizado collective.cover à versão 1.8b1.
+  [hvelarde]
+
+- Adiciona funcionalidade de preview de imagens em links.
+  [rodfersou]
+
+- Adiciona suporte para processamento de recursos estáticos usando o `webpack`_.
+  [rodfersou]
+
+- Corrige upgrade step para desinstalar o ``Products.Doormat`` (fecha `#523 <https://github.com/plonegovbr/brasil.gov.portal/issues/523>`_).
+  [hvelarde]
+
+- Corrige estilos para tiles do collective.cover.
+  [hvelarde]
+
+- Atualizado brasil.gov.barra à versão 2.0b1.
+  [hvelarde]
+
+
+2.0b3 (2018-09-19)
+^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.tiles à versão 2.0b2.
+  [hvelarde]
+
+- Atualizado collective.cover à versão 1.7b5.
+  [hvelarde]
+
+- Atualizado plone.restapi à versão 3.4.5.
+  [hvelarde]
+
+- Corrige opções iniciais do menu de navegação.
+  [hvelarde]
+
+- Instala webcouturier.dropdownmenu ao atualizar o site.
+  [hvelarde]
+
+- Evita instalar plone.restapi em novos portais (refs. `plone.rest#73 <https://github.com/plone/plone.rest/issues/73>`_).
+  [hvelarde]
+
+- Atualizado Plone à versão 4.3.18.
+  [hvelarde]
+
+- Atualizado collective.lazysizes à versão 4.1.1.1.
+  [hvelarde]
+
+
+2.0b2 (2018-09-04)
+^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.temas à versão 2.0b2.
+  [hvelarde]
+
+- Atualizado brasil.gov.tiles à versão 2.0b1.
+  [hvelarde]
+
+- Atualiza i18n e traduções ao Português Brasileiro.
+  [agnogueira, hvelarde]
+
+- Remove validador do tamanho da imagem de fundo do cabeçalho (fecha `#520 <https://github.com/plonegovbr/brasil.gov.portal/issues/520>`_).
+  [hvelarde]
+
+- Adiciona novos estilos para o cover.
+  [agnogueira]
+
+
+2.0b1 (2018-09-03)
+^^^^^^^^^^^^^^^^^^
+- Adiciona tamanhos de miniaturas de imagens de acordo com a largura de colunas do portal.
+  [agnogueira]
+
+- Atualizado brasil.gov.tiles à versão 2.0a1.
+  [hvelarde]
+
+- Remove da configuração referências a tiles descontinuados.
+  [hvelarde]
+
+- Atualizado brasil.gov.agenda à versão 2.0a6.
+  [hvelarde]
+
+- Atualizado brasil.gov.portlets à versão 2.0a1.
+  [hvelarde]
+
+- Atualizado brasil.gov.temas à versão 2.0b1.
+  [hvelarde]
+
+- Corrige ``UnicodeDecodeError`` no header do portal (fecha `#515 <https://github.com/plonegovbr/brasil.gov.portal/issues/515>`_).
+  [claytonc]
+
+- Desinstala ``Products.Doormat`` pois ele não é mais usado no projeto;
+  remove também todas as customizações do complemento.
+  [hvelarde]
+
+- Adiciona visäo de Filtro de resultados.
+  [rodfersou, hvelarde]
+
+- Adiciona visão de Central de conteúdo.
+  [rodfersou, hvelarde]
+
+- Atualiza as dependências do pacote.
+  Remove dependência no ``plone.directives.form`` e últimos traços do Grok.
+  [hvelarde]
+
+- Adiciona opção para permitir escolher entre headers diferentes.
+  [hvelarde, rodfersou]
+
+- Adiciona https nas URLs das redes sociais.
+  [agnogueira]
+
+- Corrige workflow para tipo de conteúdo Infográfico.
+  [rodfersou]
+
+- Altera configurações do cover (grid, estilos e modelos).
+  [agnogueira]
+
+- Remove viewlet de destaques e dependência direta no five.grok.
+  [hvelarde]
+
+- Corrige dependências do pacote.
+  [hvelarde]
+
+- Remove customização desnecessária do portlet de navegação.
+  [hvelarde]
+
+- Corrige a largura das columnas das capas de acordo ao novo layout.
+  [hvelarde]
+
+- Remove todos os portlets atribuídos à raíz do site.
+  [hvelarde]
+
+- Corrige ``AttributeError`` e outros problemas no upgrade step v10900 (fecha `#448 <https://github.com/plonegovbr/brasil.gov.portal/issues/448>`_).
+  [hvelarde]
+
+- Atualizado Products.PloneKeywordManager à versão 2.2.1.
+  [hvelarde]
+
+- Remove IDs das redes sociais para evitar duplicidade.
+  [agnogueira]
+
+- Atualizado collective.cover à versão 1.7b3.
+  [hvelarde]
+
+
+2.0a5 (2018-07-06)
+^^^^^^^^^^^^^^^^^^
+
+.. Warning::
+    Atualizações da branch 1.x do pacote só serão suportadas da versão mais recente dessa branch.
+    O collective.portlet.calendar não é mais uma dependência do brasil.gov.agenda;
+    é necessário adicioná-lo como dependência no buildout para permitir sua remoção.
+    Consulte a documentação do release para obter mais informação.
+
+- Atualizado collective.cover à versão 1.7b2.
+  [hvelarde]
+
+- Atualizado brasil.gov.temas à versão 2.0a6.
+  [hvelarde]
+
+- Atualizado brasil.gov.agenda à versão 2.0a4.
+  [hvelarde]
+
+- Remove collective.portlet.calendar da lista de pacotes ocultos;
+  esse pacote não é mais dependência do brasil.gov.agenda.
+  [hvelarde]
+
+- Atualizado plone.restapi à versão 3.1.0.
+  [hvelarde]
+
+- Atualizado Products.PloneFormGen à versão 1.7.24.
+  [hvelarde]
+
+- Atualiza versão do profile usado para 10900 (closes `#472 <https://github.com/plonegovbr/brasil.gov.portal/issues/472>`_).
+  [hvelarde]
+
+- Atualizado Plone à versão 4.3.17.
+  [hvelarde]
+
+
+2.0a4 (2018-06-06)
+^^^^^^^^^^^^^^^^^^
+
+- Adiciona dependência no `six <https://pypi.org/project/six/>`_ para futura compatibilidade com Python 3.
+  [hvelarde]
+
+- Adiciona suporte para gestão de tags.
+  [hvelarde]
+
+- Remove dependência no plone4.csrffixes.
+  [hvelarde]
+
+- Adiciona um viewlet para relatórios de erros;
+  é preciso criar um formulário de contato com id ``relatar-erros`` na raiz do site para utilizar este recurso.
+  [hvelarde, claytonc]
+
+- Atualiza as traduções a português brasileiro e espanhol.
+  [hvelarde]
+
+- Revisa a view de galeria de fotos e atualiza a lista de dimensões de imagens validas.
+  [rodfersou]
+
+- Corrige o viewlet services responsável pelos links de destaques.
+  [claytonc]
+
+- Adiciona um configlet para gerenciar os links no portal tabs.
+  [claytonc]
+
+- Adicionado tipo de conteúdo ``Infografic``;
+  por enquanto é simplesmente um clone do tipo de conteúdo ``Image``.
+  [hvelarde]
+
+
+2.0a3 (2018-02-28)
+^^^^^^^^^^^^^^^^^^
+
+- Atualiza código para usar os decoradores ``implementer`` e ``adapter`` da ZCA.
+  [hvelarde]
+
+- Corrige ``icon_expr`` dos tipos de conteúdo definidos no pacote.
+  [hvelarde]
+
+- Corrige as permissões ``brasil.gov.portal: Add MPEG File`` e ``brasil.gov.portal: Add OGG File``:
+  um usuário com papel "Editor" não deve poder adicionar conteúdo.
+  [hvelarde]
+
+- Atualizado plone.restapi à versão 1.1.0.
+  [hvelarde]
+
+- Atualizado brasil.gov.barra à versão 1.2.3.
+  [hvelarde]
+
+- Atualizado brasil.gov.temas à versão 2.0a4.
+  [hvelarde]
+
+- Corrige alinhamento do topo quando não informada primeira linha do título.
+  [rodfersou]
+
+- Habilita a busca de objetos de tipo ``sc.embedder``.
+  [hvelarde]
+
+2.0a2 (2018-01-11)
+^^^^^^^^^^^^^^^^^^
+
+- Atualizado sc.social.like à versão 2.13b3.
+  [hvelarde]
+
+- Remove monkey patches relacionados à atualização do plone.app.contenttypes.
+  [hvelarde]
+
+- Corrige configuração padrão do sc.social.like.
+  [hvelarde]
+
+- Adiciona patch para o widget de campos ordenados não engolir opções com mesmo nome (refs. `z3c.form#76 <https://github.com/zopefoundation/z3c.form/pull/76>`_).
+  [rodfersou]
+
+- Evita ``KeyError`` nos resultados da busca provocado por verbetes inexistentes.
+  [hvelarde]
+
+
+2.0a1 (2017-12-27)
+^^^^^^^^^^^^^^^^^^
+
+- Atualizado brasil.gov.vcge à versão 2.0.2 (ainda não é possível a migração de 1.x).
+  [hvelarde]
+
+- Adiciona webcouturier.dropdownmenu ao IDG;
+  habilita menus dropdown para navegação global.
+  [hvelarde]
+
+- Implementa importação de conteúdo usando formato JSON e collective.transmogrifier.
+  [hvelarde]
+
+- Remove customizações dos templates do collective.nitf.
+  [hvelarde]
+
+- O viewlet ``global_sections`` é visível novamente.
+  [rodfersou]
+
+- Move estilos para o pacote brasil.gov.temas.
+  [rodfersou]
+
+- Remove criação de estrutura e conteúdo iniciais.
+  [hvelarde]
+
+- Remove dependência no collective.z3cform.widgets.
+  [hvelarde]
+
+- Removidos upgrade steps anteriores a v10803.
+  [hvelarde]
+
+
