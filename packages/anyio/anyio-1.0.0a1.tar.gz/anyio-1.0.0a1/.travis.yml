@@ -1,0 +1,64 @@
+language: python
+sudo: false
+cache: pip
+python: "3.5.3"
+
+stages:
+  - name: run linter
+  - name: test
+  - name: deploy to pypi
+    if: type = push AND tag =~ ^\d+\.\d+\.\d+
+
+jobs:
+  include:
+    - stage: run linter
+      env: TOXENV=flake8
+
+    - stage: test
+      env: TOXENV=pypy3
+      python: pypy3
+
+    - stage: test
+      env: TOXENV=py35
+      after_success: &after_success
+        - pip install coveralls
+        - coveralls
+
+    - stage: test
+      env: TOXENV=py36
+      python: "3.6"
+      after_success: *after_success
+
+      # https://github.com/travis-ci/travis-ci/issues/9815
+    - stage: test
+      env: TOXENV=py37
+      dist: xenial
+      sudo: required
+      python: "3.7"
+      after_success: *after_success
+
+    - stage: deploy to pypi
+      install: pip install -U setuptools
+      script: skip
+      deploy:
+        provider: pypi
+        user: agronholm
+        password:
+          secure: eYlwRer+Kd9lbbYsIwV7lTcNgtari7IPYEUcx3JkqlMLGPfNsshPCizmpj0YHeLsSRCNAxxWe5KbJq8lcotAaR+wiNIP3rlXvEPGtbO7Jzg8hsy23wJBTym8TEa1NzL2C4zBs/e9wSjJI+WtDKe6V4PzHrE038mbyp67m5o+D8VadEfahPzTsNpbwv20HiI1b1MTnW2a84DZrl5pCqARCRfu6Ar60X/oM8tiAv8dL/8Uo8zx+F3mgQkVop76ESHrRhHOasB+f2BVOdIeRQe2a2dn6NHsaiZ0wUoTDoRH0ALeYv6Qt/wMOfODMuLl1XS4R3x6HWBds3rYe8XuxnOCMw7euBbiaaraTyFR5A1tk/sxBPc3c86mLOIVrW2e7AJmgTcSP0rEjzZ30wEk2NHvpjqZgkQR841b8/sDoZadC4jbVKE62M0p0FcO38lbSb3lAPaFMcGHTCSsa4nWL9RscSYCJg3MgpsCwaGZ5FzMDGhdl1ogrUXy5gxz/2qkefeBNDtjrPsLpwX1odmDP6idC+Rocx1UKN6sgJX8tUxaYdyLfjAjsVMlp4/si7Q6Nq3eHlBij3S+mSA2JwQ5kxvbVjAeA0UJTZeFClc4yDBsuZ4YWb8x1DZiEbhViFkTPKVDutVi5lZYL5tIRNltSV4le5SSzOORTlUX6xw9koC5rx8=
+        distributions: sdist bdist_wheel
+        on:
+          tags: true
+          repo: agronholm/anyio
+  allow_failures:
+    - python: pypy3
+
+install: pip install tox
+
+script: tox
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.net#pypa-dev"
+    use_notice: true
+    skip_join: true
