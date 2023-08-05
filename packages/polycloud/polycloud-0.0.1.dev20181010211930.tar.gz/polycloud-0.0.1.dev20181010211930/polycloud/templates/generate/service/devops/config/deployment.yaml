@@ -1,0 +1,38 @@
+##################################################################################################
+# {{apiname}} service (based on Reviews service)
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{apiname}}
+  labels:
+    app: {{apiname}}
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: {{apiname}}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{apiname}}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{apiname}}
+        version: {{version}}
+    spec:
+      containers:
+      - name: {{apiname}}
+        image: {{dockerusername}}/{{apiname}}:{{version}}
+        imagePullPolicy: IfNotPresent
+        env:
+           - name: PORT
+             value: "9080"
+        ports:
+        - containerPort: 9080
+---

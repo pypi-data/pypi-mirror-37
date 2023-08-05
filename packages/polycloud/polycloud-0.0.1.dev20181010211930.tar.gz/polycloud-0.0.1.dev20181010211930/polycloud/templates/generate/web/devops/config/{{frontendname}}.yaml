@@ -1,0 +1,35 @@
+##################################################################################################
+# {{frontendname}} service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{frontendname}}
+  labels:
+    app: {{frontendname}}
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: {{frontendname}}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{frontendname}}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{frontendname}}
+        version: v1
+    spec:
+      containers:
+      - name: {{frontendname}}
+        image: {{dockerusername}}/{{frontendname}}:v5
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+---

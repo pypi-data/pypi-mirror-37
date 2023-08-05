@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - checkout
+      - setup_remote_docker:
+          name: Setup remote docker environment for docker build
+          reusable: true
+          exclusive: false
+      - run:
+          name: Setup Pipeline Image
+          command: ./.circleci/machine-setup.sh
+      - run:
+          name: Retrieve cluster credentials
+          command: |
+            gcloud container clusters get-credentials d10l-plattform-cluster \
+            --zone us-central1-a --project {{gcpproject}}
+      - run:
+          name: Build and Deploy App
+          command: chmod 777 ./devops/build-and-deploy.sh && ./devops/build-and-deploy.sh
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build:
+          context: GLOBAL_CONFIG
