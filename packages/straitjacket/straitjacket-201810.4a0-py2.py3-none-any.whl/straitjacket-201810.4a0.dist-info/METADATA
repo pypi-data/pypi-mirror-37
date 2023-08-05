@@ -1,0 +1,174 @@
+Metadata-Version: 2.1
+Name: straitjacket
+Version: 201810.4a0
+Summary: Another uncompromising code formatter.
+Home-page: https://github.com/mbarkhau/straitjacket
+Author: Manuel Barkhau
+Author-email: mbarkhau@gmail.com
+License: MIT
+Keywords: formatter yapf black pyfmt gofmt
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Environment :: Other Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Unix
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: black[d] (>=18.9b0)
+
+# StraitJacket: Another Uncompromising Code Formatter
+
+StraitJacket is a wrapper around black which implements post
+processing to perform automatic code alignment.
+
+[![Code Style: sjfmt][style_img]][style_ref]
+[![Type Checked with mypy][mypy_img]][mypy_ref]
+[![Build Status][ci_build_img]][ci_build_ref]
+[![Code Coverage][codecov_img]][codecov_ref]
+[![MIT License][license_img]][license_ref]
+[![PyCalVer v201810.0004-beta][version_img]][version_ref]
+[![PyPI Version][pypi_img]][pypi_ref]
+[![PyPI Wheel][wheel_img]][wheel_ref]
+[![Supported Python Versions][pyversions_img]][pyversions_ref]
+
+
+[mypy_img]: https://img.shields.io/badge/mypy-100%25-green.svg
+[mypy_ref]: http://mypy-lang.org/
+
+[style_img]: https://img.shields.io/badge/code%20style-%20sjfmt-f71.svg
+[style_ref]: https://gitlab.com/mbarkhau/straitjacket/
+
+[ci_build_img]: https://gitlab.com/mbarkhau/straitjacket/badges/master/pipelines.svg
+[ci_build_ref]: https://gitlab.com/mbarkhau/straitjacket/pipelines
+
+[codecov_img]: https://gitlab.com/mbarkhau/straitjacket/badges/master/coverage.svg
+[codecov_ref]: https://mbarkhau.gitlab.io/straitjacket/cov
+
+[license_img]: https://img.shields.io/badge/License-MIT-blue.svg
+[license_ref]: https://gitlab.com/mbarkhau/straitjacket/blob/master/LICENSE
+
+[pypi_img]: https://img.shields.io/pypi/v/straitjacket.svg
+[pypi_ref]: https://gitlab.com/mbarkhau/straitjacket/blob/master/CHANGELOG.rst
+
+[version_img]: https://img.shields.io/badge/PyCalVer-v201810.0004--beta-blue.svg
+[version_ref]: https://calver.org/
+
+[wheel_img]: https://img.shields.io/pypi/wheel/straitjacket.svg
+[wheel_ref]: https://pypi.org/project/straitjacket/#files
+
+[pyversions_img]: https://img.shields.io/pypi/pyversions/straitjacket.svg
+[pyversions_ref]: https://pypi.python.org/pypi/straitjacket
+
+
+
+Contributing
+============
+
+If you would like to contribute as a developer, here is how to
+get started with development. You will require a linux system,
+though WSL on Windows should work fine too.
+
+
+Setup Conda
+-----------
+
+If you haven't already, install conda like so:
+
+.. code-block:: bash
+
+    $ conda --version
+    conda: command not found
+    $ wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    $ bash miniconda.sh -b -p $HOME/miniconda
+    $ export PATH="$HOME/miniconda3/bin:$PATH"
+    $ conda --version
+    conda 4.5.11
+
+
+Setup Virtual Environments
+--------------------------
+
+Next you can do ``make install`` to setup local conda environments.
+
+
+.. code-block:: bash
+
+    $ make install
+    Solving environment: done
+
+    ## Package Plan ##
+
+      environment location: /home/user/miniconda3/envs/sjfmt37
+    ...
+
+
+Development Tasks
+-----------------
+
+This creates environments named for the supported python versions of the project.
+Finally you can run your typical development commands:
+
+.. code-block:: bash
+
+    $ make lint         # run sjfmt and flake8
+    $ make mypy         # mypy src/
+    $ make test         # pytest test/
+    $ make devtest      # pytest test/ --verbose --exitfirst
+    $ make doc          # rst2html5
+
+
+
+Distributing
+------------
+
+
+.. code-block:: bash
+
+    make bump_version
+    make build
+    make upload
+
+
+Project Structure
+-----------------
+
+For most things you can review this guide:
+https://docs.python-guide.org/writing/structure/
+
+One main difference is the use of ``src/`` as a top level
+directory to contain all library source code. This is done
+because the ``PYTHONPATH`` always has the current directory as
+its first entry and so ``import module`` will always look for
+``module`` in ``PWD`` first. This is fine when testing during
+develpment, because that's actually where the source is that you
+want to test. If you want to test a distribution however, you
+may think everything is fine, because you ran ``pip install .``
+or ``pip install dist/...whl``, and running your tests
+everything is green. In reality you will not be testing the
+installed module though, but rather the source from your local
+directory.
+
+Using a ``src/`` directory avoids this problem. You have to be
+explicit about your ``PYTHONPATH`` (as ``make test`` is for
+example), and you will always be testing what you expect.
+
+
+# Changelog for straitjacket
+
+## v201809.0001-alpha
+
+ - Initial release
+
+
