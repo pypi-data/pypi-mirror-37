@@ -1,0 +1,240 @@
+Metadata-Version: 2.1
+Name: formulas
+Version: 0.1.4
+Summary: Parse and compile Excel formulas and workbooks in python code.
+Home-page: https://github.com/vinci1it2000/formulas
+Author: Vincenzo Arcidiacono
+Author-email: vinci1it2000@gmail.com
+License: EUPL 1.1+
+Download-URL: https://github.com/vinci1it2000/formulas/tarball/v0.1.4
+Project-URL: Documentation, http://formulas.readthedocs.io
+Project-URL: Issue tracker, https://github.com/vinci1it2000/formulas/issues
+Project-URL: Donate, https://donorbox.org/formulas
+Keywords: python,utility,library,excel,formulas,processing,calculation,dependencies,resolution,scientific,engineering,dispatch,compiling
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Development Status :: 4 - Beta
+Classifier: Natural Language :: English
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: European Union Public Licence 1.1 (EUPL 1.1)
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
+Provides-Extra: excel
+Provides-Extra: dev
+Provides-Extra: plot
+Provides-Extra: all
+Requires-Dist: regex
+Requires-Dist: schedula (>=0.2.8)
+Requires-Dist: numpy
+Provides-Extra: all
+Requires-Dist: Pygments; extra == 'all'
+Requires-Dist: bs4; extra == 'all'
+Requires-Dist: docutils; extra == 'all'
+Requires-Dist: flask; extra == 'all'
+Requires-Dist: graphviz; extra == 'all'
+Requires-Dist: jinja2; extra == 'all'
+Requires-Dist: lxml; extra == 'all'
+Requires-Dist: networkx; extra == 'all'
+Requires-Dist: openpyxl; extra == 'all'
+Requires-Dist: regex; extra == 'all'
+Provides-Extra: dev
+Requires-Dist: Pygments; extra == 'dev'
+Requires-Dist: bs4; extra == 'dev'
+Requires-Dist: docutils; extra == 'dev'
+Requires-Dist: flask; extra == 'dev'
+Requires-Dist: graphviz; extra == 'dev'
+Requires-Dist: jinja2; extra == 'dev'
+Requires-Dist: lxml; extra == 'dev'
+Requires-Dist: networkx; extra == 'dev'
+Requires-Dist: openpyxl; extra == 'dev'
+Requires-Dist: regex; extra == 'dev'
+Requires-Dist: wheel; extra == 'dev'
+Requires-Dist: sphinx; extra == 'dev'
+Requires-Dist: gitchangelog; extra == 'dev'
+Requires-Dist: mako; extra == 'dev'
+Requires-Dist: sphinx-rtd-theme; extra == 'dev'
+Requires-Dist: setuptools (>=36.0.1); extra == 'dev'
+Requires-Dist: sphinxcontrib-restbuilder; extra == 'dev'
+Requires-Dist: nose; extra == 'dev'
+Requires-Dist: coveralls; extra == 'dev'
+Requires-Dist: ddt; extra == 'dev'
+Provides-Extra: excel
+Requires-Dist: openpyxl; extra == 'excel'
+Requires-Dist: networkx; extra == 'excel'
+Provides-Extra: plot
+Requires-Dist: graphviz; extra == 'plot'
+Requires-Dist: regex; extra == 'plot'
+Requires-Dist: flask; extra == 'plot'
+Requires-Dist: Pygments; extra == 'plot'
+Requires-Dist: lxml; extra == 'plot'
+Requires-Dist: bs4; extra == 'plot'
+Requires-Dist: jinja2; extra == 'plot'
+Requires-Dist: docutils; extra == 'plot'
+
+.. _start-intro:
+
+
+What is formulas?
+*****************
+
+**formulas** implements an interpreter for Excel formulas, which
+parses and compile Excel formulas expressions.
+
+Moreover, it compiles Excel workbooks to python and executes without
+using the Excel COM server. Hence, **Excel is not needed**.
+
+
+Installation
+************
+
+To install it use (with root privileges):
+
+::
+
+   $ pip install formulas
+
+Or download the last git version and use (with root privileges):
+
+::
+
+   $ python setup.py install
+
+
+Install extras
+==============
+
+Some additional functionality is enabled installing the following
+extras:
+
+* excel: enables to compile Excel workbooks to python and execute
+   using: ``ExcelModel``.
+
+* plot: enables to plot the formula ast and the Excel model.
+
+To install formulas and all extras, do:
+
+::
+
+   $ pip install formulas[all]
+
+.. _end-quick:
+
+
+Basic Examples
+**************
+
+The following sections will show how to:
+
+* parse a Excel formulas;
+
+* load, compile, and execute a Excel workbook;
+
+* extract a sub-model from a Excel workbook;
+
+* add a custom function.
+
+
+Parsing formula
+===============
+
+An example how to parse and execute an Excel formula is the following:
+
+>>> import formulas
+>>> func = formulas.Parser().ast('=(1 + 1) + B3 / A2')[1].compile()
+
+To visualize formula model and get the input order you can do the
+following:
+
+..
+
+   >>> list(func.inputs)
+   ['A2', 'B3']
+   >>> func.plot(view=False)  # Set view=True to plot in the default browser.
+   SiteMap([(=((1 + 1) + (B3 / A2)), SiteMap())])
+
+   [graph]
+
+Finally to execute the formula and plot the workflow:
+
+..
+
+   >>> func(1, 5)
+   OperatorArray(7.0, dtype=object)
+   >>> func.plot(workflow=True, view=False)  # Set view=True to plot in the default browser.
+   SiteMap([(=((1 + 1) + (B3 / A2)), SiteMap())])
+
+   [graph]
+
+
+Excel workbook
+==============
+
+An example how to load, calculate, and write an Excel workbook is the
+following:
+
+::
+
+   >>> import formulas
+   >>> fpath = 'file.xlsx'  
+   >>> xl_model = formulas.ExcelModel().loads(fpath).finish()
+   >>> xl_model.calculate()
+   Solution(...)
+   >>> xl_model.write()
+   {'EXCEL.XLSX': {Book: <openpyxl.workbook.workbook.Workbook ...>}}
+
+Tip: If you have or could have **circular references**, add
+   *circular=True* to *finish* method.
+
+To plot the dependency graph that depict relationships between Excel
+cells:
+
+..
+
+   >>> dsp = xl_model.dsp
+   >>> dsp.plot(view=False)  # Set view=True to plot in the default browser.
+   SiteMap([(Dispatcher ..., SiteMap())])
+
+   [graph]
+
+To compile, execute, and plot a Excel sub-model you can do the
+following:
+
+..
+
+   >>> inputs = ["'[EXCEL.XLSX]DATA'!A2"]  # input cells
+   >>> outputs = ["'[EXCEL.XLSX]DATA'!C2"]  # output cells
+   >>> func = xl_model.compile(inputs, outputs)
+   >>> func(2).value[0,0]
+   4.0
+   >>> func.plot(view=False)  # Set view=True to plot in the default browser.
+   SiteMap([(Dispatcher ..., SiteMap())])
+
+   [graph]
+
+
+Custom functions
+================
+
+An example how to add a custom function to the formula parser is the
+following:
+
+>>> import formulas
+>>> FUNCTIONS = formulas.get_functions()
+>>> FUNCTIONS['MYFUNC'] = lambda x, y: 1 + y + x
+>>> func = formulas.Parser().ast('=MYFUNC(1, 2)')[1].compile()
+>>> func()
+4
+
+
