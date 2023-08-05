@@ -1,0 +1,912 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+from __future__ import print_function
+from __future__ import unicode_literals
+import logging
+import requests
+import json
+import sys
+import os
+import time
+import stat
+import math
+import six
+import re
+import random
+from datetime import date
+from getpass import getpass
+from prettytable import PrettyTable, PLAIN_COLUMNS
+from requests.auth import HTTPBasicAuth
+from six.moves import input
+import pkg_resources
+from jsonschema import validate, Draft4Validator
+from jsonschema.exceptions import ValidationError
+from packaging import version
+from datetime import datetime
+
+
+if os.environ.get("LAUNCHER_URL") == None:
+    os.environ["LAUNCHER_URL"] = "http://stlauncher"
+
+import client.launcher as launcher
+
+launcher.append_version(pkg_resources.require("snw")[0].version)
+
+parser_login = launcher.subparsers.add_parser('login',
+                                      help='login to systran-nmt-wizard')
+parser_auth = launcher.subparsers.add_parser('auth',
+                                      help='get auth token for other user (super only)')
+parser_auth.add_argument('-u', '--user', type=str, required=True, help='user name')
+parser_auth.add_argument('--duration', type=int, help='specify duration of token ')
+
+parser_logout = launcher.subparsers.add_parser('logout',
+                                      help='remove credentials')
+
+parser_list_models = launcher.subparsers.add_parser('lm',
+                                             help='list available models')
+parser_list_models.add_argument('-s', '--source', help='source language prefix')
+parser_list_models.add_argument('-t', '--target', help='target language prefix')
+parser_list_models.add_argument('-m', '--model', help='beginning pattern on model name')
+parser_list_models.add_argument('--skip', action='store_true',
+                                                 help='skip models without scores')
+parser_list_models.add_argument('--aggr', choices=['lp', 'model'],
+                                                 help='aggregate models by `lp` or `model`')
+parser_list_models.add_argument('--scores', nargs='*', default=None, 
+                                                 help='testset patterns to display along with the model')
+parser_delete_models = launcher.subparsers.add_parser('dm',
+                                             help='delete specific models')
+parser_delete_models.add_argument('-s', '--source', help='source language', required=True)
+parser_delete_models.add_argument('-t', '--target', help='target language', required=True)
+parser_delete_models.add_argument('models', nargs='+', type=str, help='model names')
+
+parser_list_dockers = launcher.subparsers.add_parser('ld',
+                                             help='list available dockers')
+parser_list_dockers.add_argument('-d', '--docker', default="", help='restrict to specific docker')
+
+parser_list_resources = launcher.subparsers.add_parser('lr',
+                                             help='list available resources')
+parser_list_resources.add_argument('path', nargs='?', default=None, help='subpath')
+
+parser_describe = launcher.subparsers._name_parser_map['describe']
+parser_describe.add_argument('-m', '--model', help='model to describe')
+parser_describe.add_argument('-d', '--docker', help='docker to describe')
+parser_describe.add_argument('-c', '--config', help='for docker describe, name of the config')
+
+parser_list_users = launcher.subparsers.add_parser('lu',
+                                             help='list users')
+
+parser_add_user = launcher.subparsers.add_parser('au', help='add user')
+parser_add_user.add_argument('-u', '--username', help='user name', required=True)
+parser_add_user.add_argument('-t', '--tid', help='trainer id', required=True)
+parser_add_user.add_argument('-p', '--password', help='password', required=True)
+parser_add_user.add_argument('roles', nargs='+', help='roles')
+
+parser_add_user = launcher.subparsers.add_parser('mu', help='change user credentials')
+parser_add_user.add_argument('-u', '--username', help='user name', required=True)
+parser_add_user.add_argument('-t', '--tid', help='trainer id')
+parser_add_user.add_argument('-p', '--password', help='password')
+parser_add_user.add_argument('roles', nargs='*', help='roles')
+
+parser_add_user = launcher.subparsers.add_parser('du', help='remove user')
+parser_add_user.add_argument('-u', '--username', help='user name', required=True)
+
+parser_add_user = launcher.subparsers.add_parser('password', help='change password')
+parser_add_user.add_argument('-p', '--password', help='password')
+
+parser_change_tasks = launcher.subparsers.add_parser('ct',
+                                         help='change queued task')
+parser_change_tasks.add_argument('-p', '--prefix',
+                                         help='prefix for the tasks to change')
+parser_change_tasks.add_argument('-P', '--priority', type=int,
+                                         help='task priority - highest better')
+parser_change_tasks.add_argument('-Pr', '--priority_rand', type=int, default=0,
+                                         help='for each task add this random number to priority')
+parser_change_tasks.add_argument('-s', '--service', help="service name")
+parser_change_tasks.add_argument('-g', '--gpus', help="number of gpus", type=int)
+parser_change_tasks.add_argument('task_ids', nargs='*',
+                                        help="task identifiers")
+launcher.parser_launch.add_argument('-N', '--no_test_trans',
+                                          help="disable automatic test file translations",
+                                          action='store_true')
+launcher.parser_launch.add_argument('--force', action='store_true',
+                                                 help='skip config validation')
+
+parser_service = launcher.subparsers.add_parser('service',
+                                         help='service administration')
+parser_service.add_argument('-s', '--service', help="service name")
+parser_service.add_argument('-cn', '--configname', help="configuration name")
+parser_service.add_argument('-c', '--config', help="configuration file (for `setconfig` only)")
+parser_service.add_argument('-r', '--resource', help="name of the resource (for `enable`/`disable` only)")
+parser_service.add_argument('-m', '--message', help="add message for logs")
+parser_service.add_argument('action', help="command list, listconfig, setconfig, getconfig, delconfig, selectconfig"
+                                           ", restart, stop, enable, disable")
+parser_service.add_argument('-v', '--verbose', help='detail resource name, and running tasks',
+                                  action='store_true')
+
+launcher.parser_launch.add_argument('--upgrade', choices=['auto', 'none', 'force'],
+                                                 default='auto', help='choice to upgrade when later docker image available: `auto`(interactive), `none`, `force`')
+
+args = launcher.parser.parse_args()
+
+logging.basicConfig(stream=sys.stdout, level=args.log_level)
+launcher.logger = logging.getLogger()
+
+if args.url is None:
+    args.url = os.getenv('LAUNCHER_URL')
+    if args.url is None:
+        launcher.logger.error('missing launcher_url')
+        sys.exit(1)
+
+token_file = '%s/.launcher_token' % os.getenv('HOME')
+
+if args.cmd == 'login':
+    login = input('Login: ')
+    password = getpass()
+    r = requests.get(os.path.join(args.url, "auth/token"),
+                     auth=HTTPBasicAuth(login, password))
+    if r.status_code != 200:
+        launcher.logger.error('invalid credentials')
+        sys.exit(1)
+    token = str(r.json()['token'])
+    duration = r.json()['duration']
+    with open(token_file, 'w') as ftok:
+        ftok.write(token)
+    st = os.stat(token_file)
+    atime = st[stat.ST_ATIME]
+    mtime = st[stat.ST_MTIME]
+    end_mtime = mtime + duration - 10
+    os.utime(token_file, (atime, end_mtime))
+    launcher.logger.info('Got token (%s) for %ss', token, duration)
+    sys.exit(0)
+elif args.cmd == 'logout':
+    if os.path.exists(token_file):
+        os.remove(token_file)
+        launcher.logger.info('Removed connection token')
+    else:
+        launcher.logger.error('Not connected')
+    sys.exit(0)
+
+auth = None
+if os.path.exists(token_file):
+    if os.stat(token_file)[stat.ST_MTIME] > time.time():
+        with open('%s/.launcher_token' % os.getenv('HOME'), 'r') as ftok:
+            auth = ftok.read()
+    else:
+        os.remove(token_file)
+        launcher.logger.info('Removed expired token file')
+if auth is not None:
+    auth=HTTPBasicAuth(auth, 'x')
+
+if args.cmd == 'auth':
+    params = {'user': args.user }
+    if args.duration is not None:
+        params['duration'] = args.duration
+    r = requests.get(os.path.join(args.url, "auth/token"), auth=auth,
+                     params=params)
+    if r.status_code != 200:
+        launcher.logger.error('error: %s', r.text)
+        sys.exit(1)
+    token = str(r.json()['token'])
+    duration = r.json()['duration']
+    launcher.logger.info('Got token (%s) for %ss', token, duration)
+    sys.exit(0)
+
+r = requests.get(os.path.join(args.url, "service/list"), auth=auth)
+if r.status_code != 200:
+    launcher.logger.error('incorrect result from \'service/list\' service: %s', r.text)
+    sys.exit(1)
+
+serviceList = r.json()
+
+if hasattr(args, 'trainer_id') and not args.trainer_id:
+    args.trainer_id = ''
+
+is_json = args.display == "JSON"
+
+def _get_testfiles(url, auth, path, model, src_lang, tgt_lang):
+    assert src_lang is not None and tgt_lang is not None, "src/tgt_lang not determined"
+    r = requests.get(os.path.join(url, "resource/list"), 
+                      auth=auth, data={'path': "s3_test:"+path})
+    result = r.json()
+    assert r.status_code == 200, "cannot connect to test repository: %s" % result['message']
+    files = result.keys()
+    res = []
+    for f in files:
+        if f.endswith("."+src_lang) and f[:-len(src_lang)]+tgt_lang in files:
+            res.append(("s3_test:"+f, "s3_trans:"+model+"/"+f+"."+tgt_lang))
+    return res
+
+def tree_display(res, lvl, l, idx_result, model_maxsize, scorenames, bestscores, skip):
+    l = sorted(l, key=lambda k: float(idx_result[k]["date"]))
+    pref = ' ' * lvl
+    for k in l:
+        item = idx_result[k]
+        if not skip or len(item["scores"]) != 0:
+            if item["date"] is not None and item["date"] != 0:
+                d = date.fromtimestamp(math.ceil(float(item["date"]))).isoformat()
+            else:
+                d = ""
+            model = pref + item["model"]
+            if "count" in item:
+                model = model + " (%d)" % item["count"]
+            imageTag = item["imageTag"]
+            p = imageTag.find(':')
+            if p != -1:
+                imageTag = imageTag[:p]
+            p = imageTag.rfind('/')
+            if p != -1:
+                imageTag = imageTag[p+1:]
+            scorecols = []
+            for s in scorenames:
+                score = ""
+                if s in item["scores"]:
+                    score = "%.02f" % float(item["scores"][s])
+                    if item["scores"][s] == bestscores[s]:
+                        score = '*' + score
+                    elif item["scores"][s]/bestscores[s] > 0.995:
+                        score = '~' + score
+                scorecols.append(score)
+            sentenceCount = ''
+            if 'cumSentenceCount' in item and item['cumSentenceCount'] != 0:
+                sentenceCount = "%.2fM"% (item['cumSentenceCount']/1000000.)
+            res.add_row([d, item["lp"], imageTag, model, sentenceCount] + scorecols)
+        tree_display(res, lvl+1, item['children_models'], idx_result, model_maxsize, scorenames, bestscores, skip)
+
+# Calculate max depth of the trees
+def tree_depth(lvl, l, idx_result):
+    max_level = lvl
+    for k in l:
+        item = idx_result[k]
+        sub_level = tree_depth(lvl+1, item['children_models'], idx_result)
+        if sub_level > max_level:
+            max_level = sub_level
+    return max_level
+# Calculate cumulated sentenceCount
+def cum_sentenceCount(l, idx_result, sentenceCount):
+    for k in l:
+        item = idx_result[k]
+        if 'cumSentenceCount' not in item or item['cumSentenceCount'] is None:
+            item['cumSentenceCount'] = item['sentenceCount'] + sentenceCount
+        sub_level = cum_sentenceCount(item['children_models'], idx_result, item['cumSentenceCount'])
+# Merge two configs (redundant code with method in nmt-wizard/server/nmtwizard/config.py and nmt-wizard-docker/nmtwizard/framework.py)
+def merge_config(a, b):
+    """Merges config b in a."""
+    for k, v in six.iteritems(b):
+        if k in a and isinstance(v, dict):
+            merge_config(a[k], v)
+        else:
+            a[k] = v
+    return a
+# Parse docker image name to get version pattern (e.g. "systran/pn9_tf:v1") and number (1)
+def parse_version_number(image):
+    p = image.find(".")
+    if p == -1:
+        # version incompletely qualified
+        current_version_pattern = image
+    else:
+        # version completely qualified
+        current_version_pattern = image[:p]
+    q = current_version_pattern.find("v")
+    if q == -1:
+        version_main_number = 0
+    else:
+        version_main_number = int(current_version_pattern[q+1:])
+    return (current_version_pattern, version_main_number)
+# Check upgrades for docker image and return upgraded version if available and accepted by user
+def check_upgrades(image):
+    # retrieve info from image name
+    image = '/'.join(image.split("/")[-2:])
+    current_version_pattern, version_main_number = parse_version_number(image)
+
+    # get all docker images corresponding to current image version (starting from v1)
+    if(version_main_number > 0 and args.upgrade != "none"):
+        r = requests.get(os.path.join(args.url, "docker/versions"),
+                         auth=auth, params={'version_pattern': current_version_pattern})
+        if r.status_code != 200:
+            raise RuntimeError('cannot find docker images for current version %s -- %s' % (current_version_pattern, r.text))
+        result = r.json()
+        versions = []
+        for r in result:
+            versions.append(version.parse(r['image']))
+        latest_version_parse = max(versions)
+        latest_version = latest_version_parse.base_version
+        # selectively upgrade if later version available 
+        if(version.parse(image) < latest_version_parse):
+            if "." not in image or args.upgrade == "force":
+                # version incompletely qualified
+                launcher.logger.info('automatically upgrading docker_image=%s to %s' % (image, latest_version))
+                return latest_version
+            else:
+                # version completely qualified
+                launcher.logger.info('upgrading docker_image=%s to %s is available, do you want to upgrade? (y/n)' % (image, latest_version))
+                while True:
+                    response = input('Upgrade?: ')
+                    if response in {'y', 'yes'}:
+                        launcher.logger.info('upgrading docker_image=%s to %s' % (image, latest_version))
+                        return latest_version
+                    elif response in {'n', 'no'}:
+                        break
+                    else:
+                        launcher.logger.info('Please enter `y` or `n`.')
+    return image
+# Annonce the usage of a docker image
+def annonce_usage(image):
+    split = image.split("/")
+    if len(split) > 2:
+        image = "/".join(split[-2:])
+    launcher.logger.info('** will be using -docker_image=%s' % image)
+
+try:
+    res = None
+    if args.cmd == 'service':
+        if not (args.action == 'list' or args.action == 'listconfig'
+                or args.action == 'setconfig' or args.action == 'getconfig'
+                or args.action == 'delconfig' or args.action == 'selectconfig' or
+                args.action == 'enable' or args.action == 'disable' or
+                args.action == 'restart' or args.action == 'stop'):
+            raise ValueError('action should be list, listconfig, getconfig, setconfig, delconfig, selectconfig'
+                             ', restart, stop, enable, disable')
+        if args.action == 'list':
+            args.cmd = 'ls'
+        else:
+            params = None
+            if args.message:
+                params = { 'message': args.message }
+            if args.service is None:
+                raise ValueError('argument -s/--service is required')
+            if args.service not in serviceList:
+                raise ValueError('unknown service: %s' % args.service)
+            if args.resource is not None and not(args.action == 'enable' or args.action == 'disable'):
+                raise ValueError('argument -r/--resource cannot be used with %s' % args.action)                    
+            if args.action == 'enable' or args.action == 'disable':
+                if args.configname is not None:
+                    raise ValueError('argument -cn/--configname cannot be used with disable, enable')
+                if args.resource is None:
+                    raise ValueError('argument -r/--resource required with disable, enable')
+                service = serviceList[args.service]
+                if "detail" not in service or service["detail"].get(args.resource) == None:
+                    raise ValueError('unknown resource %s for service %s' % (args.resource, args.service))
+                r = requests.get(os.path.join(args.url, "service", args.action, args.service, args.resource),
+                                 auth=auth, params=params)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'service/%s\' service: %s' % (args.action, r.text))
+                res = r.json()
+            elif args.action == 'restart' or args.action == 'stop':
+                if args.configname is not None:
+                    raise ValueError('argument -cn/--configname cannot be used with %s', args.action)
+                r = requests.get(os.path.join(args.url, "service", args.action, args.service),
+                                 auth=auth, params=params)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'service/%s\' service: %s' % (args.action, r.text))
+                res = r.json()
+            elif args.action == 'listconfig' or args.action == 'getconfig':
+                r = requests.get(os.path.join(args.url, "service/listconfig", args.service),
+                                 auth=auth, params=params)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'service/listconfig\' service: %s' % r.text)
+                result = r.json()
+                if args.action == 'listconfig' and not is_json:
+                    res = PrettyTable(["Name", "Last Modified", "Current"])
+                    for r in result["configurations"]:
+                        mtime = result["configurations"][r][0]
+                        mdate = datetime.fromtimestamp(math.ceil(float(mtime))).isoformat()
+                        res.add_row([r, mdate, r==result["current"] and "yes" or "no"])
+                elif args.action == 'getconfig':
+                    if args.configname is None:
+                        args.configname = result["current"]
+                    if args.configname not in result["configurations"]:
+                        raise ValueError('unknown configuration: %s' % args.configname)
+                    res = result["configurations"][args.configname][1]
+                else:
+                    res = result
+            else:
+                if args.configname is None:
+                    raise ValueError('argument -cn/--configname is required')
+                if args.action == "setconfig" and args.config is None:
+                    raise ValueError('argument -c/--config is required for `setconfig`')
+                if args.action == "setconfig":
+                    config = args.config
+                    try:
+                        if config.startswith("@"):
+                            with open(config[1:], "rt") as f:
+                                config = f.read()
+                        jconfig = json.loads(config)
+                        if jconfig.get("name") != args.service:
+                            raise ValueError('config name should be corresponding to service')
+                    except Exception as err:
+                        raise ValueError(str(err))
+                    r = requests.post(os.path.join(args.url, "service", args.action, args.service, args.configname),
+                                      data={'config': config}, auth=auth)
+                else:
+                    r = requests.get(os.path.join(args.url, "service", args.action, args.service, args.configname),
+                                     auth=auth)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'service/%s\' service: %s' % (args.service, r.text))
+                res = r.json()
+    elif args.cmd == 'lu':
+        r = requests.get(os.path.join(args.url, "user/list"), auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'user/list\' service: %s' % r.text)
+        result = r.json()
+        if not is_json:
+            res = PrettyTable(["TID", "Name", "Roles"])
+            res.align["Name"] = "l"
+            for r in result:
+                res.add_row([r["tid"], r["name"], ", ".join(r["roles"])])
+        else:
+            res = result
+    elif args.cmd == 'au':
+        data = {
+            'name': args.username,
+            'password': args.password,
+            'TID': args.tid,
+            'roles': args.roles
+        }
+        r = requests.post(os.path.join(args.url, "user/add"), auth=auth, data=data)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'user/add\' service: %s' % r.text)
+        res = 'ok'
+    elif args.cmd == 'mu':
+        data = {
+            'name': args.username,
+        }
+        if args.password is not None:
+            data['password'] = args.password
+        if args.tid is not None:
+            data['TID'] = args.tid
+        if args.roles is not None:
+            data['roles'] = args.roles
+        r = requests.post(os.path.join(args.url, "user/modify"), auth=auth, data=data)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'user/modify\' service: %s' % r.text)
+        res = 'ok'
+    elif args.cmd == 'password':
+        data = {
+            'password': args.password,
+        }
+        r = requests.post(os.path.join(args.url, "user/password"), auth=auth, data=data)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'user/password\' service: %s' % r.text)
+        res = 'ok'
+    elif args.cmd == 'du':
+        data = {
+            'name': args.username,
+        }
+        r = requests.post(os.path.join(args.url, "user/delete"), auth=auth, data=data)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'user/delete\' service: %s' % r.text)
+        res = 'ok'
+    elif args.cmd == 'ld':
+        r = requests.get(os.path.join(args.url, "docker/list"),
+                         auth=auth, params={'docker': args.docker})
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'docker/list\' service: %s' % r.text)
+        result = r.json()
+        if not is_json:
+            res = PrettyTable(["Date", "IMAGE", "Tag", "Configurations"])
+            res.align["Configurations"] = "l"
+            for r in sorted(result, key=lambda r: float(r["date"])):
+                d = date.fromtimestamp(math.ceil(float(r["date"] or 0))).isoformat()
+                imgtag=r["image"].split(':')
+                res.add_row([d, imgtag[0], imgtag[1], r["configs"]])
+        else:
+            res = result
+    elif args.cmd == 'lr':
+        r = requests.get(os.path.join(args.url, "resource/list"), 
+                          auth=auth, data={'path': args.path})
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'resource/list\' service: %s' % r.text)
+        result = r.json()
+        if not is_json:
+            if args.path is None or args.path == '':
+                res = PrettyTable(['Name', 'Description'])
+                res.align["Name"] = "l"
+                res.align["Description"] = "l"
+                for r in result:
+                    res.add_row([r["name"]+":", r["description"]])
+            else:
+                res = PrettyTable(['Type', 'Path', 'Suffixes', 'Count'])
+                res.align["Path"] = "l"
+                res.align["Suffixes"] = "l"
+                files = {}
+                for k, v in six.iteritems(result):
+                    if v > 1:
+                        res.add_row(['dir', k, '', v])
+                    else:
+                        suffix = ""
+                        if k.endswith(".gz"):
+                            suffix = ".gz"
+                            k = k[:-3]
+                        p = k.rfind(".")
+                        if p != -1:
+                            suffix = k[p:] + suffix
+                            k = k[:p]
+                        if k not in files:
+                            files[k] = []
+                        files[k].append(suffix)
+                for k, v in six.iteritems(files):
+                    res.add_row(['file', k, ', '.join(sorted(v)), len(v)])
+        else:
+            res = result
+    elif args.cmd == 'dm':
+        count = 0
+        for m in args.models:
+            print('removing '+m)
+            if launcher.confirm():
+                r = requests.get(os.path.join(args.url, "model/delete/%s/%s/%s" % (args.source, args.target, m)), auth=auth)
+                if r.status_code == 200:
+                    count += 1
+                else:
+                    print('cannot remove %s (%s)' % (m, r.text))
+        res = "%d deleted model(s)" % count
+    elif args.cmd == 'ct':
+        if args.prefix == None and len(args.task_ids) == 0 and args.gpus == None:
+            raise RuntimeError('you need to specify either `--prefix PREFIX` or task_id(s) or `--gpus NGPUS`')
+        if args.prefix != None and len(args.task_ids) != 0:
+            raise RuntimeError('you cannot to specify both `--prefix PREFIX` and task_id(s)')
+        if args.service == None and args.priority == None:
+            raise RuntimeError('you need to specify new service (`--service SERVICE`)'+
+                               ' and/or new priority (`--priority PRIORITY`)')
+        if args.prefix:
+            r = requests.get(os.path.join(args.url, "task/list", args.prefix + '*'), auth=auth)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'task/list\' service: %s' % r.text)
+            result = r.json()
+            args.task_ids = [k["task_id"] for k in result]
+            if len(result) == 0:
+                raise RuntimeError('no task matching prefix %s' % args.prefix)
+        print('Change %d tasks (%s)' % (len(args.task_ids), ", ".join(args.task_ids)))
+        if len(args.task_ids) == 1 or launcher.confirm():
+            modification = ""
+            if args.service:
+                modification += "service=%s" % args.service
+            if args.priority:
+                if len(modification) > 0:
+                    modification += ", "
+                modification += "priority=%d" % args.priority
+            if args.gpus:
+                if len(modification) > 0:
+                    modification += ", "
+                modification += "ngpus=%d" % args.gpus
+            launcher.logger.info("modifying tasks (%s) for:" % modification)
+            error = False
+            for k in args.task_ids:
+                launcher.logger.info("*** %s" % k)
+                p = args.priority
+                if p is not None and args.priority_rand != 0:
+                    p += random.randint(0, args.priority_rand)
+                r = requests.get(os.path.join(args.url, "task/change", k), auth=auth,
+                                 params={ 'priority': p, 'service': args.service, 'ngpus': args.gpus})
+                if r.status_code != 200:
+                    launcher.logger.error('>> %s' % r.json()["message"])
+                    error = True
+                else:
+                    launcher.logger.info(">> %s" % r.json()["message"])
+                res=""
+        else:
+            res =""
+    elif args.cmd == 'lm':
+        if args.skip and args.scores is None:
+            raise RuntimeError('cannot use --skip without --scores')
+        params = {'source':args.source, 'target': args.target, 'model': args.model,
+                  'scores':json.dumps(args.scores)}
+        r = requests.get(os.path.join(args.url, "model/list"), params=params, auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'model/list\' service: %s' % r.text)
+        response = r.json()
+        result = []
+        for item in response:
+            if args.model and args.model not in item['model']:
+                continue
+            if args.scores is not None:
+                item['scores'] = {os.path.basename(k):v for k, v in six.iteritems(item['scores'])}
+            result.append(item)
+        if not is_json:
+            scorenames = {}
+            bestscores = {}
+
+            # Calculate the aggregate sentence feed
+            idx_result = {}
+            root = []
+            for r in result:
+                r['children_models'] = []
+                idx_result[r['lp']+":"+r['model']] = r
+            for k,v in six.iteritems(idx_result):
+                parent_model = v['parent_model']
+                if 'parent_model' in v and v['parent_model'] is not None and v['lp']+":"+v['parent_model'] in idx_result:
+                    p = v['lp']+":"+v['parent_model']
+                    idx_result[p]['children_models'].append(k)
+                else:
+                    root.append(k)
+            cum_sentenceCount(root, idx_result, 0)
+
+            idx_result = {}
+            root = []
+            if args.aggr:
+                aggr_result = {}
+                for r in result:
+                    model = r["model"]
+                    q = model.find("_")
+                    if q != -1:
+                        q = model.find("_", q+1)
+                        model = model[q+1:]
+                        q = model.find("_")
+                        if q != -1:
+                            model = model[:q]
+                    lpmodel = r["lp"]
+                    if args.aggr == 'model':
+                        lpmodel += ":" + model
+                    if lpmodel not in aggr_result:
+                        aggr_result[lpmodel] = { 'lp': r["lp"], 'cumSentenceCount': 0,
+                                                 'date': 0, 'model': '', 'scores': {}, 'count': 0,
+                                                 'imageTag': '' }
+                        if args.aggr == 'model':
+                            aggr_result[lpmodel]["imageTag"] = r["imageTag"]
+                            aggr_result[lpmodel]["model"] = model
+                    aggr_result[lpmodel]['count'] += 1
+                    for s, v in six.iteritems(r['scores']):
+                        if s not in aggr_result[lpmodel]['scores'] or aggr_result[lpmodel]['scores'][s] < v:
+                            aggr_result[lpmodel]['scores'][s] = v
+                    if r["date"] > aggr_result[lpmodel]['date']:
+                        aggr_result[lpmodel]['date'] = r["date"]
+                    if r["cumSentenceCount"] > aggr_result[lpmodel]['cumSentenceCount']:
+                        aggr_result[lpmodel]['cumSentenceCount'] = r["cumSentenceCount"]
+                result = [aggr_result[k] for k in aggr_result]
+            for r in result:
+                r['children_models'] = []
+                lpmodel = r["lp"]+":"+r["model"]
+                if 'parent_model' in r and r['parent_model'] is not None:
+                    r["parent_model"] = r["lp"]+':'+r["parent_model"]
+                idx_result[lpmodel] = r
+                for s, v in six.iteritems(r['scores']):
+                    scorenames[s] = scorenames.get(s, 0) + 1
+                    if s not in bestscores or v > bestscores[s]:
+                        bestscores[s] = v
+            for k,v in six.iteritems(idx_result):
+                if 'parent_model' in v and v['parent_model'] in idx_result:
+                    p = v['parent_model']
+                    idx_result[p]['children_models'].append(k)
+                else:
+                    root.append(k)
+            max_depth = tree_depth(0, root, idx_result)
+            model_maxsize = max_depth + 42
+            scorenames_key = sorted(scorenames.keys())
+            scoretable = []
+            scorecols = []
+            for i in xrange(len(scorenames_key)):
+                scorecols.append("T%d" % (i+1))
+                scoretable.append("T%d:\t%s\t%d" % (i+1, scorenames_key[i], scorenames[scorenames_key[i]]))
+            res1 = PrettyTable(["Date", "LP", "Type", "Model ID", "#Sentences"]+scorecols)
+            res1.align["Model ID"] = "l"
+            tree_display(res1, 0, root, idx_result, model_maxsize, scorenames_key, bestscores, args.skip)
+            res = [res1]
+            res.append('=> %d models\n' % len(result))
+            if len(scoretable):
+                res.append('\n'.join(scoretable) + "\n")
+        else:
+            res = result
+    elif args.cmd == 'describe' and args.model:
+        r = requests.get(os.path.join(args.url, "model/describe", args.model), auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/describe\' service: %s' % r.text)
+        res = r.json()
+    elif args.cmd == 'describe' and args.docker:
+        image = args.docker
+        p = image.find(":")
+        tag = image[p+1:]
+        image = image[:p]
+        assert args.config, "docker describe requires --config parameter"
+        r = requests.get(os.path.join(args.url, "docker/describe"),
+                         params={'config':args.config,'image':image,'tag':tag},auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/describe\' service: %s' % r.text)
+        res = r.json()
+    elif args.cmd == "file":
+        p = args.filename.find(':')
+        if p == -1:
+            r = requests.get(os.path.join(args.url, "task/file", args.task_id, args.filename), auth=auth)
+        else:
+            r = requests.get(os.path.join(args.url, "task/file_storage", 
+                                          args.filename[0:p], args.task_id, args.filename[p+1:]), auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'task/file_extended\' service: %s' % r.text)
+        res = r.text.encode("utf-8")
+    if res is None:
+        skip_launch = False
+        if args.cmd == 'launch':
+            mode = None
+            model = None
+            src_lang = None
+            tgt_lang = None
+            totranslate = None
+            # implement -t option for translation
+
+            # first pass to get model if present and if no image given, determine docker image to be used
+            i = 0
+            while i < len(args.docker_command):
+                tok = args.docker_command[i]
+                if mode is None and (tok == "-m" or tok == "--model"):
+                    assert i+1 < len(args.docker_command), "`-m` missing value"
+                    model = args.docker_command[i+1]
+                    
+                    if args.docker_image is None:
+                        # no image specified with -i, first try to infer it from model
+                        r = requests.get(os.path.join(args.url, "model/describe", model), params={"short": True},
+                                         auth=auth)
+                        if r.status_code != 200:
+                            raise RuntimeError("cannot infer docker_image for model %s -- %s" % (model, r.text))
+                        args.docker_image = r.json()['imageTag']
+
+                    args.docker_image = check_upgrades(args.docker_image)
+                    annonce_usage(args.docker_image)
+
+                    split = model.split("_")
+                    if len(split) > 2 and src_lang is None:
+                        lp = split[1]
+                        m = re.match(r"^([a-z]{2}([-+][A-Z]+)?)([a-z]{2}.*)$", lp)
+                        if m is not None:
+                            src_lang = m.group(1)
+                            tgt_lang = m.group(3)
+                    i += 1
+                i += 1
+            # second pass to apply other options
+            i = 0
+            while i < len(args.docker_command):
+                tok = args.docker_command[i]
+                if mode is None and (tok == "train" or tok == "trans" or tok == "preprocess" or tok == "release"):
+                    mode = tok
+                    assert mode != "trans" or model is not None, "missing model for `trans`"
+                # get config if present and validate it against schema
+                elif mode is None and (tok == "-c" or tok == "--config"):
+                    assert i+1 < len(args.docker_command), "`-c` missing value"
+
+                    # get JSON config passed as parameter
+                    c = args.docker_command[i+1]
+                    if c.startswith("@"):
+                        with open(c[1:], "rt") as f:
+                            c = f.read()
+                    config = json.loads(c)
+                    if model:
+                        # if model is present, collect its config
+                        r = requests.get(os.path.join(args.url, "model/describe", model), auth=auth)
+                        if r.status_code != 200:
+                            raise RuntimeError("cannot infer docker_image for model %s -- %s" % (model, r.text))
+                        model_config = r.json()
+                        # merge to validate complete config
+                        config = merge_config(model_config, config)
+                    else:
+                        # get latest docker image
+                        assert args.docker_image, "missing docker image"
+                        args.docker_image = check_upgrades(args.docker_image)
+                        annonce_usage(args.docker_image)
+
+                    # get JSON schema associated with docker image and tag if --force flag not activated (from v1 onwards)
+                    if not args.force:
+                        image = args.docker_image
+                        _, version_main_number = parse_version_number(image)
+                        if(version_main_number > 0):
+                            p = image.find(":")
+                            tag = image[p+1:]
+                            image = image[:p]
+                            r = requests.get(os.path.join(args.url, "docker/schema"),
+                                 params={'image':image,'tag':tag},auth=auth)
+                            if r.status_code != 200:
+                                print(r)
+                                raise RuntimeError('cannot retrieve schema from docker image %s, tag %s: %s' % (image, tag))
+                            schema_res = r.json()
+                            schema = json.loads(schema_res)
+                            # validate config against JSON schema
+                            try:
+                                validate(config, schema)
+                            except ValidationError as error:
+                                v = Draft4Validator(schema)
+                                all_errors = "\n\n**Your config has the following issues, please refer to the documentation:"
+                                for error in sorted(v.iter_errors(config), key=str):
+                                    # format error message
+                                    error_parts = error.message.split()
+                                    error_message = ""
+                                    for error_part in error_parts:
+                                        if error_part.startswith("u'"):
+                                            error_message += error_part[1:].replace("'",'"')
+                                        elif error_part[1:].startswith("u'"):
+                                            error_message += error_part[0]+error_part[2:].replace("'",'"')
+                                        else:
+                                            error_message += error_part
+                                        error_message += ' '
+                                    # format error path
+                                    error_path = ""
+                                    for path_part in list(error.path):
+                                        if isinstance(path_part, int):
+                                            error_path += "array["+str(path_part)+"]"
+                                        else:
+                                            error_path += '"'+path_part+'"'
+                                        error_path += '/'
+                                    # write error message and path
+                                    if error_path == "":
+                                        all_errors += '\n - In the config, '+error_message
+                                    else:
+                                        all_errors += '\n - In the option '+error_path+', '+error_message
+                                raise ValidationError(all_errors)
+                    src_lang = config["source"]
+                    tgt_lang = config["target"]
+                    i += 1
+                elif mode == "trans" and tok == "-t":
+                    assert i+1 < len(args.docker_command), "`trans -t` missing value"
+                    filename = args.docker_command[i+1]
+                    p = filename.rfind(".")
+                    assert p != -1, "-t filename should include language suffix"
+                    if src_lang == None:
+                        src_lang = filename[p+1:]
+                    else:
+                        assert src_lang == filename[p+1:], "incompatible language suffix"
+                    if tgt_lang == None:
+                        p = model.find("_")
+                        q = model.find("_", p+1)
+                        assert p != -1 and q != -1, "cannot find language pair in model name"
+                        lp = model[p+1:q]
+                        assert lp[:len(src_lang)] == src_lang, "model lp does not match language suffix"
+                        tgt_lang = lp[len(src_lang):]
+                    new_params = ["-i", "s3_test:"+filename, "-o", "s3_trans:"+model+"/"+filename+"."+tgt_lang]
+                    args.docker_command = args.docker_command[0:i] + new_params + args.docker_command[i+2:]
+                    i += 4
+                elif mode == "trans" and tok == "-T":
+                    assert i+1 < len(args.docker_command), "`trans -T` missing value"
+                    path = args.docker_command[i+1]
+                    assert path != "" and path.find(":") == -1, "`trans -T path` - path should be subpath of s3_test:"
+                    if path[-1:] != "/":
+                        path += "/"
+                    files = _get_testfiles(args.url, auth, path, model, src_lang, tgt_lang)
+                    docker_command = args.docker_command
+                    res = []
+                    for f in files:
+                        print("translating: "+f[0])
+                        new_params = ["-i", f[0], "-o", f[1]]
+                        args.docker_command = docker_command[0:i] + new_params + docker_command[i+2:]
+                        res.append(launcher.process_request(serviceList, args.cmd, args.display=="JSON",
+                                                            args, auth=auth))
+                    assert len(res) != 0, "no file found to translate (%s>%s)" % (src_lang, tgt_lang)
+                    skip_launch = True
+                    break
+                i += 1
+            if mode == "release":
+                args.docker_command += ["-d", "s3_release:"]
+            if args.no_test_trans:
+                assert mode == "train", "`--no_test_trans` can only be used with `train` mode"
+            elif mode == "train":
+                assert src_lang is not None and tgt_lang is not None, ("src/tgt_lang not determined: " +
+                                                                      "cannot find test sets")
+                if src_lang < tgt_lang:
+                    test_dir = src_lang + "_" + tgt_lang
+                else:
+                    test_dir = tgt_lang + "_" + src_lang
+                args.totranslate = _get_testfiles(args.url, auth, test_dir, "<MODEL>", src_lang, tgt_lang)
+        if not skip_launch:
+            res = launcher.process_request(serviceList, args.cmd, args.display=="JSON",
+                                           args, auth=auth)
+except RuntimeError as err:
+    launcher.logger.error(str(err))
+    sys.exit(1)
+except ValueError as err:
+    launcher.logger.error(str(err))
+    sys.exit(1)
+
+if not isinstance(res, list):
+    res = [res]
+for r in res:
+    if args.display=="JSON" or isinstance(r, dict):
+        print(json.dumps(r, indent=2))
+    else:
+        if isinstance(r, PrettyTable):
+            if args.display == "TABLE":
+                print(r)
+            elif args.display == "RAW":
+                r.set_style(PLAIN_COLUMNS)
+                print(r)
+            else:
+                print(r.get_html_string())
+        else:
+            sys.stdout.write(r)
+            if args.cmd != "file" and not r.endswith("\n"):
+                sys.stdout.write("\n")
+            sys.stdout.flush()
