@@ -1,0 +1,22 @@
+version: '2'
+services:
+  uniqueidmysql:
+    image: mysql
+    container_name: uniqueidmysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pacifica_uniqueid
+      MYSQL_USER: uniqueid
+      MYSQL_PASSWORD: uniqueid
+    ports:
+     - 3306:3306
+
+  uniqueid:
+    container_name: uniqueid
+    build: .
+    links:
+      - uniqueidmysql:mysql
+    ports:
+      - 8051:8051
+    environment:
+      MYSQL_PORT_3306_TCP_ADDR: mysql
