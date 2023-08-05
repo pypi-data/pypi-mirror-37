@@ -1,0 +1,87 @@
+# https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/endpoints/kubernetes/k8s-grpc-bookstore.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-{SERVICE_ID}-service
+  labels:
+    app: grpc-{SERVICE_ID}
+    release: grpc-{SERVICE_ID}
+spec:
+  ports:
+  - port: 9000
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  - port: 9001
+    targetPort: 9001
+    protocol: TCP
+    name: grpc
+  selector:
+    app: grpc-{SERVICE_ID}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grpc-{SERVICE_ID}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: grpc-{SERVICE_ID}
+        release: grpc-{SERVICE_ID}
+    spec:
+      volumes:
+        - name: devision-token-issuer
+          secret:
+            secretName: devision-token-issuer
+        - name: developer-settings
+          secret:
+            secretName: developer-settings
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+      - name: esp
+        image: gcr.io/endpoints-release/endpoints-runtime:1
+        args: [
+          "--http_port=9000",
+          "--http2_port=9001",
+          "--backend=grpc://127.0.0.1:50051",
+          "--service={SERVICE_ID}.endpoints.{PROJECT_ID}.cloud.goog",
+          "--service_account_key=/etc/nginx/creds/devision-token-issuer.json",
+          "--rollout_strategy=managed",
+        ]
+        ports:
+          - containerPort: 9000
+          - containerPort: 9001
+        volumeMounts:
+          - mountPath: /etc/nginx/creds
+            name: devision-token-issuer
+            readOnly: true
+      - name: app-grpc-{SERVICE_ID}
+        image: {IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 50051
+        volumeMounts:
+          - mountPath: /root/.rwmeta
+            name: developer-settings
+            readOnly: true
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: grpc-{SERVICE_ID}-service
+  namespace: apis
+  labels:
+    app: grpc-{SERVICE_ID}
+    release: grpc-{SERVICE_ID}
+spec:
+  rules:
+  - host: {SERVICE_ID}.apis.devision.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: grpc-{SERVICE_ID}-service
+          servicePort: 9000
