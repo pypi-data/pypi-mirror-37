@@ -1,0 +1,81 @@
+# Run python-versions on {{ taskotron_item }} NVR build
+
+- hosts: localhost
+  remote_user: root
+  vars:
+    testcase: dist.python-versions
+    taskotron_generic_task: true
+    # below are fallback vars for local testing
+    artifacts: ./artifacts
+    taskotron_item: python-gear-0.11.0-1.fc27  # you should really override at least this :)
+    taskotron_supported_arches:
+      - x86_64
+  tasks:
+    - name: Install required packages
+      dnf:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - python3-rpm
+        - python3-dnf
+        - python3-libarchive-c
+        - python3-bugzilla
+        - libtaskotron-core
+        - libtaskotron-fedora
+      register: dnf_output
+      # retry for network failures
+      retries: 3
+      delay: 30
+      until: dnf_output is succeeded
+
+    - name: Print msg of DNF task
+      debug:
+        var: dnf_output.results[0].msg
+      when: "'msg' in dnf_output.results[0]"
+
+    - name: Print results of DNF task
+      debug:
+        var: dnf_output.results[0].results | sort
+      when: "'results' in dnf_output.results[0]"
+
+    - name: Make sure taskotron results dir exists
+      # this is for placing results.yml file
+      file:
+        path: "{{ artifacts }}/taskotron"
+        state: directory
+
+    - name: Create work dir
+      tempfile:
+        path: /var/tmp
+        state: directory
+        prefix: task-{{ testcase }}_
+      register: workdir
+
+    - name: Print work dir
+      debug:
+        var: workdir.path
+
+    - name: Compute architectures to test
+      set_fact:
+        test_arches: "{{ taskotron_supported_arches }} + ['noarch', 'src']"
+
+    - name: Print architectures to test
+      debug:
+        var: test_arches
+
+    - block:
+        - name: Download RPMs from Koji
+          shell: >
+            python3 download_rpms.py {{ taskotron_item }} {{ workdir.path }}
+            {{ test_arches | join(',') }}
+            &> {{ artifacts }}/test.log
+
+        - name: Run task
+          shell: >
+            python3 python_versions_check.py {{ taskotron_item }} {{ workdir.path }}
+            {{ artifacts }} {{ testcase }} {{ test_arches | join(',') }}
+            &>> {{ artifacts }}/test.log
+      always:
+        - name: Print results location
+          debug:
+            msg: 'You can see task results at: {{ artifacts | realpath }}'
