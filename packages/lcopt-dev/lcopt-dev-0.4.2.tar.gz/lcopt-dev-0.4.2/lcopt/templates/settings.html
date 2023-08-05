@@ -1,0 +1,119 @@
+{% extends 'base.html'%}
+
+{% block title %}Settings{% endblock%}
+
+{% block head_postload %}
+	<script src="{{ url_for('static', filename = 'js/cdn_cache/selectize.js') }}"></script>
+	<script src="{{ url_for('static', filename = 'js/methods_box.js') }}"></script>
+
+	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static', filename = 'css/methods_box.css') }}" />
+	<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static', filename = 'css/cdn_cache/selectize.css') }}" />
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+	<form class="form-horizontal">
+		<fieldset>
+
+		<!-- Form Name -->
+		<legend>Model settings</legend>
+
+		<!-- Text input-->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="settings_amount">Amount to analyse</label>  
+		  <div class="col-md-4">
+		  <input id="settings_amount" name="settings_amount" type="text" class="form-control input-md" value="{{args.current_amount}}">
+		  <span class="help-block">Recommended value is 1</span>  
+		  </div>
+		</div>
+
+		<!-- Select with Selectize -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="settings_methods">Methods</label>
+		  <div class="col-md-4">
+		    <select multiple id="settings_methods" name="settings_methods" ><!--class="form-control">-->
+		    </select>
+		  </div>
+		</div>
+
+		<!-- Multiple Checkboxes -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="checkboxes">Additional options</label>
+		  <div class="col-md-4">
+		    <div class="checkbox">
+		      <label for="allow_allocation">
+		        <input type="checkbox" name="allow_allocation" id="allow_allocation" value="" {% if args.allow_allocation %} checked {% endif %}>
+		        Allow allocation
+		      </label>
+			</div>
+		  </div>
+		</div>
+
+		</fieldset>
+	</form>
+
+		<!-- Button -->
+	<div class="form-group">
+	  <label class="col-md-4 control-label" for="export-btn"></label>
+	  <div class="col-md-4">
+	    <button id="export-btn" name="export-btn" class="btn btn-primary">Save</button>
+	  </div>
+	</div>
+
+</div>
+
+<script type="text/javascript">
+	
+	$(document).ready(function(){
+
+		var $select
+
+		current_methods = {{args.current_methods|safe}};
+
+		console.log(current_methods)
+
+		$.getJSON('/methods.json', function(data){
+			//////console.log(data);
+			setUpSelectize(data, current_methods)
+		})
+
+	})
+
+	$('#export-btn').click(function(){
+
+	
+	//////console.log('change')
+	var my_items = $select[0].selectize.items;
+	var all_options = $select[0].selectize.options;
+	var chosen_methods = []
+
+	for(i in my_items){
+		this_item = my_items[i]
+		chosen_methods.push(all_options[this_item].value)
+
+	}
+	console.log(chosen_methods)
+
+	json_methods = JSON.stringify(chosen_methods);
+
+	console.log(json_methods)
+	postData = {
+		action : 'update_settings',
+		settings_amount : $('#settings_amount').val(),
+		settings_methods : json_methods,
+		allow_allocation : $('#allow_allocation').is(':checked'),
+	}
+
+	$.post('/process_post', postData)
+
+	window.location.replace("/")
+
+})
+
+</script>
+
+{% endblock %}
+
