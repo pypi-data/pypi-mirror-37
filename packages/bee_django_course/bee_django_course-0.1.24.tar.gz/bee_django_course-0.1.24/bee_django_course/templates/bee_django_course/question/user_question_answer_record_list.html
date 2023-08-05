@@ -1,0 +1,79 @@
+{% extends "bee_django_course/base.html" %}
+{% load bee_django_course_filter %}
+
+{% block content %}
+    <div class="text-center"><h3>
+        {% if user %}
+            {{ user|get_name_detail:False }}【{{ ucs.section }}】的问卷
+        {% else %}
+            问题列表
+        {% endif %}
+    </h3>
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th></th>
+            <th>问题</th>
+            {% if not user %}
+                <th>课件</th>
+            {% endif %}
+            <th>正确答案</th>
+            {% if user %}
+                <th>用户答案</th>
+            {% else %}
+                <th></th>
+            {% endif %}
+
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for question in question_list %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {{ question.question }}
+                </td>
+                {% if not user %}
+
+                    <td>
+                        {{ question.section.name }}
+                    </td>
+                {% endif %}
+                <td>
+                    {% if question.get_correct_options|length == 0 %}
+                        <span style="color: red">无正确答案</span>
+                    {% endif %}
+                    {% for option in question.get_correct_options %}
+                        {{ option.option }}
+                        {% if not  forloop.last %},{% endif %}
+                    {% endfor %}
+                </td>
+                {% if user %}
+                    <td>
+                        {% get_user_question_answer question user as records %}
+                        {% for record in records %}
+                            {{ record.answer.option }}
+                            {% if not  forloop.last %},{% endif %}
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td>
+                        <a href="#">答题情况</a>
+                    </td>
+                {% endif %}
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+    {% include 'bee_django_course/paginator.html' %}
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+
+
+    </script>
+{% endblock %}
