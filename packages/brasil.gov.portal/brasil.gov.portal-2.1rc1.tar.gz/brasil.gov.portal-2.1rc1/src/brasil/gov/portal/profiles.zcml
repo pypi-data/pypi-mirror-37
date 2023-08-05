@@ -1,0 +1,33 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:gs="http://namespaces.zope.org/genericsetup"
+    i18n_domain="brasil.gov.portal">
+
+  <!-- Profiles -->
+  <gs:registerProfile
+      name="default"
+      title=".gov.br: Portal Padrão"
+      directory="profiles/default"
+      description="Portal Padrão de sites para o Governo Federal"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler="brasil.gov.portal.setuphandlers.run_after"
+      />
+
+  <!-- Upgrades -->
+  <include package=".upgrades" />
+
+  <utility
+      factory=".setuphandlers.NonInstallable"
+      name="brasil.gov.portal"
+      provides="Products.CMFPlone.interfaces.INonInstallable"
+      />
+
+  <!-- BBB: Plone 4.3 -->
+  <utility
+      factory=".setuphandlers.NonInstallable"
+      name="brasil.gov.portal"
+      provides="Products.CMFQuickInstallerTool.interfaces.INonInstallable"
+      />
+
+</configure>

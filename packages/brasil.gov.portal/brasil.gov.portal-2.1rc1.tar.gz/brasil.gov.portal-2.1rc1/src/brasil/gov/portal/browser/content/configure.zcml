@@ -1,0 +1,85 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="brasil.gov.portal">
+
+  <browser:page
+      name="view"
+      for="brasil.gov.portal.content.audio.IAudio"
+      permission="zope2.View"
+      class=".audio.AudioView"
+      />
+
+  <browser:page
+      name="view"
+      for="brasil.gov.portal.content.external.IExternalContent"
+      permission="zope2.View"
+      class=".external.ExternalContentView"
+      />
+
+  <browser:menuItems
+      for="collective.nitf.content.INITF"
+      menu="plone_displayviews">
+
+    <browser:menuItem
+        title="Visão de notícia"
+        action="nitf_custom_view"
+        description="Essa view inclui galeria de imagens e se torna a view padrao de noticias"
+        />
+
+  </browser:menuItems>
+
+  <browser:page
+      name="batchnavigation"
+      for="*"
+      permission="zope.Public"
+      class="plone.batching.browser.PloneBatchView"
+      template="templates/batchnavigation.pt"
+      layer="brasil.gov.portal.interfaces.IBrasilGov"
+      />
+
+  <browser:page
+      name="infographic_view"
+      for="brasil.gov.portal.content.infographic.IInfographic"
+      template="templates/infographic.pt"
+      layer="brasil.gov.portal.interfaces.IBrasilGov"
+      permission="zope2.View"
+      menu="plone_displayviews"
+      title="View Infographic"
+      />
+
+  <browser:menuItem
+      for="plone.app.contenttypes.interfaces.IFolder"
+      menu="plone_displayviews"
+      title="Centrais de conteúdo"
+      action="centrais-de-conteudo"
+      description="Mostra um formulário de busca de conteúdo."
+      />
+
+  <browser:page
+      name="centrais-de-conteudo"
+      for="plone.app.contenttypes.interfaces.IFolder"
+      class=".contentcentral.ContentCentralView"
+      permission="zope2.View"
+      template="templates/contentcentral.pt"
+      layer="brasil.gov.portal.interfaces.IBrasilGov"
+      />
+
+  <browser:menuItem
+      for="plone.app.contenttypes.interfaces.ICollection"
+      menu="plone_displayviews"
+      title="Filtro de resultados"
+      action="filtro-de-resultados"
+      description="Aplica uma query customizada aos resultados da coleção."
+      />
+
+  <browser:page
+      name="filtro-de-resultados"
+      for="plone.app.contenttypes.interfaces.ICollection"
+      class=".resultsfilter.ResultsFilterView"
+      permission="zope2.View"
+      template="templates/resultsfilter.pt"
+      layer="brasil.gov.portal.interfaces.IBrasilGov"
+      />
+
+</configure>

@@ -1,0 +1,57 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup">
+
+  <genericsetup:registerProfile
+      name="default"
+      title="brasil.gov.portal (v10901)"
+      directory="profile"
+      description='Configuration for version 10901'
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:upgradeSteps
+      source="10900"
+      destination="10901"
+      profile="brasil.gov.portal:default">
+
+    <genericsetup:upgradeStep
+        title="Remove portlet assigments at portal root"
+        handler=".remove_root_portlets"
+        />
+
+    <genericsetup:upgradeStep
+        title="Fix column widths on cover objects"
+        handler=".fix_cover_columns"
+        />
+
+    <genericsetup:upgradeDepends
+        title="Import various"
+        description="Update collective.cover configuration and add new fields to control panel configlet."
+        import_profile="brasil.gov.portal.upgrades.v10901:default"
+        />
+
+    <genericsetup:upgradeStep
+        title="Remove workflow from Infographic content type"
+        handler=".update_infographic_workflow"
+        />
+
+    <genericsetup:upgradeStep
+        title="Add Content Central menu option to Folder content type"
+        handler=".add_content_central_menu"
+        />
+
+    <genericsetup:upgradeStep
+        title="Add Results Filter menu option to Collection content type"
+        handler=".add_results_filter_menu"
+        />
+
+    <genericsetup:upgradeStep
+        title="Cook JavaScripts resources"
+        description="There were changes in the JS files, so we need to cook the resources."
+        handler="..cook_javascript_resources"
+        />
+
+  </genericsetup:upgradeSteps>
+
+</configure>
