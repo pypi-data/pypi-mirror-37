@@ -1,0 +1,62 @@
+Metadata-Version: 2.1
+Name: dj-loopbreaker
+Version: 0.0.1
+Summary: Break infinite loops in signals
+Home-page: https://gitlab.com/SchoolOrchestration/libs/dj-loopbreaker
+Author: Christo Crampton
+Author-email: tech@appointmentguru.co
+License: UNKNOWN
+Description: # dj-loopbreaker
+        
+        ![coverage](https://gitlab.com/SchoolOrchestration/libs/dj-loopbreaker/badges/master/coverage.svg)
+        [![PyPI version](https://badge.fury.io/py/dj-loopbreaker.svg)](https://badge.fury.io/py/dj-loopbreaker)
+        
+        > Django library which breaks infinite loops in signals
+        
+        ## Installation
+        
+        ```
+        pip install dj-loopbreaker
+        ```
+        
+        ## Usage
+        
+        ```python
+        from loopbreaker import throttle
+        ```
+        
+        ## The problem
+        
+        Imagine you have a signal like this:
+        
+        ```python
+        @receiver(post_save, sender=Todo, dispatch_uid="example.say_hi")
+        @throttle(signal_id="update.todo", expire_after=1)
+        def update_todo(instance, created, **kwargs):
+            # normally this would cause an infinte loop
+            instance.done = not instance.done
+            instance.save()
+        ```
+        
+        Normally that would cause an infinite loop. However, include the `@throttle` decorator, and it will now make sure that this signal is only
+        executed again after 1 second for this specific instance.
+        
+        ## How it works
+        
+        `throttle` uses Django's caching mechanism. It will create a key using the  following format: `{signal_id}.{app_label}{model_name}{instance_id}`. The key will expire after `expire_after` seconds
+        
+        This means:
+        
+        * No longer need to worry about making infinite loops in your signals
+        * No dependencies, or dependencies at your own discretion (we use django's internal caching, [so you can set up your caching backend](https://docs.djangoproject.com/en/2.1/topics/cache/#setting-up-the-cache))
+        * Throttling occurs per instance (not per model)
+        
+        
+        
+        
+        
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
