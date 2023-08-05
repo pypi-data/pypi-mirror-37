@@ -1,0 +1,57 @@
+Metadata-Version: 2.1
+Name: zxpath
+Version: 1.0.1
+Summary: 操作更方便的xpath, 使用方法类似于Beautiful Soup4, 但是比他更快速
+Home-page: https://pypi.org/
+Author: zlyuan
+Author-email: 1277260932@qq.com
+License: GNU GENERAL PUBLIC LICENSE
+Platform: all
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: lxml
+
+
+操作更方便的xpath
+
+使用方法类似于Beautiful Soup4, 但是比他更快速
+
+import zxpath
+
+zx = zxpath.load('etree对象或者html源码') #加载
+
+find() #查询一个节点, 失败返回None
+zx.find('div', class_='content') #参考 .//div[@class="content"][1]
+zx.find('div', class_=False) #参考 .//div[not(@class)][1]
+zx.find('div', _class_='content') #参考 .//div[not(@class="content")][1]
+zx.find('div', class=True, sun_node=False) #参考 ./div[@class][1] sun_node表示是否递归查询孙级节点
+
+find_all() # 查询多个节点, 参数同find, 返回一个列表, 失败返回空列表
+zx(*attr, **kw) #同find_all
+
+#_Element对象
+node = zx.find('div')
+
+node.id #获取id属性
+node.text #获取文本
+node.string #获取整个div的所有文本
+node.a #获取在这个节点下搜索到的第一个a元素节点
+node.html #获取这个节点的html源码
+node.find
+node.find_all
+node(*attr, **kw) #同find_all
+node.xpath_one #使用原始xpath代码查询一个节点
+node.xpath_all #使用原始xpath代码查询多个节点
+
+更新日志:
+1.0.1
+    修复了一些bug, 该bug曾导致:
+        在查找上一个同级节点时会忽略掉同级的文本节点
+        在查找下一个同级节点时会忽略掉同级的文本节点
+
+
