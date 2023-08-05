@@ -1,0 +1,64 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:meta="http://namespaces.zope.org/meta"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:z3c="http://namespaces.zope.org/z3c"
+    i18n_domain="zope">
+
+  <!-- re-use ftesting configuration -->
+  <include package="z3c.layer.pagelet.tests" file="ftesting.zcml" />
+
+  <!-- exclude will prevent from include -->
+  <exclude package="zope.pluggableauth" file="ftpplugins.zcml" />
+  <exclude package="zope.pluggableauth" file="groupfolder.zcml" />
+
+  <include package="zope.pluggableauth" />
+
+  <!-- load additional configuration -->
+  <include package="zope.viewlet" file="meta.zcml" />
+  <include package="zope.viewlet" />
+
+  <!-- load package configuration -->
+  <include package="z3c.authviewlet" />
+
+
+  <!-- definitions for login-logout tests -->
+  <!-- use special template for default.html view -->
+  <z3c:layout
+      for="z3c.authviewlet.tests.LoginLogoutPage"
+      layer="z3c.layer.pagelet.IPageletBrowserLayer"
+      template="tests/login-logout-template.pt"
+      />
+
+  <z3c:pagelet
+      for="zope.container.interfaces.IContainer"
+      name="default.html"
+      permission="zope.View"
+      class="z3c.authviewlet.tests.LoginLogoutPage"
+      layer="z3c.layer.pagelet.IPageletBrowserLayer"
+      />
+
+  <browser:defaultView
+     name="default.html"
+     for="zope.container.interfaces.IContainer"
+     layer="z3c.layer.pagelet.IPageletBrowserLayer"
+     />
+
+  <!-- use tempate with head slot for logout pagelets -->
+  <z3c:layout
+      for="z3c.authviewlet.auth.LogoutRedirectPagelet"
+      layer="z3c.layer.pagelet.IPageletBrowserLayer"
+      template="tests/login-logout-template.pt"
+      />
+
+  <z3c:layout
+      for="z3c.authviewlet.auth.LogoutSuccessPagelet"
+      layer="z3c.layer.pagelet.IPageletBrowserLayer"
+      template="tests/login-logout-template.pt"
+      />
+
+  <!-- -->
+
+  <grantAll role="zope.Anonymous" />
+
+</configure>
