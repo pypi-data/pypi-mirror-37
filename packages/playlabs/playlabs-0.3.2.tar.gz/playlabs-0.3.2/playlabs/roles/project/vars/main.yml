@@ -1,0 +1,152 @@
+---
+project_variable: '{{ prefix }}_{{ instance }}'
+project_instance: '{{ prefix }}-{{ instance }}'
+project_image: >-
+  {{
+    image|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_image',
+        )
+    )
+  }}
+
+project_networks: >-
+  {{
+    networks|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_networks',
+            []
+        )
+    )
+  }}
+
+project_home: >-
+  {{
+    home|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_home',
+            '/home/' + project_instance
+        )
+    )
+  }}
+project_log_home: '{{ project_home }}/log'
+project_log_mount: '/app/log'
+
+project_backup_home: '{{ project_home }}/backup'
+project_backup_repo: '{{ project_home }}/restic'
+project_backup_password: >-
+  {{
+    backup_password|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_backup_password',
+            false,
+        )
+    )
+  }}
+project_backup_lftp_dsn: >-
+  {{
+    hostvars[inventory_hostname].get(
+        project_variable + '_backup_lftp_dsn',
+        false,
+    )
+  }}
+
+project_letsencrypt_environment: >-
+  {{
+    letsencrypt_environment|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_letsencrypt_environment',
+            'staging',
+        )
+    )
+  }}
+
+project_letsencrypt_email: >-
+  {{
+    letsencrypt_email|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_letsencrypt_email',
+            ''
+        )
+    )
+  }}
+
+# letsencrypt_uri: https://acme-v01.api.letsencrypt.org/directory
+project_letsencrypt_uri: >-
+  {{
+    letsencrypt_uri|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_letsencrypt_uri',
+            'https://acme-staging.api.letsencrypt.org/directory',
+        )
+    )
+  }}
+
+project_dns: >-
+  {{
+    dns|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_dns',
+            ansible_default_ipv4.address
+        )
+    )
+  }}
+
+project_dns_redirect: >-
+  {{
+    dns_redirect|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_dns_redirect',
+            []
+        )
+    )
+  }}
+
+project_secure: >-
+  {{
+    secure|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_secure',
+            true
+        )
+    )
+  }}
+
+project_htaccess: >-
+  {{
+    htaccess|default(
+        hostvars[inventory_hostname].get(
+            project_variable + '_htaccess',
+            false
+        )
+    )
+  }}
+
+project_plugins: >-
+  {{
+    plugins.split(',') if plugins is defined
+    else hostvars[inventory_hostname].get(
+        project_variable + '_plugins',
+        []
+    )
+  }}
+
+project_env_base:
+  ACME_CA_URI: '{{ project_letsencrypt_uri }}'
+  PLAYLABS_PLUGINS: '{{ ",".join(project_plugins) }}'
+  PLAYLABS_PREFIX: '{{ prefix }}'
+  PLAYLABS_INSTANCE: '{{ instance }}'
+  DEFAULT_FROM_EMAIL: '{{ hostvars[inventory_hostname].get(project_instance + "_email_from", prefix + "@" + project_dns) }}'
+  ALLOWED_HOSTS: '{{ project_dns }}'
+  VIRTUAL_HOST: '{{ project_dns }}{% if project_dns_redirect %},{{ project_dns_redirect|join(",") }}{% endif %}'
+  LOG: '{{ project_log_mount }}'
+
+project_env: >-
+  {{
+    project_env_base|combine(
+        hostvars[inventory_hostname].get(
+            project_variable + '_env',
+            {}
+        )
+    )
+  }}
