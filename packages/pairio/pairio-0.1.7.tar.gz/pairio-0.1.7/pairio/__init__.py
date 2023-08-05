@@ -1,0 +1,1 @@
+from .pairio import get, set, setConfig
