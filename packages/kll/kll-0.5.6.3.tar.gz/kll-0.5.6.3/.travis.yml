@@ -1,0 +1,42 @@
+# travis-ci integration for the kll compiler
+
+sudo:
+  - false
+
+os:
+  - linux
+
+language:
+  - python
+
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+  - "nightly"
+
+env:
+  global:
+    - PIPENV_IGNORE_VIRTUALENVS=1
+
+# Exclusions
+matrix:
+  allow_failures:
+    - python: "3.7-dev"
+    - python: "nightly"
+
+# System setup
+install:
+  # Info about OS
+  - uname -a
+
+  # Prepare pipenv
+  - pip install pipenv flit
+  - pipenv install -d
+
+# Run test script(s)
+script:
+  - pipenv run pytest -s
+  - pipenv run flit build
+
