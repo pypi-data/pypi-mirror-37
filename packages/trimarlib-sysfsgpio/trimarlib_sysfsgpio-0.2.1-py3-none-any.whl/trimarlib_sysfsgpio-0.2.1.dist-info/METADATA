@@ -1,0 +1,144 @@
+Metadata-Version: 2.1
+Name: trimarlib-sysfsgpio
+Version: 0.2.1
+Summary: Sysfs GPIO utility
+Home-page: https://dsl2.trimar.org/pythons-ll/sysfsgpiolib
+Author: TRIMAR Developer
+Author-email: developer@trimar.com.pl
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX :: Linux
+Description-Content-Type: text/markdown
+
+## trimarlib-sysfsgpio
+
+Python GPIO library, using Linux `sysfs` interface.
+
+### Getting started
+
+These instructions will get you a copy of the project on your local machine for development and testing purposes. 
+See [Deployment](#deployment) for notes on how to deploy the project on a live system.
+
+#### Prerequisites
+
+The build process requires some basic development tools:
+
+* `make` - GNU Make program, either for *nix or Windows system, used to execute build and test targets
+* `git` - used not only to clone the repository, but also in auto-versioning (see [Versioning](#versioning))
+* `python3`
+
+Two standard Python packages are used for build and installation steps:
+
+* `setuptools`
+* `wheel`
+
+The library has no dependencies on any third-party packages.
+
+#### Building and releasing
+
+Invoking `make all` (default target) prepares archives for distribution. It is done in two steps:
+
+1. query Git repository for tags (`git describe` command) to determine current version and generate 
+`version.py` file,
+2. invoke Python interpreter passing `setup.py` script to prepare source and wheel distributions.
+
+The Python interpreter invoked by the `Makefile` defaults to `python` when running on Windows machine and
+`python3` otherwise. In both cases it is possible to override it passing a `PYTHON` variable to the command,
+ e.g. `make all PYTHON=python3`.
+
+The release process is automated and based on GitLab CI/CD environment - each commit triggers a build job
+which attempts to make and install built packages (no testing implemented yet, requires an available hardware
+platform). If the commit is tagged the built wheel distribution is passed to the deployment stage and
+the runner attempts to upload the package to the repository specified in project settings.
+
+#### Testing
+
+Test source files are located in `sysfsgpio/tests` directory. Testing is based on `unittest` Python 
+built-in package. The `Makefile` defines `test` target which invokes all tests.  
+
+Testing is divided into two steps:
+
+* utility functions testing - performs unit tests of all ancillary features. Those tests are
+platform independent (i.e. shall pass on either a *nix or a Windows machine);
+* `Pin` testing - performs unit tests of `Pin` class. Those tests depend on the `sysfs` Linux 
+filesystem and are skipped when running on Windows machine.  
+
+### Deployment
+
+The library is not intended to be used in a standalone configuration - the primary purpose is to be used
+by higher-level applications, which should define it as a dependency. However it is perfectly correct
+to install it manually using `pip`.  
+Please keep in mind that there are some platform dependent steps needed to be taken before the
+pins are accessible without super-user privileges. The package designates 3 entry points (accessible
+as command-line tools) to ease-up the set-up process (the scripts are developed and confirmed to be
+working on Orange Pi platform running Armbian distribution). These entry points are:
+
+* `sysfsgpio-install-service` - this command installs and enables `systemd` `gpio-exporter` service,
+which exports all free pins available on the Orange Pi SBC at system boot;
+* `sysfsgpio-install-rules` - this command install `udev` rules file which ensures that each exported
+pin has `rw` mode available to `staff` group;
+* `sysfsgpio-install` - this one invokes the above to reduce number of commands needed to set-up system.
+
+Each of the commands may be invoked with `--force` switch to overwrite existing files - without that
+switch commands fail printing proper message.  
+
+> **NOTE:**
+> The user needs to become member of the `staff` group to use the pins without super-user rights.
+
+### Versioning
+
+The project is versioned using a simple pattern based on repository tagging feature. See [Makefile](Makefile)
+for implementation details, for versions available see 
+[tags on this repository](https://dsl2.trimar.org/pythons-ll/sysfsgpio/tags).
+
+### Usage
+
+See docstrings for API documentation.
+
+* Example of using pin PA21 as input:
+
+```python
+from sysfsgpio import Pin
+
+
+def callback(sender, value):
+    print('pin={}, value={}'.format(sender, value))
+
+
+pin = Pin('PA21')
+pin.direction = 'in'
+pin.register_callback(callback)
+pin.enabled = True
+```
+
+* Example of using pin PA20 as output:
+
+```python
+from sysfsgpio import Pin
+import time
+
+pin = Pin('PA20')
+pin.direction = 'out'
+for i in range(10):
+    time.sleep(.1)
+    pin.value = pin.value ^ 1
+```
+
+* Example of using pin PA7 as inverted output to generate timed pulses:
+
+```python
+from sysfsgpio import Pin
+
+pin = Pin('PA20')
+pin.direction = 'out'
+pin.configuration = dict(ontime=3.33, offtime=6.67, repeat=3)
+pin.enable()
+```
+
+### License
+
+This software is licensed under the MIT License - see [LICENSE](LICENSE).
+
+

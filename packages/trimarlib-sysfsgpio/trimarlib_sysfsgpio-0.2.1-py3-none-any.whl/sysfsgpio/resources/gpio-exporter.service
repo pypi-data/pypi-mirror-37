@@ -1,0 +1,11 @@
+[Unit]
+Description=GPIO exporter
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c "for i in 7 8 9 10 20 21 68 71 110; do echo $i > /sys/class/gpio/export; done"
+ExecStop=/bin/sh -c "for i in 7 8 9 10 20 21 68 71 110; do echo $i > /sys/class/gpio/unexport; done"
+
+[Install]
+WantedBy=default.target
