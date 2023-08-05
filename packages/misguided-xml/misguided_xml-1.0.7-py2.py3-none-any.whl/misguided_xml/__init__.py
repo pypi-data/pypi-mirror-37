@@ -1,0 +1,21 @@
+from xml import (XMLComment,
+                 XMLCDATA,
+                 XML,
+                 xml_subset_string,
+
+                 ELEMENT,
+                 ATTRIBUTE,
+                 VALUE,
+
+                 NoXMLDeclarationDetected,
+                 InvalidXMLDeclaration,
+                 InvalidXMLElement,
+                 XMLSyntaxError,
+                 XMLElementNotFound,
+                 XMLTooManyElementsFound,
+                 XMLEndTagNotFound,
+                 BadSearchCriteria,
+                 UndefinedNamespace,
+                 XMLDeclaration,
+
+                 )
