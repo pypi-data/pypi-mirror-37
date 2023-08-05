@@ -1,0 +1,64 @@
+diff -uN scrappie.3dc490fe23913cc35764b79e6e8ae6e5b5e0c395/event_detection.c scrappie/event_detection.c
+--- scrappie.3dc490fe23913cc35764b79e6e8ae6e5b5e0c395/event_detection.c	2018-07-05 13:00:25.433093931 +0900
++++ scrappie/event_detection.c	2018-07-05 18:37:00.878843766 +0900
+@@ -32,6 +32,7 @@
+  *   @param sumsq     double[d_length + 1]   Vector to store sum of squares (out)
+  *   @param d_length                     Length of data vector
+  **/
++static
+ void compute_sum_sumsq(const float *data, double *sum,
+                        double *sumsq, size_t d_length) {
+     RETURN_NULL_IF(NULL == data, );
+@@ -57,6 +58,7 @@
+  *
+  *   @returns float array containing tstats.  Returns NULL on error
+  **/
++static
+ float *compute_tstat(const double *sum, const double *sumsq,
+                      size_t d_length, size_t w_length) {
+     assert(d_length > 0);
+@@ -119,6 +121,7 @@
+  *   @returns array of length nsample whose elements contain peak positions
+  *   Remaining elements are padded by zeros.
+  **/
++static
+ size_t *short_long_peak_detector(DetectorPtr short_detector,
+                                  DetectorPtr long_detector,
+                                  const float peak_height) {
+@@ -210,6 +213,7 @@
+  *
+  *  @returns An initialised event.  A 'null' event is returned on error.
+  **/
++static
+ event_t create_event(size_t start, size_t end, double const *sums,
+                      double const *sumsqs, size_t nsample) {
+     assert(start < nsample);
+@@ -264,7 +264,8 @@ event_table create_events(size_t const *peaks, double const *sums,
+         et.event[ev] = create_event(peaks[ev - 1], peaks[ev], sums, sumsqs, nsample);
+     }
+     // Last event -- ends at nsample
+-    et.event[n - 1] = create_event(peaks[n - 2], nsample, sums, sumsqs, nsample);
++    if (n > 1)
++        et.event[n - 1] = create_event(peaks[n - 2], nsample, sums, sumsqs, nsample);
+
+     return et;
+ }
+diff -uN scrappie.3dc490fe23913cc35764b79e6e8ae6e5b5e0c395/event_detection.h scrappie/event_detection.h
+--- scrappie.3dc490fe23913cc35764b79e6e8ae6e5b5e0c395/event_detection.h	2018-07-05 13:00:25.437094002 +0900
++++ scrappie/event_detection.h	2018-07-05 18:45:01.959787190 +0900
+@@ -12,6 +12,7 @@
+ } detector_param;
+ 
+ 
++#if 0
+ static detector_param const event_detection_defaults = {
+     .window_length1 = 3,
+     .window_length2 = 6,
+@@ -19,6 +20,7 @@
+     .threshold2 = 9.0f,
+     .peak_height = 0.2f
+ };
++#endif
+ 
+ 
+ 
