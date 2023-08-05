@@ -1,0 +1,549 @@
+# Changelog
+
+- * 373e2c3 - 2018-10-15: Release v9.3.94 
+- * 47ce84c - 2018-10-16: Update .gitlab-ci.yml 
+- * bc472cc - 2018-10-16: Update .gitlab-ci.yml 
+- * eb1a642 - 2018-10-15: Release v9.3.93 
+- * 13ff53a - 2018-10-15: Release v9.3.92 
+- * def0213 - 2018-10-15: Updated .gitlab-ci.yml 
+- * 4500af0 - 2018-10-15: Release v9.3.91 
+- * b226cf4 - 2018-10-15: Updated .gitlab-ci.yml 
+- * b4d3c18 - 2018-10-15: Release v9.3.90 
+- * 70b40c6 - 2018-10-15: Updated .gitignore 
+- * 01f719f - 2018-10-15: Updated Dockerfile. Added CI/CD config. 
+- * 89b5a00 - 2018-10-15: Release v9.3.89 
+- * 38a0dd8 - 2018-10-15: Fixed issues with Torznab sending results to NZB client instead of Torrent client 
+- * b01ca47 - 2018-10-14: Release v9.3.88 
+- * 79735d7 - 2018-10-14: Fixed issue with custom provider not being saved when using spaces for names. Fixed parsing issue with Jackett. Fixed issue with missing provider icons. 
+- * 6d8c60a - 2018-10-14: Fixed issue with custom providers having spaces in their names that was causing settings to not save 
+- * 23f9684 - 2018-10-14: Fixed issues with removing custom torrent/newznab providers 
+- * e2132a2 - 2018-10-14: Fixed issue#286 - added support for non-english indexer images 
+- * d186f55 - 2018-10-14: Release v9.3.87 
+- * ca05ceb - 2018-10-14: Fixed issue with freebsd init script not daemonizing the app 
+- * 10fc6b3 - 2018-10-14: Release v9.3.86 
+- * b0c7dc9 - 2018-10-13: Release v9.3.85 
+- * 2e0a378 - 2018-10-13: Fixed issue with saving subtitle language settings 
+- * 57a541f - 2018-10-13: Release v9.3.84 
+- * aa89c95 - 2018-10-13: Added notifier Join 
+- * 7891d45 - 2018-10-13: Release v9.3.83 
+- * 83e5033 - 2018-10-13: Fixed issue with adding shows from Trakt and IMDB not showing 
+- * 256f26b - 2018-10-13: Pre-Release v9.3.83.dev1 
+- * 2aa5b96 - 2018-10-13: Testing fix for &quot;unsupported operand type&quot; during BTN provider search 
+- * 536c3ba - 2018-10-13: Release v9.3.82 
+- * a120b3e - 2018-10-13: Fixed issue with re-scanning existing show episodes that do not contain the show name in the filename 
+- * a216e2b - 2018-10-13: Fixed issue with displaying provider icons for custom providers 
+- * f29e97d - 2018-10-12: Release v9.3.81 
+- * 35fb7f1 - 2018-10-12: Fixed issue with building Dockerfile. Added .dockerignore file. Fixed issue with viewing config settings. 
+- * 7141eec - 2018-10-09: Pre-Release v9.3.81.dev1 
+- * 7a20aea - 2018-10-09: Fixed issue with TorrentLeech logins 
+- * a9e7913 - 2018-10-08: Release v9.3.80 
+- * 615cf7d - 2018-10-08: Pre-Release v9.3.80.dev6 
+- * fabc483 - 2018-10-08: Added web session hook to handle redirects when doing posts. Fixed issues with getting search results from YGGTorrent provider. 
+- * f64a196 - 2018-10-08: Pre-Release v9.3.80.dev5 
+- * 7b0a85e - 2018-10-08: Fixed issue #273 - location not found when adding/removing a show 
+- * 8a1fd06 - 2018-10-06: Pre-Release v9.3.80.dev4 
+- * b85e87b - 2018-10-06: Fixed login issue for YGGTorrent 
+- * e3e893f - 2018-10-06: Fixed saving allowed video exts 
+- * be55b94 - 2018-09-22: Pre-Release v9.3.80.dev3 
+- * 3afaeb1 - 2018-09-22: Added a loading spinner for all view page loads. 
+- * a74e159 - 2018-09-22: Added a loading spinner when displaying show information. 
+- * 6e16bcc - 2018-09-20: Pre-Release v9.3.80.dev2 
+- * d2b5aab - 2018-09-20: Fixed issue with magnet links missing torrent trackers 
+- * 0ee4330 - 2018-09-20: Added back missing bootstrap-formhelpers library 
+- * ec020ec - 2018-09-20: Pre-Release v9.3.80.dev1 
+- * bf4e106 - 2018-09-20: Updated remaining ui-icon icons to fontawesome. Fixed issue #260 - removed redundant clear errors and clear warnings button, merged into one button. 
+- * 5962b54 - 2018-09-20: Added UHD to quality preset ANY. Added quality preset &quot;ANY + Unknown&quot;. Added ability to set quality size for unknown qualities. 
+- * 5bf995b - 2018-09-18: Release v9.3.79 
+- * dbb7543 - 2018-09-18: Fixed issue with custom webroot and too many redirects 
+- * a7d0209 - 2018-09-17: Pre-Release v9.3.79.dev10 
+- * 09b1857 - 2018-09-17: Pre-Release v9.3.79.dev9 
+- * 3419702 - 2018-09-16: Pre-Release v9.3.79.dev8 
+- * a4a4814 - 2018-09-16: Pre-Release v9.3.79.dev7 
+- * 605f75c - 2018-09-16: Pre-Release v9.3.79.dev6 
+- * 8780b59 - 2018-09-16: Zooqle torrent provider RSS feed English only results 
+- * bd67a69 - 2018-09-16: Pre-Release v9.3.79.dev5 
+- * f39ab1c - 2018-09-16: Refactored Zooqle torrent provider to handling paging results 
+- * 31a9c17 - 2018-09-16: Pre-Release v9.3.79.dev4 
+- * 69668c7 - 2018-09-16: Hardcoded Zooqle torrent provider to search for english torrents 
+- * 2868350 - 2018-09-16: Pre-Release v9.3.79.dev3 
+- * f40c471 - 2018-09-16: Refactored Zooqle torrent provider to use RSS Fixed Attribute error for name parser 
+- * 7bb2095 - 2018-09-16: Fixed performance issues with TheTVDB indexer 
+- * e8445dd - 2018-09-16: Fixed issue when displaying multiple modals same page, 2nd modal wasn&#x27;t removing scrollbar. 
+- * 15f9781 - 2018-09-16: Pre-Release v9.3.79.dev2 
+- * f87f0b0 - 2018-09-16: Fixed search issue with Zooqle torrent provider. 
+- * e6fab35 - 2018-09-15: Pre-Release v9.3.79.dev1 
+- * 60a435c - 2018-09-15: Added Zooqle torrent provider 
+- * 90f31c5 - 2018-09-14: Release v9.3.78 
+- * a413ab3 - 2018-09-14: Fixed AttributeError list_entry_points for subtitles 
+- * d6195df - 2018-09-13: Release v9.3.77 
+- * 23d3379 - 2018-09-09: Release v9.3.76 
+- * 28282ed - 2018-09-09: Added support for multi-login based on user-defined allowed user list 
+- * 80a1cf8 - 2018-09-09: Release v9.3.75 
+- * b0e0ac6 - 2018-09-09: Added ability to optionally restore application id when restoring backup. Fixed issue with provider cache API calls. 
+- * 0a5590f - 2018-09-09: Release v9.3.74 
+- * fd54d1e - 2018-09-08: Pre-Release v9.3.74.dev1 
+- * d4b634c - 2018-09-08: Release v9.3.73 
+- * 0f56bf7 - 2018-09-08: Release v9.3.72 
+- * 5c3c795 - 2018-09-08: Pre-Release v9.3.72.dev1 
+- * 3b8de1e - 2018-09-08: Release v9.3.71 
+- * cf75694a - 2018-09-08: Release v9.3.70 
+- * d1aa98d - 2018-09-08: Pre-Release v9.3.70.dev2 
+- * f805a60 - 2018-09-08: Added real-time SSO session handling for WebUI. Token exchange performed to get offline token for API access. 
+- * 4027b39 - 2018-09-06: Application oAuth token now saved to config as a JSON string 
+- * 1c0d920 - 2018-09-06: Pre-Release v9.3.70.dev1 
+- * 088d5f3 - 2018-09-06: Added general settings option to specify a comma delimited list of allowed video file extensions to be checked against existing files when performing show updates/refreshes 
+- * e93f949 - 2018-09-05: Release v9.3.69 
+- * 3f84dd7 - 2018-09-05: Added main database function to sync tv episodes to index 
+- * 51f6fb2 - 2018-09-04: Release v9.3.68 
+- * 78d23e1 - 2018-09-04: Added &#x27;tv_episodes_by_indexerid&#x27; database index. Added database test case. Fixed TV episode database upsert code. Misc variable name cleanup. 
+- * c11dace - 2018-09-01: Release v9.3.67 
+- * 1430717 - 2018-09-01: Fixed issue #255 - total episode count incorrect. Improved memory usage from database calls. Misc code cleanup. 
+- * 569f95c - 2018-09-01: Release v9.3.66 
+- * 33b3f9c - 2018-09-01: Disabled changelog from popping after a new update 
+- * 4c62c8c - 2018-08-31: Pre-Release v9.3.66.dev2 
+- * 4ac6773 - 2018-08-31: Pre-Release v9.3.66.dev1 
+- * 1ee6798 - 2018-08-31: Fixed issue #265 - Unable to detect internal IP address in order to add UPnP portmap 
+- * ab769b0 - 2018-08-30: Release v9.3.65 
+- * 889fa19 - 2018-08-30: Fixed issues with failed snatch searcher attempting to re-download archived episodes 
+- * cd59c7f - 2018-08-30: Pre-Release v9.3.65.dev3 
+- * 61c0376 - 2018-08-30: Pre-Release v9.3.65.dev2 
+- * a534896 - 2018-08-30: Pre-Release v9.3.65.dev1 
+- * 9d880bd - 2018-08-30: Failed processing skips paused shows and archived episodes. 
+- * fbc8814 - 2018-08-30: Removed unrequired logging from AniDB module 
+- * dc90396 - 2018-08-29: Release v9.3.64 
+- * 0c2e95d - 2018-08-27: Release v9.3.63 
+- * 9e66cf5 - 2018-08-27: Fixed javascript issue when adding existing shows 
+- * 6b01822 - 2018-08-27: Release v9.3.62 
+- * c831b4d - 2018-08-27: Fixed issue with TheTVDB indexer cache 
+- * c4c732f - 2018-08-27: Release v9.3.61 
+- * 085b442 - 2018-08-26: Shows returned from search filtered if show in library 
+- * ebd6252 - 2018-08-26: Release v9.3.60 
+- * a92e6b5 - 2018-08-26: Fixed issue with TheTVDB cache storing dict keys as strings instead of integer 
+- * 1b42b83 - 2018-08-26: Pre-Release v9.3.60.dev1 
+- * 55e4104 - 2018-08-26: Fixed issue where click event for adding root folders was being fired more then twice. 
+- * ec16f20 - 2018-08-25: Suppressed InsecureRequestWarnings 
+- * 8b6981b - 2018-08-25: Fixed unicode issues with timezone updater 
+- * 9797220 - 2018-08-25: Fixed spacing for status view 
+- * 8279ece - 2018-08-24: Fixed quality badge for manual searches 
+- * fb31d87 - 2018-08-24: Release v9.3.59 
+- * 2a1d2ce - 2018-08-24: Pre-Release v9.3.59.dev3 
+- * b18bd58 - 2018-08-24: Misc improvements made to websockets code 
+- * a1cc57d - 2018-08-24: Pre-Release v9.3.59.dev2 
+- * 30e4803 - 2018-08-24: Misc improvements made to websockets code 
+- * 5ddb5de - 2018-08-24: Pre-Release v9.3.59.dev1 
+- * c0b6be8 - 2018-08-24: Added websockets support for ui messages 
+- * 096b055 - 2018-08-24: Improvements made to tornado web handler code 
+- * a7f3541 - 2018-08-23: Release v9.3.58 
+- * 0366d15 - 2018-08-23: Changed the way TheTVDB cache&#x27;s its shows, improved performance of app 
+- * faefa9d - 2018-08-23: Fixed issues with custom web roots and redirects Checking for updates now redirects back to referrer url 
+- * bd35aae - 2018-08-23: Pre-Release v9.3.58.dev2 
+- * 45d0b32 - 2018-08-23: Switch TorrentLeech provider to login via cookies due to reCAPTCHA 
+- * 2f40c76 - 2018-08-22: Pre-Release v9.3.58.dev1 
+- * 9010755 - 2018-08-22: Fixed issue #256 - unable to search BTN 
+- * 5f0e3bf - 2018-08-20: Fixed issue #253 - Provider Option Missing Cookie Field 
+- * e5b5706 - 2018-08-19: Release v9.3.57 
+- * b1dc06d - 2018-08-19: Release v9.3.56 
+- * e26fd2e - 2018-08-19: Pre-Release v9.3.56.dev29 
+- * d590b01 - 2018-08-19: Migrated upnp client from threaded object to scheduler job, resolves shutdown/restart problems 
+- * 69cee25 - 2018-08-19: Misc code cleanup 
+- * a2aa340 - 2018-08-18: Pre-Release v9.3.56.dev28 
+- * 10de224 - 2018-08-18: Pre-Release v9.3.56.dev27 
+- * 8efa7cb - 2018-08-18: Fixed broken toggle buttons 
+- * e27a959 - 2018-08-18: Fixed gaierror&#x27;s for ssdp Fixed WebHandler routing errors 
+- * c60cbb3 - 2018-08-17: Pre-Release v9.3.56.dev26 
+- * 1cfa2f9 - 2018-08-17: Fixed issue where MultiPartEpisode was being appended to all episodes and not just multi-part episodes. 
+- * c9367a6 - 2018-08-17: Pre-Release v9.3.56.dev25 
+- * 481f291 - 2018-08-17: Removed code that was preventing show refreshes from happening due to show updates being in queue. 
+- * 46f21f5 - 2018-08-16: Misc changes to package tests. Multi-EP episode names are no longer appended to form one giant filename but instead &#x27;MultiPartEpisode&#x27; is tacked on. 
+- * b9bbb26 - 2018-08-15: Misc updates to tests 
+- * d56b876 - 2018-08-15: Made quicksearch content easier to read 
+- * 26635da - 2018-08-14: Pre-Release v9.3.56.dev24 
+- * 676065a - 2018-08-14: Fixed AttributeError with Tokyotoshokan provider 
+- * 332017d - 2018-08-14: Fixed issue with saving provider settings Reverted toggles for provider priorities, subtitle plugins, and post-processor metadata choices 
+- * ea140ab - 2018-08-14: individual shows view now gathers total show size from episode file sizes in database 
+- * 3ae007d - 2018-08-13: Pre-Release v9.3.56.dev23 
+- * 9cba816 - 2018-08-13: Fixed issues with multi-episode search results with more then 6 episodes in result. Misc provider URL updates. Misc fixes for tests. 
+- * 908bb53 - 2018-08-13: Pre-Release v9.3.56.dev22 
+- * 55d5abd - 2018-08-13: Improved pager code for getting episode data from theTVDB 
+- * 777692f - 2018-08-13: Migrated mediaToSiCKRAGE script to use API calls 
+- * bbce5f4 - 2018-08-13: Migrated autoProcessTV script to use API calls 
+- * b8c4de7 - 2018-08-13: Pre-Release v9.3.56.dev21 
+- * af4abb6 - 2018-08-13: Re-enabled closing of databases on shutdown/restart Disabled closing of logger on shutdown/restart 
+- * beba691 - 2018-08-13: Fixed KeyError for Show Stats API call 
+- * c30f21b - 2018-08-13: Fixed issue with displaying overall stats using API 
+- * fdeaf28 - 2018-08-13: Pre-Release v9.3.56.dev20 
+- * e6f1422 - 2018-08-13: Disabled closing database on shutdown/restart of app 
+- * e69a0e5 - 2018-08-13: Pre-Release v9.3.56.dev19 
+- * 1dc0171 - 2018-08-13: Added show directory column to mass update view Fixed table sorting issues for mass update and main shows views 
+- * 479026c - 2018-08-08: Fixed status text styling issues for episode rows in display show view 
+- * d6b5a4a - 2018-08-08: Pre-Release v9.3.56.dev18 
+- * c775a68 - 2018-08-08: Fixed issue with missing JS import for timeago module 
+- * 9b5ed21 - 2018-08-08: Fixed redirect issue when trying to login to a app thats already linked to another account 
+- * d569f06 - 2018-08-07: Pre-Release v9.3.56.dev17 
+- * 93bd3ce - 2018-08-07: Fixed issues with modals not displaying correctly Fixed issues with episode searches and episode search retries Fixed issue with data retrieval from database files 
+- * 1a7bca1 - 2018-08-05: Removed unrequired top margin spacing 
+- * 096927a - 2018-08-04: Pre-Release v9.3.56.dev16 
+- * ebcd017 - 2018-08-04: Fixed issue with network logo being off-center Fixed issue with show posters being misaligned 
+- * 6004bc4 - 2018-08-04: Fixed issues with displaying show network logo&#x27;s 
+- * 486eb8c - 2018-08-04: Pre-Release v9.3.56.dev15 
+- * 277ba1b - 2018-08-04: Show size now calculated from show stats 
+- * f52c99b - 2018-08-04: Fixed case-insensitive sorting for small poster view 
+- * 51b6726 - 2018-08-04: Fixed newline issue with error view 
+- * b40951e - 2018-08-01: Pre-Release v9.3.56.dev14 
+- * 0beb0e7 - 2018-08-01: Misc style changes 
+- * 3f0fc47 - 2018-08-01: Added margins to display show view 
+- * 056bf58 - 2018-08-01: Added margins for all layouts except poster in home view 
+- * 18c60e7 - 2018-08-01: Added backdrop for home view 
+- * 535cdc1 - 2018-08-01: Added backdrop for schedule view Added backdrop for history view Added opacity style to views with backdrops 
+- * 6533663 - 2018-08-01: Added backdrop for add shows view 
+- * 6279e0c - 2018-08-01: Added backdrop for config menus 
+- * c6f1503 - 2018-08-01: Pre-Release v9.3.56.dev13 
+- * 6383647 - 2018-08-01: Styling input checkboxes as toggles 
+- * 07e1703 - 2018-07-31: Pre-Release v9.3.56.dev12 
+- * 08cb03c - 2018-07-31: Merged overall_stats and show_stat functions Cut main show view load time down by 6s 
+- * edb99a0 - 2018-07-31: Fixed CSS issue for quicksearch items 
+- * 3acc96b - 2018-07-31: Pre-Release v9.3.56.dev11 
+- * d60e09f - 2018-07-31: Added delay for quicksearch input 
+- * 8c90243 - 2018-07-31: Pre-Release v9.3.56.dev10 
+- * 133d2ef - 2018-07-29: Added categories to quicksearch for both tv shows and tv episodes 
+- * f33330a - 2018-07-28: Pre-Release v9.3.56.dev9 
+- * 4088edc - 2018-07-28: Added back table column selection for shows, show, and schedule views Fixed sorting for all tables Fixed filtering for all tables 
+- * 7020ea5 - 2018-07-28: Reverted text-nowrap class for schedule view table episode name column 
+- * 764a9f1 - 2018-07-28: Fix for issue #244 - reverse proxy 
+- * e588aa6 - 2018-07-27: Pre-Release v9.3.56.dev8 
+- * 33a0a4b - 2018-07-27: Added tablesorter with bootstrap 4 compatibility Case-insensitive sorting fixed for shows view 
+- * d086087 - 2018-07-27: Refactored table show show/episode column for history view Removed table footer from history view 
+- * 876ddfc - 2018-07-27: Pre-Release v9.3.56.dev7 
+- * 19cb817 - 2018-07-27: Refactored table class spacing/padding and column widths 
+- * 5a27b14 - 2018-07-27: Pre-Release v9.3.56.dev6 
+- * 76afe3b - 2018-07-27: Refactored content column size for large devices, small to medium devices are now full-width 
+- * 9f09e96 - 2018-07-27: Refactored preview rename view CSS 
+- * e39068a - 2018-07-27: Pre-Release v9.3.56.dev5 
+- * 169b960 - 2018-07-27: Refactored list group in subtitles config view 
+- * 1867aaf - 2018-07-27: Fixed provider view list items 
+- * 1243962 - 2018-07-27: Fixed file browser modal 
+- * 24b4751 - 2018-07-26: Pre-Release v9.3.56.dev4 
+- * 334b7c7 - 2018-07-26: Misc JS code fixes 
+- * 96a1978 - 2018-07-26: Fixed IMDb star ratings for display show view 
+- * 9c41f4b - 2018-07-26: Fixed genre row alignment for display show view Fixed small poster sizing for shows view 
+- * c702306 - 2018-07-26: Fixed missing icons in navbar Migrated misc css classes to bootstrap 4 
+- * 45d2074 - 2018-07-26: Pre-Release v9.3.56.dev3 
+- * e12e04f - 2018-07-26: Removed bootbox jquery package Fixed confirmation dialog boxes for history and mass update views Changed text color from white to dark for episode statuses view Added css for jquery confirm package 
+- * 5ac6bac - 2018-07-26: Pre-Release v9.3.56.dev2 
+- * 1f9d56a - 2018-07-26: Fixed issue with retrieving image thumbnails from Fanart.tv 
+- * b96888a - 2018-07-26: Removed focus box shadow for quick search form control 
+- * 900b680 - 2018-07-26: Pre-Release v9.3.56.dev1 
+- * 6afa4c2 - 2018-07-26: Updated grunt tasks 
+- * 3a87793 - 2018-07-26: Removed select column control from shows view 
+- * d5f8615 - 2018-07-26: Refactored restart view page 
+- * efff7db - 2018-07-26: Fixed logs view 
+- * dfb4f99 - 2018-07-26: Refactored mass update view and manage queues view 
+- * b0e6922 - 2018-07-26: Fixed table text wraps 
+- * fb7255b - 2018-07-26: Added thumbs for default poster and banners Fixed margins for add shows view 
+- * 524cb0a - 2018-07-26: Misc style changes 
+- * 7d1e3f3 - 2018-07-26: Added updates alert above navbar 
+- * 2fb8d02 - 2018-07-26: Added clear button to quick show search 
+- * 11ddcd3 - 2018-07-26: Added quick show search to navbar 
+- * dcad4d1 - 2018-07-25: Refactoring SCSS theme styles 
+- * 97b4239 - 2018-07-24: Misc code corrections and cleanups 
+- * e1ea56c - 2018-07-24: Migrated add existing shows view to bootstrap 4 
+- * 71b4cfa - 2018-07-23: Misc code cleanup 
+- * 2fa2261 - 2018-07-23: Migrated imdb popular shows view to bootstrap 4 
+- * 7abe9f9 - 2018-07-22: Migrated add trakt show view to bootstrap 4 Added pre-loading div for main show and trakt show views 
+- * 476f90a - 2018-07-22: Misc code migrates to bootstrap 4 
+- * 9abbba8 - 2018-07-22: Migrated API builder to bootstrap 4 
+- * d115e61 - 2018-07-21: Misc code cleanup 
+- * 2742737 - 2018-07-21: Refactored manual post-processing view responsiveness 
+- * 2466e65 - 2018-07-21: Refactored edit show view responsiveness 
+- * fbc0c9e - 2018-07-21: Refactored responsive column for views 
+- * bc2a0f2 - 2018-07-21: Migrated status view to bootstrap 4 
+- * a3ff9ab - 2018-07-21: Refactored add new show view to bootstrap 4 
+- * 03c08d7 - 2018-07-18: Fixed main shows page show details footer 
+- * 453ca1a - 2018-07-17: Refactored schedule view 
+- * 0fdb6df - 2018-07-16: Refactored history view 
+- * 427b651 - 2018-07-16: Refactored missing subtitles view 
+- * 6727208 - 2018-07-16: Refactored failed history view 
+- * b24cc27 - 2018-07-16: Refactored display show view 
+- * e61f206 - 2018-07-16: Refactored layouts for main shows view 
+- * 605eee5 - 2018-07-16: Added shadowing for theme classes 
+- * 6cd3963 - 2018-07-16: Created themed scss classes Migrated manage queues view 
+- * bce28bd - 2018-07-15: Migrated file browser modal to bootstrap 4 
+- * 1df34fa - 2018-07-15: Refactored mass update view 
+- * ef5ceee - 2018-07-15: Refactored all config views Refactored manual post-processing view Refactored edit show view Refactored main layout Refactored config layout 
+- * 085af56 - 2018-07-15: Refactored notifications config view 
+- * 22d3071 - 2018-07-15: Refactored metadata config view 
+- * 8b4add8 - 2018-07-15: Refactored episode naming view and misc config views 
+- * df9b9e3 - 2018-07-15: Updated notifications view 
+- * 9dad99d - 2018-07-15: Themed main modal 
+- * c334f29 - 2018-07-15: Themed display show modals 
+- * fe6e1f0 - 2018-07-15: Migrated more icons to font awesome 
+- * 1e21e2d - 2018-07-15: Migrated loading, queued, searching icons to font awesome icons 
+- * 736d021 - 2018-07-14: Re-sized buttons bar for main view 
+- * 961b90c - 2018-07-14: Migrated home view network logo&#x27;s from images to sprites Fixed display show view responsiveness Added subtitle and flag sprites to webpack 
+- * 6f84b0d - 2018-07-14: Updated gitignore file 
+- * b3107c2 - 2018-07-14: Migrated provider and subtitle image references to sprite references 
+- * 901a870 - 2018-07-14: Updated gitignore file 
+- * f94568a - 2018-07-14: Converted provider icons to sprites Converted subtitle icons to sprites Converted network icons to sprites Converted notifier icons to sprites Converted core icons to sprites 
+- * f626619 - 2018-07-14: Converted provider icons to sprites Converted subtitle icons to sprites Converted network icons to sprites Converted notifier icons to sprites Converted core icons to sprites 
+- * 0672255 - 2018-07-14: Converted all glyphicons icons to fontawesome icons 
+- * fd36e3d - 2018-07-13: Release v9.3.55 
+- * a60f7af - 2018-07-13: Updated gruntfile 
+- * 2f5ba4a - 2018-07-13: Updated Yggtorrent provider base url Update Torrent9 provider base url 
+- * d2cea58 - 2018-07-13: Migrated config providers view to bootstrap 4 
+- * d73439e - 2018-07-09: Migrating away from Bower to NPM/WebPack 
+- * a4b58c9 - 2018-07-09: Migrating away from Bower to NPM/WebPack 
+- * 86021ad - 2018-07-09: Compiled all CSS/SCSS into 1 core file 
+- * b912b2e - 2018-07-08: Refactored config views to Bootstrap 4.x 
+- * ae015ef - 2018-07-08: Release v9.3.54 
+- * afa499a - 2018-07-08: Set secure cookie to expire after 30 days 
+- * 443ec81 - 2018-07-08: Changed table text color to dark for display show view 
+- * 2923c07 - 2018-07-08: Pre-Release v9.3.54.dev1 
+- * adba6a8 - 2018-07-08: Fixed logging format error for NyaaTorrents search provider 
+- * e666331 - 2018-07-08: Fixed getEpisode function to handle absolute episode numbers of zero 
+- * 00f48ae - 2018-07-08: Fixed bug in AniDB NZB provider 
+- * 8aefe4c - 2018-07-08: Fixed progressbar backgrounds and misc margin tweaks 
+- * dc3cc1c - 2018-07-07: Release v9.3.53 
+- * 7b9aac5 - 2018-07-07: Fixed client errors for SSO logins Added timeout for logins to match expire_in of tokens Fixed resetting of app_id when resetting config to defaults 
+- * fd227d5 - 2018-07-07: Refactored edit show view to Bootstrap 4.x 
+- * a4fa4da - 2018-07-07: Refactored display show view to Bootstrap 4.x 
+- * f3b315e - 2018-07-06: Release v9.3.52 
+- * 302fbe2 - 2018-07-06: Updated requirements.txt to be more compatible with Synology devices 
+- * 9d335cb - 2018-07-06: Release v9.3.51 
+- * 55167ba - 2018-07-06: Updated requirements.txt to be more compatible with Synology devices 
+- * 9f14867 - 2018-07-05: Migrated tablesorter theme to bootstrap 4.x for home view 
+- * fc2ec2b - 2018-07-05: Upgraded tablesorter to use bootstrap 4.x 
+- * e8d562b - 2018-07-04: Fixed responsiveness for add shows template Main shows page posters migrated to bootstrap 4 cards 
+- * 591578b - 2018-07-04: Release v9.3.50 
+- * 88a93b5 - 2018-07-04: Added missing requirements to requirements.txt 
+- * 729f8dc - 2018-07-02: Refactoring WebUI CSS Upgraded to Bootstrap 4.x Merged misc icons into core icon pack 
+- * 867b799 - 2018-06-29: Release v9.3.49 
+- * 47ac908 - 2018-06-29: Fixed issue with token not being refreshed correctly for API usage 
+- * 3d27b4e - 2018-06-28: Release v9.3.48 
+- * b3ca706 - 2018-06-26: Minor updates to login handler Added ability to unlink account from app Fixed issue with scheduler view and empty show runtime Replaced all no16 and yes16 with font awesome equivalents 
+- * ecf829f - 2018-06-25: Release v9.3.47 
+- * 713cec3 - 2018-06-25: Updated requirements.txt to resolve Synology issues 
+- * 40ffc7a - 2018-06-25: Release v9.3.46 
+- * d272697 - 2018-06-25: Fixed token refresh issues for API 
+- * 05e41d5 - 2018-06-24: Release v9.3.45 
+- * dcaff48 - 2018-06-24: Fixed issue with UPnP getting incorrect internal IP address 
+- * 38bd1fc - 2018-06-24: Release v9.3.44 
+- * 9ed9450 - 2018-06-24: Fixed issues with UPnP client and Synology devices 
+- * f596b19 - 2018-06-24: Added app id to info page Updated some info page icons Fixed API builder to incorporate web root Fixed redirect issues when using a custom web root 
+- * 7fd4ff2 - 2018-06-22: Added app id to info page Updated some info page icons 
+- * 21d03f9 - 2018-06-22: Release v9.3.43 
+- * 42893d0 - 2018-06-22: Release v9.3.42 
+- * abf1b98 - 2018-06-21: Release v9.3.41 
+- * 8bd7022 - 2018-06-21: Release v9.3.40 
+- * 36ce10b - 2018-06-21: Release v9.3.39 
+- * c2a903e - 2018-06-21: Release v9.3.38 
+- * 4ee3db6 - 2018-06-21: Fixed issue with how data is formatted on return for app api 
+- * c63362a - 2018-06-21: Added AppID registration to account profiles 
+- * 08580c9 - 2018-06-20: Release v9.3.37 
+- * 5e91170 - 2018-06-20: Release v9.3.36 
+- * e6f02d4 - 2018-06-19: Pre-Release v9.3.36.dev1 
+- * 977b971 - 2018-06-17: Switched WebUI to use API for login credentials 
+- * c800afc - 2018-06-16: Release v9.3.35 
+- * 2e05d78 - 2018-06-16: Added function to randomize external upnp port number Added ability to manually set external upnp port number 
+- * 8ee962a - 2018-06-16: Pre-Release v9.3.35.dev2 
+- * bcdcce3 - 2018-06-16: Pre-Release v9.3.35.dev1 
+- * 8f7a4e2 - 2018-06-16: Added UPNP functionality to app 
+- * 2eef0d8 - 2018-06-16: Fixed requirements issues 
+- * f316113 - 2018-06-11: Changed placement of announcement&#x27;s for main layout 
+- * 7bd322b - 2018-06-10: Release v9.3.34 
+- * 5c47d7c - 2018-06-10: Added Google Drive support for syncing app data local and remote Added ability to download unverified torrent magnet links Fixed issues for access data retrieved from SR API endpoints 
+- * a65bc0f - 2018-06-04: Release v9.3.29 
+- * d21e3aa - 2018-06-02: Fixed NoneType error in displayShow mako code related to imdb ratings 
+- * 1277227 - 2018-06-01: Release v9.3.28 
+- * 924a877 - 2018-06-01: Release v9.3.27 
+- * 22b37e3 - 2018-05-31: Pre-Release v9.3.27.dev1 
+- * 7f39cc3 - 2018-05-31: Fixed issue #224 - backlog searches not working 
+- * 088906e - 2018-05-27: Refactored SiCKRAGE API class 
+- * 39debf7 - 2018-05-27: Added Google drive API endpoints 
+- * 4dd25e6 - 2018-05-27: Migrated from oauth2 client credential grant to password grant Migrated SiCKRAGE API endpoints 
+- * 510fe7d - 2018-05-26: Misc changes/fixes for database calls 
+- * 1ad45d2 - 2018-05-24: Removes existing symlink or hardlink file if exists when creating new links 
+- * d861c0c - 2018-05-24: Release v9.3.26 
+- * eee20d0 - 2018-05-24: Fixed issue with parsing failed quality for episodes 
+- * 06d160f - 2018-05-21: Release v9.3.25 
+- * f7f75e7 - 2018-05-21: Fixed issue with unexpected keyword agrument &#x27;skip_downloaded&#x27; 
+- * 706c89e - 2018-05-20: Release v9.3.24 
+- * f7f766b - 2018-05-20: Fixed issue #221 - PIP update issues due to dev releases and StrictVersion 
+- * 7bd2298 - 2018-05-19: Release v9.3.23 
+- * 1ff0bc5 - 2018-05-19: Converted for loop to while loop for database upgrade function 
+- * 8a40c41 - 2018-05-19: Pre-Release v9.3.23.dev2 
+- * b80633c - 2018-05-19: Added database version upgrade functionality 
+- * 249b6b0 - 2018-05-19: Converted archive_firstmatch to skip_downloaded option, skips upgrading quality of downloaded episodes 
+- * c6fd81b - 2018-05-18: Pre-Release v9.3.23.dev1 
+- * 15c6a47 - 2018-05-18: Fixed issues with downloading subtitles Fix KeyError for black and white lists Fixed NoneType error for indexer api 
+- * 0f68f72 - 2018-05-18: Converted log error to warning for Discord client Refactored SabNZBd client code 
+- * a3c7441 - 2018-05-18: Misc small fixes 
+- * 5f5592c - 2018-05-18: Misc typo corrections Converted errors to warnings for email notifications 
+- * 1630902 - 2018-05-17: Release v9.3.22 
+- * 8acce0d - 2018-05-16: Pre-Release v9.3.22.dev4 
+- * 6ea67b3 - 2018-05-15: Pre-Release v9.3.22.dev3 
+- * d2f59fc - 2018-05-15: Pre-Release v9.3.22.dev2 
+- * a2da132 - 2018-05-15: Fixed KeyError when trying to display a show 
+- * 7b39213 - 2018-05-15: Added labels to better explain options for editing shows 
+- * 2476478 - 2018-05-13: Pre-Release v9.3.22.dev1 
+- * 3fc98cf - 2018-05-13: Fixed issues with searches and UNKNOWN qualities 
+- * 0869c48 - 2018-05-13: Release v9.3.21 
+- * ea98ece - 2018-05-13: Fixed bug in backlog searcher that was incorrectly comparing date ordinals causing zero results to be found 
+- * 52d12af - 2018-05-13: Pre-Release v9.3.21.dev4 
+- * d1b612a - 2018-05-12: Changed iptorrents login url 
+- * 7be1210 - 2018-05-12: Pre-Release v9.3.21.dev3 
+- * 07b7203 - 2018-05-12: Fixed KeyError for Anizb provider 
+- * 3ffb11e - 2018-05-12: Added more notify options for Emby 
+- * 5c626f6 - 2018-05-10: Pre-Release v9.3.21.dev2 
+- * 5bb7da0 - 2018-05-10: Updated Grunt tasks 
+- * cdcc32f - 2018-05-11: New Crowdin translations 
+- * 392eda4 - 2018-05-11: Update Crowdin configuration file 
+- * 8b1ac6e - 2018-05-09: Pre-Release v9.3.21.dev1 
+- * fcdf2e4 - 2018-05-08: Changed log levels from error to warning for misc 
+- * 7c77db3 - 2018-05-06: Release v9.3.20 
+- * b9fa094 - 2018-05-06: Pre-Release v9.3.20.dev6 
+- * 8ba19bd - 2018-05-06: Merged failed database into main database 
+- * b89ab1b - 2018-05-06: Pre-Release v9.3.20.dev5 
+- * 0e6ce30 - 2018-05-06: Pre-Release v9.3.20.dev4 
+- * 67d8ac1 - 2018-05-06: Fixed UnicodeEncode errors when saving subtitles 
+- * f69a02b - 2018-05-05: Pre-Release v9.3.20.dev3 
+- * b7cc531 - 2018-05-05: Refactoring search client code 
+- * e0d01bd - 2018-05-05: Fixed redirect on login Changed secure cookie variable name 
+- * b5b3a06 - 2018-05-05: Pre-Release v9.3.20.dev2 
+- * ae451c1 - 2018-05-05: Pre-Release v9.3.20.dev1 
+- * f12f59c - 2018-05-05: Checks if download_url is NoneType Fixes SICKRAGE-C6-5J 
+- * 50769a1 - 2018-05-05: Release v9.3.19 
+- * c478436 - 2018-05-05: Pre-Release v9.3.19.dev3 
+- * ee3e0d4 - 2018-05-04: Pre-Release v9.3.19.dev2 
+- * 793d2a5 - 2018-05-04: Pre-Release v9.3.19.dev1 
+- * 885708b - 2018-05-04: Release v9.3.18 
+- * de8804b - 2018-05-03: View Changelog now reads changelog.md file 
+- * 4a12c79 - 2018-05-03: Pre-Release v9.3.18.dev3 
+- * 2a46cba - 2018-05-03: Pre-Release v9.3.18.dev2 
+- * 821cc99 - 2018-05-03: Refactoring of provider code 
+- * f85ba73 - 2018-05-03: Pre-Release v9.3.18.dev1 
+- * a81ccaf - 2018-05-03: Converted errors to warnings for DelugeD client 
+- * f8d6cc9 - 2018-05-03: Fixed attribute error in Torrentz provider 
+- * 1656459 - 2018-05-03: Fixed IndexNotFoundException in for TV cache when looking up last time updated 
+- * ba588fd - 2018-05-03: Fixed mapping of error codes to error messages for Synology download station client 
+- * e5bf9f2 - 2018-05-03: Added exception handling when trying to get show data and nothing is returned 
+- * 1759db6 - 2018-05-02: Changed log levels from error to warning where needed 
+- * bd058f0 - 2018-05-01: Release v9.3.17 
+- * ec33e74 - 2018-05-01: Fixed versioning issue with psutil and Synology devices 
+- * 3781227 - 2018-04-30: Changed logging level from error to warning when trying to load episodes from directory and the show or episode is not found 
+- * 1a7b0ca - 2018-04-30: Release v9.3.16 
+- * 49c633f - 2018-04-30: Release v9.3.15 
+- * 48105f6 - 2018-04-30: Prevent sentry log handler from having logging level changed 
+- * 1c5d2fe - 2018-04-30: Release v9.3.14 
+- * 7cd716e - 2018-04-30: Added version update function for Emby notifier 
+- * ab62087 - 2018-04-30: Release v9.3.13 
+- * f3546f0 - 2018-04-30: Pre-Release v9.3.13.dev5 
+- * 55b2e91 - 2018-04-29: Pre-Release v9.3.13.dev4 
+- * 35791f4 - 2018-04-29: Pre-Release v9.3.13.dev2 
+- * e0bc4ae - 2018-04-29: Pre-Release v9.3.13.dev1 
+- * 244264a - 2018-04-29: Fixed issue with sending email notifications Fixed issue with retrieving IMDb info from SR API 
+- * 3a13aca - 2018-04-29: Release v9.3.12 
+- * 03e1ced - 2018-04-29: Updated sentry api url 
+- * de5e70f - 2018-04-29: Release v9.3.11 
+- * ae29eb5 - 2018-04-29: Fixed log level of sentry logging handler to log errors only 
+- * bebb5f6 - 2018-04-29: Pre-Release v9.3.11.dev1 
+- * a82f305 - 2018-04-29: Fixed issue with NewPCT provider and &#x27;NoneType&#x27; object has no attribute &#x27;get&#x27; Fixed missing method from twilio client 
+- * bcac79f - 2018-04-29: Release v9.3.10 
+- * 79bf6f6 - 2018-04-29: Release v9.3.8 
+- * fd43837 - 2018-04-29: Release v9.3.7 
+- * b9546e2 - 2018-04-29: Pre-Release v9.3.7.dev3 
+- * d632a05 - 2018-04-29: Added remote error logging 
+- * 0d890f1 - 2018-04-28: Pre-Release v9.3.7.dev2 
+- * 7b8402e - 2018-04-28: Pre-Release v9.3.7.devNaN 
+- * 6653573 - 2018-04-28: Skips post-processing video if not enough free space available for destination. 
+- * f77cf2d - 2018-04-26: Pre-Release v9.3.7.dev1 
+- * 3afe2b6 - 2018-04-26: Pre-Release v9.3.6.dev1 
+- * be6173b - 2018-04-26: Fixed issue with stuck current item in queue 
+- * 9f2aac1 - 2018-04-26: Code refactoring for backlog and daily searches 
+- * 26ab1dd - 2018-04-26: Code refactoring for backlog and daily searches 
+- * 37d5cd0 - 2018-04-26: Daily searches hard-coded to search from todays date and greater Backlog searches hard-coded to search from yesterday and less 
+- * 40c2bce - 2018-04-25: Fixed issue where cloudflare bypass would loop when unable to bypass Updated torrentleech provider url 
+- * 9b257bc - 2018-04-25: Fixed issue #202 - Torrent client delaying load times on all pages 
+- * ee7b8bc - 2018-04-21: Release v9.3.6 
+- * c32702b - 2018-04-18: Daily/Backlog searches now skip downloaded episodes with higher quality then show&#x27;s set preferred or best. Daily searches skip downloaded episodes if archive on first match enabled. 
+- * 9e76bc0 - 2018-04-15: Manual searches and Removal of shows now take extreme priority in queue 
+- * e8cea87 - 2018-04-15: Manual searches and Removal of shows now take extreme priority in queue 
+- * a7210e4 - 2018-04-15: Manual searches and Removal of shows now take extreme priority in queue 
+- * b96a3f9 - 2018-04-15: Manual searches and Removal of shows now take extreme priority in queue 
+- * aa08e0c - 2018-04-15: Manual searches and Removal of shows now take extreme priority in queue 
+- * 5d9caa6 - 2018-04-15: Added ability to pause/unpause daily search queue 
+- * 04cf1ef - 2018-04-14: Backlog searches no longer trigger cache updates, speeds up searching Fixed misc queue priority issues 
+- * 57b8a79 - 2018-04-10: Release v9.3.5 
+- * c056018 - 2018-04-07: Release v9.3.4 
+- * c153794 - 2018-04-07: Fixed User-Agent issues for RARBG torrent provider 
+- * f9a1261 - 2018-04-08: Updated RARBG torrent provider code 
+- * 6734d81 - 2018-04-07: Fixed issues with TorrentLeech provider and cloudflare bypass 
+- * a5e76f4 - 2018-04-06: Resolved issues for post-processing already processed compressed files 
+- * 8c8feea - 2018-03-27: Release v9.3.3 
+- * b6885a5 - 2018-03-27: Fixed issue #187 - Qbittorrent failing authentication 
+- * 0b928da - 2018-03-22: Added hevc to list of scene quality checks 
+- * 1891763 - 2018-03-22: Added hevc to list of scene quality checks 
+- * e198141 - 2018-03-21: Added hevc to list of scene quality checks 
+- * f546064 - 2018-03-21: Release v9.3.2 
+- * fe0d03b - 2018-03-21: Updated .gitignore 
+- * ded351a - 2018-03-21: Fixed issues with RARBG provider and cloudflare protection 
+- * 98fa8b8 - 2018-03-20: Minor code update for provider cookie handling 
+- * f303419 - 2018-03-20: Updated JWT functions for TheTVDB authentication mechanism 
+- * b169536 - 2018-03-20: Updated JWT functions for TheTVDB authentication mechanism 
+- * 23df733 - 2018-03-20: Fixed issues with cloudflare protection not being detected 
+- * 6a37da8 - 2018-03-20: Added 5 second sleep timer to Torrentz provider 
+- * 7a4aef8 - 2018-03-20: Fixed issue #184 - Failed to refresh TheTVDB api token 
+- * e0fa39e - 2018-03-02: Fixed small typo in daily searcher code 
+- * cc43195 - 2018-03-01: Fixed small typo in daily searcher code 
+- * 25f6ef4 - 2018-03-01: Fix call to generate_bwlist on save 
+- * f6de0d6 - 2018-02-28: Fixed daily searcher to search for shows set WANTED aired same-day Fixed backlog searcher issues 
+- * 9453aea - 2018-02-28: Fixed daily searcher to search for shows set WANTED aired same-day Fixed backlog searcher issues 
+- * 54cc664 - 2018-02-11: revertFailedEpisode changed to use debug instead of warning for episodes without previous snatched statuses 
+- * f65fe08 - 2018-02-12: Fix call to generate_bwlist on save 
+- * aa7292f - 2018-02-08: Release v9.2.101 
+- * e740a8e - 2018-02-08: Fixed unicode issues with srDateTime class when using locales 
+- * c94ad9f - 2018-02-07: Fixed issues with backlog and proper searches 
+- * f50e104 - 2018-02-07: Fixed issue with next airdate and main show page 
+- * c912546 - 2018-02-07: Fixed issue with next airdate and main show page 
+- * e9494a7 - 2018-02-07: Fixed issue with next airdate and main show page 
+- * 563c4a0 - 2018-02-07: Added search delay feature to edit show options, allows setting a delay in days to delay daily searches for specific shows that may not release same day on provider sites 
+- * ca75c7e - 2018-02-06: refactored srDateTime class added locale support for displaying date and time 
+- * 2c89486 - 2018-02-06: Fixed issue #175 - autocomplete &quot;Enter the folder containing the episode &quot; field when manually post-processing using Post-Processing Dir from settings 
+- * b608667 - 2018-02-04: Fixed issue #176 - autocomplete colors when using dark theme hard to see 
+- * e73b9af - 2018-02-04: Fixed issue #176 - autocomplete colors when using dark theme hard to see 
+- * e77ea77 - 2018-02-04: Fixed issue #176 - autocomplete colors when using dark theme hard to see 
+- * 372b59e - 2018-02-04: Fixed issue #177 - case-insensitive sorting for drop-down show list 
+- * c5bee33 - 2018-01-31: Release v9.2.100 
+- * c91e143 - 2018-01-28: Fixed issue #170 - double popup on hover over network in show list 
+- * 2155ce3 - 2018-01-26: Updated usenet-crawler url to new API url 
+- * d1b497f - 2018-01-25: Fixed Error loading IMDb info: &#x27;NoneType&#x27; object is not iterable 
+- * 3b348cb - 2018-01-24: Added option to skip automatic refresh/updating of ended shows or to refresh/update them after 90 days 
+- * dff6cff - 2018-01-23: Release v9.2.99 
+- * d076678 - 2018-01-23: reverted requests[&#x27;security&#x27;] to requests requirement, was causing issues for synology devices 
+- * 016ec81 - 2018-01-20: Release v9.2.98 
+- * b8fabca - 2018-01-20: Fixed missing requests security requirement 
+- * 0ebcc19 - 2018-01-19: misc range to xrange changes 
+- * 927c3c0 - 2018-01-19: Fixed missing token error 
+- * 7cf97c1 - 2018-01-18: Release v9.2.97 
+- * f9983e3 - 2018-01-18: Fixed issue with SR API and expired tokens 
+- * b8ae4e8 - 2018-01-15: Release v9.2.95 
+- * 0817995 - 2018-01-15: Fixed issue #169 - Missing parameter: &quot;refresh_token&quot; is required 
+- * 70d1ecc - 2018-01-14: Fixed issue #167 - PreconditionsException when saving IMDB info 
+- * 4931383 - 2018-01-12: Release v9.2.94 
+- * deedce0 - 2018-01-12: Release v9.2.93 
+- * 2af9433 - 2018-01-12: Fixed issues with refresh token when using client credentials 
+- * c9449f9 - 2018-01-12: Fixed issues with refresh token when using client credentials 
+- * dae404d - 2018-01-12: Release v9.2.92 
+- * b48dd3f - 2018-01-12: Updated requirement psutil from 5.4.1 to 5.4.3 
+- * 944065c - 2018-01-11: Update torrent9.py. 
+- * d3b36d3 - 2018-01-10: added SR external api calls for imdb searches 
+- * 8bbd2b2 - 2018-01-09: thread name added to UI warning/error messages 
+- * 1c36a65 - 2018-01-07: Release v9.2.91 
+- * 8cdd6f2 - 2018-01-07: Fixed issues with air-by-date shows not properly being parsed for episode numbers 
+- * 17ae529 - 2018-01-04: Release v9.2.90 
+- * a98de61 - 2018-01-04: Fixed issue #157 - Daily and Manual Search log formatting issue 
+- * 6d49779 - 2018-01-04: Release v9.2.89 
+- * 1206659 - 2018-01-04: Fix for connection issues to RARBG 
+- * 5a2f6c5 - 2018-01-04: Updated imdbpie requirement to v4.4.2 
+- * 3a38155 - 2018-01-04: Fixed __getitem__ error for managing episode statues 
+
+
