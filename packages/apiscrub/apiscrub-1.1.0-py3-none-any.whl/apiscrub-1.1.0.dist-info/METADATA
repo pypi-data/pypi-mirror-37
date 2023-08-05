@@ -1,0 +1,68 @@
+Metadata-Version: 2.1
+Name: apiscrub
+Version: 1.1.0
+Summary: OpenAPI Scrubber
+Home-page: https://github.com/danielgtaylor/apiscrub
+Author: Daniel G. Taylor
+Author-email: danielgtaylor@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+Requires-Dist: ruamel.yaml (>=0.15)
+
+# API Scrubber
+
+An OpenAPI scrubber to process and remove certain information depending on the target audience. For example, given something like:
+
+```yaml
+paths:
+  /hello:
+    get:
+      description: Returns a hello world string.
+  /admin:
+    x-only: admin
+    get:
+      description: Get the admin settings
+```
+
+Then running `apiscrub input.yaml -` would result in:
+
+```yaml
+paths:
+  /hello:
+    get:
+      description: Returns a hello world string.
+```
+
+While running `apiscrub --keep=admin input.yaml -` would result in:
+
+```yaml
+paths:
+  /hello:
+    get:
+      description: Returns a hello world string.
+  /admin:
+    get:
+      description: Get the admin settings
+```
+
+Note that the `x-only` metadata extension tag gets removed in both cases.
+
+## Installation
+
+Install via Python:
+
+```sh
+$ pip install apiscrub
+```
+
+## License
+
+Copyright © 2018 Daniel G. Taylor
+
+http://dgt.mit-license.org/
+
+
