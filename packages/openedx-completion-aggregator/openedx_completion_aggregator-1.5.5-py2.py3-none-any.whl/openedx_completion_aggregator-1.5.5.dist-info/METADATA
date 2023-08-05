@@ -1,0 +1,173 @@
+Metadata-Version: 2.1
+Name: openedx-completion-aggregator
+Version: 1.5.5
+Summary: an app that aggregates block level completion data for different block types for Open edX.
+Home-page: https://github.com/open-craft/openedx-completion-aggregator
+Author: OpenCraft
+Author-email: help@opencraft.com
+License: AGPL 3.0
+Keywords: Django edx
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.8
+Classifier: Framework :: Django :: 1.11
+Classifier: Framework :: Django :: 2.0
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: Django (<1.12,>=1.8)
+Requires-Dist: django-model-utils (>=2.0)
+Requires-Dist: djangorestframework
+Requires-Dist: XBlock (>=1.2.2)
+Requires-Dist: celery (>=3.1)
+Requires-Dist: edx-celeryutils (>=0.1.5)
+Requires-Dist: edx-completion (>=0.1.5)
+Requires-Dist: edx-opaque-keys
+
+openedx-completion-aggregator
+=============================
+
+|pypi-badge| |travis-badge| |codecov-badge| |doc-badge| |pyversions-badge| |license-badge|
+
+openedx-completion-aggregator is a Django app that aggregates block level
+completion data for different block types for Open edX.
+
+Overview
+--------
+
+openedx-completion-aggregator uses the pluggable django app pattern to
+ease installation.  To use in edx-platform, do the following:
+
+1.  Install the app into your virtualenv.
+
+    ..code_block::
+
+        $ pip install openedx-completion-aggregator
+
+2.  [Optional] You may override the set of registered aggregator block types in
+    your lms.env.json file::
+
+        ...
+        "COMPLETION_AGGREGATOR_BLOCK_TYPES": {
+            "course",
+            "chapter",
+            "subsection",
+            "vertical"
+        },
+        ...
+
+
+3.  By default, completion is aggregated with each created or updated
+    BlockCompletion.  If this creates too much database activity for your
+    installation, set the following in your lms.env.json file::
+
+        ...
+        "COMPLETION_AGGREGATOR_ASYNC_AGGREGATION": true,
+        ...
+
+    Then configure up a pair of cron jobs to run `./manage.py
+    run_aggregator_service` and `./manage.py run_aggregator_cleanup` as often
+    as desired.
+
+Note that if operating on a Hawthorne-or-later release of edx-platform, you may
+override the settings in `EDXAPP_ENV_EXTRA` instead.
+
+Documentation
+-------------
+
+The full documentation is at https://openedx-completion-aggregator.readthedocs.org.
+
+License
+-------
+
+The code in this repository is licensed under the AGPL 3.0 unless
+otherwise noted.
+
+Please see ``LICENSE.txt`` for details.
+
+How To Contribute
+-----------------
+
+Contributions are very welcome.
+
+Please read `How To Contribute <https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst>`_ for details.
+
+Even though they were written with ``edx-platform`` in mind, the guidelines
+should be followed for Open edX code in general.
+
+PR description template should be automatically applied if you are sending PR from github interface; otherwise you
+can find it it at `PULL_REQUEST_TEMPLATE.md <https://github.com/open-craft/openedx-completion-aggregator/blob/master/.github/PULL_REQUEST_TEMPLATE.md>`_
+
+Issue report template should be automatically applied if you are sending it from github UI as well; otherwise you
+can find it at `ISSUE_TEMPLATE.md <https://github.com/open-craft/openedx-completion-aggregator/blob/master/.github/ISSUE_TEMPLATE.md>`_
+
+Reporting Security Issues
+-------------------------
+
+Please do not report security issues in public. Please email help@opencraft.com.
+
+Getting Help
+------------
+
+Have a question about this repository, or about Open edX in general?  Please
+refer to this `list of resources`_ if you need any assistance.
+
+.. _list of resources: https://open.edx.org/getting-help
+
+
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/openedx-completion-aggregator.svg
+    :target: https://pypi.python.org/pypi/openedx-completion-aggregator/
+    :alt: PyPI
+
+.. |travis-badge| image:: https://travis-ci.org/open-craft/openedx-completion-aggregator.svg?branch=master
+    :target: https://travis-ci.org/open-craft/openedx-completion-aggregator
+    :alt: Travis
+
+.. |codecov-badge| image:: http://codecov.io/github/edx/openedx-completion-aggregator/coverage.svg?branch=master
+    :target: http://codecov.io/github/open-craft/openedx-completion-aggregator?branch=master
+    :alt: Codecov
+
+.. |doc-badge| image:: https://readthedocs.org/projects/openedx-completion-aggregator/badge/?version=latest
+    :target: http://openedx-completion-aggregator.readthedocs.io/en/latest/
+    :alt: Documentation
+
+.. |pyversions-badge| image:: https://img.shields.io/pypi/pyversions/openedx-completion-aggregator.svg
+    :target: https://pypi.python.org/pypi/openedx-completion-aggregator/
+    :alt: Supported Python versions
+
+.. |license-badge| image:: https://img.shields.io/github/license/open-craft/openedx-completion-aggregator.svg
+    :target: https://github.com/open-craft/openedx-completion-aggregator/blob/master/LICENSE.txt
+    :alt: License
+
+
+Change Log
+----------
+
+..
+   All enhancements and patches to completion_aggregator will be documented
+   in this file.  It adheres to the structure of http://keepachangelog.com/ ,
+   but in reStructuredText instead of Markdown (for ease of incorporation into
+   Sphinx documentation and the PyPI description).
+
+   This project adheres to Semantic Versioning (http://semver.org/).
+
+.. There should always be an "Unreleased" section for changes pending release.
+
+Unreleased
+~~~~~~~~~~
+
+[1.0.0] - 2018-01-04
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* First release on PyPI.
+* On-demand asynchronous aggregation of xblock completion.
+* Provides an API to retrieve aggregations for one or many users, for one or 
+  many courses.
+
+
