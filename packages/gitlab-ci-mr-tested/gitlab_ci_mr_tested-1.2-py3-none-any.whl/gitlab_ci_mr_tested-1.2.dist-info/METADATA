@@ -1,0 +1,51 @@
+Metadata-Version: 2.1
+Name: gitlab-ci-mr-tested
+Version: 1.2
+Summary: Utility for use in gitlab ci to check merge requests have been marked tested
+Home-page: https://gitlab.com/alelec/gitlab-ci-mr-tested
+Author: Andrew Leech
+Author-email: andrew@alelec.net
+License: MIT
+Platform: UNKNOWN
+Requires-Dist: python-gitlab
+Requires-Dist: click
+
+Gitlab CI Merge Request Tested?
+===============================
+
+We use informal testing alongside automated CI testing which is documented in our
+merge requests. Once a project member has done some testing, the basic steps are
+documented in a comment on the merge request with the tested label attached to that
+comment (by add "~tested" to the comment text. The tested label then needs to be
+attached to the merge request for easy tracking
+
+This python script is run as the alst step of ci and  uses the gitlab api to
+inspect Merge Requests covering the current commit to see if they have the
+"tested" label attached. If so, it also checks the comments to ensure one
+of them has the ~tested label declared.
+
+If either of these two requirements is not met, the CI job is failed.
+
+
+It can be used in a gitlab-ci.yml stage like:
+
+.. code:: yaml
+
+    stages:
+      - test
+      - build
+      - release
+      - tested
+
+    < ... snip ... >
+
+    mr_tested:
+      only:
+        - branches
+      stage: tested
+      image: python:3
+      script:
+        - pip install gitlab_ci_mr_tested
+        - gitlab_ci_mr_tested --token "${PRIVATE_TOKEN}" --label "tested"
+
+
