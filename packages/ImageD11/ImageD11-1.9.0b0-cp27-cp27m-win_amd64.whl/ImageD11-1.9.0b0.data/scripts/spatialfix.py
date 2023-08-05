@@ -1,0 +1,44 @@
+#!c:\ProgramData\Anaconda2\python.exe
+
+from __future__ import print_function
+
+"""
+Applies a new spatial correction based on spd style distortion files
+"""
+from ImageD11 import columnfile
+import fabio
+import sys, os
+import numpy as np
+
+try:
+    dx = fabio.open(sys.argv[1]).data
+    dy = fabio.open(sys.argv[2]).data
+    cf = columnfile.columnfile(sys.argv[3])
+except:
+    print("Usage dxfile dyfile oldcolfile newcolfile")
+    raise
+if os.path.exists( sys.argv[4] ):
+    print("About to overwrite",sys.argv[4], end=' ')
+    if input("OK? ")[0] not in 'yY':
+        print("So I will exit then")
+        sys.exit()
+
+
+if len(sys.argv)>5:
+   if "V" in sys.argv[5]:
+       cf.s_raw = 2048 - cf.s_raw
+       print("did a vertical flip")
+   if "H" in sys.argv[5]:
+       cf.f_raw = 2048 - cf.f_raw
+       print("did a horizontal flip")
+
+# Closest pixel indices
+si = (cf.s_raw+0.5).astype(np.int).clip(0,2047)
+fi = (cf.f_raw+0.5).astype(np.int).clip(0,2047)
+
+# Add shifts
+cf.sc[:] = cf.s_raw + dy[ si, fi ]
+cf.fc[:] = cf.f_raw + dx[ si, fi ]
+
+cf.writefile( sys.argv[4] )
+
