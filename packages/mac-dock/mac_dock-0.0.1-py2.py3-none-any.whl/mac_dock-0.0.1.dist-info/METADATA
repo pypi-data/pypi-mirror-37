@@ -1,0 +1,127 @@
+Metadata-Version: 2.1
+Name: mac-dock
+Version: 0.0.1
+Summary: MacOS Dock
+Home-page: https://github.com/looking-for-a-job/mac-dock.py
+License: UNKNOWN
+Keywords: dock
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: MacOS X
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development
+Description-Content-Type: text/markdown
+Requires-Dist: Click
+Requires-Dist: applescript
+Requires-Dist: public
+Requires-Dist: runcmd
+Requires-Dist: setuptools
+Requires-Dist: values
+
+[![](https://img.shields.io/badge/OS-MacOS-blue.svg?longCache=True)]()
+[![](https://img.shields.io/pypi/pyversions/mac-dock.svg?longCache=True)](https://pypi.org/pypi/mac-dock/)
+
+### Install
+```bash
+$ [sudo] pip install mac-dock
+```
+
+### Usage
+
+##### CLI
+```bash
+$ python -m mac_dock.apps.add path ...                  # add apps to Dock
+$ python -m mac_dock.apps.bundle                        # Dock apps bundle IDs
+$ python -m mac_dock.apps.label                         # Dock apps labels
+$ python -m mac_dock.apps.path                          # Dock apps paths
+$ python -m mac_dock.apps.rm path ...                   # rm apps from Dock
+```
+
+```bash
+$ python -m mac_dock.folders.add [options] path ...     # add folder to Dock
+$ python -m mac_dock.folders.label                      # Dock folders labels
+$ python -m mac_dock.folders.path                       # Dock folders paths
+$ python -m mac_dock.folders.rm [path ...]              # rm folders from Docks
+```
+
+```bash
+$ python -m mac_dock.files.add path ...                 # add files from Dock
+$ python -m mac_dock.files.label                        # Dock files labels
+$ python -m mac_dock.files.path                         # Dock files paths
+$ python -m mac_dock.files.rm [path ...]                # rm files from Dock
+```
+
+##### Functions
+```python
+mac_dock.apps.add(path)
+mac_dock.apps.rm(path)
+mac_dock.apps.items()
+```
+```python
+mac_dock.files.add(path)
+mac_dock.files.rm(path)
+mac_dock.files.items()
+```
+```python
+mac_dock.folders.add(path, arrangement, displayas, showas)
+mac_dock.folders.rm(path)
+mac_dock.folders.items()
+```
+
+###### folder options
+
++   `arrangement`: 1 - name (default), 2 - added, 3 - modification, 4 - creation, 5 - kind
++   `displayas`: 1 - folder, 2 - stack (default)
++   `showas`: 1 - beep, 2 - grid, 3 - list, 4 - auto (default)
+
+### Examples
+
+##### Preferences
+```python
+>>> mac_dock.autohide=False
+>>> mac_dock.tilesize=85
+>>> mac_dock.save()
+```
+
+##### CLI
+```bash
+$ python -m mac_dock.apps.add "/Applications/Safari.app" "/Applications/Siri.app"
+$ python -m mac_dock.apps.rm "/Applications/Siri.app" "/Applications/Siri.app"
+```
+```bash
+$ python -m mac_dock.files.rm # rm all files from Dock
+$ python -m mac_dock.files.add "path/to/run.command" "path/to/site.webloc"
+$ python -m mac_dock.files.rm "path/to/run.command" "path/to/site.webloc"
+```
+```bash
+$ python -m mac_dock.folders.add # rm all folders from Dock
+$ python -m mac_dock.folders.add --arrangement=4 --displayas=1 --showas=1 ~/Downloads
+$ python -m mac_dock.folders.add --arrangement=1 --displayas=2 --showas=2 ~/Desktop
+$ python -m mac_dock.folders.rm ~/Desktop ~/Downloads
+```
+
+##### Functions
+```python
+>>> mac_dock.apps.add(["/Applications/Dashboard.app","/Applications/Safari.app"])
+>>> mac_dock.apps.rm(["/Applications/Dashboard.app","/Applications/Safari.app"])
+```
+```python
+>>> mac_dock.files.rm()  # rm all files from Dock
+>>> mac_dock.files.add(["path/to/site.webloc"])
+>>> mac_dock.files.rm(["path/to/site.webloc"])
+```
+```python
+>>> mac_dock.folders.rm()  # rm all folders from Dock
+>>> mac_dock.folders.add("~/Downloads",arrangement=4, displayas=1, showas=1)
+>>> mac_dock.folders.rm(["~/Downloads"])
+```
+
