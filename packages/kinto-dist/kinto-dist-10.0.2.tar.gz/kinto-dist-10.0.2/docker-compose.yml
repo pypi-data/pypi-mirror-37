@@ -1,0 +1,75 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:9.6
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  memcached:
+    image: memcached:1.5.10
+
+
+  autograph:
+    build:
+      context: autograph
+      dockerfile: Dockerfile
+    image: kinto:autograph
+
+  megaphone:
+    image: mozilla/megaphone
+    depends_on:
+      - mysql
+    environment:
+      ROCKET_DATABASE_URL: mysql://megaphone-user:megaphone-pass@mysql/megaphone
+      ROCKET_BROADCASTER_AUTH: "{kinto-dist-test=[token1]}"
+      ROCKET_READER_AUTH: "{reader=[token2]}"
+
+  mysql:
+    image: mysql:5.7.23
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql-root-pass
+      MYSQL_DATABASE: megaphone
+      MYSQL_USER: megaphone-user
+      MYSQL_PASSWORD: megaphone-pass
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kinto:build
+    depends_on:
+      - db
+      - memcached
+      - autograph
+      - megaphone
+    environment:
+      - KINTO_STORAGE_URL=postgres://postgres@db/postgres
+      - KINTO_PERMISSION_URL=postgres://postgres@db/postgres
+      - KINTO_SIGNER_AUTOGRAPH_SERVER_URL=http://autograph:8000
+      - KINTO_ATTACHMENT_BASE_URL=http://autograph:8000
+      - KINTO_CACHE_BACKEND=kinto.core.cache.memcached
+      - KINTO_CACHE_HOSTS=memcached:11211
+    ports:
+      - "8888:8888"
+      - "9999:9999"
+    volumes:
+      - $PWD:/app
+    command: uwsgistart
+
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    image: kinto:tests
+    depends_on:
+      - web
+    environment:
+      - SERVER=http://web:8888/v1
+      - MAILFILESERVER=http://web:9999
+    volumes:
+      - $PWD/tests:/app
+      - $PWD/mail:/app/mail/
+    command: start

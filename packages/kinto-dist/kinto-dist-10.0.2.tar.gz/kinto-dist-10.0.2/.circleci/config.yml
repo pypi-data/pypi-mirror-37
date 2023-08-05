@@ -1,0 +1,74 @@
+# These environment variables must be set in CircleCI UI
+#
+# DOCKERHUB_REPO - docker hub repo, format: <username>/<repo>
+# DOCKER_USER
+# DOCKER_PASS
+#
+version: 2
+jobs:
+  build_test_publish:
+    machine:
+      docker_layer_caching: true
+
+    working_directory: ~/kinto-dist
+
+    steps:
+      - run:
+          name: Install essential packages
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl git openssh-client
+
+      - checkout
+
+      - run:
+          name: Create version.json
+          command: |
+            # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+            printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
+            "$CIRCLE_SHA1" \
+            "$CIRCLE_TAG" \
+            "$CIRCLE_PROJECT_USERNAME" \
+            "$CIRCLE_PROJECT_REPONAME" \
+            "$CIRCLE_BUILD_URL" > version.json
+
+      - run:
+          name: Build
+          command: docker-compose build
+
+      - run:
+          name: Start once
+          command: |
+            # This will start all the dependencies first
+            docker-compose run web sleep 5
+
+      - run:
+          name: Migrate
+          command: |
+            mkdir mail
+            sudo chmod 777 mail
+            docker-compose run web migrate
+
+      - run:
+          name: Tests
+          command: |
+              docker-compose run tests start
+
+      - run:
+          name: Push to Dockerhub
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              ./bin/deploy-dockerhub.sh latest
+            fi
+            if [ -n "${CIRCLE_TAG}" ]; then
+              ./bin/deploy-dockerhub.sh "$CIRCLE_TAG"
+            fi
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build_test_publish:
+          filters:
+            tags:
+              only: /.*/
