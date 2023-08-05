@@ -1,0 +1,72 @@
+# log
+
+Python library/client for structured log output
+
+```bash
+pip install spacemakerlog
+```
+
+## Usage
+
+```python
+from spacemakerlog import log
+
+log.debug('hello something happened', some_key='with some value', another_key=123.12)
+```
+
+Output:
+
+```bash
+{"message": "hello something happened", "timestamp": "2018-08-05T18:08:01.780036Z", "another_key": 123.12, "level": "debug", "some_key": "with some value"}
+```
+
+### Log exception with stacktrace:
+
+```python
+from spacemakerlog import log
+
+try:
+    raise Exception('some error message')
+except Exception as e:
+    log.error('oooops, an error occured while doing something', exception=e)
+```
+
+Output:
+
+```bash
+{"message": "oooops, an error occured while doing something", "timestamp": "2018-08-15T08:49:46.707435Z", "level": "error", "exception": "Traceback (most recent call last):\n  File \"/someProject/some-spacemaker-app/some_module.py\", line 76, in some_method\n    raise Exception('some error message')\nException: some error message"}
+```
+
+### Settings
+
+The log client will read from environment variables at "init" for log level and format.
+
+| Env          | default |
+| ------------ | ------- |
+| `LOG_FORMAT` | "json"  |
+| `LOG_LEVEL`  | "debug" |
+
+Set log format to "text":
+
+```python
+log.set_format('text');
+```
+
+Set log level to "info":
+
+```python
+log.set_level('info');
+```
+
+## Publish
+
+Using [twine](https://pypi.org/project/twine/) for publishing to [PyPI](https://pypi.org/project/spacemakerlog/).
+
+```bash
+brew install twine
+```
+
+```bash
+python setup.py bdist_wheel
+twine upload dist/*
+```
