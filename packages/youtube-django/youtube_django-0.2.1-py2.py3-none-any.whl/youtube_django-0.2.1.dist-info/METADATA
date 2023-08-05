@@ -1,0 +1,112 @@
+Metadata-Version: 2.1
+Name: youtube-django
+Version: 0.2.1
+Summary: YouTube API Data V3 and Google Authentication implementation for Django
+Home-page: http://youtube-django.rtfd.io
+Author: Ivan Neto
+Author-email: ivan.cr.neto@gmail.com
+License: MIT License
+Project-URL: Documentation, http://youtube-django.rtfd.io
+Project-URL: Github, https://github.com/ivancrneto/youtube-django
+Project-URL: Tracker, https://github.com/ivancrneto/youtube-django/issues
+Keywords: youtube,djanto,django-youtube,youtube-django
+Platform: UNKNOWN
+Classifier: Environment :: Console
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*
+Description-Content-Type: text/markdown
+Requires-Dist: cachetools (==2.1.0)
+Requires-Dist: certifi (==2018.8.24)
+Requires-Dist: chardet (==3.0.4)
+Requires-Dist: Django (>=1.11)
+Requires-Dist: google-api-python-client (==1.7.4)
+Requires-Dist: google-auth (==1.5.1)
+Requires-Dist: google-auth-httplib2 (==0.0.3)
+Requires-Dist: google-auth-oauthlib (==0.2.0)
+Requires-Dist: httplib2 (==0.11.3)
+Requires-Dist: idna (==2.7)
+Requires-Dist: jsonpickle (==1.0)
+Requires-Dist: oauth2client (==4.1.3)
+Requires-Dist: oauthlib (==2.1.0)
+Requires-Dist: pyasn1 (==0.4.4)
+Requires-Dist: pyasn1-modules (==0.2.2)
+Requires-Dist: pytz (==2018.5)
+Requires-Dist: requests (==2.19.1)
+Requires-Dist: requests-oauthlib (==1.0.0)
+Requires-Dist: rsa (==4.0)
+Requires-Dist: six (==1.11.0)
+Requires-Dist: Unipath (==1.1)
+Requires-Dist: uritemplate (==3.0.0)
+Requires-Dist: urllib3 (==1.23)
+Requires-Dist: mkdocs (==1.0.4)
+
+# youtube-django
+
+
+|       |  |
+| ----------- | ----------- |
+| docs      | ![Documentation Status](https://readthedocs.org/projects/youtube-django/badge/?style=flat)      |
+| tests   |[![CircleCI](https://circleci.com/gh/ivancrneto/youtube-django.svg?style=svg)](https://circleci.com/gh/ivancrneto/youtube-django) [![codecov](https://codecov.io/gh/ivancrneto/youtube-django/branch/master/graph/badge.svg)](https://codecov.io/gh/ivancrneto/pymox) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/399d643486d74d7eafd27e7dbac698c8)](https://www.codacy.com/app/ineto/youtube-django?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ivancrneto/youtube-django&amp;utm_campaign=Badge_Grade) ![Requirements Status](https://requires.io/github/ivancrneto/youtube-django/requirements.svg?branch=master)       |
+| package   |   ![PyPI Package latest release](https://img.shields.io/pypi/v/youtube-django.svg) ![PyPI Wheel](https://img.shields.io/pypi/wheel/youtube-django.svg) ![Supported versions](https://img.shields.io/pypi/pyversions/pytest-cov.svg) ![Supported implementations](https://img.shields.io/pypi/implementation/youtube-django.svg) ![Commits since latest release](https://img.shields.io/github/commits-since/ivancrneto/youtube-django/0.1.svg)       |
+
+
+## Install
+
+``` bash
+$ pip install youtube-django
+```
+
+Add `'youtube_django'` to your settings.
+
+``` python
+INSTALLED_APPS = [
+    # [...]
+    'youtube_django',
+]
+```
+
+Run migrations:
+
+``` bash
+$ python manage.py migrate
+```
+
+Add the following Google Oauth Settings to your `settings.py`:
+
+```
+GOOGLE_OAUTH2_CLIENT_ID = '<Your Client ID from Google Developer Console>'
+GOOGLE_OAUTH2_CLIENT_SECRET = '<Your Client Secret from Google Developer Console>'
+GOOGLE_OAUTH2_CALLBACK_VIEW = 'oauth2callback'  # your oauth callback view name
+```
+
+Add your views.Example:
+
+```python
+from youtube_django.views import (
+    VideoUploadView,
+    AuthorizeView,
+    Oauth2CallbackView,
+)
+
+urlpatterns = [
+    path('^yt/upload/', VideoUploadView.as_view(), name='video_upload'),
+    path('^yt/authorize/', AuthorizeView.as_view(), name='authorize'),
+    path('^yt/oauth2callback/', Oauth2CallbackView.as_view(),
+        name='oauth2callback')
+]
+```
+
+
