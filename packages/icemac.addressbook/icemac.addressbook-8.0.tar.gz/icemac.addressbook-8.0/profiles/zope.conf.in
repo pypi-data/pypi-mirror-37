@@ -1,0 +1,26 @@
+# Identify the component configuration used to define the site:
+site-definition site.zcml
+
+<zodb>
+ <zeoclient>
+   server ${zeo-hostname}:${zeo-port}
+   storage 1
+   # ZEO client cache, in bytes
+   cache-size 20MB
+   # Have a persistent disk cache
+   client zeo1
+   # Store the cache in var/
+   var var
+   # Blob handling
+   shared-blob-dir true
+   blob-dir var/blobs
+ </zeoclient>
+</zodb>
+
+# logging is done using WSGI, but we need an empty entry here because
+# eventlog is required.
+<eventlog>
+</eventlog>
+
+# developer mode
+devmode ${devmode}
