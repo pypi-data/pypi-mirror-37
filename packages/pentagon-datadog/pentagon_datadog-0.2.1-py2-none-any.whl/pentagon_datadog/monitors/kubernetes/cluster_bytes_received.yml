@@ -1,0 +1,21 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Increase in network bytes received'
+tags: ['${environment}', network, reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_15m):avg:kubernetes.network.rx_bytes{kubernetescluster:${cluster}} by {host} > 20000000
+message: |
+  {{#is_alert_recovery}}
+  Increase in network bytes in
+  {{/is_alert_recovery}}
+  ${notifications}
+type: metric alert
+thresholds: {critical: 20000000, warning: 17500000}
+timeout_h: 0

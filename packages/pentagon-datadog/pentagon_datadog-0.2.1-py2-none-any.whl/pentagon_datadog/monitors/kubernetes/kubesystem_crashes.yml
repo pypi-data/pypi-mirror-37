@@ -1,0 +1,24 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Increased kube-system crashes'
+tags: ['${environment}', reactiveops]
+include_tags: true
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: false
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_5m):avg:kubernetes_state.container.restarts{kubernetescluster:${cluster},namespace:kube-system} by {pod} - hour_before(avg:kubernetes_state.container.restarts{kubernetescluster:${cluster},namespace:kube-system} by {pod}) > 1
+message: |
+  {{#is_alert}}
+  {{pod.name}} has crashed repeatedly over the last hour
+  {{/is_alert}}
+  {{^is_alert}}
+  {{pod.name}} appears to have stopped crashing
+  {{/is_alert}}
+  ${notifications}
+type: query alert
+thresholds: {critical: 1}
+timeout_h: 0

@@ -1,0 +1,28 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Containers waiting to run'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: 41
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: true
+renotify_interval: 0
+escalation_message: ''
+query: min(last_30m):sum:kubernetes_state.container.waiting{kubernetescluster:${cluster},namespace:${namespace}} > 1
+message: |
+  {{#is_alert}}
+  There has been at least 1 container waiting to start for 30 minutes.
+  There are currently {{kubernetes_state.container.waiting}} containerswaiting to start.
+    - Is something crash-looping?
+    - Is autoscaling adding capacity where needed?
+    - Is a secret or configmap missing?
+  {{/is_alert}}
+  {{^is_alert}}
+  Containers are no longer waiting.
+  {{/is_alert}}
+  ${notifications}
+type: metric alert
+thresholds: {critical: 1}
+timeout_h: 0

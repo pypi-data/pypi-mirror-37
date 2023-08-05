@@ -1,0 +1,23 @@
+notify_audit: false
+locked: false
+name: "[${environment}] Single node container restarts are high"
+tags: ['${environment}', reactiveops]
+include_tags: true
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_5m):outliers(avg:kubernetes_state.container.restarts{kubernetescluster:${cluster}}
+  by {host}, 'DBSCAN', 3) > 0
+message: |
+  {{#is_alert}}
+  Container restarts: {{kubernetes_state.container.restarts}}
+  {{/is_alert}}
+  {{#is_recovery}} Container restarts: {{kubernetes_state.container.restarts}}
+  {{/is_recovery}}
+  ${notifications}
+type: query alert
+timeout_h: 0

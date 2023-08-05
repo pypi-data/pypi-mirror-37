@@ -1,0 +1,21 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Increase in total network errors'
+tags: [network, '${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_15m):avg:kubernetes.network_errors{kubernetescluster:${cluster}} > 10
+message: |
+  {{#is_alert}}
+  We are getting increasing network errors
+  {{/is_alert}}
+  ${notifications}
+type: metric alert
+thresholds: {critical: 10, warning: 5}
+timeout_h: 0

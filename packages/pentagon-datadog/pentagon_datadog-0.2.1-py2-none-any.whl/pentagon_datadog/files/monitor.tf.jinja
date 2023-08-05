@@ -1,0 +1,83 @@
+
+{#- Copyright 2018 ReactiveOps
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -#}
+
+resource "datadog_monitor" "{{ resource_name }}" {
+  # Required Arguments
+  name               = "{{ name }}"
+  type               = "{{ type }}"
+
+  message            = <<EOF
+  {{ message }}
+  EOF
+  query = "{{ query | trim }}"
+
+  # Optional Arguments
+  {%- if escalation_message %}
+  escalation_message = <<EOF
+  {{ escalation_message }}
+  EOF
+  {%- endif %}
+  {%- if notify_no_data %}
+  notify_no_data    = {{ notify_no_data|lower }}
+  {%- endif %}
+  {%- if no_data_timeframe %}
+  no_data_timeframe = {{ no_data_timeframe }}
+  {%- endif %}
+  {%- if new_host_delay %}
+  new_host_delay = {{ new_host_delay }}
+  {%- endif %}
+  {%- if thresholds %}
+  thresholds {
+    {%- for key in thresholds %}
+    {{ key }} = {{ thresholds[key] }}
+    {%- endfor %}
+  }
+  {%- endif %}
+  {%- if evalutation_delay %}
+  evaluation_delay = {{ evaluation_delay }}
+  {%- endif %}
+  {%- if notify_data_timeframe %}
+  notify_data_timeframe = {{ notify_data_timeframe }}
+  {%- endif %}
+  {%- if renotify_interval %}
+  renotify_interval = {{ renotify_interval }}
+  {%- endif %}
+  {%- if notify_audit %}
+  notify_audit = {{ notify_audit|lower }}
+  {%- endif %}
+  {%- if timeout_h %}
+  timeout_h    = {{ timeout_h }}
+  {%- endif %}
+  {%- if include_tags %}
+  include_tags = {{ include_tags|lower }}
+  {%- endif %}
+  {%- if require_full_window %}
+  require_full_window = {{ require_full_window|lower }}
+  {%- endif %}
+  {%- if locked %}
+  locked = {{ locked }}
+  {%- endif %}
+  {%- if tags %}
+  tags = {{ tags | tojson }}
+  {%- endif %}
+  {%- if silenced %}
+  silenced = {
+    "*" = 0
+  }
+  {%- else %}
+  silenced = {}
+  {%- endif %}
+
+}

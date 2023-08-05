@@ -1,0 +1,19 @@
+notify_audit: false
+locked: false
+name: '[${environment}] cluster High CPU utilization on ${cluster}'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+require_full_window: true
+new_host_delay: 300
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_30m):avg:system.load.5{kubernetescluster:${cluster}} by {host} > 7
+message: |
+  High utilization
+  ${notifications}
+type: metric alert
+thresholds: {critical: 7, warning: 5}
+timeout_h: 0

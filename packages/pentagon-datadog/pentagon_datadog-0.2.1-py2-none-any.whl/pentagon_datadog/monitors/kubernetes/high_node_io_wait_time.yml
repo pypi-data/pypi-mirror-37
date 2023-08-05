@@ -1,0 +1,28 @@
+notify_audit: false
+locked: false
+name: '[${environment}] I/O wait times are high'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_10m):avg:system.cpu.iowait{kubernetescluster:${cluster},k8s.io/role/node:1}
+  by {host} > 50
+message: |
+  {{#is_alert}}
+  The I/O wait time for {host.ip} is very high
+  - Is the EBS volume out of burst capacity for iops?
+  - Is something writing lots of errors to the journal?
+  - Is there a pod doing something unexpected (crash looping, etc)?
+  {{/is_alert}}
+  {{^is_alert}}
+  The EBS volume burst capacity is returning to normal.
+  {{/is_alert}}
+  ${notifications}
+type: metric alert
+thresholds: {critical: 50, warning: 30}
+timeout_h: 0
