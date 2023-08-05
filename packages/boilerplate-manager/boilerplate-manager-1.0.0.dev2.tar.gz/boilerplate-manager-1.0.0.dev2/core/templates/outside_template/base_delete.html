@@ -1,0 +1,52 @@
+{% extends "outside_template/base.html" %}
+{% load staticfiles %}
+{% load base %}
+{% block content %}
+    {% if has_delete_permission %}
+        <div class="container-fluid container-margin">
+            <h3>{% block tituloapp %} Apagar: {{ object }} ? {% endblock tituloapp %}</h3>
+            {% block related_fields %}
+                <!-- Bloco para exibir os campos que possuem relacionamento
+                com o registro que está sendo excluído -->
+                <div class="container-fluid container-margin">
+                    {% for field in many_fields %}
+                        {% if field.1.all %}
+                            {% if forloop.first %}
+                                <h4>Todos os itens abaixo também serão apagados.</h4>
+                            {% endif %}
+                            <div class="alert alert-warning" role="alert">
+                                <h4 class="alert-heading">{{ field.0|capfirst }}</h4>
+                                <ul>
+                                    {% for item in field.1.all %}
+                                        <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endblock related_fields %}
+            {% block contentform %}
+                <form class="needs-validation was-validated" method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row justify-content-between">
+                    {% block buttonbar %}
+                        <div class="col-6">
+                            <a href="{% url url_list %}" class="btn btn-primary"> <i class="fas fa-arrow-left"></i> Cancelar exclusão.</a>
+                        </div>
+                        <div class="col-5 text-right">
+                             {% if has_delete_permission %}
+                                <button type="submit" class="btn btn-danger "><i class="fas fa-trash"></i> Confirma exclusão?</button>
+                            {% endif %}
+                        </div>
+                        {% endblock buttonbar %}
+                    </div>
+                </form>
+            {% endblock contentform %}
+        </div>
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+          <h4 class="alert-heading"> Voce não tem permisão para acessar essa pagina!</h4>
+        </div>
+    {% endif %}
+ {% endblock content %}
