@@ -1,0 +1,27 @@
+demos:
+- name: my-service
+  priority: 0
+  cred: my-cred
+  placement:
+    region:
+    avzone:
+  hardware:
+    subnet:
+    disktypes: [gp2, standard]
+  blueprint:
+    name: my-service
+    def: blueprints/my-service.json
+    ver: 1.0.0
+  recipes:
+  - name: post-install
+    def: recipes/post-install.sh
+    ver: 1.0.0
+    typ: POST_CLUSTER_INSTALL
+  mpacks:
+  dbs:
+  catalog:
+    name: my-image-catalog
+    def: https://raw.githubusercontent.com/Chaffelson/nipyapi/cloudbreak/nipyapi/demo/resources/whoville/demo-image-catalog.json
+    os: amazonlinux
+  proxies:
+  sshkey: secloud
