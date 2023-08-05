@@ -1,0 +1,64 @@
+|PyPI| |license|
+
+prettype
+========
+
+An easy to use text stylizer for your desktop!
+
+Installation
+------------
+
+-  To install ``prettype``, simply,
+
+   ::
+
+       $ pip install prettype
+
+Usage
+-----
+
+-  To run ``prettype``, open terminal and run this command:
+
+   ::
+
+       $ prettype
+
+**Note:** Leave this terminal open as long as you want to use
+**prettype**.
+
+-  To stylize any text,
+
+   -  select it
+   -  press the key binding (``ctrl``\ +\ ``space`` by default) to open
+      font selector
+   -  select the font you want to stylize your text with using the GUI
+   -  the stylized text gets copied to your clipboard
+   -  press ``ctrl``\ +\ ``v`` to paste the stylized text wherever you
+      want!
+
+-  To close prettype, just press the exit key (``esc`` by default).
+
+-  **CLI usage to configure key binding and exit key:**
+
+   ::
+
+       $ prettype [-h] [-b key1 key2] [-e key]
+
+   You can always use ``$ prettype -h`` command to open this help
+   message:
+
+   ::
+
+       optional arguments:
+       -h, --help            show this help message and exit
+       -b key1 key2, --binding key1 key2
+                           Set a key binding for triggering prettype font
+                           selector. Example: $ prettype -b ctrl space
+       -e key, --exit_key key
+                           Specify a key which stops the keyboard listener, when
+                           pressed. Example: $ prettype -e esc
+
+.. |PyPI| image:: https://img.shields.io/badge/PyPi-v1.0.0-f39f37.svg
+   :target: https://pypi.python.org/pypi/clix
+.. |license| image:: https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000
+   :target: https://github.com/nikhilkumarsingh/clix/blob/master/LICENSE.txt
