@@ -1,0 +1,229 @@
+Metadata-Version: 2.1
+Name: dorcas-sdk-python
+Version: 0.0.1
+Summary: A Python wrapper for communicating with the Dorcas API
+Home-page: https://gitlab.com/dorcasng/dorcas-sdk-python
+Author: Emmanuel Okeke
+Author-email: emmanix2002@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+Dorcas Python3 SDK
+=======
+A Python library for interacting with the Dorcas API. It makes it easy to access the API services directly 
+from your Python project.
+
+#### Example Usage
+```python
+from dorcas_sdk_python import Sdk
+
+client_id = 'jAGOn0aygL'
+client_secret = '7CDouHd526pbPubv4fFLRnw5uWjKeaIh0ymsjJ39'
+sdk = Sdk(client_id, client_secret, environment='local')
+plans = sdk('resource', 'Plan')
+plans.add_query_param('search', 'Pre')
+response = plans.send('get')
+response = response.send(method='post')
+if response.is_successful():
+    print(response.data())
+else:
+    print('Something went wrong')
+```
+
+### Overview
+- [Getting Started](#getting-started)
+- [Using the Package](#using-the-package)
+- [The `Sdk` object](#the-sdk-object)
+- [Authentication](#authentication)
+- [Making Requests](#making-requests)
+- [The `DorcasResponse` object](#the-dorcas-response-object)
+
+
+<a name="getting-started"></a>
+### Getting Started
+To get started, the first thing you need to do is create a developer account on the 
+[Dorcas developer site](http://developers.dorcas.io/docs/).    
+You should follow the instructions inside the documentation.
+
+
+<a name="using-the-package"></a>
+### Using the Package
+The package was built to simplify the process of communicating with the API, and using it can be 
+summed up into 5 steps (excluding `import` statements):
+
+1. Instantiate the SDK
+2. Create the `Resource`, or `Service` instance
+3. Set your payload (`body`, or `query`)
+4. Send the request, and receive a `DorcasResponse` instance as the return value
+5. Use the `DorcasResponse` object
+
+Below is an example:
+
+```python
+from dorcas_sdk_python import Sdk
+
+
+sdk = Sdk('jAGOn0aygL', '7CDouHd526pbPubv4fFLRnw5uWjKeaIh0ymsjJ39', environment='local')  # step 1
+
+password_login = sdk('service', 'PasswordLogin')    # step 2
+
+password_login.add_body_param('username', 'fakeid@gmail.com')   # step 3
+password_login.add_body_param('password', 'awesome secure uncrackable password')    # step 3
+
+response = password_login.send(method='post')   # step 4
+
+if response.is_successful():    # step 5
+    print('Access Token: {}'.format(response.access_token))
+else:
+    print('Login failed')
+    print(response.errors()[0])
+
+```
+
+<a name="the-sdk-object"></a>
+### The `Sdk` object
+The `Sdk` class allows you to set your API authentication details:
+
+- `client_id`
+- `client_secret`
+
+It also allows you to choose an environment, you should either set it to:
+
+- production : for the live Dorcas API
+- staging: for the Dorcas testing API
+
+The environment you choose decides which endpoint your requests are sent to.   
+
+#### Model Types
+There are 2 kinds of models represented on this library, they are:
+
+- `Resource`(s): these kind of models almost always require the call to be authenticated. They usually point to 
+database records. This means `Resource` models are always mapped to database records. 
+E.g. `Product` maps to `Product` records on the API
+
+- `Service`(s): these kind of models usually refer to things that aren;t actually records in the database as you'd 
+expect. For instance, the `PasswordLogin` service is strictly used for authenticating a user.
+
+The `Sdk` object makes it easy to instantiate these models; it can be done manually as well. To instantiate a model, 
+you do like so:
+
+```python
+from dorcas_sdk_python import Sdk
+
+
+sdk = Sdk('jAGOn0aygL', '7CDouHd526pbPubv4fFLRnw5uWjKeaIh0ymsjJ39', environment='local')
+
+resource = sdk('resource', 'ResourceModelClassName')    # we use the Sdk instance object
+service = sdk('service', 'ServiceModelClassName')
+```
+
+All `Resource` models extend the base `Resource` class, while `Service` models extend the base `Service` class.
+
+**NOTE**: When instantiating the models, you can also pass in additional `keyword parameters` to the call, and they'll 
+also be passed to the constructor of the model class, and are collected in an `option` property on the instance. 
+ You can make the call like so:
+
+```python
+from dorcas_sdk_python import Sdk
+
+
+sdk = Sdk('jAGOn0aygL', '7CDouHd526pbPubv4fFLRnw5uWjKeaIh0ymsjJ39', environment='local')
+
+resource = sdk('resource', 'ResourceModelClassName', length=5, tag='general')    # we use the Sdk instance object
+service = sdk('service', 'ServiceModelClassName', name='growth hacking')
+
+print(resource.option.tag)  # general
+print(service.option.name)  # growth hacking
+
+```
+
+This is useful for situations where you create your own custom `Service`, or `Resource` classes.
+
+
+<a name="authentication"></a>
+### Authentication
+Most of the calls to the API require the caller to be authenticated; this mean, it must contain a 
+valid `access_token` for the user you're making the call on behalf of.
+
+There are 2 ways to get a token:
+
+1. Via the login (`PasswordLogin` service) activity (public - available to all API clients)
+2. Via direct authentication (private - only available to select clients)
+
+Because these activities always follow the same process, 3 utility methods were provided to simplify these 
+calls (see the `helpers.py` module):
+
+- `authorize_via_email_only` : direct authorization
+- `login_via_password` : username + password combination authentication
+- `create_account` : although not part of this, but this function was provided to make user registration as simple as 
+a function call
+
+Authentication calls always provide a response similar to this:
+```json
+{
+    "token_type": "Bearer",
+    "expires_in": 31536000,
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjE1YTI3ZmY1ZWI0ZWNhZTczMjNhZWI2MjYwNjhkYzYyYTcxNzIwOTY2NzAwNzYxNDlhMzI1NTFjZjdlZDBkNjY4NWVkODVmYjA5NDMwNzExIn0.eyJhdWQiOiIyIiwianRpIjoiMTVhMjdmZjVlYjRlY2FlNzMyM2FlYjYyNjA2OGRjNjJhNzE3MjA5NjY3MDA3NjE0OWEzMjU1MWNmN2VkMGQ2Njg1ZWQ4NWZiMDk0MzA3MTEiLCJpYXQiOjE1MTUyNzc2MDksIm5iZiI6MTUxNTI3NzYwOSwiZXhwIjoxNTQ2ODEzNjA5LCJzdWIiOiIxIiwic2NvcGVzIjpbIioiXX0.GIBH8fuEg7bnSjm0Z3NtxuYshJ4RJVEcH-bNJPAMokLVvNSsMr4DBnYIsmJFk14pdMfiGRLqKQEZN2REgxTPj8q5a1btJwFoHqu5-nLcNGlrIKav8W8D5RtO8PZ1MHEBp-eyvu3U3-qIWe-vYan7csNdhnA0vcoZCXMU7JbAnATtahv0VjCqLo2n-VmICtYBvKfQjX3rVtp6sg4LqiChvGLDC5XoA0AYUfZdj2RvCj4oj0eC3W0y4ndcMpWkSSI1BIhZ9LyE6YloE0NNs4FB0upDoBVK_vxmwahdYsYaRgYGwu1RJf4v7hkLBvrSgwewqwTytCtfVU18EW71Pera9e9OMh1-ldZ3PiQMpBesos_bR9U2roEqfHUwJEY_1834hqiPQj_vq7E5ppMAVoWT2A9JMQIDzgZrxP7E0mynEoVohSBEvsF5VJxuUii8STcmGTo33x2dcMUYLtVNyRXHLzKjyYns_SrDtyIhyPrpYCtVNUWok_stLps6KrJFm7kJ0JB3u5-7tTP645DhPKaoMUrrodghZpkeCc_gabXtvughYgJkhlK3wixLCB1tdqR8IeuCdhWmqc31TfpfUob1Deka_jzmfxsyuu1VvIPiqdtw_Mm3RR6qQWhqfXQlpdf46SRa_lRveiOp7IXwPUFm_XSgSt8zBL5oQOm3k6r5lJo",
+    "refresh_token": "def50200ffed0e36ba02030192de5ecf0fa7b098e774ee3854c0a1d2a9b5e376d410aa435bf101fadbfd54a169a1c17a68ed27d242339c13dc318a7cb258d4ae2bcc487d0e7e9597794240bd51b24fce8ed274c55f368c0bdf8a739ceaa4e0656575de854152ba6c98126dd6b8435145d9e9d79df5bbe5114ca3da1c157447dc062be9c0cea747edfa9202f3ae036d65a532588ce91975db489c9721e53017b5b9069c5a13f51b682f5938a838dec60fb28f8ef19f62657f5f25082a376e14808f1963c1d2abd0af04a3d3a45c4e7abad8aba5b71f0245365530445a1a089604e727bce80be03ff2a24a094dc9acc22146108f3ee1e1f7efc11573c7b58e2ecc9c81241da90a0a477aeb784147c62e991b1630d07d8d9fb4ba1fc6d843408d268454c242153b04648ed9a1d8d9cf06aeeee59e33de8db4d06a569e5a9b155999f0e68226fae133dc06a88064b25032605e2be0921b069596333b108e9d124fa1b4fd0105"
+}
+```
+
+The response contains an `access_token` key which you set on the `Sdk` instance for future use like 
+so: `sdk.auth_token = response.access_token`
+
+All calls after this using this `Sdk` instance will send the appropriate `Authorization` header in the request.
+
+
+#### Things to take note of
+You will likely have to save this `access_token` in your _cache / session_ so you don't have to authenticate the 
+user on each page reload.
+
+The `auth_token` can also be provided when instantiating the `Sdk` like so: 
+
+```python
+sdk = Sdk('jAGOn0aygL', '7CDouHd526pbPubv4fFLRnw5uWjKeaIh0ymsjJ39', auth_token='...', environment='local')
+```
+
+
+<a name="making-requests"></a>
+### Making Requests
+Making requests is the final step after setting your payload. It only requires you to know 2 things:
+
+- The request method: One of 'get', 'delete', 'post', or 'put'
+- The requests path: Every model has a base path, but certain sub-resources might require you appending something to 
+the path
+
+An example of the second point is like so:
+
+- `Customer` resource has a base path of `/customers`
+- To get a single `Customer` model from the API, we need a path in the form: `/customers/{id}`
+
+In the above case, our call to `send()` will look like: `resource.send('get', customer.id)` 
+
+
+<a name="the-dorcas-response-object"></a>
+### The `DorcasResponse` object
+The `DorcasResponse` object provides some simple methods:
+
+- `is_successful()` : returns `True`, or `False` if the request came back successfully. i.e. The API call worked fine
+- `code()` : only useful when a `code` key exists in the returned response
+- `message()`: useful when a `message` key exists in the returned response
+- `errors()` : will usually be a list of errors, when `is_successful()` is `False`
+- `data()`: for successful responses with a `data` key.
+
+From above, you can see that all the methods excluding `is_successful()` simply provide access to the keys in the 
+response. For `keys` that don't have a defined method, you can access them like properties on the response object.
+see [Authentication](#authentication) for the example of accessing the `access_token` key.
+
+
+### To-DO
+- Add file upload support
+
+
+### Questions?
+Just drop me a line at _emmanix2002 [at] gmail dot com_
+
