@@ -1,0 +1,66 @@
+<tal:bandi i18n:domain="rer.bandi">
+  <div class="box boxScheda boxOffice boxBandoDetail">
+    <h4 class="boxHeader"  i18n:translate="tipologia_bando_label">Announcement type</h4>
+    <div class="boxContent">
+      <div class="tipologiaBando" tal:condition="context/getTipologia_bando">
+        <p tal:content="python:view.bando_view.voc_tipologia.getTermByToken(context.getTipologia_bando()).title" />
+      </div>
+      <div class="destinatariBando" tal:condition="context/getDestinatari|nothing">
+        <h6 i18n:translate="destinatari_label">Recipients</h6>
+        <ul>
+          <li tal:repeat="dest python:view.bando_view.getDestinatariNames()"
+              tal:content="dest">
+              Destinatario
+          </li>
+        </ul>
+      </div>
+      <div class="enteBando" tal:condition="context/getEnte_bando|nothing">
+        <h6 i18n:translate="ente_label">Authority</h6>
+        <ul>
+          <li tal:repeat="ente context/getEnte_bando"
+              tal:content="ente">
+              Authority
+          </li>
+        </ul>
+      </div>
+      <div class="pubblicazioneBando" tal:condition="context/getEffectiveDate">
+        <h6 i18n:translate="bando_pub_date">Publication date</h6>
+          <p tal:content="python:context.toLocalizedTime(context.EffectiveDate())">
+            data di pubblicazione
+          </p>
+      </div>
+      <div class="scadenzaPartecipazioneBando" tal:condition="context/getScadenza_bando|nothing">
+        <h6 i18n:translate="bando_scadenza_partecipazione">Deadline participation terms</h6>
+          <p tal:content="python:here.toLocalizedTime(context.getScadenza_bando(), long_format=True)">
+            scadenza bando
+          </p>
+      </div>
+      <div class="chiusuraProcedimentoBando" tal:condition="context/getChiusura_procedimento_bando|nothing">
+        <h6 i18n:translate="bando_chiusura_procedimento">Closing process</h6>
+          <p tal:content="python:context.toLocalizedTime(context.getChiusura_procedimento_bando())">
+            chiusura procedimento
+          </p>
+      </div>
+    </div>
+  </div>
+  <div class="box boxScheda boxModuli boxModuliBando" tal:condition="view/folder_deepenings">
+    <tal:folder_deepening repeat="folder view/folder_deepenings">
+      <h4 class="boxHeader" tal:content="folder/Title" />
+      <div class="boxContent">
+        <ul class="listLink">
+          <tal:link repeat="item python:folder.listFolderContents()">
+            <li tal:attributes="class python:view.get_class_by_type(item)">
+              <a href=""
+                 tal:attributes="href string:${item/absolute_url}/view;
+                                 title item/Description">
+                  <tal:title content="item/Title">
+                      Title
+                  </tal:title>
+              </a>
+            </li>
+          </tal:link>
+        </ul>
+      </div>
+    </tal:folder_deepening>
+  </div>
+</tal:bandi>

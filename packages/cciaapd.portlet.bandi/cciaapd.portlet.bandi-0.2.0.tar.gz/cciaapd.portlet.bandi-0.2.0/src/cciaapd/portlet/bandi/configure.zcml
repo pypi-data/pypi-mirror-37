@@ -1,0 +1,37 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="cciaapd.portlet.bandi">
+
+  <includeDependencies package="." />
+
+  <i18n:registerTranslations directory="locales" />
+
+  <genericsetup:registerProfile
+      name="default"
+      title="cciaapd.portlet.bandi"
+      directory="profiles/default"
+      description="Installs the cciaapd.portlet.bandi add-on."
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:importStep
+      name="cciaapd.portlet.bandi-postInstall"
+      title="cciaapd.portlet.bandi post_install import step"
+      description="Post install import step from cciaapd.portlet.bandi"
+      handler=".setuphandlers.post_install">
+  </genericsetup:importStep>
+
+  <plone:portlet
+    name="cciaapd.portlet.bandi.BandoDetailsPortlet"
+    interface=".bando_details_portlet.IBandoDetailsPortlet"
+    assignment=".bando_details_portlet.Assignment"
+    renderer=".bando_details_portlet.Renderer"
+    addview=".bando_details_portlet.AddForm"
+    view_permission="zope2.View"
+    edit_permission="plone.app.portlets.ManagePortlets"
+    />
+</configure>
