@@ -1,0 +1,20 @@
+---
+# This playbook provisions the openshift topology.
+
+- name:  "schema check and Pre Provisioning Activities on topology_file"
+  hosts: localhost
+  gather_facts: True
+  roles:
+    - { role: 'common' }
+
+- name:  "Provisioning openshift resources"
+  hosts: localhost
+  gather_facts: True
+  roles:
+    - { role: 'openshift' }
+
+- name: "Gather resources to the RunDB"
+  hosts: localhost
+  gather_facts: True
+  roles:
+    - { role: 'gather_resources' }
