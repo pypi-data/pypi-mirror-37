@@ -1,0 +1,193 @@
+heat_template_version: rocky
+
+description: External tasks definition for OpenShift
+
+parameters:
+  RoleNetIpMap:
+    default: {}
+    type: json
+  ServiceData:
+    default: {}
+    description: Dictionary packing service data
+    type: json
+  ServiceNetMap:
+    default: {}
+    description: Mapping of service_name -> network name. Typically set
+                 via parameter_defaults in the resource registry.  This
+                 mapping overrides those in ServiceNetMapDefaults.
+    type: json
+  DefaultPasswords:
+    default: {}
+    type: json
+  RoleName:
+    default: ''
+    description: Role name on which the service is applied
+    type: string
+  RoleParameters:
+    default: {}
+    description: Parameters specific to the role
+    type: json
+  EndpointMap:
+    default: {}
+    description: Mapping of service endpoint -> protocol. Typically set
+                 via parameter_defaults in the resource registry.
+    type: json
+  OpenShiftGlusterDisks:
+    default:
+      - /dev/vdb
+      - /dev/vdc
+      - /dev/vdd
+    description: List of disks for openshift_glusterfs service to use
+    type: comma_delimited_list
+    tags:
+      - role_specific
+  DockerOpenShiftGlusterFSImage:
+    description: Container image to use for GlusterFS pod
+    type: string
+  DockerOpenShiftGlusterFSBlockImage:
+    description: Container image to use for glusterblock-provisioner pod
+    type: string
+  DockerOpenShiftGlusterFSHeketiImage:
+    description: Container image to use for heketi pods
+    type: string
+
+resources:
+  RoleParametersValue:
+    type: OS::Heat::Value
+    properties:
+      type: json
+      value:
+        map_replace:
+          - map_replace:
+            - OpenShiftGlusterDisks: OpenShiftGlusterDisks
+            - values: {get_param: [RoleParameters]}
+          - values:
+              OpenShiftGlusterDisks: {get_param: OpenShiftGlusterDisks}
+
+outputs:
+  role_data:
+    description: Role data for the Openshift Service
+    value:
+      # This service template essentially tags the nodes that we want
+      # as cns. The actual installation is performed in
+      # openshift-master service template.
+      service_name: openshift_glusterfs
+      config_settings:
+        tripleo.openshift_glusterfs.firewall_rules:
+          '200 openshift-glusterfs kubelet':
+            dport:
+              - 2222
+              - 3260
+              - 10250
+              - 24008
+              - 24010
+            proto: tcp
+          '200 openshift-glusterfs external services':
+            dport: '49152-49251'
+      host_prep_tasks:
+        - name: Wipe the configured disks
+          shell: |
+            wipefs -af {{item}}
+            pvremove {{item}} || true
+          with_items: {get_attr: [RoleParametersValue, value, OpenShiftGlusterDisks]}
+      upgrade_tasks: []
+      step_config: ''
+      external_deploy_tasks:
+        - name: openshift_cns step 1 Generate Inventory
+          when: step == '1'
+          block:
+            - name: create openshift temp dirs
+              file:
+                path: "{{item}}"
+                state: directory
+              with_items:
+                - "{{playbook_dir}}/openshift/inventory"
+
+            - name: set openshift global vars fact
+              set_fact:
+                openshift_gluster_disks: {get_attr: [RoleParametersValue, value, OpenShiftGlusterDisks]}
+
+            - name: set openshift images vars fact
+              set_fact:
+                openshift_gluster_images:
+                  openshift_storage_glusterfs_image:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[0]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSImage}
+                  openshift_storage_glusterfs_version:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[1]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSImage}
+                  openshift_storage_glusterfs_block_image:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[0]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSBlockImage}
+                  openshift_storage_glusterfs_block_version:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[1]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSBlockImage}
+                  openshift_storage_glusterfs_heketi_image:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[0]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSHeketiImage}
+                  openshift_storage_glusterfs_heketi_version:
+                    yaql:
+                      expression:
+                        $.data.image.rightSplit(":", 1)[1]
+                      data:
+                        image: {get_param: DockerOpenShiftGlusterFSHeketiImage}
+
+            - name: generate openshift inventory for openshift_glusterfs service
+              lineinfile:
+                path: "{{playbook_dir}}/openshift/inventory/openshift_glusterfs.ini"
+                create: true
+                line: "[openshift_glusterfs:children]"
+                insertbefore: BOF
+
+            - name: generate openshift inventory for openshift_glusterfs service
+              lineinfile:
+                path: "{{playbook_dir}}/openshift/inventory/openshift_glusterfs.ini"
+                insertafter: "[openshift_glusterfs:children]"
+                line:
+                  str_replace:
+                    template: ROLENAME
+                    params:
+                      ROLENAME: {get_param: RoleName}
+
+            - name: generate openshift inventory for Role
+              copy:
+                dest:
+                  str_replace:
+                    template: "{{playbook_dir}}/openshift/inventory/ROLENAME_openshift_glusterfs.yml"
+                    params:
+                      ROLENAME: {get_param: RoleName}
+                content:
+                  str_replace:
+                    params:
+                      ROLENAME: {get_param: RoleName}
+                    template: |
+                      glusterfs:
+                        hosts:
+                          {% for host in groups['ROLENAME'] | default([]) -%}
+                          {{ hostvars.raw_get(host)['ansible_hostname'] }}:
+                            glusterfs_ip: {{hostvars.raw_get(host)['storage_ip']}}
+                            glusterfs_devices:
+                              {{openshift_gluster_disks | to_nice_yaml() | indent(8) }}
+                            ansible_user: {{ hostvars.raw_get(host)['ansible_user'] | default(hostvars.raw_get(host)['ansible_ssh_user']) | default('root') }}
+                            ansible_host: {{ hostvars.raw_get(host)['ansible_host'] | default(host) }}
+                            ansible_become: true
+                            openshift_schedulable: true
+                          {% endfor %}
+
+                        vars:
+                          {{openshift_gluster_images | to_nice_yaml() | indent(4) }}
