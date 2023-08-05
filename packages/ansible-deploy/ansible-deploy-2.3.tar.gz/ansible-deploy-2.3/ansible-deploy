@@ -1,0 +1,28 @@
+#!/bin/bash
+target=ansible
+inventory=
+ARGS=
+while getopts ":i:, :h, :t:" opt; do
+  case $opt in
+    h)
+      echo "USAGE: ansible-deploy [any ansible-playbook arguments]"
+      exit
+      ;;
+    t)
+    target=$OPTARG
+      ;;
+
+    i)
+    inventory=$OPTARG
+      ;;
+
+    \?)
+      ARGS+="$ARGS $OPTARG"
+      echo $ARGS $OPTARG $opt
+      ;;
+  esac
+done
+
+cp /etc/ansible/roles/deploy/deploy.yml .ansible-deploy.yml
+ANSIBLE_HASH_BEHAVIOUR=merge
+ansible-playbook .ansible-deploy.yml $@
