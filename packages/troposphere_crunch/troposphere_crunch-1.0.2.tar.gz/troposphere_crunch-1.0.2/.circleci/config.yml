@@ -1,0 +1,32 @@
+version: 2
+workflows:
+    version: 2
+    main:
+        jobs:
+            - test_py37
+            - publish:
+                filters:
+                    branches:
+                        ignore: /.*/
+                    tags:
+                        only: /.*/
+
+jobs:
+    test_py37:
+        docker:
+            - image: python:3.7.0-alpine3.8
+        steps:
+            - run: apk update
+            - run: apk add git openssh alpine-sdk
+            - checkout
+            - run: pip install pipenv
+            - run: make build
+    publish:
+        docker:
+            - image: python:3.7.0-alpine3.8
+        steps:
+            - run: apk update
+            - run: apk add git openssh alpine-sdk
+            - checkout
+            - run: pip install pipenv
+            - run: make deploy
