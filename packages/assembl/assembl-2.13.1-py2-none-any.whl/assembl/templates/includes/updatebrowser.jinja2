@@ -1,0 +1,89 @@
+<script src="{{ STATIC_URL }}/js/app/utils/browser-detect.js"></script>
+
+<style>
+
+/* Need to be there to not depend of global css or latency */
+#asn-warning{
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    margin: 0px;
+    padding: 13px 10px;
+    width: 100%;
+    z-index: 99999;
+    font-size: 10pt;
+    background-color: #bb7be2;
+    text-align: left;
+    border-radius: 0;
+    box-sizing: border-box;
+}
+
+#asn-warning .bx-close {
+    float: right;
+    left: 0;
+    top: -2px;
+    font-size: 16px;
+}
+#asn-warning .bx-close .icon-delete {
+    color: #ffffff;
+}
+
+</style>
+
+<script id="asn-template" type="text/x-template">
+    <div id="asn-warning" class="bx">
+        <button class="btn btn-cancel btn-xs bx-close" type="button" style="">
+            <a href="javascript://" onclick="document.querySelector('#asn-warning').remove()">
+                <i class="icon-delete"></i>
+            </a>
+        </button>
+        <span style="display: block; float: left; color:#ffffff;">
+            {{ gettext("Your version of <strong>{0}</strong> is outdated and may deteriorate your experience on Assembl.")|safe }}&nbsp;
+            <a href="http://www.updateyourbrowser.net/" target="_blank" class="btn btn-secondary">{{ gettext("update your browser") }}</a>
+            &nbsp; {{ gettext('Thanks!')}}
+        </span>
+    </div>
+</script>
+
+<script type="text/javascript"> 
+(function(BrowserDetect){
+    'use strict';
+
+    if( !BrowserDetect ){
+        return;
+    }
+
+    /**
+     * The browsers minimun version
+     * @type {Object}
+     */
+    var browsers = {
+            "Explorer": { version: 10, name: 'Internet explorer' },
+            "Firefox": { version: 24, name: 'Firefox' }, //https://www.mozilla.org/en-US/firefox/organizations/faq/
+            "Opera": { version: 10, name: "Opera" },
+            "Safari": { version: 7, name: "Safari" },
+            "Chrome": { version: 25, name: "Google Chrome" }
+        },
+
+        /**
+         * Current browser
+         * @type {Object}
+         */
+        currentBrowser = browsers[BrowserDetect.browser];
+
+    BrowserDetect.showMsg = function(name){
+        var div = document.createElement('div');
+        div.innerHTML = document.getElementById('asn-template').innerHTML.replace('{0}', name || 'Browser name');
+        document.body.appendChild(div);
+    };
+
+    if( !currentBrowser ){
+        return;
+    }
+
+    if( BrowserDetect.version < currentBrowser.version ){
+        BrowserDetect.showMsg(currentBrowser.name);
+    }
+
+})(window.BrowserDetect);
+</script> 

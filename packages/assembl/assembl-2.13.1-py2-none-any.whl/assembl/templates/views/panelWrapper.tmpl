@@ -1,0 +1,40 @@
+<% if( !hideHeader ) { %>
+    <header class="panel-header">
+        <span class="panel-header-title vat">
+          <i class="<%= icon %>"></i><%= title %>
+        </span>
+        <div class="fr">
+            <% if ( hasMinimize ){ %>
+                <a class="js_minimizePanel panel-header-minimize btn btn-sm" data-toggle="tooltip" data-placement="auto top" title="{{gettext('Minimize panel')}}">
+                  <i class="icon-arrowleft"></i>
+                </a>
+            <% } %>
+            <% if( userCanChangeUi ){ %>
+                <% if( hasLock ){ %>
+                    <a class="js_lockPanel lock-group phs fr"><i class="iconbutton icon-lock-open" data-toggle="tooltip" data-placement="top"  title="{{ gettext('Lock panel') }}"></i></a>
+                <% } %>
+                <a class="js_panel-fullScreenButton iconbutton--resizefull fr " data-toggle="tooltip" data-placement="top"  title="{{ gettext('Fullsize') }}"></a>
+                <% if ( hasClose ){ %>
+                    <a class="js_panel-closeButton panel-header-close fr iconbutton" data-toggle="tooltip" data-placement="top" title="{{gettext('Close panel')}}">
+                    <i class="icon-delete"></i>
+                    </a>
+                <% } %>
+            <% } %>
+        </div>
+    </header>
+<% } %>
+
+<div class="panelContents"></div>
+
+{# A minimized panel only shows an arrow in its title bar, and as panel content it uses the icon shown in its maximized title bar #}
+{# A possible improvement is to create a template system for minified state of each panel #}
+<div class="panelContentsWhenMinimized <% if ( hideHeader ) { %>hasNoHeader<% } else { %>hasHeader<% } %>">
+    <% if ( hideHeader ) { %>
+        <header class="panel-header">
+            <a class="js_minimizePanel panel-header-minimize btn btn-sm" data-toggle="tooltip" data-placement="top" title="{{gettext('Maximize panel')}}">
+              <i class="icon-arrowright"></i>
+            </a>
+        </header>
+    <% } %>
+    <span class="<%= icon %>"></span>
+</div>

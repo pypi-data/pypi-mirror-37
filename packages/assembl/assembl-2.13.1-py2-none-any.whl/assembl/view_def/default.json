@@ -1,0 +1,697 @@
+{
+    "_default": {
+        "id": false,
+        "type": false,
+        "@id": "self",
+        "@type": "&external_typename",
+        "@view": "@view",
+        "_default": false
+    },
+    "Permission": {
+        "name": true
+    },
+    "Locale": {
+        "locale": true,
+        "rtl": true
+    },
+    "LangString": {
+        "entries": ["&best_entries_in_request_with_originals:default"]
+    },
+    "LangStringEntry": {
+        "@language": "locale_code",
+        "error_code": true,
+        "value": true
+    },
+    "UserLanguagePreference": {
+        "user": true,
+        "locale": true,
+        "locale_code": true,
+        "preferred_order": true,
+        "source_of_evidence": true,
+        "translate_to": true,
+        "translate_to_name": "translate_to_code"
+    },
+    "AgentProfile": {
+        "description": true,
+        "avatar_url_base": "&external_avatar_url",
+        "name": "&display_name",
+        "real_name": "&real_name",
+        "preferred_email": false,
+        "was_created_on_current_discussion": false,
+        "is_first_visit": false,
+        "accounts": [":default"]
+    },
+    "User": {
+        "@extends": "AgentProfile",
+        "creation_date": true,
+        "last_login": true,
+        "login_expiry": "&login_expiry_req",
+        "login_failures": false,
+        "password": false,
+        "verified": true,
+        "is_first_visit": true,
+        "last_visit": true,
+        "first_visit": true,
+        "was_created_on_current_discussion": true,
+        "permissions": "permissions_for_current_discussion",
+        "username": "username_p"
+    },
+    "UserTemplate": {
+        "@extends": "User",
+        "discussion": true,
+        "for_role": ":"
+    },
+    "AgentStatusInDiscussion": {
+        "discussion": true,
+        "agent_profile": true,
+        "first_visit": true,
+        "last_visit": true,
+        "first_subscribed": true,
+        "last_unsubscribed": true,
+        "user_created_on_this_discussion": true
+    },
+    "Action": {
+        "when": "creation_date",
+        "user": "actor"
+    },
+    "ActionOnPost": {
+        "@extends": "Action",
+        "target": "post",
+        "target_type": "'\"Content\""
+    },
+    "LikedPost": {
+        "@extends": "ActionOnPost"
+    },
+    "ViewPost": {
+        "@extends": "ActionOnPost"
+    },
+    "ActionOnIdea": {
+        "@extends": "Action",
+        "target": "idea",
+        "target_type": "'\"Idea\""
+    },
+    "ViewIdea": {
+        "@extends": "ActionOnIdea"
+    },
+    "AbstractAgentAccount": {
+        "preferred": true,
+        "email": true,
+        "verified": true,
+        "profile": true
+    },
+    "EmailAccount": {
+        "@extends": "AbstractAgentAccount",
+        "will_merge_if_validated": "'false"
+    },
+    "WebLinkAccount": {
+        "@extends": "AbstractAgentAccount",
+        "user_link": true
+    },
+    "LoomioAccount": {
+        "@extends": "WebLinkAccount"
+    },
+    "SourceSpecificAccount": {
+        "@extends": "AbstractAgentAccount",
+        "user_link": true,
+        "user_id": true,
+        "source_id": true
+    },
+    "SocialAuthAccount": {
+        "@extends": "AbstractAgentAccount",
+        "provider": "&get_provider_type",
+        "username": true,
+        "uid": false,
+        "picture_url": true,
+        "access_tokens": [":default"]
+    },
+    "IdentityProvider": {
+        "name": true,
+        "provider_type": true,
+        "trust_emails": true
+    },
+    "ContentSource": {
+        "discussion_id": "discussion",
+        "name": true,
+        "creation_date": true,
+        "connection_error": "connection_error_as_text",
+        "error_description": true,
+        "error_backoff_until": true
+    },
+    "PostSource": {
+        "@extends": "ContentSource",
+        "number_of_imported_posts": true,
+        "last_import": true
+    },
+    "FeedPostSource": {
+        "@extends": "PostSource",
+        "url": true,
+        "parser_full_class_name": true
+    },
+    "LoomioPostSource": {
+        "@extends": "FeedPostSource"
+    },
+    "FacebookGenericSource": {
+        "@extends": "PostSource",
+        "fb_source_id": true,
+        "url_path": true,
+        "creator_id": "&get_creator_uri",
+        "upper_bound": true,
+        "lower_bound": true
+    },
+    "FacebookGroupSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookGroupSourceFromUser": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookPagePostsSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookPageFeedSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookSinglePostSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "AnnotatorSource": {
+        "@extends": "ContentSource"
+    },
+    "EdgeSenseDrupalSource": {
+        "@extends": "PostSource",
+        "node_source": true,
+        "user_source": true,
+        "comment_source": true,
+        "node_root": true,
+        "post_id_prepend": false
+    },
+    "AbstractMailbox": {
+        "@extends": "PostSource",
+        "admin_sender": true
+    },
+    "IMAPMailbox": {
+        "@extends": "AbstractMailbox",
+        "folder": true,
+        "host": true,
+        "port": true,
+        "username": true,
+        "use_ssl": true,
+        "password": true,
+        "last_imported_email_uid": false,
+        "subject_mangling_regex": false,
+        "subject_mangling_replacement": false,
+        "most_common_recipient_address": "&most_common_recipient_address"
+    },
+    "MailingList": {
+        "@extends": "IMAPMailbox",
+        "post_email_address": true
+    },
+    "Content": {
+        "date": "creation_date",
+        "hidden": true,
+        "discussion": true,
+        "import_date": false,
+        "subject": "&get_subject:",
+        "body": "&get_body:",
+        "widget_ideas": "&widget_ideas",
+        "message_classifier": true,
+        "tombstone_date": true
+    },
+    "Post": {
+        "@extends": "Content",
+        "publication_state": true,
+        "moderation_text": true,
+        "moderator": true,
+        "moderated_on": true,
+        "message_id": false,
+        "ancestry": false,
+        "parentId": "parent",
+        "idCreator": "creator",
+        "bodyMimeType": "&get_body_mime_type",
+        "attachments": [":default"],
+        "extracts": [":id_only"]
+    },
+    "AssemblPost": {
+        "@extends": "Post"
+    },
+    "PropositionPost": {
+        "@extends": "AssemblPost"
+    },
+    "WidgetPost": {
+        "@extends": "AssemblPost",
+        "metadata_json": true
+    },
+    "IdeaProposalPost": {
+        "@extends": "WidgetPost",
+        "proposes_idea": true
+    },
+    "SynthesisPost": {
+        "@extends": "AssemblPost",
+        "publishes_synthesis": true
+    },
+    "ImportedPost": {
+        "@extends": "Post",
+        "source": true
+    },
+    "FeedPost": {
+        "@extends": "ImportedPost"
+    },
+    "LoomioFeedPost": {
+        "@extends": "FeedPost"
+    },
+    "SourceSpecificPost": {
+        "@extends": "ImportedPost"
+    },
+    "FacebookPost": {
+        "@extends": "ImportedPost",
+        "attachment_blob": false
+    },
+    "Webpage": {
+        "@extends": "Content",
+        "last_modified_date": true,
+        "url": true,
+        "extracts": [":partial"]
+    },
+    "Email": {
+        "@extends": "ImportedPost",
+        "recipients": true,
+        "sender": true,
+        "full_message": false,
+        "in_reply_to": false
+    },
+    "Discussion": {
+        "creation_date": true,
+        "slug": true,
+        "topic": true,
+        "permissions": "&get_roles_by_permission",
+        "widget_collection_url": true,
+        "objectives": true,
+        "instigator": true,
+        "creator": true,
+        "introduction": true,
+        "introductionDetails": true,
+        "sources": [":partial"],
+        "subscribe_to_notifications_on_signup": true,
+        "web_analytics_piwik_id_site": true,
+        "help_url": true,
+        "require_secure_connection": true,
+        "logo": true,
+        "homepage": true,
+        "translation_service_class": true,
+        "show_help_in_debate_section": true
+    },
+    "Idea": {
+        "longTitle": "synthesis_title:extended",
+        "shortTitle": "title:extended",
+        "definition": "description:extended",
+        "original_uri": true,
+        "creationDate": "creation_date",
+        "order": "&get_order_from_first_parent",
+        "discussion": false,
+        "hidden": true,
+        "parents": "parent_uris",
+        "is_tombstone": true,
+        "subtype": "rdf_type",
+        "parentId": "&get_first_parent_uri",
+        "numChildIdea": "num_children",
+        "num_total_and_read_posts": true,
+        "widget_links": "&widget_link_signatures",
+        "widget_add_post_endpoint": true,
+        "messages_in_parent": true,
+        "message_view_override": true,
+        "message_columns": [":default"],
+        "attachments": [":default"]
+    },
+    "Thematic": {
+        "@extends": "Idea"
+    },
+    "Question": {
+        "@extends": "Idea"
+    },
+    "RootIdea": {
+        "@extends": "Idea",
+        "root": "'true",
+        "extracts": [":partial"],
+        "parentId": false,
+        "num_orphan_posts": true,
+        "num_synthesis_posts": true
+    },
+    "IdeaLink": {
+        "original_uri": true,
+        "target": true,
+        "source": true,
+        "subtype": "rdf_type",
+        "is_tombstone": true,
+        "order": true
+    },
+    "IdeaMessageColumn": {
+        "idea": true,
+        "message_classifier": true,
+        "header": ":extended",
+        "synthesis_title": ":extended",
+        "title": ":extended",
+        "name": ":extended",
+        "color": true,
+        "previous_column": true
+    },
+    "IdeaGraphView": {
+        "creation_date": true,
+        "discussion": false
+    },
+    "ExplicitSubGraphView": {
+        "@extends": "IdeaGraphView",
+        "ideas": [":partial"],
+        "idea_links": [":partial"]
+    },
+    "TableOfContents": {
+        "@extends": "IdeaGraphView",
+        "ideas": ["&get_ideas:partial"],
+        "idea_links": ["&get_idea_links:partial"]
+    },
+    "Synthesis": {
+        "@extends": "ExplicitSubGraphView",
+        "subject": ":extended",
+        "introduction": ":extended",
+        "conclusion": ":extended",
+        "is_next_synthesis": true,
+        "published_in_post": true
+    },
+    "IdeaContentLink": {
+        "idIdea": "idea",
+        "idPost": "content",
+        "created": "creation_date",
+        "idCreator": "creator"
+    },
+    "IdeaContentPositiveLink": {
+        "@extends": "IdeaContentLink"
+    },
+    "IdeaRelatedPostLink": {
+        "@extends": "IdeaContentPositiveLink"
+    },
+    "IdeaContentNegativeLink": {
+        "@extends": "IdeaContentLink"
+    },
+    "IdeaThreadContextBreakLink": {
+        "@extends": "IdeaContentNegativeLink"
+    },
+    "Extract": {
+        "@extends": "IdeaContentPositiveLink",
+        "target": true,
+        "important": true,
+        "annotator_schema_version": "'\"v1.0\"",
+        "owner": true,
+        "quote": "body",
+        "order": true,
+        "discussion": false,
+        "ranges": ["text_fragment_identifiers:default"],
+        "text": "annotation_text"
+    },
+    "TextFragmentIdentifier": {
+        "end": "xpath_end",
+        "endOffset": "offset_end",
+        "extract_id": false,
+        "start": "xpath_start",
+        "startOffset": "offset_start"
+    },
+    "DiscussionPermission": {
+        "discussion": true,
+        "permission": "&permission_name",
+        "role": "&role_name"
+    },
+    "WidgetIdeaLink": {
+        "widget": true,
+        "idea": true,
+        "context_url":true
+    },
+    "BaseIdeaWidgetLink": {
+        "@extends": "WidgetIdeaLink"
+    },
+    "GeneratedIdeaWidgetLink": {
+        "@extends": "WidgetIdeaLink"
+    },
+    "IdeaShowingWidgetLink": {
+        "@extends": "WidgetIdeaLink"
+    },
+    "IdeaDescendantsShowingWidgetLink": {
+        "@extends": "IdeaShowingWidgetLink"
+    },
+    "IdeaInspireMeWidgetLink": {
+        "@extends": "IdeaDescendantsShowingWidgetLink"
+    },
+    "IdeaCreativitySessionWidgetLink": {
+        "@extends": "IdeaShowingWidgetLink"
+    },
+    "VotableIdeaWidgetLink": {
+        "@extends": "IdeaShowingWidgetLink"
+    },
+    "VotedIdeaWidgetLink": {
+        "@extends": "WidgetIdeaLink"
+    },
+    "VotingCriterionWidgetLink": {
+        "@extends": "WidgetIdeaLink"
+    },
+    "Widget": {
+        "discussion": true,
+        "settings": "settings_json",
+        "state": "state_json",
+        "start_date": true,
+        "end_date": true,
+        "configured": true,
+        "activity_state": true,
+        "hide_notification": true,
+        "ui_endpoint": "&get_ui_endpoint",
+        "user_states_url": "&get_user_states_url",
+        "user_state_url": "&get_user_state_url",
+        "widget_settings_url": "&get_settings_url",
+        "widget_state_url": "&get_state_url"
+    },
+    "BaseIdeaWidget": {
+        "@extends": "Widget",
+        "ideas_url": "&get_ideas_url",
+        "messages_url": "&get_messages_url",
+        "base_idea": true
+    },
+    "IdeaCreatingWidget": {
+        "@extends": "BaseIdeaWidget",
+        "ideas_hiding_url": "&get_ideas_hiding_url",
+        "confirm_ideas_url": "&get_confirm_ideas_url",
+        "confirm_messages_url": "&get_confirm_messages_url"
+    },
+    "CreativitySessionWidget": {
+        "@extends": "IdeaCreatingWidget",
+        "num_posts_by_current_user": true
+    },
+    "InspirationWidget": {
+        "@extends": "IdeaCreatingWidget"
+    },
+    "VotingWidget": {
+        "@extends": "Widget",
+        "criteria_url": true,
+        "votespecs_url": true,
+        "votables_url": true,
+        "votable_ideas": ":id_only",
+        "vote_specifications": ":"
+    },
+    "MultiCriterionVotingWidget": {
+        "@extends": "VotingWidget"
+    },
+    "TokenVotingWidget": {
+        "@extends": "VotingWidget"
+    },
+    "VoteSession": {
+        "@extends": "VotingWidget",
+        "discussion_phase": true
+    },
+    "AbstractIdeaVote": {
+        "idea": true,
+        "criterion": true,
+        "widget": true,
+        "value": true,
+        "original_uri": true,
+        "vote_spec": true,
+        "voter": true
+    },
+    "BinaryIdeaVote": {
+        "@extends": "AbstractIdeaVote"
+    },
+    "MultipleChoiceIdeaVote": {
+        "@extends": "AbstractIdeaVote"
+    },
+    "LickertIdeaVote": {
+        "@extends": "AbstractIdeaVote"
+    },
+    "TokenIdeaVote": {
+        "@extends": "AbstractIdeaVote",
+        "token_category": true
+    },
+    "PartnerOrganization": {
+        "name": true,
+        "description": true,
+        "homepage": true,
+        "logo": true,
+        "is_initiator": true
+    },
+    "TimelineEvent": {
+        "discussion": true,
+        "title": ":extended",
+        "description": ":extended",
+        "image_url": true,
+        "identifier": true,
+        "previous_event": true,
+        "next_event": true,
+        "order": true
+    },
+    "DiscussionPhase": {
+        "@extends": "TimelineEvent",
+        "start": true,
+        "end": true,
+        "interface_v1": true
+    },
+    "DiscussionSession": {
+        "@extends": "TimelineEvent",
+        "start": true,
+        "end": true
+    },
+    "DiscussionMilestone": {
+        "@extends": "TimelineEvent",
+        "start": true
+    },
+    "NotificationSubscription": {
+        "discussion": true,
+        "creation_date": true,
+        "creation_origin": true,
+        "parent_subscription": true,
+        "status": true,
+        "last_status_change_date": true,
+        "followed_object": "&followed_object",
+        "human_readable_description": "&get_human_readable_description",
+        "user": true
+    },
+    "NotificationSubscriptionFollowSyntheses": {
+        "@extends": "NotificationSubscription"
+    },
+    "NotificationSubscriptionFollowAllMessages": {
+        "@extends": "NotificationSubscription"
+    },
+    "NotificationSubscriptionFollowOwnMessageDirectReplies": {
+        "@extends": "NotificationSubscription"
+    },
+    "Notification": {
+        "event_source_object": "&event_source_object",
+        "event_source_type": "&event_source_type",
+        "first_matching_subscription": true,
+        "creation_date": true,
+        "push_method": true,
+        "push_address": true,
+        "push_date": true,
+        "delivery_state": true,
+        "delivery_confirmation": true,
+        "delivery_confirmation_date": true
+    },
+    "NotificationOnPostCreated": {
+        "@extends": "Notification"
+    },
+    "LocalUserRole": {
+        "user": true,
+        "requested": true,
+        "role": "&get_role_name",
+        "discussion": true
+    },
+    "FacebookAccessToken": {
+        "fb_account_id": "&get_facebook_account_uri",
+        "token": true,
+        "expiration": true,
+        "token_type": true,
+        "object_name": true,
+        "object_fb_id": true,
+        "is_infinite_token": "infinite_token"
+    },
+    "AbstractVoteSpecification": {
+        "widget": true,
+        "criterion_idea": true,
+        "question_id": true,
+        "settings": "settings_json",
+        "voting_urls": "&get_voting_urls",
+        "voting_url": "&get_generic_voting_url",
+        "results_url": "&get_vote_results_url",
+        "vote_class": "&get_vote_classname",
+        "my_votes": "&votes_of_current_user:partial"
+    },
+    "LickertVoteSpecification": {
+        "@extends": "AbstractVoteSpecification",
+        "minimum": true,
+        "maximum": true
+    },
+    "MultipleChoiceVoteSpecification": {
+        "@extends": "AbstractVoteSpecification",
+        "num_choices": true
+    },
+    "BinaryVoteSpecification": {
+        "@extends": "AbstractVoteSpecification"
+    },
+    "TokenVoteSpecification": {
+        "@extends": "AbstractVoteSpecification",
+        "exclusive_categories": true,
+        "token_categories": ":"
+    },
+    "TokenCategorySpecification": {
+        "total_number": true,
+        "maximum_per_idea": true,
+        "typename": true,
+        "name": ":extended",
+        "image": true,
+        "image_empty": true,
+        "color": true,
+        "token_vote_specification": true
+    },
+    "Document": {
+        "uri": "uri_id",
+        "oembed_type": true,
+        "mime_type": true,
+        "title": true,
+        "description": true,
+        "author_name": true,
+        "author_url": true,
+        "thumbnail_url": true,
+        "site_name": true,
+        "creation_date": true,
+        "external_url": "external_url"
+    },
+    "File": {
+        "@extends": "Document",
+        "data": false
+    },
+    "Attachment": {
+        "document": [":"],
+        "idAttachedDocument": "document",
+        "idCreator": "creator",
+        "attachmentPurpose": true,
+        "title": true,
+        "description": true,
+        "creation_date": true,
+        "external_url": "external_url"
+    },
+    "DiscussionAttachment": {
+        "@extends": "Attachment"
+    },
+    "PostAttachment": {
+        "@extends": "Attachment",
+         "idObjectAttachedTo": "post"
+    },
+    "IdeaAttachment": {
+        "@extends": "Attachment",
+        "idObjectAttachedTo": "idea"
+    },
+    "Announcement": {
+        "creation_date": true,
+        "modification_date": true,
+        "creator": true,
+        "last_updated_by": true,
+        "title": ":extended",
+        "body": ":extended"
+    },
+    "IdeaAnnouncement": {
+        "@extends": "Announcement",
+        "idObjectAttachedTo": "idea",
+        "should_propagate_down": true
+    }
+}
