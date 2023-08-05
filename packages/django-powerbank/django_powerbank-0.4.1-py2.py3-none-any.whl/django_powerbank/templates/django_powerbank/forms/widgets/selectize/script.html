@@ -1,0 +1,49 @@
+{% load i18n %}
+<script>
+    head.ready(function () {
+        $('#{{ widget.attrs.id }}').selectize({
+            //{{ selectize.plugins }}
+            plugins: {{ selectize.plugins|safe}},
+            valueField: '{{ selectize.value_field }}',
+            labelField: '{{ selectize.label_field }}',
+            searchField: '{{ selectize.search_field }}',
+            closeAfterSelect: '{{ selectize.close_after_select }}',
+            //preload: true,
+            options: [],
+            {% if selectize.allow_create %}
+                create: function (input) {
+                    return {
+                        value: input,
+                        text: input
+                    }
+                },
+                createOnBlur: true,
+            {% else %}
+                create: false,
+            {% endif %}
+            load: function (query, callback) {
+                console.debug("this", this);
+                if (!query.length && !this.settings.preload) return callback();
+                $.ajax({
+                    url: '{{ selectize.url }}',
+                    type: 'GET',
+                    data: {
+                        q: query,
+                    },
+                    error: function () {
+                        callback();
+                    },
+                    success: function (res) {
+                        callback(res);
+                    }
+                });
+            },
+            render: {
+                'option_create': function (data, escape) {
+                    return '<div class="create"> {% trans "Add" %} <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+                }
+            }
+
+        });
+    });
+</script>
