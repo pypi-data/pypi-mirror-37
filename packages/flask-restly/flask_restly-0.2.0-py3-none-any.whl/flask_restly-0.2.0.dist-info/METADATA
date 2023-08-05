@@ -1,0 +1,104 @@
+Metadata-Version: 2.1
+Name: flask-restly
+Version: 0.2.0
+Summary: Build a REST API with Flask
+Home-page: https://github.com/gorzechowski/flask-restly
+Author: Gracjan Orzechowski
+Author-email: orzechowski.gracjan@gmail.com
+License: MIT
+Keywords: flask api rest
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Flask
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Internet :: WWW/HTTP
+Description-Content-Type: text/markdown
+Requires-Dist: flask (>=1.0)
+
+# Flask-RESTly
+
+[![Build Status](https://travis-ci.org/gorzechowski/flask-restly.svg?branch=master)](https://travis-ci.org/gorzechowski/flask-restly)
+[![Latest version](https://img.shields.io/pypi/v/flask-restly.svg)](https://pypi.org/project/flask-restly)
+[![Python versions](https://img.shields.io/pypi/pyversions/flask-restly.svg)](https://pypi.org/project/flask-restly)
+
+## Features
+
+* Decorators-based routing
+* Automatic response codes
+* Built-in response serializers with custom serializer support
+
+## Todo
+
+* Protobuf support
+* HATEOAS
+* ...and few more :)
+
+## Installation
+
+```
+pip install flask-restly
+```
+
+## Usage
+
+Please see [examples](/examples) for more details.
+
+## Quick start
+
+```python
+from flask import Flask
+from flask_restly import FlaskRestly
+from flask_restly.decorator import resource, get, delete
+
+
+app = Flask(__name__)
+
+rest = FlaskRestly(app)
+rest.init_app(app)
+
+
+@resource(name='employees')
+class EmployeesResource:
+    @get('/<id>')
+    def get_employee(self, id):
+        return dict(id=int(id))
+
+    @get('/')
+    def get_employees(self):
+        return dict(entites=[
+            dict(id=1),
+            dict(id=2)
+        ])
+
+    @delete('/<id>')
+    def delete_employee(self, **kwargs):
+        return
+
+
+with app.app_context():
+    EmployeesResource()
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5001, debug=True)
+```
+
+```bash
+$ python main.py
+* Serving Flask app "main" (lazy loading)
+* Environment: production
+  WARNING: Do not use the development server in a production environment.
+  Use a production WSGI server instead.
+* Debug mode: on
+* Restarting with stat
+* Debugger is active!
+* Debugger PIN: 210-167-642
+* Running on http://127.0.0.1:5001/ (Press CTRL+C to quit)
+```
+
+
