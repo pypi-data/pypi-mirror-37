@@ -1,0 +1,25 @@
+{%- if prelude -%}
+<script src="{{ url_for('components.get_prelude') }}" > </script>
+<script> $P._url = "{{ url_for('components.index') }}"; </script>
+
+<script>
+  $P._namespaces = {{ dirhash_lookup | safe }}
+</script>
+{%- endif -%}
+<script type="text/javascript" name="setversions"> $P.set_versions({{ versions | safe }}); </script>
+
+{% if css_package %}
+<script type="text/javascript" name="loadcss">$P._require_css({{css_package | safe }}) </script>
+{% endif %}
+
+{%- if html -%}
+{{ html | safe }}
+{%- endif -%}
+{{ postfix }}
+
+{% for act in activations %}
+<script type='text/javascript'>
+  {{ act | safe }}
+</script>
+{% endfor %}
+
