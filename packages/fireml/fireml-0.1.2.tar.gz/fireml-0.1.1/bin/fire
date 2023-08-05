@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+
+import argparse
+import functools
+from collections import defaultdict
+import pickle
+
+import google
+import google.protobuf.text_format
+import theano
+
+from fireml import builder
+from fireml.train import Train
+from fireml.const import TEST, TRAIN
+
+
+proto_module = None
+
+
+def load_net(path):
+    with open(path, 'rb') as f:
+        try:
+            loaded = pickle.load(f)
+            return loaded
+        except UnicodeDecodeError as e:
+            f.seek(0)
+            u = pickle._Unpickler(f)
+            u.encoding = 'latin1'
+            loaded = u.load()
+            return loaded
+
+
+def read_net(net_path):
+    net = proto_module.NetParameter()
+    google.protobuf.text_format.Merge(open(net_path, 'rt').read(), net)
+    return net
+
+
+class Wrapper:
+    def __init__(self, params):
+        self.params = params
+
+    def __getattr__(self, attr):
+        def get(value, default=None):
+            if value in self.params:
+                return [x.data[...] for x in self.params[value]]
+            return default
+        if attr == 'get':
+            return get
+        return getattr(self.params, attr)
+
+
+def get_params(net_path, caffemodel_path):
+    import caffe
+    net = caffe.Net(net_path, caffemodel_path, caffe.TEST)
+    params = net.params
+    return Wrapper(params)
+
+
+def build_net(net_path, phase, weights_path=None, caffemodel=None, emulate_caffe=False):
+    net_builder = load_builder(net_path, phase, weights_path, caffemodel, emulate_caffe=emulate_caffe)
+    net_builder.build()
+    return net_builder
+
+
+def load_builder(net_path, phase, weights_path=None, caffemodel=None, emulate_caffe=False):
+    net, weights, phases, stages, solver = load_config(net_path, weights_path, caffemodel,
+                                                       emulate_caffe=emulate_caffe)
+    net_builder = builder.Builder(net, phase=phase, weights=weights)
+    return net_builder
+
+
+def run_test(net_path, weights_path=None, caffemodel=None, solver_path=None, emulate_caffe=False):
+    raise NotImplementedError()
+
+
+def load_config(net_path, weights_path=None, caffemodel=None, solver_path=None, emulate_caffe=False):
+    global proto_module
+    if emulate_caffe:
+        import caffe_pb2
+        proto_module = caffe_pb2
+    else:
+        from fireml import fire_pb2
+        proto_module = fire_pb2
+    solver = None
+    if solver_path is not None:
+        solver = proto_module.SolverParameter()
+        f = open(solver_path, 'rt')
+        google.protobuf.text_format.Merge(f.read(), solver)
+
+    net = read_net(net_path)
+    weights = None
+    if caffemodel:
+        weights = get_params(net_path, caffemodel)
+    if weights_path:
+        weights = load_net(weights_path)
+    phases = set()
+    stages = defaultdict(list)
+
+    for layer in net.layer:
+        if hasattr(layer, 'include'):
+            for include in layer.include:
+                phases.add(include.phase)
+                if hasattr(include, 'stage'):
+                    for stage in include.stage:
+                        stages[include.phase].append(stage)
+    return net, weights, phases, stages, solver
+
+
+def run_train(net_path, weights_path=None, caffemodel=None, solver_path=None, emulate_caffe=False):
+    net, weights, phases, stages, solver = load_config(net_path, weights_path, caffemodel, solver_path, emulate_caffe)
+    current_phase = builder.TRAIN
+    train_builder = None
+    train_model = None
+    assert TRAIN in phases
+    train_builder = builder.Builder(net, phase=TRAIN, weights=weights)
+    train_builder.build()
+
+    test_builder = None
+    test_model = None
+    if TEST in phases:
+        print("building TEST phase")
+        test_builder = builder.Builder(net, phase=TEST, shared_builder=train_builder)
+        test_builder.build()
+
+    save_net = functools.partial(train_builder.save_net, prefix=solver.snapshot_prefix)
+    tr = Train(train_builder=train_builder, test_builder=test_builder, test_interval=solver.test_interval,
+               save_function=save_net, snapshot_interval=solver.snapshot, max_iter=solver.max_iter,
+               display=solver.display, average_loss=solver.average_loss, solver=solver)
+
+    tr()
+
+
+def print_num_weights(net_path, weights_path=None, caffemodel=None, solver_path=None, emulate_caffe=False):
+    net, weights, phases, stages, solver = load_config(net_path, weights_path, caffemodel, solver_path, emulate_caffe)
+    for phase in phases:
+        tmp_builder = builder.Builder(net, phase=phase, weights=weights)
+        weights_by_layers = tmp_builder.number_of_parameters()
+        print("phase: {0}, number of weights: {1}".format(phase, sum(weights_by_layers.values())))
+        print("By layers:")
+        for layer_id, num in weights_by_layers.items():
+            print("{0}: {1}".format(layer_id, num))
+        print('-' * 30)
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description='run model on data.')
+    parser.add_argument('-emulate-caffe', action='store_true',
+                        help='use caffe prototxt format')
+    parser.add_argument('-weights', metavar='W', type=str,
+                        help='snashot with weights')
+    parser.add_argument('-model', metavar='M', type=str,
+                        help='model description .prototxt file')
+    parser.add_argument('-train', action='store_true',
+                        help='train the model')
+    parser.add_argument('-solver', type=str,
+                        help='solver prototxt file')
+    parser.add_argument('-test', action='store_true',
+                        help='test the model')
+    parser.add_argument('-caffemodel', type=str,
+                        help='import weights from caffe model')
+    parser.add_argument('-compute_test_value', type=str, choices=['off', 'ignore', 'warn', 'raise'],
+                        help="enable or disable computing test values before running the model")
+    parser.add_argument('-print_num_weights', action='store_true',
+                        help='print number of weights in the network')
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = build_parser()
+    if args.compute_test_value:
+        theano.config.compute_test_value = args.compute_test_value
+    if args.print_num_weights:
+        print_num_weights(args.model, args.weights, args.caffemodel, args.solver, args.emulate_caffe)
+    if args.train:
+        run_train(args.model, args.weights, args.caffemodel, args.solver, args.emulate_caffe)
+    if args.test:
+        run_test(args.model, args.weights, args.caffemodel, args.solver, args.emulate_caffe)
+
+
+if __name__ == '__main__':
+    main()
+

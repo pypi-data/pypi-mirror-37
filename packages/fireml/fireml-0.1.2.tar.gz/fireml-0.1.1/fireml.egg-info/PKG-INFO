@@ -1,0 +1,240 @@
+Metadata-Version: 2.1
+Name: fireml
+Version: 0.1.1
+Summary: fireml machine learning framework
+Home-page: https://bitbucket.org/noSkill/fireml
+Author: Anatoly Belikov
+Author-email: awbelikov@gmail.com
+License: UNKNOWN
+Description: # README #
+        
+        Caffe-like machine learning framework in python
+        
+        
+        ## layers types
+        
+        ### ImageData
+        layer to read images. Possible sources: txt file with path labels on each line, cifar archive.
+        
+        **image_data_param**:
+        
+        source: string - path to cifar archive or txt file
+        
+        batch_size: int - how many images to process in each iteration
+        
+        shuffle: bool - images will be shuffled when sampling for a batch
+        
+        new_height: int - new image height(can be same as original)
+        
+        new_width: int - new image width(can be same as original)
+        
+        new_labels: int - expected number of labels(txt file may contain multiple labels for each path)
+        
+        example:
+        
+             layer {
+               top: "data"
+               top: "label"
+               name: "data"
+               type: "ImageData"
+               image_data_param {
+                 source: "../cifar/cifar-10-python.tar.gz"
+                 source: "data.txt.3"  # use cifar or txt file
+                 batch_size: 65
+                 shuffle: true
+                 new_height: 32
+                 new_width: 32
+                 n_labels: 10
+               }
+               transform_param {
+                 mean_value: 126 # r
+                 mean_value: 123 # g
+                 mean_value: 114 # b
+                 mirror: true
+                 scale: 0.02728125
+                 standard_params {
+                     var_average: 5000
+                     mean_average: 5000
+                     mean_per_channel: false
+                     var_per_channel: false
+                 }
+               }
+               include: { phase: TRAIN }
+             }
+        
+        **transform_param**
+        
+        Parameters for data preprocessing
+        
+        **standard_params**
+        
+        Parameters for preprocessor for data standardization.
+        To achieve zero mean and unit variance the preprocessor will subtract iterative 
+        mean from each sample and divide the result by standard deviation.
+        
+            standard_params {
+                var_average: 1
+                mean_average: 1
+                mean_per_channel: false
+                var_per_channel: true
+            }
+        
+        var_average: int [default = 0] - use last var_average samples to compute variance and std  
+        disabled if var_average == 0  
+        mean_average: int [default = 0]  - use last var_average samples to compute mean  
+        disabled if mean_average == 0  
+        mean_per_channel: bool [default = false] - subtract from each channel mean for that channel  
+        var_per_channel: [default = false] - divide each channel by separate std value  
+        
+        ### Convolution
+        
+        Convolution of 2-3 d images(matrices)
+        
+        **convolution_param**
+        
+        num_output: int   number of filters(output feature maps)
+        
+        kernel_size:  int    size of receptive field of filters. Receptive field is kernel_size * kernel_size
+        
+        stride: int - filter will be applied after stride pixels
+        
+        weight_filler: see weight filler
+        
+        example:
+        
+            layer {
+              name: "conv1"
+              type: "Convolution"
+              bottom: "data"
+              top: "conv1"
+              convolution_param {
+                num_output: 40
+                kernel_size: 3
+                stride: 2
+                weight_filler {
+                  type: "xavier"
+                  variance_norm: AVERAGE
+                }
+              }
+            }
+        
+        
+        ### Pooling
+        
+        Subsampling layer for max or average pooling
+        
+        **pooling_param**
+        
+        pool: MAX or AVE
+        
+        kernel_size: int 
+        subsampling window size
+        
+        stride: int
+        perform pooling each *stride* pixels
+        
+        example:
+        
+            layer {
+              name: "pool1"
+              type: "Pooling"
+              bottom: "conv1"
+              top: "pool1"
+              pooling_param {
+                pool: MAX
+                kernel_size: 3
+                stride: 2
+              }
+            }
+        
+        ### Accuracy
+        
+        Layer for computing accuracy
+        Accuracy of a classifier is defined as (true positive + true negative)/total  
+        In multilabel classification example counts as correctly classified iff **all** outputs
+         are correct.  
+        Example:   
+        
+            layer {
+              name: "accuracy"
+              type: "Accuracy"
+              bottom: "pool10"
+              bottom: "label"
+              top: "accuracy"
+            }
+        
+        ## weight_filler
+        
+        Weigth filler parameters are common for all layers with weights
+        
+        type: string  
+        "xavier", "gaussian", "uniform"
+        
+        mean: float  
+        mean value for gaussian initialization
+        
+        std: float  
+        standard deviation for gaussian initialization
+        
+        min: float  
+        lower bound for uniform initialization
+        
+        max: float  
+        upper bound for uniform initialization
+        
+        ## Activation functions
+        
+        ### SeLU
+        
+        Self-regularized linear unit:
+        
+        example:  
+            {
+              name: "relu_conv1"
+              type: "SeLU"
+              bottom: "conv1"
+              top: "conv1"
+            }
+        
+        ## Loss layers
+        
+        ### SigmoidCrossEntropyLoss
+        
+        Layer that applies sigmoid elementwise, followed by cross-entropy log loss
+        -mean(sum(y * log(p(y))  + (1 - y) * log(1 - p(y))))
+        
+        where p(y) - sigmoid transformation of layer's input, that is vector of independent probabilities for each class.
+        
+            example:  
+                layer { 
+                  name: "loss"
+                  type: "SigmoidCrossEntropyLoss"
+                  bottom: "pool1"
+                  bottom: "label"
+                  top: "loss"
+                  include {
+                      phase: TRAIN
+                  }
+                }
+        
+        ## Maxout layer
+        
+        Apply max operator for each *size* channels  
+        
+        size: int [default = 0] - take max over each *size* channels  
+        lambda: int [default = 0.0] - apply probabilistic max if lambda != 0  
+        
+            layer {
+              name: "maxout_1"
+              type: "Maxout"
+              maxout_param {
+                lambda: 1
+                size: 2
+              }
+              bottom: "conv1"
+              top: "conv1"
+            }
+        
+        
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
