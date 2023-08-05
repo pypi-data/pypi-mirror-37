@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+#hotArea {
+  {% if width is defined %}
+    width: {{ width }}px;
+  {% endif %}
+
+  {% if height is defined %}
+    height: {{ height }}px;
+  {% endif %}
+
+  {% if width is defined or height is defined %}
+  overflow: hidden;
+  {% endif %}
+}
+    </style>
+    <style>{% include 'handsontable.full.min.css' %}</style>
+
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div id="hotArea"></div>
+
+    <script>{% include 'handsontable.full.min.js' %}</script>
+
+    <script>var config = {{ config|tojson }};</script>
+    <script>var maxColWidth = {{ maxColWidth|default('200') }};</script>
+
+    <script>{% include 'viewer.js' %}</script>
+  </body>
+</html>
