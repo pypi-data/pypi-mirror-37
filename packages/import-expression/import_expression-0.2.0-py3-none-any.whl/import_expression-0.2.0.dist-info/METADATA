@@ -1,0 +1,92 @@
+Metadata-Version: 2.1
+Name: import-expression
+Version: 0.2.0
+Summary: Parses a superset of Python allowing for inline module import expressions
+Home-page: https://github.com/bmintz/import-expression-parser
+Author: Benjamin Mintz
+Author-email: bmintz@protonmail.com
+License: Charity Public License v1.1.0
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
+Provides-Extra: test
+Requires-Dist: pytestpytest-cov; extra == 'test'
+
+# Import Expression Parser (for lack of a better name)
+
+[![Build Status](https://travis-ci.org/bmintz/import-expression-parser.svg?branch=main)](https://travis-ci.org/bmintz/import-expression-parser)
+[![Coverage Status](https://coveralls.io/repos/github/bmintz/import-expression-parser/badge.svg?branch=main)](https://coveralls.io/github/bmintz/import-expression-parser?branch=main)
+
+Import Expression Parser converts code like this:
+
+```py
+x = collections.deque!(maxsize=2)
+```
+
+Into this roughly equivalent code:
+```py
+from collections import deque
+x = deque(maxsize=2)
+del deque
+```
+
+## Usage
+
+```py
+>>> import import_expression
+>>> import_expression.eval('collections!.Counter("bccdddeeee")')
+Counter({'e': 4, 'd': 3, 'c': 2, 'b': 1})
+```
+
+By default, the filename for `SyntaxError`s is `<string>`.
+To change this, pass in a filename via the `filename` kwarg.
+
+### Monkey Patching the REPL
+
+```py
+>>> urllib.parse!.quote
+  File "<stdin>", line 1
+    urllib.parse!.quote
+                ^
+SyntaxError: invalid syntax
+>>> import import_expression.patch
+>>> import_expression.patch.patch(globals())
+>>> urllib.parse!.quote
+<function quote at 0xdeadbeef>
+```
+
+For convenience, you can also add the following two lines to your `sitecustomize.py`:
+
+```py
+import import_expression.patch
+import_expression.patch.patch()
+```
+
+And all REPL sessions will use the import expression syntax.
+
+## Limitations / Known Issues
+
+* Some invalid syntax, such as `!a`, `a!b`, `urllib!.parse!` is not yet detected.
+* Due to python limitations, results of `import_expression.exec` will have no effect on the caller's globals
+  without an explicit `globals` argument.
+
+## FAQ
+
+*Actually asked questions for a new project! Golly gee!*
+
+* Why not just use `__import__('x')`? \
+  From the [discord.py server](https://discord.gg/r3sSKJJ):
+  > devon#4089: if i want to type `_("thing")` \
+  > devon#4089: i have to move my fingers between three different locations \
+  > devon#4089: both at the end and start of the string \
+  > lambda#0987: yeah and [*it's*] also a pain to type on mobile so ok \
+  > devon#4089: \<\<x\>\> is slightly less grating \
+
+  For context, the originally proposed syntax was \<\<x\>\>.
+
+## [License](https://github.com/bmintz/import-expression-parser/blob/main/LICENSE)
+
+Copyright © 2018 Benjamin Mintz <<bmintz@protonmail.com>>. All Rights Reserved.
+Licensed under this new hipster cool cat license called the [Charity Public License v1.10.0](https://github.com/bmintz/import-expression-parser/blob/main/LICENSE).
+If you are not a hipster cool cat, please contact me to arrange a private license.
+
+
