@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+from argparse import ArgumentParser
+from servo_control import ServoControl
+
+def int2deg(int_in):
+	return 180 if int_in == 180 else int_in % 180
+
+parser = ArgumentParser()
+
+parser.add_argument("pan", type=int, help="Target pan coordinate in degrees (0 <= pan <= 180)")
+parser.add_argument("tilt", type=int, help="Target tilt coordinate in degrees (0 <= tilt <= 180)")
+
+args = parser.parse_args()
+
+s = ServoControl(pan_limits=(650,2500),tilt_limits=(650,2250))
+s.move_to(int2deg(args.pan), int2deg(args.tilt))
