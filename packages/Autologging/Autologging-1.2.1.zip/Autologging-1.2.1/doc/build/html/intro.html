@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction to Autologging &mdash; Autologging 1.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within Autologging 1.2.0 documentation"
+            href="_static/opensearch.xml"/>
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The autologging API" href="autologging.html" />
+    <link rel="prev" title="Autologging — easier logging and tracing for Python classes" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Autologging
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction to Autologging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#logging-and-tracing-by-hand">Logging and tracing “by hand”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging-and-tracing-with-autologging">Logging and tracing with <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="autologging.html">The <code class="docutils literal notranslate"><span class="pre">autologging</span></code> API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples of using <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">How does <code class="docutils literal notranslate"><span class="pre">autologging</span></code> work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Autologging 1.2.0 testing summary</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Autologging</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Introduction to Autologging</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/intro.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction-to-autologging">
+<h1>Introduction to Autologging<a class="headerlink" href="#introduction-to-autologging" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Release:</th><td class="field-body">1.2.0</td>
+</tr>
+</tbody>
+</table>
+<p>When using the Python <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.7)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module to log classes, there are a
+couple of challenges that usually must be addressed by the developer:</p>
+<ol class="arabic simple">
+<li>The standard <code class="docutils literal notranslate"><span class="pre">logging</span></code> module is not inherently “aware” of classes
+in the context of logging statements made within class methods.</li>
+<li>The standard <code class="docutils literal notranslate"><span class="pre">logging</span></code> module has no concept of tracing (i.e. there
+are neither log methods for tracing nor any log levels lower than
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">logging.DEBUG</span></code> to use for tracing). (See
+<a class="reference external" href="https://www.google.com/search?q=logging+vs.+tracing">logging vs. tracing</a>.)</li>
+</ol>
+<p>Challenge #1 is not a failing of the <code class="docutils literal notranslate"><span class="pre">logging</span></code> module, but rather a
+side-effect of using Python stack frames to determine caller information
+(see <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger.findCaller" title="(in Python v3.7)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">logging.Logger.findCaller</span></code></a>).</p>
+<p>A reasonable workaround for #1 is to simply create a class-level logger
+that uses the class’s <a class="reference external" href="http://docs.python.org/3/glossary.html#term-qualified-name">qualified name</a> as the
+logger name. This approach is consistent with respect to the <code class="docutils literal notranslate"><span class="pre">logging</span></code>
+module’s <a class="reference external" href="http://docs.python.org/3/library/logging.html#logger-objects">recommended usage</a> for
+logger naming (as well as being analogous to <a class="reference external" href="http://docs.oracle.com/javase/8/docs/api/java/util/logging/package-summary.html">java.util.logging</a>
+and <a class="reference external" href="http://logging.apache.org/log4j/2.x/">log4j</a> usage, upon which
+Python’s <code class="docutils literal notranslate"><span class="pre">logging</span></code> module is based).</p>
+<p>Challenge #2 can also be worked around, though it requires a bit more
+effort. Defining a new log level/name for tracing (via
+<a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.addLevelName" title="(in Python v3.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">logging.addLevelName</span></code></a>) is a start, but writing (and maintaining)
+the tracing log statements becomes tedious and error prone. In a
+language as dynamic as Python, it should not be (and isn’t) necessary
+to do this “by hand.”</p>
+<p>As it turns out, the code necessary to create appropriately-named
+loggers for classes <strong>and</strong> to trace functions or class methods is
+boilerplate. The <a class="reference internal" href="autologging.html#module-autologging" title="autologging"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autologging</span></code></a> module encapsulates this boilerplate
+code for you, allowing you to use simple decorators to get consistent
+class logging and tracing.</p>
+<div class="section" id="logging-and-tracing-by-hand">
+<h2>Logging and tracing “by hand”<a class="headerlink" href="#logging-and-tracing-by-hand" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># my_module.py</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;TRACE&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MyClass</span><span class="p">:</span>
+
+   <span class="n">__log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.MyClass&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="vm">__name__</span><span class="p">))</span>
+
+   <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">TRACE</span><span class="p">,</span> <span class="s2">&quot;CALL </span><span class="si">%r</span><span class="s2"> keyword=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;my message&quot;</span><span class="p">)</span>
+      <span class="n">phrase</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">TRACE</span><span class="p">,</span> <span class="s2">&quot;RETURN </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">phrase</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">phrase</span>
+</pre></div>
+</div>
+<p>Assuming we’ve already configured logging to use the format
+<em>“%(levelname)s:%(name)s:%(funcName)s:%(message)s”</em>, calling “my_method”
+produces the following log output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TRACE</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">CALL</span> <span class="s1">&#39;spam&#39;</span> <span class="n">keyword</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span>
+<span class="n">INFO</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">my</span> <span class="n">message</span>
+<span class="n">TRACE</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">RETURN</span> <span class="s1">&#39;spam and eggs&#39;</span>
+</pre></div>
+</div>
+<p>Using this approach, we end up with several lines of visual clutter:</p>
+<ul class="simple">
+<li>The purpose of “my_method” is to join the arg and keyword together
+into a phrase, but there are more lines dedicated to logging/tracing
+than to the method logic.</li>
+<li>Because we wish to trace the return value of the method, we <strong>must</strong>
+set the return value as an intermediate local variable so that it can
+be traced, then returned.
+This means we can’t simply use the much more succinct expression
+<code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">&quot;%s</span> <span class="pre">and</span> <span class="pre">%s&quot;</span> <span class="pre">%</span> <span class="pre">(arg,</span> <span class="pre">keyword)</span></code>.</li>
+</ul>
+<p>Aside from visual clutter, there are maintenance issues as well:</p>
+<ul class="simple">
+<li>If the name of the class changes, the logger name should be updated
+accordingly.</li>
+<li>If anything about the method signature changes (number and/or position
+of arguments, number and/or names of keyword arguments), then the
+“CALL” tracing log statement must be updated manually.</li>
+<li>If “my_method” were ever refactored to, say, return with a different
+value if keyword is <code class="docutils literal notranslate"><span class="pre">None</span></code>, then we’d need to either add <em>another</em>
+logging statement to trace the early return, or we’d need to
+reconstruct the method body to set <code class="docutils literal notranslate"><span class="pre">phrase</span></code> accordingly before
+tracing and returning.</li>
+</ul>
+</div>
+<div class="section" id="logging-and-tracing-with-autologging">
+<h2>Logging and tracing with <code class="docutils literal notranslate"><span class="pre">autologging</span></code><a class="headerlink" href="#logging-and-tracing-with-autologging" title="Permalink to this headline">¶</a></h2>
+<p>Autologging addresses <strong>all</strong> of the issues in the previous sample, resulting
+in less code that’s more readable and easier to maintain:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># my_module.py</span>
+
+<span class="kn">from</span> <span class="nn">autologging</span> <span class="k">import</span> <span class="n">logged</span><span class="p">,</span> <span class="n">traced</span>
+
+<span class="nd">@traced</span>
+<span class="nd">@logged</span>
+<span class="k">class</span> <span class="nc">MyClass</span><span class="p">:</span>
+
+   <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;my message&quot;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The method is now much easier to follow visually, requires zero logging
+or tracing “maintenance,” and produces log output that is semantically
+identical to the previous example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TRACE</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">CALL</span> <span class="o">*</span><span class="p">(</span><span class="s1">&#39;spam&#39;</span><span class="p">,)</span> <span class="o">**</span><span class="p">{</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="s1">&#39;eggs&#39;</span><span class="p">}</span>
+<span class="n">INFO</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">my</span> <span class="n">message</span>
+<span class="n">TRACE</span><span class="p">:</span><span class="n">my_module</span><span class="o">.</span><span class="n">MyClass</span><span class="p">:</span><span class="n">my_method</span><span class="p">:</span><span class="n">RETURN</span> <span class="s1">&#39;spam and eggs&#39;</span>
+</pre></div>
+</div>
+<p>Please see <a class="reference internal" href="autologging.html"><span class="doc">The autologging API</span></a> for details, then check out <a class="reference internal" href="examples.html"><span class="doc">Examples of using autologging</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="autologging.html" class="btn btn-neutral float-right" title="The autologging API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Autologging — easier logging and tracing for Python classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013, 2015, 2016, 2018 Matthew Zipay.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

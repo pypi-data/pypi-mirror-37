@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Disabling @traced at runtime &mdash; Autologging 1.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within Autologging 1.2.0 documentation"
+            href="_static/opensearch.xml"/>
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using @logged and @traced together" href="examples-logged-and-traced.html" />
+    <link rel="prev" title="Using the @traced decorator" href="examples-traced.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Autologging
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Autologging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autologging.html">The <code class="docutils literal notranslate"><span class="pre">autologging</span></code> API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="examples.html">Examples of using <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="examples-logged.html">Using the <code class="docutils literal notranslate"><span class="pre">&#64;logged</span></code> decorator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-traced.html">Using the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> decorator</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Disabling <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> at runtime</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#recommended-approach-let-autologging-install-the-traced-no-op-automatically">Recommended approach: Let Autologging install the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op automatically</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-the-traced-no-op-directly">Install the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op directly</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples-logged-and-traced.html">Using <code class="docutils literal notranslate"><span class="pre">&#64;logged</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> together</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-inheritance.html">Logging, tracing, and inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-separate.html">Separate configurations for logging and tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">How does <code class="docutils literal notranslate"><span class="pre">autologging</span></code> work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Autologging 1.2.0 testing summary</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Autologging</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="examples.html">Examples of using <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a> &raquo;</li>
+        
+      <li>Disabling <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> at runtime</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/examples-traced-noop.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="disabling-traced-at-runtime">
+<h1>Disabling <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> at runtime<a class="headerlink" href="#disabling-traced-at-runtime" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Release:</th><td class="field-body">1.2.0</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.1.0.</span></p>
+</div>
+<ul class="simple">
+<li><a class="reference internal" href="#automatic-noop"><span class="std std-ref">Recommended approach: Let Autologging install the &#64;traced no-op automatically</span></a></li>
+<li><a class="reference internal" href="#explicit-noop"><span class="std std-ref">Install the &#64;traced no-op directly</span></a></li>
+</ul>
+<p>When a class or a function is decorated with <a class="reference internal" href="autologging.html#autologging.traced" title="autologging.traced"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.traced</span></code></a>,
+Autologging <em>replaces</em> a method (or function) with a tracing “proxy”
+function that intercepts any invocation to perform the CALL/RETURN
+tracing. (See <a class="reference internal" href="internals.html"><span class="doc">How does autologging work?</span></a> for a more in-depth explanation.)</p>
+<p>Autologging is careful to minimize the overhead imposed by these tracing
+proxy functions, but there will always be <em>some</em> overhead - even when
+the <a class="reference internal" href="autologging.html#autologging.TRACE" title="autologging.TRACE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">autologging.TRACE</span></code></a> log level is disabled, the tracing proxy
+function must still (a) check the log level and then (b) delegate to
+the original method/function.</p>
+<p>In some cases, it may be desirable to completely eliminate <em>any</em> tracing
+overhead. Running the application in a production environment, or
+executing a performance test, are the two most obvious examples. For
+these cases, Autologging now provides a “killswitch” for the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code>
+decorator that effectively turns it into a no-op.</p>
+<p>When the <a class="reference internal" href="autologging.html#autologging.install_traced_noop" title="autologging.install_traced_noop"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.install_traced_noop</span></code></a> function is called
+<strong>before</strong> the traced decorator is imported and any classes or functions
+have been decorated, then the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> decorator will function as an
+“identity” decorator, simply returning the decorated class or function
+<strong>unmodified</strong>. In this way, tracing can be completely “removed” from an
+application <em>without</em> having to comment-out the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> decorator
+(or conditionally apply it).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">autologging.install_traced_noop()</span></code> <em>after</em> any class or
+function has been decorated <strong>will not uninstall the tracing proxy
+function.</strong> It is imperative that
+<code class="docutils literal notranslate"><span class="pre">autologging.install_traced_noop()</span></code> be called <em>before</em>
+<a class="reference internal" href="autologging.html#autologging.traced" title="autologging.traced"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.traced</span></code></a> is imported and before any class or
+function is decorated.</p>
+<p class="last">The process is irreversible in the running Python interpreter. Once
+<code class="docutils literal notranslate"><span class="pre">autologging.install_traced_noop()</span></code> has been called, the only way
+to reinstate tracing functionality is to restart the interpreter (and
+<em>not</em> install the no-op).</p>
+</div>
+<p>Consider a simple application consisting of two modules - a bootstrap
+module that is responsible for launching the application, and the
+application module itself:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># bootstrap.py</span>
+
+<span class="kn">import</span> <span class="nn">app</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">launch</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># app.py</span>
+
+<span class="kn">from</span> <span class="nn">autologging</span> <span class="k">import</span> <span class="n">traced</span>
+
+
+<span class="nd">@traced</span>
+<span class="k">class</span> <span class="nc">Application</span><span class="p">:</span>
+
+   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_connections</span><span class="p">()</span>
+      <span class="c1"># other initialization</span>
+
+   <span class="k">def</span> <span class="nf">_prepare_connections</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="c1"># prepare the connections</span>
+
+   <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+         <span class="c1"># listen for events, then handle them</span>
+
+   <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+      <span class="c1"># handle the event</span>
+
+
+<span class="nd">@traced</span>
+<span class="k">def</span> <span class="nf">launch</span><span class="p">():</span>
+   <span class="n">Application</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>As written, the “__init__”, “_prepare_connections”, “run”, and “handle”
+methods of the application object, and the “launch” function in the
+<code class="docutils literal notranslate"><span class="pre">app</span></code> module,  will be replaced by tracing proxies.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Whether or not any tracing info is <em>emitted</em> to logs can be
+controlled simply by configuring the logging system appropriately.</p>
+</div>
+<p>Let’s suppose that for this particular application we wish to completely
+<em>remove</em> tracing capability when running in a production or performance
+testing environment. To accomplish this, we need to call the
+<a class="reference internal" href="autologging.html#autologging.install_traced_noop" title="autologging.install_traced_noop"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.install_traced_noop</span></code></a> function <strong>before</strong> any class or
+function is decorated with <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code>.</p>
+<div class="section" id="recommended-approach-let-autologging-install-the-traced-no-op-automatically">
+<span id="automatic-noop"></span><h2>Recommended approach: Let Autologging install the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op automatically<a class="headerlink" href="#recommended-approach-let-autologging-install-the-traced-no-op-automatically" title="Permalink to this headline">¶</a></h2>
+<p>The recommended approach is to instruct Autologging to install the no-op
+automatically. This can be accomplished by setting the
+<code class="docutils literal notranslate"><span class="pre">AUTOLOGGING_TRACED_NOOP</span></code> environment variable to any <strong>non-empty</strong> value.</p>
+<p>For example, we would run the application in a production or performance
+testing environment like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export AUTOLOGGING_TRACED_NOOP=1
+$ python bootstrap.py
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This is the recommended approach because it requires no change to the
+application or bootstrap source code.</p>
+<p class="last">If the conditions under which tracing should be deactivated are more
+complex, then direct installation of the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op may be
+necessary.</p>
+</div>
+</div>
+<div class="section" id="install-the-traced-no-op-directly">
+<span id="explicit-noop"></span><h2>Install the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op directly<a class="headerlink" href="#install-the-traced-no-op-directly" title="Permalink to this headline">¶</a></h2>
+<p>If automatic installation of the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> no-op is not possible (or
+not preferred), then the application bootstrap code can be modified to
+install the no-op directly.</p>
+<p>The following modification to <em>bootstrap.py</em> accomplishes the goal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># bootstrap.py</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">autologging</span>
+
+<span class="c1"># MUST happen before importing app!</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;APP_ENV&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;PRODUCTION&quot;</span><span class="p">,</span> <span class="s2">&quot;PERFORMACE_TEST&quot;</span><span class="p">):</span>
+   <span class="n">autologging</span><span class="o">.</span><span class="n">install_traced_noop</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">app</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">launch</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples-logged-and-traced.html" class="btn btn-neutral float-right" title="Using @logged and @traced together" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="examples-traced.html" class="btn btn-neutral" title="Using the @traced decorator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013, 2015, 2016, 2018 Matthew Zipay.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

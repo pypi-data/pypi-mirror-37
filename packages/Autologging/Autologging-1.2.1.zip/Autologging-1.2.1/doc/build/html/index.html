@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Autologging — easier logging and tracing for Python classes &mdash; Autologging 1.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within Autologging 1.2.0 documentation"
+            href="_static/opensearch.xml"/>
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Introduction to Autologging" href="intro.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Autologging
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Autologging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autologging.html">The <code class="docutils literal notranslate"><span class="pre">autologging</span></code> API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples of using <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">How does <code class="docutils literal notranslate"><span class="pre">autologging</span></code> work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Autologging 1.2.0 testing summary</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Autologging</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Autologging — easier logging and tracing for Python classes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="autologging-easier-logging-and-tracing-for-python-classes">
+<h1>Autologging — easier logging and tracing for Python classes<a class="headerlink" href="#autologging-easier-logging-and-tracing-for-python-classes" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Release:</th><td class="field-body">1.2.0</td>
+</tr>
+</tbody>
+</table>
+<a class="reference external image-reference" href="https://pypi.python.org/pypi/Autologging"><img alt="PyPI version" src="https://img.shields.io/pypi/v/Autologging.svg" /></a>
+<a class="reference external image-reference" href="https://www.python.org/"><img alt="Python version" src="https://img.shields.io/pypi/pyversions/Autologging.svg" /></a>
+<a class="reference external image-reference" href="https://pypi.python.org/pypi/Autologging"><img alt="Python implementation" src="https://img.shields.io/pypi/implementation/Autologging.svg" /></a>
+<a class="reference external image-reference" href="https://github.com/mzipay/Autologging/blob/master/LICENSE.txt"><img alt="License" src="https://img.shields.io/pypi/l/Autologging.svg" /></a>
+<a class="reference external image-reference" href="https://pypi.python.org/pypi/Autologging"><img alt="Wheel availability" src="https://img.shields.io/pypi/wheel/Autologging.svg" /></a>
+<p>Autologging eliminates boilerplate logging setup code and tracing code,
+and provides a means to separate application logging from program flow
+and data tracing.</p>
+<p>Python modules that make use of Autologging are cleaner, leaner, and
+more resilient to changes that would otherwise require updating tracing
+statements.</p>
+<p>Autologging allows for tracing to be configured (and controlled)
+independently from application logging. Toggle tracing on/off, write
+trace log records to a separate log, and use different formatting for
+trace log entries - all via standard Python logging facilities, and
+without affecting your application logging.</p>
+<p><strong>Python 2.7 and Python 3.4+ are supported using the same codebase.</strong>
+All examples given on this site use Python 3 syntax.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.0.1: </span>Autologging is now officially tested and working under <a class="reference external" href="http://www.jython.org/">Jython</a>, <a class="reference external" href="http://ironpython.net/">IronPython</a>,
+<a class="reference external" href="http://pypy.org/">PyPy</a>, and <a class="reference external" href="https://bitbucket.org/stackless-dev/stackless/wiki/Home">Stackless Python</a>.</p>
+</div>
+<p>Autologging exposes two decorators (<a class="reference internal" href="autologging.html#autologging.logged" title="autologging.logged"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.logged</span></code></a>,
+<a class="reference internal" href="autologging.html#autologging.traced" title="autologging.traced"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.traced</span></code></a>) and a custom log level
+(<a class="reference internal" href="autologging.html#autologging.TRACE" title="autologging.TRACE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">autologging.TRACE</span></code></a>).</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.1.0: </span>Autologging now exposes the <a class="reference internal" href="autologging.html#autologging.install_traced_noop" title="autologging.install_traced_noop"><code class="xref py py-func docutils literal notranslate"><span class="pre">autologging.install_traced_noop</span></code></a>
+function. This function <strong>replaces</strong> the <code class="docutils literal notranslate"><span class="pre">traced</span></code> decorator with a
+no-op that returns traced classes and functions unmodified
+(effectively disabling all tracing capabilities). This is useful for
+cases where <em>any</em> overhead from tracing is not desired (for example,
+when running in production environments, or when running performance
+tests).</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.2.0: </span><a class="reference external" href="https://docs.python.org/3/glossary.html#term-generator-iterator">Generator iterators</a>
+now emit YIELD/STOP trace logging records
+(in addition to the CALL/RETURN tracing of the <a class="reference external" href="https://docs.python.org/3/glossary.html#term-generator">generator</a> function
+itself).</p>
+</div>
+<p>A brief example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="mi">1</span> <span class="kn">import</span> <span class="nn">logging</span>
+ <span class="mi">2</span> <span class="kn">import</span> <span class="nn">sys</span>
+ <span class="mi">3</span>
+ <span class="mi">4</span> <span class="kn">from</span> <span class="nn">autologging</span> <span class="k">import</span> <span class="n">logged</span><span class="p">,</span> <span class="n">TRACE</span><span class="p">,</span> <span class="n">traced</span>
+ <span class="mi">5</span>
+ <span class="mi">6</span> <span class="nd">@traced</span>
+ <span class="mi">7</span> <span class="nd">@logged</span>
+ <span class="mi">8</span> <span class="k">class</span> <span class="nc">Example</span><span class="p">:</span>
+ <span class="mi">9</span>
+<span class="mi">10</span>     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="mi">11</span>         <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;initialized&quot;</span><span class="p">)</span>
+<span class="mi">12</span>
+<span class="mi">13</span>     <span class="k">def</span> <span class="nf">backwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">words</span><span class="p">):</span>
+<span class="mi">14</span>         <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+<span class="mi">15</span>             <span class="k">yield</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">word</span><span class="p">))</span>
+<span class="mi">16</span>
+<span class="mi">17</span>
+<span class="mi">18</span> <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="mi">19</span>     <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+<span class="mi">20</span>             <span class="n">level</span><span class="o">=</span><span class="n">TRACE</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+<span class="mi">21</span>             <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(filename)s</span><span class="s2">,</span><span class="si">%(lineno)d</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">.</span><span class="si">%(funcName)s</span><span class="s2">:</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="mi">22</span>     <span class="n">example</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
+<span class="mi">23</span>     <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">example</span><span class="o">.</span><span class="n">backwards</span><span class="p">(</span><span class="s2">&quot;spam&quot;</span><span class="p">,</span> <span class="s2">&quot;eggs&quot;</span><span class="p">):</span>
+<span class="mi">24</span>         <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Logging and tracing output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python example.py
+TRACE:example.py,10:__main__.Example.__init__:CALL *() **{}
+INFO:example.py,11:__main__.Example.__init__:initialized
+TRACE:example.py,11:__main__.Example.__init__:RETURN None
+TRACE:example.py,13:__main__.Example.backwards:CALL *(&#39;spam&#39;, &#39;eggs&#39;) **{}
+TRACE:example.py,15:__main__.Example.backwards:RETURN &lt;generator object Example.backwards at 0x7f298a450de0&gt;
+TRACE:example.py,15:__main__.Example.backwards:YIELD &#39;maps&#39;
+maps
+TRACE:example.py,15:__main__.Example.backwards:YIELD &#39;sgge&#39;
+sgge
+TRACE:example.py,15:__main__.Example.backwards:STOP
+</pre></div>
+</div>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Autologging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#logging-and-tracing-by-hand">Logging and tracing “by hand”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#logging-and-tracing-with-autologging">Logging and tracing with <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="autologging.html">The <code class="docutils literal notranslate"><span class="pre">autologging</span></code> API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples of using <code class="docutils literal notranslate"><span class="pre">autologging</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples-logged.html">Using the <code class="docutils literal notranslate"><span class="pre">&#64;logged</span></code> decorator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-traced.html">Using the <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> decorator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-traced-noop.html">Disabling <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> at runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-logged-and-traced.html">Using <code class="docutils literal notranslate"><span class="pre">&#64;logged</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;traced</span></code> together</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-inheritance.html">Logging, tracing, and inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples-separate.html">Separate configurations for logging and tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">How does <code class="docutils literal notranslate"><span class="pre">autologging</span></code> work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Autologging 1.2.0 testing summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#id1">CPython</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#id2">PyPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#id3">Stackless Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#id4">Jython</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#id5">IronPython</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="download-and-install">
+<h2>Download and Install<a class="headerlink" href="#download-and-install" title="Permalink to this headline">¶</a></h2>
+<p>The easiest way to install Autologging is to use <a class="reference external" href="https://pip.pypa.io/">pip</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install Autologging
+</pre></div>
+</div>
+<p>To install from source, clone or fork the repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/mzipay/Autologging.git
+</pre></div>
+</div>
+<p>Alternatively, download and extract a source .zip or .tar.gz archive
+from <a class="reference external" href="https://github.com/mzipay/Autologging/releases">https://github.com/mzipay/Autologging/releases</a> or
+<a class="reference external" href="https://pypi.python.org/pypi/Autologging">https://pypi.python.org/pypi/Autologging</a>.</p>
+<p>Run the test suite and install the <code class="docutils literal notranslate"><span class="pre">autologging</span></code> module (make sure you
+have <a class="reference external" href="https://pypi.python.org/pypi/setuptools">setuptools</a>
+installed!):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd Autologging
+$ python setup.py test
+$ python setup.py install
+</pre></div>
+</div>
+<p>You can also install from one of the available binary packages
+available at <a class="reference external" href="https://pypi.python.org/pypi/Autologging">https://pypi.python.org/pypi/Autologging</a> or
+<a class="reference external" href="https://sourceforge.net/projects/autologging/files/">https://sourceforge.net/projects/autologging/files/</a>.</p>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="intro.html" class="btn btn-neutral float-right" title="Introduction to Autologging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013, 2015, 2016, 2018 Matthew Zipay.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.2.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
