@@ -1,0 +1,215 @@
+# skivvy
+A simple tool for testing JSON/HTTP APIs
+
+Skivvy was developed in order to faciliate automated testing of web-APIs. If you've written an API that consumes or
+produces JSON, skivvy makes it easy to create test-suites for these APIs.
+You can think of skivvy as a more simple-minded cousin of cURL - it can't do many of the things cURL can but the the
+things few things it can do it does well.
+
+## try it out
+#### installing
+* install through PIP
+```sh
+pip install skivvy
+```
+* download some examples
+```sh
+mkdir skivvy_examples
+cd skivvy_examples
+curl -OL https://github.com/hyrfilm/skivvy/raw/master/skivvy_examples.zip
+tar xf skivvy_examples.zip
+```
+* run:
+```sh
+skivvy run cfg/example.json
+```
+
+## what you can do with it
+
+Let's say you've created an API for looking up definition of words. Calling the URL: ```http://example.com/words/api/skivvy``` would result in this being returned:
+
+```json
+{"word": "skivvy",
+"results": [{
+  "definition": "a female domestic servant who does all kinds of menial work",
+  "type": "noun",
+  "language": "English",
+  "dialect": "British"
+  }]
+}
+```
+With skivvy you could easily create a testcase for this in a myraid of ways depending on what you would want to test:
+#### checking the HTTP status-code
+```json
+{"url": "http://example.com/words/api/skivvy",
+"status": 200}
+```
+#### checking fields
+```json
+{"url": "http://example.com/words/api/skivvy",
+"response": {
+   "results": [{
+   "type": "noun",
+   "language": "English"
+   }]
+}
+```
+#### checking the length of the results
+```json
+{"url": "http://example.com/words/api/skivvy",
+"response": {
+  "results": "$len 1"
+  }
+}
+```
+#### checking that the response contain some particular data
+```json`
+{"url": "http://example.com/words/api/skivvy",
+"response": "$contains servant who does all kinds of menial work"}
+```
+
+#### etc
+Other things supported:
+* test-suites incl using different environments (like staging / production)
+* custom matcher syntax, for checking things like urls (```$valid_url```), approximations (```$~```), date-validation (```$date```), custom python-expression (```$expr```) and more
+* ability to create extend the syntax to create own matchers easily
+* all common http-verbs (get, put, post, delete)
+* reading and writing http-headers
+* file uploads
+* dumping output from one testcase into a file and passing in parts of that data to other testcases
+* ... and more! ;)
+
+### Documentation
+**NOTE:** The easiest way to gain understading of ways to use skivvy is to simply download the examples and _then_ look at the documentation.
+
+All examples as zip: https://github.com/hyrfilm/skivvy/raw/master/skivvy_examples.zip
+Or if you prefer to view them on github directly: https://github.com/hyrfilm/skivvy/tree/master/skivvy/examples
+
+#### optional config settings
+a skivvy testfile, can contain the following flags that changes how the tests is performed
+
+#### mandatory config settings
+* *tests* - directory where to look for tests (recursively)
+* *ext* - file extension to look for (like ".json")
+* *base_url* - base URL that will be prefixed for all tests
+
+#### optional config settings
+* *log_level* - a low value like 10, shows ALL logging, a value like 20 shows only info and more severe
+
+#### mandatory settings for a testcase
+* *url* - the URL that skivvy should send a HTTP request to 
+* *base_url* - an base url (like "https://example.com") that will be prefixed for the URL
+* *method* - what HTTP verb should be used (optional, defaults to GET)
+
+#### optional settings for testcase
+* *brace_expansion* - whether brace expansion should used for URLs containing <variable>
+* *expected_status* - the expected HTTP status of the call
+* *response* - the _expected_ response that should be checked against _actual_ response received from the API
+* *data* - data should be sent in in POST or PUT request
+* *json_encode_body* - setting this to false makes skivvy not json encode the body of a PUT or POST and instead sends it as form-data
+* *headers* - headers to send into the request
+* *content_type* - defaults to _"application/json"_
+* *headers_to_write* - headers that should be retrieved from the HTTP response and dumped a file, for example: ````"write_headers": {"headers.json": ["Set-Cookie", "Cache-Control"]}, ````
+* *headers_to_write* - specifies a file containing headers to be sent in the request, for example: ````"read_headers": "headers.json"````
+* *match_subsets* - (boolean, default is false) - controls whether skivvy will allow to match a subset of a dict found in a list
+* *match_falsiness* - (boolean, default is false) - controls whether skivvy will consider falsy values (such as null, and empty string, etc) as the same equivalent
+* *upload* - see below for an example of uploading files
+
+#### file uploads
+POSTs supports both file uploading & sending a post body as JSON. You can't have both (because that would result in conflicting HTTP-headers).
+Uploads takes precedence, which means that if you have enabled file uploads for a testcase it will happily ignore the POST data you pass in.
+Enabling a file upload would look like this:
+```json
+{"url": "http://example.com/some/path",
+"upload": {"file": "./path/to/some/file"},
+""
+}
+```
+When seeing an upload field skivvy like above skivvy will try to open that file and pass it along in the field specified ("file"
+in the example above). Currently only one upload is supported.
+The file needs to either be a absolute path or relative to where skivvy is executing. If the file can't be found skivvy will
+complain and mark the as failed.
+
+### matchers
+
+Skivvy's matcher-syntax is a simple, extensible notation that allows one greater expressiveness than vanilla-JSON would allow for.
+
+For example, let's say you want to check that the field "email" containing a some characters followed by an @-sign,
+some more characters followed by a dot and then some more characters (I don't recommend this as a way to check if an email is valid, which is quite hard!).
+Then you could write:
+```
+"email": "$regexp (.+)@(.+)\.(.+)"
+```
+The format for all matchers are as following:
+```
+$matcher_name expected [parameter1 parameter2... parameterN].
+```
+The amount of parameters a particular matcher takes depends on what matcher you are using. Currently these matchers are supported out-of-the-box:
+
+#### $valid_url
+Matches any URL that returns a 200 status.
+Example:
+```
+"some_page": "$valid_url"
+```
+would pass if `some_page` was `http://google.com`
+
+#### $contains
+Matches a string inside a field, good for finding nested information when you
+don't care about the structure of what's returned.
+Example:
+```"foo": "$contains dude!" ```
+would for example pass if `foo` was 
+```json
+{"movies": [{"title": "dude! where's my car?"}]}
+```
+#### $len
+Matches the length on JSON-array.
+Example:
+```"foo": "$len 3" ```
+would for example pass if `foo` was
+```json
+["a", "b", "c"]
+```
+#### $~
+Matches an approximate value.
+Example:
+```
+"foo": "$~ 100 threshold 0.1"
+```
+would match values between 90-110.
+#### $write_file
+Writes the value of a field to a file, which can then be passed to another test.
+This is useful for scenarios where you want to save a field (like a database id) that
+should be passed in to a subsequent test.
+Example:
+```
+"foo": "$write_file dude.txt"
+```
+Would write the value of `foo` to the file `dude.txt`
+
+#### $read_file
+Reads the value of a file and sets a field to it (most useful in the body of a POST)
+```json
+...
+"body": {
+  "foo": "$read_file dude.txt"
+}
+```
+Would read the contents of the file `dude.txt` and assign it to the field `foo`.
+#### $regexp
+Matches using a regular expression.
+Example:
+```"foo": "$regexp [a-z]+" ```
+Would require `foo` to contain at least one occurence of the a or b... to z.
+#### $expr
+Dynamically evaluates the string as a python statement, on the data received if the statement evaluates to True it passes.
+(Be careful with this one, don't use it on untrusted data etc :)
+Example:
+```
+"foo": "$expr (int(actual)%3)==0"
+``` 
+Would try to convert the data in the field `foo` to an integer and see if it was
+evenly dividable by 3. If so it would pass, otherwise fail.
+
+
