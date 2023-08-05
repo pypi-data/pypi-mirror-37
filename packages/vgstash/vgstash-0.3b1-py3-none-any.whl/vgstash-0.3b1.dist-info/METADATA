@@ -1,0 +1,138 @@
+Metadata-Version: 2.1
+Name: vgstash
+Version: 0.3b1
+Summary: a video game collection management module, backed by SQLite
+Home-page: https://git.zlg.space/vgstash
+Author: zlg
+Author-email: zlg+vgstash@zlg.space
+License: UNKNOWN
+Project-URL: Bug Reports via Web, https://code.foxkit.us/zlg/vgstash/issues
+Project-URL: Source, https://git.zlg.space/vgstash
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Games/Entertainment
+Classifier: Topic :: Utilities
+Description-Content-Type: text/markdown; variant=CommonMark
+Requires-Dist: Click (>=6.0)
+Requires-Dist: PyYAML
+
+# vgstash - a place to stash your game collection
+
+If you love video games, you've probably amassed a collection of them, across
+many different systems; physical, digital, and everything in-between. At some
+point, a player may want to know a few key pieces of information that may steer
+their gaming. These questions are great for quelling boredom and keeping a
+gaming backlog manageable:
+
+* Which games do I own?
+* Which games have I beaten or completed?
+* Which games do I need to beat?
+* What was the note I left for X game?
+
+vgstash seeks to answer these type of questions in a simple and extensible way.
+
+# Installation
+
+vgstash is available via `pip`:
+
+~~~
+pip install [--user] vgstash
+~~~
+
+Packages for vgstash on Gentoo Linux and Adélie Linux are on the TODO list.
+
+Please note that vgstash is under heavy development at present. Do not install
+unless you are interested in helping its development.
+
+# Concept
+
+The core concept of vgstash is the game itself. Every game in a player's
+collection has a few important attributes, all of which are obvious to the
+player:
+
+* Title
+* System
+* Ownership
+    * unowned
+    * physical
+    * digital
+    * both
+* Progress
+    * new
+    * playing
+    * beaten
+    * complete
+* Notes
+
+Think of any game that you have a history with. Let's say it was a game you
+bought as part of a Humble Bundle, but haven't started playing yet. Internally,
+vgstash tracks it somewhat like this:
+
+```
+.--------------------------------------------------------.
+| Title                  | System | Ownership | Progress |
+|------------------------+--------+-----------+----------|
+| FTL: Faster Than Light | Steam  | digital   | new      |
+'--------------------------------------------------------'
+```
+
+This is the bare minimum information you need to meaningfully track a video 
+game in your collection.
+
+vgstash comes with a command line client of the same name, which gives you
+high level commands to manipulate the database with. It's the reference
+implementation for a vgstash client.
+
+If you wanted to add the above game to your collection, you'd do it like this:
+
+```bash
+$ vgstash add 'FTL: Faster Than Light' Steam d n
+Added FTL: Faster Than Light for Steam. You digitally own it and you have not started it.
+```
+
+Pretty easy, huh? Each game and system added to vgstash is free-form and can
+be tuned to match the user's preferences. vgstash has a fairly small set of
+commands:
+
+* add
+* delete
+* update
+* list
+
+The power is in the `list` command. vgstash comes with a set of default filters 
+that allow you to reason about your game collection. For example, this command 
+will show you every game marked "playing" that you also own in some way:
+
+```bash
+$ vgstash list playlog
+# listed output here
+```
+
+Consult `vgstash -h` for further usage information.
+
+# Roadmap
+
+These are planned for the full 0.3 release:
+
+* command line interface finished
+* Match feature-set with `master`
+
+Goals planned for the 0.4 release:
+
+* import and export with JSON
+
+Goals planned for the 0.5 release:
+
+* some sort of GUI (Tk and Qt are current candidates)
+
+Goals planned for the 1.0 release:
+
+* Kivy-based interface (to release on Android via F-Droid)
+
+If this interests you, please [e-mail me](mailto:zlg+vgstash@zlg.space) or find
+me on the Fediverse: [@zlg@social.zlg.space](https://social.zlg.space/users/zlg)
+
+
