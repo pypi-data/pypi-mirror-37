@@ -1,0 +1,69 @@
+# Dataviewer
+
+This dataviewer will turn a folder of project files (images and csv files) into 
+an interactive dataviewer with live-reload functionality. A tree structure of the 
+data folder is renewed every 5 seconds, and each image and table is reloaded every
+5 seconds as well.
+
+This means you can launch the tool, run your processing scripts and watch your 
+images appear and change over time.
+
+## installation
+
+To install the dataviewer, run the following command:
+
+```
+pip install git+https://gitlab.com/kobededecker/dataviewer
+```
+
+## Folder setup
+
+Create a folder structure in which you will dump project files. This will mostly 
+match the way you are already working with project outputs.
+The folder structure should look like this:
+
+```
+Project
+| - scenario1
+| | - Location 1
+| | | - Img1.png
+| | | - Img2.jpg
+| | | - table1.csv
+| | | - table2.csv
+| | - Location 2
+| | | - Img1.png
+| | | - Img2.jpg
+| | | - table1.csv
+| | | - table2.csv
+| - scenario2
+| | ...
+```
+
+## Usage
+
+Open a terminal window and navigate to the project folder as described above, and 
+launch the dataviewer by running `viewer`.
+
+```
+cd c:\Users\xxx\Project
+viewer
+```
+
+The tool will by default run on following URL: [http://localhost:80/](http://localhost:80).
+
+Port and Host can be changed by adding options to the `viewer` command. e.g.:
+
+```
+viewer --host 127.0.0.1 --port 83
+```
+
+
+## Development
+
+Modifying the layout of the web application can be done in the Vue project.
+Fork the project, navigate into the `dataviewer` directory and run `yarn install`.
+
+For development, run `yarn serve`.
+For production builds, run `yarn build`.
+
+Install the python module by running `pip install . --upgrade`.
