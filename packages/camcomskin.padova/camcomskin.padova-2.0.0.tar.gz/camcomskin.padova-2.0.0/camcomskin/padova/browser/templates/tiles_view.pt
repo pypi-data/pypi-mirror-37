@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    xmlns:metal="http://xml.zope.org/namespaces/metal"
+    xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+    lang="en"
+    metal:use-macro="context/main_template/macros/master"
+    i18n:domain="plone">
+
+    <metal:styleslot fill-slot="style_slot">
+      <link rel="stylesheet" tal:attributes="href string:${portal_url}/++resource++redturtle.tiles.management/mockup.min.css?v=${view/pkg_version}">
+      <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/kenwheeler/slick@1.8.1/slick/slick.css"/>
+    </metal:styleslot>
+    <metal:javascriptslot fill-slot="javascript_head_slot">
+      <script type="text/javascript"
+              tal:attributes="src string:${portal_url}/++resource++redturtle.tiles.management/mockup.min.js?v=${view/pkg_version}"></script>
+      <script type="text/javascript"
+              tal:attributes="src string:${portal_url}/++resource++redturtle.tiles.management/integration.js?v=${view/pkg_version}"></script>
+    <script type="text/javascript"
+            tal:attributes="src string:${portal_url}/++resource++camcomskin.padova.javascripts/integration-require.js"></script>
+    </metal:javascriptslot>
+
+    <body>
+        <metal:content-core fill-slot="content-core">
+            <metal:block define-macro="content-core"
+                         tal:define="templateId template/getId;">
+
+                <div class="content-text" tal:define="testo context/getText"
+                                          tal:condition="testo"
+                                          tal:content="structure context/getText">
+                    Il testo della Pagina
+                </div>
+                <div metal:use-macro="context/tiles_view/macros/tiles-macro" />
+            </metal:block>
+        </metal:content-core>
+    </body>
+
+</html>

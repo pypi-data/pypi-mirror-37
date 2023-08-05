@@ -1,0 +1,43 @@
+<metal:macro define-macro="collection-tile-macro"
+             tal:define="helper_view nocall:context/@@collection_tile_helpers">
+  <div class="news-highlight"
+       tal:define="news python: results and results[0] or None;">
+
+    <div class="tileBody">
+      <p tal:condition="not:news"
+         class="noResults"
+         i18n:translate="tiles_collection_noresults">
+       No results found
+      </p>
+      <div class="tile-content"
+           tal:define="obj news/getObject;
+                       image_tag python:helper_view.get_image_tag(obj, 'newshighlight');
+                       title news/Title;
+                       description news/Description">
+        <div class="news-infos">
+          <div class="news-detail">
+            <div tal:define="title view/data/title|nothing;"
+                 class="tileTitle"
+                 tal:condition="title">
+                <h3 tal:content="title">title</h3>
+            </div>
+            <div class="news-date"
+                 tal:define="date python:helper_view.get_formatted_date(news)"
+                 tal:condition="python: view.data.get('show_dates', False) and date"
+                 i18n:domain="plonelocales">
+                 <span tal:content="date/day">day</span>
+                 <span tal:content="date/month" i18n:translate="">month</span>
+                 <span tal:content="date/year">year</span>
+            </div>
+          </div>
+          <div class="news-title"><a tal:attributes="href news/getURL; title title" href="#" tal:content="title"></a></div>
+          <div class="news-description" tal:condition="description"><span tal:content="description"></span></div>
+          <div class="news-cta">
+            <a href="#" tal:attributes="href news/getURL" title="Vai alla notizia" class="news-cta-btn"><span>Continua a leggere</span></a>
+          </div>
+        </div>
+        <figure class="item-image" tal:condition="image_tag" tal:content="structure image_tag" />
+      </div>
+    </div>
+  </div>
+</metal:macro>

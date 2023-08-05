@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<object name="portal_actions" meta_type="Plone Actions Tool"
+   xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+
+ <object name="document_actions" meta_type="CMF Action Category">
+  <object name="print" meta_type="CMF Action" i18n:domain="plone">
+   <property name="title" i18n:translate="">Print this</property>
+   <property name="url_expr">string:javascript:this.print();</property>
+   <property name="visible">True</property>
+  </object>
+  <object name="sendto" meta_type="CMF Action">
+   <property name="title">Invia</property>
+   <property name="url_expr">string:$object_url/sendto_form</property>
+   <property name="link_target"></property>
+   <property name="icon_expr"></property>
+   <property name="available_expr"></property>
+   <property name="permissions"/>
+   <property name="visible">True</property>
+  </object>
+ </object>
+
+ <object name="site_actions" meta_type="CMF Action Category">  
+  <object name="privacy" meta_type="CMF Action">
+   <property name="title">Privacy Policy</property>
+   <property
+      name="url_expr">string:${globals_view/navigationRootUrl}/camera-commercio/privacy-note-legali/privacy</property>
+   <property name="visible">True</property>
+  </object>
+  <object name="sitemap" meta_type="CMF Action" i18n:domain="plone">
+   <property name="title" i18n:translate="">Site Map</property>
+   <property
+      name="url_expr">string:${globals_view/navigationRootUrl}/sitemap</property>
+   <property name="visible">True</property>
+  </object>
+  <object name="accessibility" meta_type="CMF Action" i18n:domain="plone">
+   <property name="title" i18n:translate="">Accessibility</property>
+   <property
+      name="url_expr">string:${globals_view/navigationRootUrl}/accessibility-info</property>
+   <property name="visible">True</property>
+  </object>
+  <object name="note-legali" meta_type="CMF Action">
+   <property name="title">Note legali</property>
+   <property
+      name="url_expr">string:${globals_view/navigationRootUrl}/camera-commercio/privacy-note-legali/note-legali</property>
+   <property name="visible">True</property>
+  </object>
+  <object name="plone_setup" meta_type="CMF Action" i18n:domain="plone">
+   <property name="title" i18n:translate="">Site Setup</property>
+   <property name="visible">False</property>
+  </object>
+ </object>
+ 
+ <object name="object_buttons" meta_type="CMF Action Category">
+    <object name="enable-rating" meta_type="CMF Action" i18n:domain="camcomskin.padova">
+      <property name="title" i18n:translate="">Abilita rating</property>
+      <property name="description" i18n:translate="">Abilita il rating su questo contenuto</property>
+      <property name="url_expr">string:${object/absolute_url}/@@enable_rating</property>
+      <property name="icon_expr"/>
+      <property name="available_expr">
+        python: context.restrictedTraverse('@@check_rating_action_add')()
+      </property>
+      <property name="permissions">
+        <element value="Modify portal content"/>
+      </property>
+      <property name="visible">True</property>
+    </object>
+    <object name="disable-rating" meta_type="CMF Action" i18n:domain="rer.ratings">
+      <property name="title" i18n:translate="">Disabilita il rating</property>
+      <property name="description" i18n:translate="">Disabilita il rating su questo contenuto</property>
+      <property name="url_expr">string:${object/absolute_url}/@@disable_rating</property>
+      <property name="icon_expr"/>
+      <property name="available_expr">
+        python: context.restrictedTraverse('@@check_rating_action_remove')()
+      </property>
+      <property name="permissions">
+        <element value="Modify portal content"/>
+      </property>
+      <property name="visible">True</property>
+    </object>
+   </object>
+
+</object>

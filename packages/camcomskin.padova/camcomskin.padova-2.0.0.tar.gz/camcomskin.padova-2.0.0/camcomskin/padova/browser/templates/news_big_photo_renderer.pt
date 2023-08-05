@@ -1,0 +1,47 @@
+<metal:macro define-macro="collection-tile-macro"
+             tal:define="helper_view nocall:context/@@collection_tile_helpers"
+             i18n:domain="redturtle.agidtheme">
+  <div class="news-big-photo"
+       tal:define="news python: results and results[0] or None;
+                   obj news/getObject;
+                   bg_url python:helper_view.get_bg_url(obj, 'newsbig');"
+       tal:attributes="style bg_url">
+    <div class="tileBody">
+      <p tal:condition="not:news"
+         class="noResults"
+         i18n:translate="tiles_collection_noresults">
+       No results found
+      </p>
+      <div class="tile-content"
+           tal:define="title news/Title;
+                       description news/Description">
+        <!-- <figure class="item-image" tal:condition="image_tag" tal:content="structure image_tag" /> -->
+        <h2 class="news-title"><a tal:attributes="href news/getURL; title title" href="#" tal:content="title">Title</a></h2>
+        <p class="news-description" tal:condition="description" tal:content="description">Description</p>
+        <div class="news-date-more">
+          <div class="news-date">
+            <span
+               tal:define="date python:helper_view.get_formatted_date(news)"
+               tal:condition="python: view.data.get('show_dates', False) and date"
+               i18n:domain="plonelocales">
+              <span tal:content="date/day"></span>
+              <span i18n:translate="" tal:content="date/month"></span>
+              <span tal:content="date/year"></span>
+            </span>
+          </div>
+          <div class="showMore"
+            tal:define="show_more view/data/show_more;
+                        title view/data/title"
+            tal:condition="python: show_more and title">
+            <a tal:attributes="href collection/absolute_url"
+               tal:define="show_more_label view/data/show_more_label|nothing">
+              <span tal:condition="not:show_more_label"
+                    i18n:translate="keep_reading_label">Keep reading</span>
+              <span tal:condition="show_more_label" tal:content="show_more_label"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</metal:macro>

@@ -1,0 +1,81 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="plone">
+
+<body>
+
+    <div metal:fill-slot="main">
+    <metal:main-macro define-macro="main">
+
+
+<metal:listingmacro define-macro="listing">
+
+    <div class=""
+        tal:attributes="id view/data/div_id;
+                        class string:box boxCollezione boxCollezioneBase boxEventi ${class}"
+        tal:define="collection_url view/collection_url;
+                    class view/data/css_class|nothing;">
+
+        <h4 class="boxHeader">       
+
+            <a class="rss_feed" title="RSS feed"
+              tal:condition="view/data/check_rss"
+              tal:attributes="href view/rss_url">
+                   <i class="fa fa-rss"></i>
+             </a>
+             <span class="tile" tal:content="view/data/header" />          
+         </h4>
+
+        <tal:events tal:repeat="obj query_results">
+        <div class="boxItem"
+            tal:define="item_path obj/getPath;
+                        firstItem repeat/obj/start;"
+            tal:attributes="class python:firstItem and 'boxItem firstItem' or 'boxItem'">
+          
+          <p class="dataItem" tal:condition="view/data/show_dates">
+            <span class="dataMonth"
+                 tal:define="months python:('Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic');
+                             month  python: int(obj.start.strftime('%m'))-1"
+                 tal:content="python: months[month]" />
+            <span class="dataDay" tal:content="python:obj.start.strftime('%d')"/>            
+          </p>
+            <h5 class="titleItem">              
+                <a href="#"
+                         tal:attributes="href obj/getURL;">
+                        <span tal:replace="obj/Title">
+                          Title
+                        </span>
+                    </a>
+              </h5>
+        </div>
+        </tal:events>
+
+         <div class="boxItem"
+        tal:define="no_elements_text view/data/no_elements_text"
+      tal:condition="python:no_elements_text and len(query_results)==0">
+          <span class="discreet" i18n:translate="" tal:content="no_elements_text" />
+      </div>
+
+      <div class="boxFooter"
+          tal:define="show_more view/data/show_more"
+          tal:condition="show_more">
+          <a tal:condition="not:view/data/link_text" class="linkMore"
+           tal:attributes="href collection_url"><span i18n:translate="more_url">More&hellip;</span></a>
+          <a tal:condition="view/data/link_text" tal:attributes="href collection_url"  class="linkMore"><span tal:replace="view/data/link_text" /></a>
+      </div>
+
+    </div>
+
+
+</metal:listingmacro>
+
+
+    </metal:main-macro>
+    </div>
+
+</body>
+</html>

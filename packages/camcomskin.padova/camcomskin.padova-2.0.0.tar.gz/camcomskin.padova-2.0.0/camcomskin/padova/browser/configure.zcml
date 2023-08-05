@@ -1,0 +1,497 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="camcomskin.padova">
+
+  <interface
+      interface=".interfaces.IThemeSpecific"
+      type="zope.publisher.interfaces.browser.IBrowserSkinType"
+      name="camcomskin_padova"
+      />
+
+  <!-- include package="five.pt" / -->
+  <include package="z3c.jbot" file="meta.zcml" />
+  <include package="collective.editablemenu" />
+
+  <browser:jbot
+        directory="jbot"
+        layer=".interfaces.IThemeSpecific" />
+
+  <browser:page
+    name="themebaseview"
+    for="*"
+    class=".themebaseview.ThemeBaseView"
+    permission="zope.Public"
+    allowed_interface=".interfaces.IThemeBaseView"
+    />
+
+  <!-- RESOURCE DIRECTORIES -->
+  <!-- Resource directory for images -->
+  <browser:resourceDirectory
+      name="camcomskin.padova.images"
+      directory="images"
+      layer=".interfaces.IThemeSpecific"
+      />
+
+  <!-- Resource directory for stylesheets -->
+  <browser:resourceDirectory
+      name="camcomskin.padova.stylesheets"
+      directory="stylesheets"
+      layer=".interfaces.IThemeSpecific"
+      />
+  <!-- Resource directory for javascripts -->
+  <browser:resourceDirectory
+      name="camcomskin.padova.javascripts"
+      directory="javascripts"
+      layer=".interfaces.IThemeSpecific"
+      />
+
+  <!-- VIEWLETS -->
+  <!-- The personal bar -->
+  <browser:viewlet
+        name="plone.personal_bar"
+        manager="plone.app.layout.viewlets.interfaces.IPortalTop"
+        class=".viewlets.PersonalBarViewlet"
+        permission="zope2.View"
+        layer=".interfaces.IThemeSpecific" />
+    />
+
+  <!-- Document actions -->
+     <browser:viewlet
+        name="plone.abovecontenttitle.documentactions"
+        manager="plone.app.layout.viewlets.interfaces.IBelowContent"
+        class="plone.app.layout.viewlets.content.DocumentActionsViewlet"
+        permission="zope2.View"
+        layer=".interfaces.IThemeSpecific"
+        />
+
+  <!-- The related items -->
+    <browser:viewlet
+        name="plone.belowcontentbody.relateditems"
+        manager="plone.app.layout.viewlets.interfaces.IBelowContentBody"
+        class=".viewlets.ContentRelatedItems"
+        view="plone.app.layout.globals.interfaces.IViewView"
+        permission="zope2.View"
+        layer=".interfaces.IThemeSpecific"
+        />
+
+  <!-- The search box -->
+  <!-- browser:viewlet
+      name="camomskin.searchbox"
+      manager="plone.app.layout.viewlets.interfaces.IPortalHeader"
+      template="templates/search_viewlet.pt"
+      permission="zope2.View"
+      layer=".interfaces.IThemeSpecific"
+      / -->
+
+
+  <!-- Editable menu viewlet -->
+  <configure package="collective.editablemenu">
+    <browser:viewlet
+        name="plone.global_sections"
+        manager="plone.app.layout.viewlets.interfaces.IPortalTop"
+        class="collective.editablemenu.browser.viewlets.CustomGlobalSectionsViewlet"
+        template="browser/templates/custom_sections.pt"
+        layer="camcomskin.padova.browser.interfaces.IThemeSpecific"
+        permission="zope2.View"
+        />
+  </configure>
+
+    <!-- The breadcrumbs -->
+    <browser:viewlet
+        name="plone.path_bar"
+        manager="plone.app.layout.viewlets.interfaces.IPortalTop"
+        class="plone.app.layout.viewlets.common.PathBarViewlet"
+        permission="zope2.View"
+        layer=".interfaces.IThemeSpecific"
+        />
+    <!-- Render the document byline -->
+    <browser:viewlet
+       name="plone.belowcontenttitle.documentbyline"
+       manager="plone.app.layout.viewlets.interfaces.IBelowContent"
+       class=".viewlets.DocumentBylineViewlet"
+       permission="zope2.View"
+       layer=".interfaces.IThemeSpecific"
+   />
+   <!-- Contentleadimage thumbnail -->
+   <configure package="collective.contentleadimage">
+      <browser:viewlet
+          name="collective.contentleadimage.thumbnail"
+          for="collective.contentleadimage.interfaces.ILeadImageable"
+          class="camcomskin.padova.browser.viewlets.LeadImageViewlet"
+          manager="plone.app.layout.viewlets.interfaces.IBelowContentTitle"
+          template="browser/leadimage.pt"
+          layer="camcomskin.padova.browser.interfaces.IThemeSpecific"
+          permission="zope2.View"
+      />
+    </configure>
+
+    <browser:viewlet
+       name="camcomskin.padova.social"
+       manager="plone.app.layout.viewlets.interfaces.IAboveContent"
+       layer="camcomskin.padova.browser.interfaces.IThemeSpecific"
+       class="camcomskin.padova.browser.viewlets.SocialViewlet"
+       template="templates/social_viewlet.pt"
+       permission="zope2.View"
+       />
+
+
+  <!-- VIEWS -->
+
+  <!-- Tabular view for offices -->
+  <browser:page
+      name="uffici_list_view"
+      for="plone.app.collection.interfaces.ICollection"
+      class=".uffici_list_view.UfficiListView"
+      permission="zope2.View"
+      template="templates/uffici_list_view.pt"
+      />
+  <browser:menuItems
+    for="plone.app.collection.interfaces.ICollection"
+    menu="plone_displayviews">
+    <browser:menuItem
+      title="Elenco Uffici"
+      action="uffici_list_view"
+    />
+  </browser:menuItems>
+
+  <!-- Portletpage homepage view -->
+  <browser:page
+      for="collective.portletpage.interfaces.IPortletPage"
+      name="pp_homepage_view"
+      class=".pp_homepage_view.PPHomepageView"
+      permission="zope2.View"
+      layer=".interfaces.IThemeSpecific"
+      />
+  <browser:menuItem
+      for="collective.portletpage.interfaces.IPortletPage"
+      menu="plone_displayviews"
+      title="Vista Homepage"
+      action="@@pp_homepage_view"
+      description="A view for the homepage"
+      layer=".interfaces.IThemeSpecific"
+      />
+
+  <!-- prenotazioni -->
+  <configure zcml:condition="installed rg.prenotazioni" package="rg.prenotazioni">
+    <browser:page
+      for="rg.prenotazioni.interfaces.IPrenotazioniFolder"
+      name="prenotazione_print"
+      class="camcomskin.padova.browser.prenotazioni_view.CCPDPrenotazionePrint"
+      template="browser/prenotazione_print.pt"
+      layer="camcomskin.padova.browser.interfaces.IThemeSpecific"
+      permission="zope2.View"
+    />
+  </configure>
+  <configure zcml:condition="installed rg.prenotazioni">
+    <browser:rml2pdf
+      for="rg.prenotazioni.interfaces.IPrenotazioniFolder"
+      name="prenotazione_print_pdf"
+      template="templates/prenotazione_print_pdf.pt"
+      layer=".interfaces.IThemeSpecific"
+      class=".prenotazioni_view.CCPDPrenotazionePrintPDF"
+      encoding="utf-8"
+      permission="zope2.View"
+    />
+  </configure>
+
+
+  <!-- tiles management -->
+  <!-- custom contenttree-fetch view, to show also contents set as default view -->
+  <browser:page
+    name="contenttree-fetch"
+    for="plone.formwidget.contenttree.interfaces.IContentTreeWidget"
+    permission="zope.Public"
+    layer=".interfaces.IThemeSpecific"
+    class=".contenttree_widget.Fetch"
+    />
+
+  <!-- Customized add view and form - invoked from the @@add-tile traversal view -->
+  <adapter
+      for="Products.ATContentTypes.interfaces.document.IATDocument
+           zope.publisher.interfaces.browser.IDefaultBrowserLayer
+           plone.tiles.interfaces.ITileType"
+      provides="plone.app.tiles.interfaces.ITileAddView"
+      factory="redturtle.tiles.management.browser.tiles_forms.TilesAddView"
+      />
+  <adapter
+      for="Products.ATContentTypes.interfaces.document.IATDocument
+           zope.publisher.interfaces.browser.IDefaultBrowserLayer
+           plone.tiles.interfaces.ITileType"
+      provides="plone.app.tiles.interfaces.ITileEditView"
+      factory="redturtle.tiles.management.browser.tiles_forms.TilesEditView"
+      />
+  <adapter
+      for="Products.ATContentTypes.interfaces.document.IATDocument
+           zope.publisher.interfaces.browser.IDefaultBrowserLayer
+           plone.tiles.interfaces.ITileType"
+      provides="plone.app.tiles.interfaces.ITileDeleteView"
+      factory="redturtle.tiles.management.browser.tiles_forms.TilesDeleteView"
+      />
+  <!-- Vista con le tile per le Pagine -->
+  <browser:page
+      name="document_tiles_view"
+      class=".tiles_manager_view.CCPDTilesView"
+      permission="zope2.View"
+      for="Products.ATContentTypes.interfaces.document.IATDocument"
+      template="templates/tiles_view.pt"
+      layer=".interfaces.IThemeSpecific"
+  />
+
+  <browser:page
+      name="tiles_fullscreen_view"
+      class=".tiles_manager_view.CCPDTilesView"
+      permission="zope2.View"
+      for="Products.ATContentTypes.interfaces.document.IATDocument"
+      template="templates/tiles_fullscreen_view.pt"
+      layer=".interfaces.IThemeSpecific"
+  />
+
+  <browser:page
+    name="homepage_view"
+    class=".tiles_manager_view.CCPDTilesView"
+    permission="zope2.View"
+    for="Products.ATContentTypes.interfaces.document.IATDocument"
+    template="templates/homepage_view.pt"
+    layer=".interfaces.IThemeSpecific"
+    />
+  <browser:menuItems
+    for="Products.ATContentTypes.interfaces.document.IATDocument"
+    menu="plone_displayviews">
+    <browser:menuItem
+      title="Vista tiles"
+      action="document_tiles_view"
+    />
+    <browser:menuItem
+      title="Vista tiles espansa"
+      action="tiles_fullscreen_view"
+    />
+    <browser:menuItem
+      title="Vista homepage"
+      action="homepage_view"
+      />
+  </browser:menuItems>
+
+  <!-- custom tile collection renderers -->
+  <browser:page
+      name="news_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.NewsView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/news_renderer.pt"
+      />
+
+  <browser:page
+      name="video_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.VideoView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/video_renderer.pt"
+      />
+
+  <browser:page
+      name="events_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.EventsView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/events_renderer.pt"
+      />
+
+  <browser:page
+      name="photogallery_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.GalleryView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/photogallery_renderer.pt"
+      />
+
+  <browser:page
+      name="aree_tematiche_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.AreeTematicheView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/aree_tematiche.pt"
+      />
+
+  <browser:page
+      name="landing_aree_tematiche_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.LandingAreeTematicheView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/landing_aree_tematiche.pt"
+      />
+
+  <browser:page
+      name="online_services_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.OnlineServicesView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/online_services.pt"
+      />
+
+  <browser:page
+      name="collection_tile_helpers"
+      class=".tile_collection_renderers.HelpersView"
+      permission="zope2.View"
+      for="*"
+      layer=".interfaces.IThemeSpecific"
+      />
+
+  <browser:page
+      name="sights_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.SightsView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/sights_renderer.pt"
+      />
+
+  <browser:page
+      name="news_highlight_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.NewsHighlightView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/news_highlight_renderer.pt"
+      />
+
+  <browser:page
+      name="news_two_rows_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.NewsTwoRowsView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/news_two_rows_renderer.pt"
+      />
+
+  <browser:page
+      name="news_big_photo_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.NewsBigPhotoView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/news_big_photo_renderer.pt"
+      />
+
+  <browser:page
+      name="news_area_tematica_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.NewsAreaTematicaView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/news_area_tematica.pt"
+      />
+
+  <browser:page
+      name="servizi_area_tematica_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.ServiziAreaTematicaView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/servizi_area_tematica.pt"
+      />
+
+  <browser:page
+      name="paired_collection_renderer"
+      permission="zope2.View"
+      for="*"
+      class=".tile_collection_renderers.PairedCollectionView"
+      layer=".interfaces.IThemeSpecific"
+      template="templates/paired_collection_renderer.pt"
+      />
+
+  <!-- end of custom tile collection renderers -->
+
+  <browser:page
+    for="*"
+    name="social_providers_view"
+    class=".login_helper.View"
+    attribute="get_providers"
+    permission="zope2.View"
+    layer=".interfaces.IThemeSpecific"
+    />
+
+  <!-- RATING -->
+  <!-- viewlet for rating in object's view -->
+  <browser:viewlet
+    name="rating_viewlet"
+    for="camcomskin.padova.interfaces.IRatingEnabled"
+    manager="plone.app.layout.viewlets.interfaces.IBelowContentBody"
+    class=".rating_viewlet.RatingManagerViewlet"
+    layer=".interfaces.IThemeSpecific"
+    permission="zope2.View"
+    template="templates/rating_viewlet.pt"
+    />
+
+  <!-- helper view for rating -->
+    <browser:page
+    for="*"
+    name="enable_rating"
+    class=".manage_rating.ToggleEnableRating"
+    attribute="add_interface"
+    permission="cmf.ModifyPortalContent"
+    layer=".interfaces.IThemeSpecific"
+    />
+
+    <browser:page
+    for="*"
+    name="disable_rating"
+    class=".manage_rating.ToggleEnableRating"
+    attribute="remove_interface"
+    permission="cmf.ModifyPortalContent"
+    layer=".interfaces.IThemeSpecific"
+    />
+
+    <browser:page
+    for="*"
+    name="check_rating_action_add"
+    attribute="check_rating_action_add"
+    class=".manage_rating.CheckRatingAction"
+    permission="cmf.ModifyPortalContent"
+    layer=".interfaces.IThemeSpecific"
+    />
+    <browser:page
+    for="*"
+    name="check_rating_action_remove"
+    attribute="check_rating_action_remove"
+    class=".manage_rating.CheckRatingAction"
+    permission="cmf.ModifyPortalContent"
+    layer=".interfaces.IThemeSpecific"
+    />
+  <browser:pages
+    for="camcomskin.padova.interfaces.IRatingEnabled"
+    permission="zope2.View"
+    class=".manage_rating.ManageRating">
+       <browser:page name="update_rating" attribute="update_rating" />
+       <browser:page name="delete_rating" attribute="delete_rating" />
+       <browser:page name="get_rating" attribute="get_rating" />
+       <browser:page name="get_avg_rating" attribute="get_avg_rating" />
+       <browser:page name="get_star_size" attribute="get_star_size" />
+  </browser:pages>
+
+  <browser:page
+    for=" plone.app.collection.interfaces.ICollection"
+    name="rating_topic_view"
+    permission="zope2.View"
+    class=".rating_topic_view.View"
+    template="templates/rating_topic_view.pt"
+    layer=".interfaces.IThemeSpecific"
+    />
+
+  <browser:menuItems
+      for="plone.app.collection.interfaces.ICollection"
+      menu="plone_displayviews">
+    <browser:menuItem
+        title="Rating view"
+        action="rating_topic_view"
+        />
+  </browser:menuItems>
+</configure>

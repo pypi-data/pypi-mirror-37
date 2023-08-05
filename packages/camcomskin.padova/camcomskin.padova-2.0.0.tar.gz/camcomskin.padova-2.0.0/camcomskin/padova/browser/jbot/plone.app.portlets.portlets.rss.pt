@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      tal:omit-tag="">
+<div class="box boxCollezione boxCollezioneBase boxRss"
+    i18n:domain="plone"
+    tal:condition="view/enabled">
+
+    <h4 class="boxHeader">
+        <span class="portletTopLeft"></span>
+        <a href=""
+           tal:attributes="href view/siteurl"
+           tal:omit-tag="not:view/siteurl"
+           tal:content="view/title"
+           class="tile">
+            Tags
+        </a>
+        <span class="portletTopRight"></span>
+    </h4>
+    <tal:rss tal:condition="view/feedAvailable"
+                tal:define="toLocalizedTime nocall:context/@@plone/toLocalizedTime"
+                tal:repeat="item view/items">
+
+        <div class="boxItem"
+            tal:define="firstItem repeat/item/start;"
+            tal:attributes="class python:firstItem and 'boxItem firstItem' or 'boxItem'">
+            <h5 class="titleItem">
+              <tal:data condition="exists:item/updated">
+                <span class="dataItem"
+                   tal:content="python:toLocalizedTime(item['updated'])">12/12/2013
+                </span>
+               </tal:data>
+                <a href="#"
+                         tal:attributes="href string:${item/url};">
+                        <span tal:replace="item/title">
+                          Title
+                        </span>
+                    </a>
+              </h5>
+        </div>
+    </tal:rss>
+    <div class="boxFooter" tal:condition="view/feedAvailable">
+        <a href=""
+           tal:condition="view/siteurl"
+           tal:attributes="href view/siteurl">
+           <span class="hiddenStructure"><span tal:replace="view/title" /> - </span>
+           <span i18n:translate="box_morelink">More&hellip;</span>
+        </a>
+    </div>
+</div>
+</html>

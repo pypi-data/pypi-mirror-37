@@ -1,0 +1,331 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="plone">
+
+<head>
+  <metal:block fill-slot="top_slot"
+               tal:define="dummy python:request.set('disable_border',1)" />
+
+  <metal:js fill-slot="javascript_head_slot">
+  <script type="text/javascript">
+  <!--
+
+  function importoControl(element) {
+	if ($(element).val()=='Altro...') {
+		$('#importoField').removeClass('payHiddenStructure');
+	}
+	else {
+		$('#importoField').addClass('payHiddenStructure').removeClass('error');
+	}
+  };
+
+  document.write('<style type="text/css">.payHiddenStructure {' +
+                 'background: none repeat scroll 0 0 transparent;' +
+				 'border: medium none;' +
+				 'display: block;' +
+				 'height: 1px;' +
+				 'margin: -1px 0 0 -1px;' +
+				 'overflow: hidden;' +
+				 'padding: 0;' +
+				 'width: 1px;' +
+                 '}<\/style>');
+
+  //-->
+  </script>
+  </metal:js>
+</head>
+
+<body>
+
+    <div metal:fill-slot="main"
+         tal:define="template_id template/getId;">
+
+      <h1 class="documentFirstHeading">Pagamento online con Carta di Credito</h1>
+
+      <p>
+          Il pagamento &egrave; effettuabile direttamente tramite la vostra Carta di Credito (Visa o MasterCard).
+          Si consiglia di attivare questa procedura solamente dopo aver preso contatto con l'Ufficio che provveder&agrave; a fornire il
+          servizio, al fine di concordare preventivamente e nella maniera corretta l'importo da versare.
+      </p>
+      <p>
+          I dati richiesti vanno compilati ricordando che alcuni campi (contrassegnati da un apposito simbolo) sono obbligatori.
+      </p>
+
+      <tal:defines tal:define="errors options/state/getErrors;">
+
+      <form action=""
+            method="post"
+			class="enableUnloadProtection enableAutoFocus"
+			tal:define="camcom_pagamentionline_tool nocall:context/camcom_pagamentionline_tool"
+            tal:attributes="action template_id">
+      <div>
+
+        <input type="hidden" name="form.submitted" value="1" />
+
+        <fieldset>
+
+            <legend>Dati del richiedente</legend>
+                <div class="formHelp">
+                Questi dati sono richiesti ai soli fini di contattare la persona che ha richiesto il servizio in caso di chiarimenti.
+                </div>
+
+
+            <div class="field"
+                 tal:define="error errors/name|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="name">Nome</label>
+
+                <div class="formHelp">
+                Inserire il nome della persona che richiede il servizio.
+                </div>
+
+                <input type="text" id="name" name="name" size="40"
+                       tal:attributes="value request/name|nothing"/>
+
+            </div>
+
+            <div class="field"
+                 tal:define="error errors/lastname|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="lastname">Cognome</label>
+
+                <div class="formHelp">
+                Inserire il cognome della persona che richiede il servizio.
+                </div>
+
+                <input type="text" id="lastname" name="lastname" size="40"
+                       tal:attributes="value request/lastname|nothing"/>
+
+            </div>
+
+            <div class="field"
+                 tal:define="error errors/tel|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="tel">Tel./Cell.</label>
+
+                <div class="formHelp">
+                Inserire un recapito telefonico.
+                </div>
+
+                <input type="text" id="tel" name="tel" size="30"
+                       tal:attributes="value request/tel|nothing"/>
+
+            </div>
+
+        </fieldset>
+
+
+
+        <fieldset>
+
+            <legend>Dati dell'intestatario della ricevuta o fattura</legend>
+                <div class="formHelp">
+                Questi dati verranno utilizzati per emettere regolare Ricevuta o Fattura a fronte del servizio acquistato.
+                </div>
+
+            <div class="field"
+                 tal:define="error errors/denom|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="denom">Denominazione</label>
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                Inserire il Nome e il Cognome della Persona fisica o la Denominazione dell'Impresa alla quale si intende intestare la Ricevuta o la Fattura.
+                </div>
+
+                <input type="text" id="denom" name="denom" size="60"
+                       tal:attributes="value request/denom|nothing"/>
+
+            </div>
+
+            <div class="field"
+                 tal:define="error errors/address|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="address">Indirizzo</label>
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                Inserire l'indirizzo completo di Via, numero civico, CAP, Citt&agrave;, e Provincia.
+                </div>
+
+                <input type="text" id="address" name="address" size="60"
+                       tal:attributes="value request/address|nothing"/>
+
+            </div>
+
+
+            <div class="field"
+                 tal:define="error errors/piva|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="piva">Cod.Fiscale / P.IVA</label>
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                Inserire il codice fiscale e/o la Partita IVA dell'intestatario della ricevuta.
+                </div>
+
+                <input type="text" id="piva" name="piva" size="20"
+                       tal:attributes="value request/piva|nothing"/>
+
+            </div>
+
+        </fieldset>
+
+
+        <fieldset>
+
+            <legend>Dati del pagamento</legend>
+
+              <div class="formHelp">
+                 Questi dati verranno utilizzati per attivare il Servizio di pagamenti on-line.
+                 L'indirizzo e-mail specificato in questa sezione, verr&agrave; utilizzato per fornire la notifica dell'avvenuto pagamento.
+              </div>
+
+            <div class="field"
+                 tal:define="error errors/email|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="email">E-mail</label>
+
+                <div class="formHelp">
+                A questo indirizzo arriveranno le comunicazioni di avvenuto pagamento via carta di credito: verificarne la correttezza.
+                </div>
+
+                <input type="text" id="email" name="email" size="30"
+                       tal:attributes="value request/email|nothing"/>
+
+            </div>
+
+
+            <div class="field"
+                 tal:define="error errors/servizio|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="servizio">Servizio acquistato</label>
+
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                   Selezionare un servizio seguito dalla descrizione dettagliata della causale di pagamento nel successivo
+                   campo &quot;Descrizione&quot;
+                </div>
+                <select name="servizio"
+                        id="servizio"
+                        tal:define="opts python:camcom_pagamentionline_tool.getPayTypes()"
+						tal:attributes="onclick python: camcom_pagamentionline_tool.getProperty('fixed_imports') and 'importoControl(this)' or ''">
+                     <option value="">-- Seleziona un servizio --</option>
+                     <option tal:repeat="opt opts" tal:attributes="value opt/value;
+                                                                   selected python:test(request.get('servizio',None)==opt['value'],True,False);">
+                         <span tal:replace="opt/title"/>
+                     </option>
+
+                </select>
+
+            </div>
+
+            <div class="field"
+                 tal:define="error errors/descrizione_servizio|nothing"
+                 tal:attributes="class python:test(error, 'field error', 'field')">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="descrizione_servizio">Descrizione del servizio</label>
+
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                La descrizione del servizio &egrave; obbligatoria, per fornire gli estremi delle istanze o dei soggetti di riferimento
+                </div>
+
+                <textarea rows="5" cols="20" id="descrizione_servizio" name="descrizione_servizio"><span tal:replace="request/descrizione_servizio|nothing"/></textarea>
+
+            </div>
+
+
+            <div class="field"
+			     id="importoField"
+                 tal:define="error_a errors/importo|nothing;
+                             error_b errors/importo_dec|nothing;
+                             error python:error_a or error_b;"
+                 tal:attributes="class python:test(error, 'field error', 'field') + ' ' + (camcom_pagamentionline_tool.getProperty('fixed_imports') and not error and request.get('servizio')!='Altro...' and 'payHiddenStructure' or '' ) ;">
+
+              <div tal:condition="error"
+                   tal:content="error">Validation error output</div>
+
+                <label for="importo">Importo</label>
+
+                <span class="fieldRequired" title="Required"
+                      i18n:attributes="title title_required;"
+                      i18n:translate="label_required">(Required)</span>
+
+                <div class="formHelp">
+                Inserire le cifre decimali dopo la virgola (anche in caso di ,00)
+                </div>
+
+               &euro; <input type="text" id="importo" name="importo" size="5" maxlength="5" style="text-align:right"
+                       tal:attributes="value request/importo|nothing"
+                />,<input type="text" id="importo_dec" name="importo_dec" size="2" maxlength="2"
+                       tal:attributes="value request/importo_dec|nothing"/>
+
+            </div>
+
+
+        </fieldset>
+
+        <input class="context" type="submit" name="Invia" value="Invia"/>
+        <input class="context" type="reset" name="reset" value="Annulla modifiche"/>
+        <input class="context" type="submit" name="form.button.Esci" value="Esci"/>
+
+      </div>
+      </form>
+      </tal:defines>
+
+
+    </div>
+
+</body>
+</html>

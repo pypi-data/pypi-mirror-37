@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="rer.bandi">
+
+<body>
+  <metal:content-core fill-slot="content-core">
+    <metal:content-core define-macro="content-core">
+        <div class="rer-contextual-text">
+          <tal:text define="bando_text here/getText">
+            <p tal:condition="not:bando_text"
+                i18n:translate="no_body_text"
+                i18n:domain="plone"
+                class="discreet">
+                This item does not have any body text, click the edit tab to change it.
+            </p>
+            <div tal:condition="bando_text"
+                 tal:replace="structure bando_text">
+                Body text
+            </div>
+          </tal:text>
+          <div tal:content="structure context/getRiferimenti_bando"  class="rifBando">
+              Riferimenti bando
+          </div>
+        </div>
+    </metal:content-core>
+  </metal:content-core>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<metal:macro define-macro="collection-tile-macro">
+  <div class="tileBody PagesTileCollection">
+    <p tal:condition="not:results"
+       class="noResults"
+       i18n:translate="tiles_collection_noresults">
+     No results found
+    </p>
+    <div class="tileContent" tal:condition="results">
+      <tal:results tal:repeat="obj results">
+        <div tal:define="oddrow repeat/obj/odd;
+                         item   obj/getObject;
+                         text   item/getText"
+             tal:attributes="class python:oddrow and 'collectionItem even' or 'collectionItem odd'">
+          <div class="TextWrapper">
+            <div tal:replace="structure text">The body</div>
+          </div>
+        </div>
+      </tal:results>
+    </div>
+  </div>
+</metal:macro>
