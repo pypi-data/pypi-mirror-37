@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>Mambas</title>
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+<!-- Fonts and icons -->
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+<!-- Core Files -->
+<link href="/css/material-dashboard.css?v=2.1.0" rel="stylesheet" />
+<script src="/js/core/jquery.min.js" type="text/javascript"></script>
+<script src="/js/core/popper.min.js" type="text/javascript"></script>
+<script src="/js/core/bootstrap-material-design.min.js" type="text/javascript"></script>
+<script src="/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+<!-- Notifications Plugin -->
+<script src="/js/plugins/bootstrap-notify.js"></script>
+<!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+<script src="/js/material-dashboard.min.js?v=2.1.0" type="text/javascript"></script>
+<!-- Morris Chart Plugin -->
+<link href="/css/plugins/morris.css" rel="stylesheet" />
+<script src="/js/plugins/raphael-min.js"></script>
+<script src="/js/plugins/morris.min.js"></script>
+<!-- Sweet Alert Plugin -->
+<script src="/js/plugins/sweetalert2.all.min.js"></script>
+<!-- HideShow Plugin -->
+<script src="/js/plugins/hideshow.min.js"></script>
+<!-- Custom Files -->
+<link href="/css/custom.css" rel="stylesheet" />
+<script src="/js/custom.js"></script>
+</head>
+
+<body class="">
+<div class="wrapper ">
+    <div class="sidebar" data-color="azure" data-background-color="white">
+        <div class="logo text-center">
+            <a href="/" class="logo-normal">
+                <img src="/img/logo.png" />
+            </a>
+        </div>
+        <div class="sidebar-wrapper">
+            <nav class="navbar navbar-sidebar navbar-expand-lg navbar-transparent">
+                <div class="container-fluid">
+                    <div class="navbar-wrapper">Projects</div>
+                    <div class="justify-content-end">
+                        <ul class="navbar-nav">
+                            <button type="button" rel="tooltip" class="btn btn-white btn-round btn-just-icon" title="Create a new Project" onclick="mambas.createProject()">
+                                <i class="material-icons">add</i>
+                            </button>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <ul class="nav">
+                % for project in navigation_projects:
+                % id, name = project['id'], project['name']
+                <li class="nav-item ">
+                    <a class="nav-link collapsed" data-toggle="collapse" href="#project-{{ id }}" aria-expanded="false">
+                        <p> {{ name }} 
+                            <b class="caret"></b>
+                        </p>
+                    </a>
+                    <div class="collapse" id="project-{{ id }}">
+                        <ul class="nav">
+                            <li class="nav-item ">
+                                <a class="nav-link" href="/projects/{{ id }}/dashboard">
+                                    <i class="material-icons">dashboard</i>
+                                    <span class="sidebar-normal"> Dashboard </span>
+                                </a>
+                            </li>
+                            <li class="nav-item ">
+                                <a class="nav-link" href="/projects/{{ id }}/sessions">
+                                    <i class="material-icons">view_list</i>
+                                    <span class="sidebar-normal"> Sessions </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                % end
+            </ul>
+        </div>
+    </div>
+    <div class="main-panel">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+            <div class="container-fluid">
+                <div class="navbar-wrapper">
+                    % for i in range(0, len(breadcrumbs)):
+                    % breadcrumb = breadcrumbs[i]
+                    % url, label = breadcrumb['url'], breadcrumb['label']
+                    <a href="{{ url }}" class="navbar-brand">{{ label }}</a>
+                    % if i < len(breadcrumbs) - 1:
+                    <div> &gt; </div>
+                    % end
+                    % end
+                </div>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="navbar-toggler-icon icon-bar"></span>
+                    <span class="navbar-toggler-icon icon-bar"></span>
+                    <span class="navbar-toggler-icon icon-bar"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-end">
+                    <ul class="navbar-nav">
+                    % for icon in icons:
+                        % if icon['type'] == 'create_project':
+                        <button type="button" rel="tooltip" class="btn btn-white btn-round btn-just-icon" title="Create a new Project" onclick="mambas.createProject()">
+                            <i class="material-icons">add</i>
+                            <div class="ripple-container"></div>
+                        </button>
+                        % elif icon['type'] == 'display_token':
+                        % token = icon['token']
+                        <button type="button" rel="tooltip" class="btn btn-white btn-round btn-just-icon" title="Display Token" onclick="mambas.displayToken('{{ token }}')">
+                            <i class="material-icons">confirmation_number</i>
+                            <div class="ripple-container"></div>
+                        </button>
+                        % elif icon['type'] == 'delete_project':
+                        % project_name, id_project = icon['project_name'], icon['id_project']
+                        <button type="button" rel="tooltip" class="btn btn-white btn-round btn-just-icon" title="Delete Project {{ project_name }}" onclick="mambas.deleteProject('{{ project_name }}', '{{ id_project }}')">
+                            <i class="material-icons">delete</i>
+                            <div class="ripple-container"></div>
+                        </button>
+                        % elif icon['type'] == 'delete_session':
+                        % session_name, id_project, id_session = icon['session_name'], icon['id_project'], icon['id_session']
+                        <button type="button" rel="tooltip" class="btn btn-white btn-round btn-just-icon" title="Delete Session {{ session_name }}" onclick="mambas.deleteSession('{{ session_name }}', '{{ id_project }}', '{{ id_session }}')">
+                            <i class="material-icons">delete</i>
+                            <div class="ripple-container"></div>
+                        </button>
+                        % end
+                    % end
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- End Navbar -->

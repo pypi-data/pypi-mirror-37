@@ -1,0 +1,206 @@
+% include(header_path)
+
+<div class="content">
+    <div class="container-fluid">
+        <!-- Dashboard tiles -->
+        <div class="row">
+            <div class="col-md-4 col-sm-12">
+            <div class="card card-stats">
+                % if is_active:
+                <div class="card-header card-header-info card-header-icon">
+                <div class="card-icon">
+                    <i class="fa fa-spinner spin"></i>
+                </div>
+                % else:
+                <div class="card-header card-header-success card-header-icon">
+                <div class="card-icon">
+                    <i class="material-icons">check</i>
+                </div>
+                % end
+                <p class="card-category">Status</p>
+                % if is_active:
+                <h3 class="card-title">Running</h3>
+                % else:
+                <h3 class="card-title">Finished</h3>
+                % end
+                </div>
+                <br>
+            </div>
+            </div>
+            <div class="col-md-4 col-sm-12">
+            <div class="card card-stats">
+                <div class="card-header card-header-info card-header-icon">
+                <div class="card-icon">
+                    <i class="material-icons">equalizer</i>
+                </div>
+                <p class="card-category">Epochs</p>
+                <h3 class="card-title">{{ number_epochs }}</h3>
+                </div>
+                <br>
+            </div>
+            </div>
+            <div class="col-md-4 col-sm-12">
+            <div class="card card-stats">
+                <div class="card-header card-header-info card-header-icon">
+                <div class="card-icon">
+                    <i class="material-icons">timer</i>
+                </div>
+                <p class="card-category">Duration</p>
+                % if 'duration' in locals():
+                <h3 class="card-title">{{ duration }}</h3>
+                % else:
+                <h3 class="card-title">-</h3>
+                % end
+                </div>
+                <br>
+            </div>
+            </div>
+        </div>
+        <!-- End dashboard tiles -->
+
+        <!-- Loss graph -->
+        % if 'loss' in graphs.keys():
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-icon card-header-info">
+                        <div class="card-icon">
+                            <i class="material-icons">timeline</i>
+                        </div>
+                        <nav class="navbar navbar-expand-lg navbar-transparent">
+                        <div class="container-fluid">
+                            <div class="navbar-wrapper">
+                                <h4>Loss</h4>
+                            </div>
+                            <div class="justify-content-end">
+                                <ul class="navbar-nav">
+                                    <button type="button" class="btn btn-link btn-just-icon btn-toggle">
+                                        <input type="checkbox" id="chart-toggle-loss" class="chart-toggle">
+                                        <span class="icons">
+                                            <i rel="tooltip" class="material-icons" title="Show time on x-axis">access_time</i>
+                                            <i rel="tooltip" class="material-icons" title="Show epochs on x-axis">equalizer</i>
+                                        </span>
+                                    </button>
+                                    <!--<span class="dropdown">
+                                        <button type="button" rel="tooltip" class="btn btn-link btn-just-icon" title="Download data" data-toggle="dropdown">
+                                            <i class="material-icons">save_alt</i>
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="multiDropdownMenu" x-placement="bottom-start">
+                                            <a class="dropdown-item" href="#">Action</a>
+                                            <a class="dropdown-item" href="#">Another action</a>
+                                        </div>
+                                    </span>-->
+                                </ul>
+                            </div>
+                        </div>
+                        </nav>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-loss" class="chart" data-key="loss" data-data="{{ !graphs['loss'] }}" data-toggle-id="chart-toggle-loss"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        % end
+        <!-- End loss graph -->
+
+        <!-- Accuracy graph -->
+        % if 'acc' in graphs.keys():
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-icon card-header-info">
+                        <div class="card-icon">
+                            <i class="material-icons">timeline</i>
+                        </div>
+                        <nav class="navbar navbar-expand-lg navbar-transparent">
+                            <div class="container-fluid">
+                                <div class="navbar-wrapper">
+                                    <h4>Accuracy</h4>
+                                </div>
+                                <div class="justify-content-end">
+                                    <ul class="navbar-nav">
+                                        <button type="button" class="btn btn-link btn-just-icon btn-toggle">
+                                            <input type="checkbox" id="chart-toggle-acc" class="chart-toggle">
+                                            <span class="icons">
+                                                <i rel="tooltip" class="material-icons" title="Show time on x-axis">access_time</i>
+                                                <i rel="tooltip" class="material-icons" title="Show epochs on x-axis">equalizer</i>
+                                            </span>
+                                        </button>
+                                        <!--<button type="button" rel="tooltip" class="btn btn-link btn-just-icon" title="Download data">
+                                            <i class="material-icons">save_alt</i>
+                                        </button>-->
+                                    </ul>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="card-body">
+                        <div id="chart-acc" class="chart" data-key="acc" data-data="{{ !graphs['acc'] }}" data-toggle-id="chart-toggle-acc"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        % end
+        <!-- End accuracy graph -->
+
+        <!-- Additional row for custom metric graphs -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-icon card-header-info">
+                        <div class="card-icon">
+                            <i class="material-icons">timeline</i>
+                        </div>
+                        <nav class="navbar navbar-expand-lg navbar-transparent">
+                            <div class="container-fluid">
+                                <div class="navbar-wrapper">
+                                    <h4>Custom metrics</h4>
+                                </div>
+                                <div class="justify-content-end">
+                                    <ul class="navbar-nav">
+                                        <button type="button" class="btn btn-link btn-just-icon btn-toggle">
+                                            <input type="checkbox" id="chart-toggle-custom" class="chart-toggle">
+                                            <span class="icons">
+                                                <i rel="tooltip" class="material-icons" title="Show time on x-axis">access_time</i>
+                                                <i rel="tooltip" class="material-icons" title="Show epochs on x-axis">equalizer</i>
+                                            </span>
+                                        </button>
+                                        <!--<button type="button" rel="tooltip" class="btn btn-link btn-just-icon" title="Download data">
+                                            <i class="material-icons">save_alt</i>
+                                        </button>-->
+                                    </ul>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="card-body ">
+                        % custom_graphs = { k:v for k, v in graphs.items() if not k in ['loss', 'acc'] }
+                        <ul class="nav nav-pills nav-pills-info" role="tablist">
+                            % for i, k in enumerate(custom_graphs):
+                            % active = 'active' if i < 1 else ''
+                            <li class="nav-item">
+                            <button class="nav-link btn btn-info btn-sm {{ active }}" data-toggle="tab" href="#tab-{{ k }}" role="tablist">
+                                {{ k }}
+                            </button>
+                            </li>
+                            % end
+                        </ul>
+                        <div class="tab-content tab-space">
+                            % for i, k in enumerate(custom_graphs):
+                            % v = custom_graphs[k]
+                            % active = 'active' if i < 1 else ''
+                            <div class="tab-pane {{ active }}" id="tab-{{ k }}">
+                                <div id="chart-{{ k }}" class="chart" data-key="{{ k }}" data-data="{{ !v }}" data-toggle-id="chart-toggle-custom"></div>
+                            </div>
+                            % end
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End additional row for custom metric graphs -->
+    </div>
+</div>
+
+% include(footer_path)
