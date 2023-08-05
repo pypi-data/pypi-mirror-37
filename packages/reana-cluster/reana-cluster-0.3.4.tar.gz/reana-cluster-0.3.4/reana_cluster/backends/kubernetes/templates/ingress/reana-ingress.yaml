@@ -1,0 +1,19 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: frontend
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.entryPoints: "http,https"
+spec:
+  rules:
+  - host: {{REANA_URL}}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: server
+          servicePort: 80
+  tls:
+    - secretName: reana-ssl-secrets
