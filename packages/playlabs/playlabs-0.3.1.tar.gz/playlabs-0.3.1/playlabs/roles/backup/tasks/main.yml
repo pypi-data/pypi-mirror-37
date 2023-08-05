@@ -1,0 +1,105 @@
+---
+
+- name: Upload backup script
+  notify: backup unit
+  template:
+    dest: '{{ script_path }}'
+    src: backup.sh
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Upload restore script
+  when: restore_path is defined
+  template:
+    dest: '{{ restore_path }}'
+    src: restore.sh
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Upload prune script
+  notify: prune unit
+  copy:
+    dest: '{{ prune_path }}'
+    content: '{{ prune_content }}'
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Upload backup password
+  copy:
+    dest: '{{ project_home }}/.backup_password'
+    content: '{{ restic_password }}'
+    owner: deploy
+    group: root
+    mode: 0700
+
+- name: Init restic repository
+  register: backup_init
+  shell: 'RESTIC_REPOSITORY={{ project_backup_repo }} RESTIC_PASSWORD_FILE={{ project_home }}/.backup_password restic init --repo {{ project_backup_repo }}'
+  args:
+    executable: /bin/bash
+    creates: '{{ project_backup_repo }}'
+
+- name: Create backup unit
+  notify: backup unit
+  copy:
+    dest: /etc/systemd/system/{{ unit_name }}.service
+    content: |
+      [Unit]
+      Description={{ unit_description }} unit
+
+      [Service]
+      ExecStart={{ script_path }}
+      Type=oneshot
+      StandardOutput=journal
+      Environment=BACKUP_FORCE=1
+
+      [Install]
+      WantedBy=basic.target
+
+- name: Create backup timer
+  notify: backup unit
+  copy:
+    dest: /etc/systemd/system/{{ unit_name }}.timer
+    content: |
+      [Unit]
+      Description={{ unit_description }} timer
+
+      [Timer]
+      OnCalendar=*-*-* 23:00:00
+
+      [Install]
+      WantedBy=timers.target
+
+- name: Create prune unit
+  notify: backup unit
+  copy:
+    dest: /etc/systemd/system/{{ unit_name }}.prune.service
+    content: |
+      [Unit]
+      Description=Prune {{ unit_description }} unit
+
+      [Service]
+      ExecStart={{ prune_path }}
+      Type=oneshot
+      StandardOutput=journal
+
+      [Install]
+      WantedBy=basic.target
+
+- name: Create prune timer
+  register: prune_timer
+  when: prune_path is defined
+  copy:
+    dest: /etc/systemd/system/{{ unit_name }}.prune.timer
+    content: |
+      [Unit]
+      Description=Prune {{ unit_description }} timer
+
+      [Timer]
+      OnCalendar=*-*-* 6:00:00
+
+      [Install]
+      WantedBy=timers.target
