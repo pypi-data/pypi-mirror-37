@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dir</title>
+    <style>
+        .mode-btn{
+            background-color: #8585ff;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            margin-left: 6px;
+        }
+        .mode-btn:disabled{
+            background-color: rgba(133, 133, 255, 0.36);
+        }
+    </style>
+</head>
+<body>
+<h1>Directory listing for {{path}}</h1>
+<hr>
+<ul>
+    {% for l in list %}
+    <li><a href="{{l+arg}}">{{l}}</a></li>
+    {% endfor %}
+</ul>
+<hr>
+
+<h3 id="mode"> mode:
+<button id="normal_a" class="mode-btn" onclick="changeArg('m', null)" >normal</button>
+<button id="txt_a" class="mode-btn" onclick="changeArg('m', 'txt')" >display</button>
+<button id="down_a" class="mode-btn" onclick="changeArg('m', 'down')" >download</button>
+<button id="play_a" class="mode-btn" onclick="changeArg('m', 'play')" >play</button>
+</h3>
+<script type="text/javascript">
+    // check mode to set link
+    let url = window.location.href;
+    if (url.indexOf('?m=') < 0 && url.indexOf('&m=') < 0){
+        document.getElementById('normal_a').disabled = true;
+    }else {
+        let par = location.search;
+        if (par.indexOf("?") !== -1) {
+            par = par.substr(1);
+            let pars = par.split("&");
+            for (let i = 0; i < pars.length; i++) {
+                let par = pars[i];
+                if (par.split('=')[0] === 'm') {
+                    let mod_value = par.split('=')[1];
+                    let a_elem = document.getElementById(mod_value + '_a');
+                    a_elem.disabled = true;
+                }
+            }
+        }
+    }
+
+   function changeArg(arg, value) {
+        let param = window.location.search;
+        let param_new = '';
+        if (param.indexOf('?'+arg+'=')>=0 || param.indexOf('&'+arg+'=')>=0){ // pre_url contain 'm', to modify
+            let pars = param.substr(1).split('&'); // remove '?' and split
+            for (let i=0; i<pars.length; i++){
+                if (value !== null) { // to change
+                    if (pars[i].startsWith(arg+'=')){
+                        param_new += arg+'=' + value+'&';
+                    }else {
+                        param_new += pars[i]+'&';
+                    }
+                } else { // to del
+                    if (!pars[i].startsWith(arg+'=')){
+                        param_new += pars[i]+'&';
+                    }
+                }
+            }
+            param_new = param_new.substr(0, param_new.length-1);
+            if (param_new.length !== 0)
+                window.location.search = param_new;
+            else  // remove signal '?'
+                window.location.href = window.location.href.substring(0, window.location.href.lastIndexOf('?'))
+        } else {  // pre_url don't contain 'm', to insert
+            if (value !== null){
+                param_new = param.replace('?','') + '&'+arg+'=' + value;
+                if (param_new.charAt(0)==='&')
+                    param_new = param_new.substring(1);
+                window.location.search = param_new;
+            }
+        }
+   }
+</script>
+</body>
+</html>
