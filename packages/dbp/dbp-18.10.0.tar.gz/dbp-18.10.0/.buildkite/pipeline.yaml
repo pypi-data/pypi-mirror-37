@@ -1,0 +1,17 @@
+steps:
+  - label: ":python: format"
+    command: |
+      echo "+++ Running formatter"
+      /usr/local/bin/black --check dbp.py
+  - label: "publish docs"
+    branches: "master"
+    agents:
+      queue: "deploy"
+    command: |
+      echo "--- Preparing venv"
+      rm -rf .venv
+      python3 -mvenv .venv
+      .venv/bin/pip install flit
+      .venv/bin/flit install -s
+      echo "+++ Deploying site"
+      .venv/bin/mkdocs gh-deploy --force
