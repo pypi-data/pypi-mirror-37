@@ -1,0 +1,118 @@
+#!python
+
+import subprocess
+import sys
+from pathlib import Path
+
+import pymath
+
+VERSION = '2.1.1'
+
+
+def dict_from_keys(_dict, _list):
+    new_dict = {}
+    for item in _list:
+        new_dict[item] = _dict[item]
+    return new_dict
+
+
+def merge_dicts(*dict_args):
+    """
+    https://stackoverflow.com/questions/38987/how-to-merge-two-dictionaries-in-a-single-expression
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+    """
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+
+
+def print_dict(_dict):
+    max_width = max(len(key) for key, _ in _dict.items())
+    for key, val in _dict.items():
+        print('{} {}'.format(key.ljust(max_width), val))
+
+
+def create_math_globals():
+    import itertools
+    import math
+    import statistics
+    import fractions
+    import decimal
+
+    itertools_imports = [
+        'combinations', 'combinations_with_replacement', 'permutations',
+        'product',
+    ]
+    fraction_imports = ['Fraction']
+    decimal_imports = ['Decimal']
+
+    math_globals = merge_dicts(vars(math),
+                               vars(statistics),
+                               dict_from_keys(vars(decimal),
+                                              decimal_imports),
+                               dict_from_keys(vars(fractions),
+                                              fraction_imports),
+                               dict_from_keys(vars(itertools),
+                                              itertools_imports),
+                               vars(pymath))
+
+    remove_globals = {
+        '__name__',
+        '__doc__',
+        '__package__',
+        '__loader__',
+        '__spec__',
+        '__builtins__',
+        '__file__',
+        '__cached__',
+        '__path__',
+        '_ss',
+        '__all__',
+
+        'collections',
+        'math',
+        'numbers',
+        'groupby',
+        'StatisticsError',
+        '_sum',
+        '_isfinite',
+        '_coerce',
+        '_exact_ratio',
+        '_convert',
+        '_counts',
+        '_find_lteq',
+        '_find_rteq',
+        '_fail_neg',
+
+        'bisect_left',
+        'bisect_right',
+
+        'counting',
+        'number_theory',
+        'factor',
+        'number_types',
+        'analytic',
+        'other',
+    }
+
+    for item in remove_globals:
+        del math_globals[item]
+
+    return math_globals
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        if sys.argv[1] in ['-v', '-V', '--version']:
+            print(VERSION)
+        else:
+            math_globals = create_math_globals()
+            if sys.argv[1] == '-l':
+                print_dict(math_globals)
+            else:
+                print(eval(sys.argv[1], math_globals))
+    else:
+        pymath_path = Path(pymath.__file__).resolve().parent / '__main__.py'
+        subprocess.call(['python', '-i', pymath_path])
