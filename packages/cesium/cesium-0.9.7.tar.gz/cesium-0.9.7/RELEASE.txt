@@ -1,0 +1,26 @@
+How to make a new release of ``cesium``
+=======================================
+
+- Update the version number in ``cesium/version.py`` and commit
+
+- Add the version number as a tag in git::
+
+   git tag -m "Description of release" v0.X.Y
+
+- Push the new meta-data to github::
+
+   git push --tags origin master
+
+- Publish on PyPi::
+
+   python setup.py sdist upload
+
+- Update the version in `wheel_builder/.travis.yml` to build new wheels
+
+- Download wheels from wheels.scipy.org, e.g.:
+
+CESIUM=0.X.Y
+wget -r --no-parent -A "cesium-$CESIUM*whl" http://wheels.scipy.org
+for WHEEL in `ls wheels.scipy.org`; do
+  twine upload wheels.scipy.org/$WHEEL
+done
