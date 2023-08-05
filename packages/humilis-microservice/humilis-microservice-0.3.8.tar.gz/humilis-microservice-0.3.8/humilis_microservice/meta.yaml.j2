@@ -1,0 +1,134 @@
+---
+meta:
+    description:
+        AWS Lambda microservice
+
+    parameters:
+        http_method:
+            description: The HTTP method
+            value: POST
+
+        hosted_zone_id:
+            description: The hosted zone ID where the domain name will be recorded
+            value:
+
+        domain_name:
+            description: Domain name to associate to the root resource
+            value:
+
+        certificate_arn:
+            description: ARN of the Cert for the domain name.
+            value:
+
+        schedule_expression:
+            description: The schedule expression for the Lambda trigger
+            value:
+
+        api_name:
+            description: The name of the API
+            value:
+
+        api_description:
+            description: Description to associate to the Rest API resource
+            value:
+
+        has_dead_letter_queue:
+            description:
+                Does the microservice Lambda have an associated dead letter queue?
+            value:
+                yes
+
+        dead_letter_queue_arn:
+            description:
+                The ARN of the dead letter queue.
+            value:
+
+        iam_actions:
+            description:
+                Additional IAM actions that the Lambdas will be allowed to perform. This is deprecated in favor of iam_role_policies.
+            value: []   # A list of dicts like {action: x, resource: y}
+
+        iam_role_policies:
+            description:
+                Additional policies to attach to the Lambda exec role
+            value: []   # A list of policy documents
+
+        dynamodb_capacity:
+            description:
+                The read and write capacity for the Lambda state table(s).
+            value:
+                read: 5
+                write: 5
+
+        rest_api_id:
+            description:
+                The ID of the REST API that will hold this microservice.
+            value:
+
+        parent_resource_id:
+            description:
+                The resource ID of the parent of all resources in this microservice.
+            value:
+
+        variables:
+            description:
+                The environment variables that will be injected in all the AWS
+                Lambdas that back the API resources.
+            value: {}
+
+        memory_size:
+            description:
+                The memory size for the Lambda, in MB.
+            value: 128
+
+        runtime:
+            description: The Python runtime
+            value: python3.6
+
+        timeout:
+            description: The timeout for the Lambda, in seconds.
+            value: 300
+
+        lambda_environment:
+            description:
+                Deprecated. Use 'variables' instead.
+            value: {}
+
+        input_delivery_stream:
+            value:
+            description: Firehose delivery stream for service requests
+
+        output_delivery_stream:
+            description: Firehose delivery stream for service responses
+            value:
+
+        api_resources:
+            priority: 100
+            value:
+                {% for resource in resources %}
+                -
+                  {% if resource.path %}
+                  path: {{resource.path}}
+                  {% endif %}
+                  {% if resource.schedule_expression %}
+                  schedule_expression: {{resource.schedule_expression}}
+                  {% endif %}
+                  {% if resource.variables or resource.lambda_environment %}
+                  lambda_environment: {{resource.variables or resource.lambda_environment}}
+                  {% endif %}
+                  lambda_function:
+                    $lambda:
+                        path: lambda_function
+                        dependencies:
+                            {% if lambda_dependencies %}
+                            {% for dep in lambda_dependencies %}
+                            - {{dep}}
+                            {% endfor %}
+                            {% endif %}
+                            {% if resource.lambda_dependencies %}
+                            {% for dep in resource.lambda_dependencies %}
+                            - {{dep}}
+                            {% endfor %}
+                            {% endif %}
+                        handler: {{resource.handler}}
+                {% endfor %}
