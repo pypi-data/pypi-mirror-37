@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: graphene-django-opencrud
+Version: 1.0.0
+Summary: Opencrud Graphene Django implementation
+Home-page: https://github.com/inspired-solutions/graphene-django-opencrud
+Author: Inspired Solutions
+Author-email: contacto@inspiredsolutions.pe
+License: MIT
+Description: # OpenCrud Graphene Django implementation
+        
+        ## Usage
+        
+        ```python
+        import graphene
+        from graphene_django.types import DjangoObjectType
+        
+        from django.contrib.auth import models as auth_models
+        from graphene import Node
+        
+        from opencrud.connection import WithOpenCrudConnection
+        from opencrud.list import OpenCrudDjangoFilterListField
+        from opencrud.filter import OpenCrudDjangoFilterConnectionField
+        from opencrud.field import OpenCrudDjangoField
+        
+        
+        class User(DjangoObjectType):
+            @WithOpenCrudConnection(auth_models.User)
+            class Meta:
+                filter_fields = ('id', 'email', )
+                interfaces = (Node, )
+        
+        
+        class Query(graphene.ObjectType):
+            user = OpenCrudDjangoField(User)
+            users = OpenCrudDjangoFilterListField(User)
+            users_connection = OpenCrudDjangoFilterConnectionField(User)
+        ```
+        
+        ## Contributing
+        
+        After cloning this repo, ensure dependencies are installed by running:
+        
+        ```sh
+        pip install -e ".[test]"
+        ```
+        
+        After developing, the full test suite can be evaluated by running:
+        
+        ```sh
+        py.test opencrud --cov=opencrud # Use -v -s for verbose mode
+        ```
+        
+Keywords: api graphql protocol rest relay graphene opencrud
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Provides-Extra: test
