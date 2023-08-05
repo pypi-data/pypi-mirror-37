@@ -1,0 +1,61 @@
+{% extends "bee_django_crm/base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% block content %}
+    {% include 'bee_django_crm/logo.html' %}
+    {% include 'bee_django_crm/nav.html' %}
+    <div style="margin: 5px 0;">
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.agreement.errors }}
+            <div id="editor"></div>
+            <div style="display:none;">{{ form.agreement }}</div>
+            <div id="edit_agreement" style="display:none;">{{ contract.agreement|default:''|safe }}</div>
+            {% bootstrap_button '提交' %}
+        </form>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        var editor;
+        $(document).ready(function () {
+            var E = window.wangEditor;
+            var editor = new E('#editor');
+            var $agreement = $('#id_agreement');
+
+            editor.customConfig.onchange = function (html) {
+                // 监控变化，同步更新到 textarea
+                $agreement.val(html)
+            };
+            editor.customConfig.menus = [
+                'head',  // 标题
+                'bold',  // 粗体
+                'fontSize',  // 字号
+                'fontName',  // 字体
+                'italic',  // 斜体
+                'underline',  // 下划线
+                'strikeThrough',  // 删除线
+                'foreColor',  // 文字颜色
+                'backColor',  // 背景颜色
+                'link',  // 插入链接
+                'list',  // 列表
+                'justify',  // 对齐方式
+                'quote',  // 引用
+                'emoticon',  // 表情
+                'table',  // 表格
+                'code',  // 插入代码
+                'undo',  // 撤销
+                'redo'  // 重复
+            ];
+            editor.create();
+            // 初始化 textarea 的值
+            var agreement = $("#edit_agreement").html();
+            editor.txt.html(agreement);
+            $agreement.val(agreement);
+
+        });
+    </script>
+{% endblock %}
