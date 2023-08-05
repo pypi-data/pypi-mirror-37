@@ -1,0 +1,157 @@
+Metadata-Version: 2.1
+Name: triage
+Version: 3.0.2
+Summary: Risk modeling and prediction
+Home-page: https://github.com/dssg/triage
+Author: Center for Data Science and Public Policy
+Author-email: datascifellows@gmail.com
+License: BY DOWNLOADING triage PROGRAM YOU AGREE TO THE FOLLOWING TERMS OF USE:
+Requires-Dist: alembic (==1.0.0)
+Requires-Dist: SQLAlchemy (==1.2.11)
+Requires-Dist: PyYAML (==3.13)
+Requires-Dist: psycopg2 (==2.7.5)
+Requires-Dist: python-dateutil (==2.7.3)
+Requires-Dist: scipy (==1.1.0)
+Requires-Dist: scikit-learn (==0.19.2)
+Requires-Dist: tables (==3.3.0)
+Requires-Dist: matplotlib (<2.2)
+Requires-Dist: pandas (==0.23.4)
+Requires-Dist: boto3 (<1.8)
+Requires-Dist: click (==6.7)
+Requires-Dist: inflection (==0.3.1)
+Requires-Dist: numpy (>=1.12)
+Requires-Dist: sqlalchemy-postgres-copy (==0.5.0)
+Requires-Dist: retrying (==1.3.3)
+Requires-Dist: Dickens (==1.0.1)
+Requires-Dist: signalled-timeout (==1.0.0)
+Requires-Dist: smart-open (==1.6.0)
+Requires-Dist: s3fs (==0.1.6)
+Requires-Dist: wrapt (==1.10.11)
+Requires-Dist: argcmdr (==0.6.0)
+Requires-Dist: sqlparse (==0.2.4)
+Provides-Extra: rq
+Requires-Dist: rq; extra == 'rq'
+
+Copyright ©2017.  The University of Chicago (“Chicago”). All Rights Reserved.  
+
+Permission to use, copy, modify, and distribute this software, including all object code and source code, and any accompanying documentation (together the “Program”) for educational and not-for-profit research purposes, without fee and without a signed licensing agreement, is hereby granted, provided that the above copyright notice, this paragraph and the following three paragraphs appear in all copies, modifications, and distributions. For the avoidance of doubt, educational and not-for-profit research purposes excludes any service or part of selling a service that uses the Program. To obtain a commercial license for the Program, contact the Technology Commercialization and Licensing, Polsky Center for Entrepreneurship and Innovation, University of Chicago, 1452 East 53rd Street, 2nd floor, Chicago, IL 60615.
+
+Created by Data Science and Public Policy, University of Chicago
+
+The Program is copyrighted by Chicago. The Program is supplied "as is", without any accompanying services from Chicago. Chicago does not warrant that the operation of the Program will be uninterrupted or error-free. The end-user understands that the Program was developed for research purposes and is advised not to rely exclusively on the Program for any reason.
+
+IN NO EVENT SHALL CHICAGO BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THE PROGRAM, EVEN IF CHICAGO HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. CHICAGO SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE PROGRAM PROVIDED HEREUNDER IS PROVIDED "AS IS". CHICAGO HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+Description: ======
+        Triage
+        ======
+        
+        Risk modeling and prediction
+        
+        .. image:: https://travis-ci.org/dssg/triage.svg?branch=master
+           :target: https://travis-ci.org/dssg/triage
+        
+        .. image:: https://codecov.io/gh/dssg/triage/branch/master/graph/badge.svg
+           :target: https://codecov.io/gh/dssg/triage
+        
+        .. image:: https://codeclimate.com/github/dssg/triage.png
+           :target: https://codeclimate.com/github/dssg/triage
+        
+        Predictive analytics projects require the coordination of many different tasks, such as feature generation, classifier training, evaluation, and list generation. These tasks are complicated in their own right, but in addition have to be combined in different ways throughout the course of the project.
+        
+        Triage aims to provide interfaces to these different phases of a project, such as an ``Experiment``. Each phase is defined by configuration specific to the needs of the project, and an arrangement of core data science components that work together to produce the output of that phase.
+        
+        
+        Installation
+        ============
+        
+        Prerequisites
+        -------------
+        
+        To use Triage, you first need:
+        
+        - Python 3+
+        - A PostgreSQL database with your source data (events, geographical data, etc) loaded.
+        - Ample space on an available disk, (or for example in Amazon Web Services's S3), to store the needed matrices and models for your experiment
+        
+        Building
+        --------
+        
+        Triage is a Python package distributable via ``setuptools``. It may be installed directly using ``easy_install`` or ``pip``, or named as a dependency of another package as ``triage``.
+        
+        To build this package (without installation), its dependencies may alternatively be installed from the terminal using ``pip``::
+        
+            pip install -r requirement/main.txt
+        
+        Testing
+        -------
+        
+        To add test (and development) dependencies, use **test.txt**::
+        
+            pip install -r requirement/test.txt [-r requirement/dev.txt]
+        
+        Then, to run tests::
+        
+            pytest
+        
+        
+        Experiment
+        ==========
+        
+        The first phase implemented in Triage is the ``Experiment``. An experiment represents the initial research work of creating design matrices from source data, and training/testing/evaluating a model grid on those matrices. At the end of the experiment, a relational database with results metadata is populated, allowing for evaluation by the researcher.
+        
+        
+        Documentation
+        ---------------------------
+        - `Dirty Duck Tutorial <https://dssg.github.io/dirtyduck/>`_
+        - `Running an Experiment <https://dssg.github.io/triage/experiments/running>`_
+        - `Experiment Algorithm Deep Dive <https://dssg.github.io/triage/experiments/algorithm>`_
+        - `Experiment Config v5 Upgrade Guide <https://dssg.github.io/triage/experiments/upgrade-to-v5>`_
+        
+        
+        Background
+        ==========
+        
+        Triage is developed at the University of Chicago's `Center For Data Science and Public Policy <http://dsapp.uchicago.edu>`_. We created it in response to commonly occuring challenges we've encountered and patterns we've developed while working on projects for our partners.
+        
+        Major Components Used by Triage
+        ===============================
+        
+        Triage makes use of many core data science components developed at DSaPP. These components can be useful in their own right, and are worth checking out if you'd like to make use of a subset of Triage's functionality in an existing pipeline.
+        
+        Components Within Triage
+        ------------------------
+        
+        * `Architect <src/triage/component/architect>`_: Plan, design and build train and test matrices. Includes feature and label generation.
+        * `Catwalk <src/triage/component/catwalk>`_: Training, testing, and evaluating machine learning classifier models
+        * `Collate <src/triage/component/collate>`_: Aggregation SQL Query Builder. This is used by the Architect to build features.
+        * `Timechop <src/triage/component/timechop>`_: Generate temporal cross-validation time windows for matrix creation
+        * `Metta-Data <src/triage/component/metta>`_: Train and test matrix storage
+        * `Results Schema <src/triage/component/results_schema>`_: Generate a database schema suitable for storing the results of modeling runs
+        
+        Design Goals
+        ============
+        
+        There are two overarching design goals for Triage:
+        
+        - All configuration necessary to run the full experiment from the external interface (ie, Experiment subclasses) from beginning to end must be easily serializable and machine-constructable, to allow the eventual development of tools for users to design experiments.
+        
+        - All core functionality must be usable outside of a specific pipeline context or workflow manager. There are many good workflow managers; everybody has their favorite, and core functionality should not be designed to work with specific execution expectations.
+        
+        Future Plans
+        ============
+        
+        - Generation and Management of lists (ie for inspections) by various criteria
+        - Integration of components with various workflow managers, like `Drain <https://github.com/dssg/drain>`_ and `Luigi <https://github.com/spotify/luigi>`_.
+        - Comprehensive leakage testing of an experiment's modeling run
+        - Feature Generation Wizard
+        
+Keywords: triage
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Provides-Extra: rq
