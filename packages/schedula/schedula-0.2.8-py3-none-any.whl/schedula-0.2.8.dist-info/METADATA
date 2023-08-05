@@ -1,0 +1,226 @@
+Metadata-Version: 2.1
+Name: schedula
+Version: 0.2.8
+Summary: Produce a plan that dispatches calls based on a graph of functions, satisfying data dependencies.
+Home-page: https://github.com/vinci1it2000/schedula
+Author: Vincenzo Arcidiacono
+Author-email: vinci1it2000@gmail.com
+License: EUPL 1.1+
+Download-URL: https://github.com/vinci1it2000/schedula/tarball/v0.2.8
+Project-URL: Documentation, http://schedula.readthedocs.io
+Project-URL: Issue tracker, https://github.com/vinci1it2000/schedula/issues
+Keywords: python,utility,library,data,processing,calculation,dependencies,resolution,scientific,engineering,dispatch,scheduling,simulink,graphviz
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Natural Language :: English
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: European Union Public Licence 1.1 (EUPL 1.1)
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
+Provides-Extra: web
+Provides-Extra: all
+Provides-Extra: sphinx
+Provides-Extra: plot
+Requires-Dist: networkx (>=2.0.0)
+Requires-Dist: dill (!=0.2.7)
+Provides-Extra: all
+Requires-Dist: Pygments; extra == 'all'
+Requires-Dist: bs4; extra == 'all'
+Requires-Dist: docutils; extra == 'all'
+Requires-Dist: flask; extra == 'all'
+Requires-Dist: graphviz; extra == 'all'
+Requires-Dist: jinja2; extra == 'all'
+Requires-Dist: lxml; extra == 'all'
+Requires-Dist: regex; extra == 'all'
+Requires-Dist: sphinx; extra == 'all'
+Provides-Extra: plot
+Requires-Dist: graphviz; extra == 'plot'
+Requires-Dist: regex; extra == 'plot'
+Requires-Dist: flask; extra == 'plot'
+Requires-Dist: Pygments; extra == 'plot'
+Requires-Dist: lxml; extra == 'plot'
+Requires-Dist: bs4; extra == 'plot'
+Requires-Dist: jinja2; extra == 'plot'
+Requires-Dist: docutils; extra == 'plot'
+Provides-Extra: sphinx
+Requires-Dist: sphinx; extra == 'sphinx'
+Requires-Dist: graphviz; extra == 'sphinx'
+Requires-Dist: regex; extra == 'sphinx'
+Requires-Dist: flask; extra == 'sphinx'
+Requires-Dist: Pygments; extra == 'sphinx'
+Requires-Dist: lxml; extra == 'sphinx'
+Requires-Dist: bs4; extra == 'sphinx'
+Requires-Dist: jinja2; extra == 'sphinx'
+Requires-Dist: docutils; extra == 'sphinx'
+Provides-Extra: web
+Requires-Dist: regex; extra == 'web'
+Requires-Dist: flask; extra == 'web'
+
+.. _start-intro:
+
+
+What is schedula?
+*****************
+
+Schedula implements a intelligent function scheduler, which selects
+and executes functions. The order (workflow) is calculated from the
+provided inputs and the requested outputs. A function is executed when
+all its dependencies (i.e., inputs, input domain) are satisfied and
+when at least one of its outputs has to be calculated.
+
+Note: Schedula is performing the runtime selection of the
+   **minimum-workflow** to be invoked. A workflow describes the
+   overall process - i.e., the order of function execution - and it is
+   defined by a directed acyclic graph (DAG). The **minimum-workflow**
+   is the DAG where each output is calculated using the shortest path
+   from the provided inputs. The path is calculated on the basis of a
+   weighed directed graph (data-flow diagram) with a modified Dijkstra
+   algorithm.
+
+
+Installation
+************
+
+To install it use (with root privileges):
+
+::
+
+   $ pip install schedula
+
+Or download the last git version and use (with root privileges):
+
+::
+
+   $ python setup.py install
+
+
+Install extras
+==============
+
+Some additional functionality is enabled installing the following
+extras:
+
+* plot: enables the plot of the Dispatcher model and workflow (see
+   ``plot()``).
+
+* web: enables to build a dispatcher Flask app (see ``web()``).
+
+* sphinx: enables the sphinx extension directives (i.e., autosummary
+   and dispatcher).
+
+To install schedula and all extras, do:
+
+::
+
+   $ pip install schedula[all]
+
+.. _end-quick:
+
+
+Why may I use schedula?
+***********************
+
+Imagine we have a system of interdependent functions - i.e. the inputs
+of a function are the output for one or more function(s), and we do
+not know which input the user will provide and which output will
+request. With a normal scheduler you would have to code all possible
+implementations. I’m bored to think and code all possible combinations
+of inputs and outputs from a model.
+
+
+Solution
+========
+
+Schedula allows to write a simple model (``Dispatcher()``) with just
+the basic functions, then the ``Dispatcher()`` will select and execute
+the proper functions for the given inputs and the requested outputs.
+Moreover, schedula provides a flexible framework for structuring code.
+It allows to extract sub-models from a bigger one.
+
+Note: A successful `application <https://github.com/JRCSTU/CO2MPAS-TA>`_
+   is CO_2MPAS, where schedula has been used
+
+to model an entire `vehicle
+<https://co2mpas.io/explanation.html#execution-model>`_.
+
+
+Very simple example
+*******************
+
+Let’s assume that we have to extract some filesystem attributes and we
+do not know which inputs the user will provide. The code below shows
+how to create a ``Dispatcher()`` adding the functions that define your
+system. Note that with this simple system the maximum number of inputs
+combinations is 31 ((2^n - 1), where *n* is the number of data).
+
+..
+
+   >>> import schedula
+   >>> import os.path as osp
+   >>> dsp = schedula.Dispatcher()
+   >>> dsp.add_data(data_id='dirname', default_value='.', initial_dist=2)
+   'dirname'
+   >>> dsp.add_function(function=osp.split, inputs=['path'],
+   ...                  outputs=['dirname', 'basename'])
+   'split'
+   >>> dsp.add_function(function=osp.splitext, inputs=['basename'],
+   ...                  outputs=['fname', 'suffix'])
+   'splitext'
+   >>> dsp.add_function(function=osp.join, inputs=['dirname', 'basename'],
+   ...                  outputs=['path'])
+   'join'
+   >>> dsp.add_function(function_id='union', function=lambda *a: ''.join(a),
+   ...                  inputs=['fname', 'suffix'], outputs=['basename'])
+   'union'
+
+   [graph]
+
+Tip: You can explore the diagram by clicking on it.
+
+Note: For more details how to created a ``Dispatcher()`` see:
+   ``add_data()``, ``add_function()``, ``add_dispatcher()``,
+   ``SubDispatch()``, ``SubDispatchFunction()``,
+   ``SubDispatchPipe()``, and ``DFun()``.
+
+The next step to calculate the outputs would be just to run the
+``dispatch()`` method. You can invoke it with just the inputs, so it
+will calculate all reachable outputs:
+
+..
+
+   >>> inputs = {'path': 'schedula/_version.py'}
+   >>> o = dsp.dispatch(inputs=inputs)
+   >>> o
+   Solution([('path', 'schedula/_version.py'),
+             ('basename', '_version.py'),
+             ('dirname', 'schedula'),
+             ('fname', '_version'),
+             ('suffix', '.py')])
+
+   [graph]
+
+or you can set also the outputs, so the dispatch will stop when it
+will find all outputs:
+
+..
+
+   >>> o = dsp.dispatch(inputs=inputs, outputs=['basename'])
+   >>> o
+   Solution([('path', 'schedula/_version.py'), ('basename', '_version.py')])
+
+   [graph]
+
+
