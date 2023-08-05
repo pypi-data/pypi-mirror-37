@@ -1,0 +1,77 @@
+Metadata-Version: 2.1
+Name: nbtschematic
+Version: 0.1.0
+Summary: A simple schematic file reader for nbtlib
+Home-page: https://github.com/cbs228/nbtschematic
+Author: Colin S.
+Author-email: 3526918+cbs228@users.noreply.github.com
+License: MIT
+Keywords: nbt schema minecraft mcschematic schematic package library
+Platform: any
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: nbtlib (~=1.2.1)
+Requires-Dist: numpy (~=1.14.5)
+
+# nbtschematic
+
+> A simple [nbtlib](https://github.com/vberlier/nbtlib) Schema for reading or
+> writing Schematic files for
+> [MCEdit](https://github.com/Podshot/MCEdit-Unified) and other world editors.
+
+## Installation
+
+Python 3.6 or higher is required.
+
+```bash
+pip3 install nbtschematic
+```
+
+## Examples
+
+To load an existing MCEdit or other schematic file from disk, run:
+
+```python
+from nbtschematic import SchematicFile
+sf = SchematicFile.load('tests/test_schematic/simple.schematic')
+print("The block at Y=%d, Z=%d, X=%d has block ID %d" %
+(2, 3, 0, sf.blocks[2, 3, 0]))
+```
+
+To generate a schematic file in python, run:
+
+```python
+from nbtschematic import SchematicFile
+sf = SchematicFile(shape=(10, 8, 4))
+assert sf.blocks.shape == (10, 8, 4)
+sf.blocks[2, 3, 0] = 42
+sf.save('example.schematic')
+```
+
+The size of the schematic should be defined at construction time. Resizing it
+will clear the blocks and block data.
+
+Other fields of interest include:
+
+* `data`: Block data for each and every block
+* `entities`: Everything that is not a block
+* `blockentities`: Extended metadata for blocks
+
+## Further Reading
+
+For more information about the underlying objects, see `nbtlib`'s excellent
+[examples](https://github.com/vberlier/nbtlib/blob/master/docs/Usage.ipynb)
+page.
+
+----
+
+License - [MIT](https://github.com/cbs228/nbtschematic/blob/master/LICENSE)
+
+
