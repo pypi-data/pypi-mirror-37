@@ -1,0 +1,70 @@
+[tool.poetry]
+name = "cvbuilder"
+version = "0.2.23"
+license = "MIT"
+keywords = ["opencv", "computer vision"]
+description = "Package for building OpenCV 4.0.0-beta including Python 3 bindings from the official sources."
+authors = ["Hannes Römer <none@example.org>"]
+readme = "README.md"
+classifiers=["Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX",
+        "Operating System :: Unix",
+        "Programming Language :: C++",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        # "Programming Language :: Python :: Implementation :: PyPy",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Image Recognition",
+        "Topic :: Software Development"]
+include = ["./CHANGELOG.md", "./NOTICES", "tests/test_system.*"]  # cvbuilder will be included by default
+exclude = ["./pyproject.toml", "cvbuilder/utils2.py"]
+
+[tool.poetry.dependencies]
+python = ">=3.5"
+numpy = "^1.15"
+requests = "^2.19"
+pip = ">=9.0.1"
+
+[tool.poetry.dev-dependencies]
+requests = "*"
+black = "*"
+pytest = "*"
+mypy = ">=0.630.0"
+pytest-mock = "^1.10"
+
+[tool.poetry.scripts]
+cvbuilder = 'cvbuilder.cli:main'
+
+
+[tool.black]
+line-length = 96
+py36 = true
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | __syspatch__
+
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+)/
+'''
