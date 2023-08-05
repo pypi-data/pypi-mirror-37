@@ -1,0 +1,39 @@
+{% extends "cv/skeleton.html" %}
+{% load i18n admin_urls static %}
+
+{% block styles %}
+
+{% endblock styles %}
+{% block centerbar %}
+<div class="alert alert-primary row">
+<h2 class="display-4">Delete {{model|title}}</h2>    
+<p class="col-12">You are about to delete the {{model}} &#8220;{{object}}&#8221;. Are  you sure to want to do that?</p>
+
+
+{% if object.files.all %}
+<p class="mb-0 col-12">If you do, the following files will also be deleted:</p>
+<ul class="pt-0">
+{% for file in object.files.all %}
+<li>{{file.filename}}</li>
+{% endfor %}
+</ul>
+{% endif %}
+<form method="POST" class="col-12">{% csrf_token %}
+    <input type="hidden" name="post" value="yes">
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <input type="hidden" name="post" value="yes">
+        <a id="return_url" type="button" class="btn btn-light">{% trans "No, take me back" %}</a>
+        <input class="btn btn-danger alert-danger" value="{% trans 'Yes, I\'m sure' %}" type="submit">
+    </div>
+</form>
+</div>
+{% endblock centerbar %}
+
+{% block endscripts %}
+<script>
+$(document).ready(function() {
+   var referrer =  document.referrer;
+   $("#return_url").attr("href",referrer)
+});
+</script>
+{% endblock %}
