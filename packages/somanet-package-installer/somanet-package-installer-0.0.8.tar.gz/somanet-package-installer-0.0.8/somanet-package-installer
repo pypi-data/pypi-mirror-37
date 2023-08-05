@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import tempfile
+import zipfile
+import glob
+import sys
+
+import pkg_resources
+version = pkg_resources.require("somanet-package-installer")[0].version
+
+import somanet_package_installer
+
+# Configure and parse command line arguments.
+parser = argparse.ArgumentParser(description='Install SOMANET motion drive package to an EtherCAT slave.')
+parser.add_argument('-p', '--position', metavar='position', type=int, default=0, help='slave selection, default is 0.')
+parser.add_argument('-a', '--package', metavar='package', help='package in zip format.')
+parser.add_argument('-e', '--esi', action='store_true', help='print ESI content to stdout.')
+parser.add_argument('-c', '--clear', action='store_true', help='optionally remove cogging_torque.bin, config.csv and plant_model.csv.')
+parser.add_argument('-s', '--stack_info', nargs=2, metavar=('path', 'secret'), help='write stack_info.json to slave.')
+parser.add_argument('-b', '--bootloader', nargs=2, metavar=('bin', 'bsp'), help='erase all memory on the flash device and install bootloader.')
+parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=version))
+
+args = parser.parse_args()
+
+# Logging.
+import logging
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='(%(levelname)s): %(message)s')
+log = logging.getLogger(__name__)
+
+# Erase all memory on the flash device and install bootloader.
+if args.bootloader:
+  somanet_package_installer.erase_all(args.bootloader[1], 0)
+  somanet_package_installer.install_bootloader(args.bootloader[0], args.bootloader[1], 0)
+
+# Remove cogging_torque.bin, config.csv and plant_model.csv from slave.
+if args.clear:
+  # Output state of EtherCAT slaves.
+  subprocess.run(['ethercat', 'slave'])
+  somanet_package_installer.clear_slave(args.position)
+
+# Install package.
+if args.package:
+  # Output state of EtherCAT slaves.
+  subprocess.run(['ethercat', 'slave'])
+  # Unzip package to a temporary directory.
+  dtemp = tempfile.mkdtemp(None, 'somanet-package-installer-')
+  log.info('Temporary directory created at %s', dtemp)
+  with zipfile.ZipFile(args.package) as zf:
+   zf.extractall(dtemp)
+
+  # Write ESI parts to slave.
+  somanet_package_installer.remove_esi_parts_from_slave(args.position)
+  somanet_package_installer.split_esi_into_parts(dtemp)
+  somanet_package_installer.write_esi_parts_to_slave(dtemp, args.position)
+
+  # Write SSI to slave.
+  sii_path = glob.glob(dtemp + '/*.sii')[0]
+  somanet_package_installer.write_sii_to_slave(sii_path, args.position)
+
+  # Write firmware to slave.
+  bin_path = glob.glob(dtemp + '/*.bin')[0]
+  somanet_package_installer.write_firmware_to_slave(bin_path, args.position)
+
+# Extract ESI.
+if args.esi:
+  content = somanet_package_installer.extract_esi(args.position)
+  sys.stdout.write(content)
+
+# Write stack_info.json to slave.
+if args.stack_info:
+  # Output state of EtherCAT slaves.
+  subprocess.run(['ethercat', 'slave'])
+  somanet_package_installer.write_stack_info_to_slave(args.stack_info[0], args.stack_info[1], args.position)
