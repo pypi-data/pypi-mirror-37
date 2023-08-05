@@ -1,0 +1,101 @@
+#!python
+
+#configuration options
+vpn_name = "'TDEV IPSec VPN'"
+app_name = "vpnhelper"
+
+# accept commandline input
+import argparse
+import keyring
+import getpass
+import sys
+import subprocess
+
+
+#DEFAULT OPTIONS
+# Run for workday, fill in password, don't hit enter, use normal delays. If user wishes to update password, defaults to chrome.
+defaults = {'fillpassword':'yes', 'duration':'wd', 'clickspeed':'normal', 'updatepass':'chrome'}
+
+clickspeed = {'superslow':2, 'slow':1, 'normal':1, 'fast':0.5, 'superfast':0.25}
+
+#fetchpassword
+try:
+    username = keyring.get_password(app_name, "username")
+    if username == None:
+        raise
+    password = keyring.get_password(app_name, "password")
+except:
+    username = input("Please supply the vpn username:")
+    password = getpass.getpass("Please supply the vpn password:")
+    keyring.set_password(app_name, "username", username)
+    keyring.set_password(app_name, "password", password)
+
+# initiate the parser
+parser = argparse.ArgumentParser()
+
+# add long and short argument
+parser.add_argument("--duration", "-d", default=defaults['duration'], help="(time in hours|'wd'|'fd') E.g., 8h, the amount of time (in hours) to keep the VPN active. Use 'wd' to do 9-12 and 1-6 (default), or 'fd' to do 9-6.")
+
+parser.add_argument("--clickspeed", "-s", default=defaults['clickspeed'], help="(superfast|fast|normal|slow|superslow) adjust based on responsiveness of your GUI")
+
+parser.add_argument("--fillpassword", "-fp", default=defaults['fillpassword'],  help="(yes|no|andReturn) type in password and optionally hit return in the dialogs.  CAUTION: since this password is provided to the GUI, it is possible that intermediate clicks will result in your password being typed to, e.g., chat dialogs. 'yes' is therefore safer than 'andReturn.'")
+
+parser.add_argument("--updatepass", "-up", default=defaults['updatepass'], help="(chrome|firefox|anyothername) opens TrustArc password portal in browser.")
+
+parser.add_argument("--loginonly", "-l", action="store_true", help="Logs in once and quits.")
+
+# read arguments from the command line
+args = parser.parse_args()
+
+def genAppleScript():
+    minorDelay = clickspeed[args.clickspeed]
+    majorDelay = minorDelay*2
+
+    #Default: fill password, don't do anything else
+    inputPassword = """
+		delay {majorDelay}
+		keystroke passwd
+    """.format(majorDelay=majorDelay)
+    closeDialog = ""
+
+    
+    if(args.fillpassword == 'yes'):
+        pass
+    elif(args.fillpassword == 'no'):
+        inputPassword = ""
+    elif(args.fillpassword == 'andReturn'):
+        closeDialog =  """
+		keystroke return
+		delay {minorDelay}
+		keystroke return
+
+    """.format(minorDelay=minorDelay)        
+    else:
+        print("Invalid argument passed to --fillpassword")
+        sys.exit()
+    
+    return """set vpn_name to "{vpn_name}"
+set user_name to "{username}"
+set passwd to "{password}"
+
+tell application "System Events"
+	set rc to do shell script "scutil --nc status " & vpn_name
+	if rc starts with "Disconnected" then
+		do shell script "scutil --nc start " & vpn_name & " --user " & user_name
+    {inputPassword}
+    {closeDialog}
+	end if
+end tell""".format(vpn_name=vpn_name,username=username,password=password,inputPassword=inputPassword, closeDialog=closeDialog)
+
+print(genAppleScript())
+
+
+applescript = """
+display dialog "Some message goes here..." ¬
+with title "This is a pop-up window" ¬
+with icon caution ¬
+buttons {"OK"}
+"""
+
+subprocess.call("osascript -e '{}'".format(applescript), shell=True)
+
