@@ -1,0 +1,33 @@
+# apiVersion: networking.istio.io/v1alpha3
+# kind: Gateway
+# metadata:
+#   name: d10l-gateway
+# spec:
+#   selector:
+#     istio: ingressgateway # use istio default controller
+#   servers:
+#   - port:
+#       number: 80
+#       name: http
+#       protocol: HTTP
+#     hosts:
+#     - "*.d10l.de"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{frontendname}}
+spec:
+  hosts:
+  - "open.d10l.de"
+  gateways:
+  - d10l-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: {{frontendname}}
+        port:
+          number: 9080

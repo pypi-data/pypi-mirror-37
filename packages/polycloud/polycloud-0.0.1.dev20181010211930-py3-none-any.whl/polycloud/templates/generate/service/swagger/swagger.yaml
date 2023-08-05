@@ -1,0 +1,314 @@
+swagger: '2.0'
+info:
+  description: Manages the identity of a digital marketplace
+  version: 1.0.0
+  title: Identities
+  contact:
+    email: den.seidel@gmail.com
+host: virtserver.swaggerhub.com
+basePath: /
+schemes:
+  - https
+paths:
+  /identities/{identityid}:
+    get:
+      summary: Get the profile data for an identity.
+      operationId: api.identities.identity_get
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+      produces: 
+        - application/json
+      responses:
+        200:
+          description: The profile data for an identity.
+          schema:
+            $ref: '#/definitions/Identity'
+      security: 
+          - oauth2: 
+            - "https://api.d10l.de/identities:read"
+    post:
+      summary: Add profile data for an identity.
+      operationId: api.identities.identity_post
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: body
+          name: identity
+          description: The profile data to save under the identity.
+          required: true
+          schema: 
+            $ref: '#/definitions/Identity'
+      produces:
+        - application/json
+      responses:
+        201:
+          description: The profile for an identity has been created.
+      security:
+        - oauth2:
+          - "https://api.d10l.de/identities:write"
+  /identities/{identityid}/developerid:
+    post:
+      summary: Register a developer id for the identity.
+      operationId: api.identities.register_developer
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+      responses:
+        201:
+          description: Identity has been registered as a developer.
+          schema:
+            type: object
+            required:
+              - developer_id
+            properties:
+              developer_id:
+                type: string
+                example: "18861a2c-c96c-452b-a9b3-45bbb7373739"
+        400:
+          description: "invalid input, object invalid"
+        409:
+          description: "an existing item already exists"
+      security: 
+        - oauth2: 
+          - "https://api.d10l.de/identities:write"
+  /identities/{identityid}/clients:
+    post:
+      summary: Adds a client of an identity.
+      description: https://auth0.com/docs/api/management/v2#!/Clients/post_clients
+      operationId: api.identities.clients_post
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: body
+          name: client
+          description: "Client item data"
+          required: false
+          schema:
+            type: object
+            required:
+              - client_name
+              - client_description
+            properties:
+              client_name:
+                type: string
+                example: "Peffermiza Broker Frontend"
+              client_description:
+                type: string
+                example: "This is the the frontend app for brokers."
+              allowed_callback_urls:
+                type: array
+                items:
+                  type: string
+                  example: 'http://localhost:3000/callback'
+              allowed_logout_urls:
+                type: array
+                items:
+                  type: string
+                  example: 'http://localhost:3000/logout'
+      produces:
+        - application/json
+      responses:
+        200:
+          description: The data of the new client
+          schema:
+            $ref: '#/definitions/Client'
+        400:
+          description: "invalid input, object invalid"
+        409:
+          description: "an existing item already exists"
+      security:
+        - oauth2:
+          - "https://api.d10l.de/identities:write"
+    get:
+      summary: Gets the clients of an identity.
+      description: https://auth0.com/docs/api/management/v2#!/Clients/get_clients
+      operationId: api.identities.clients_get
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: A list of clients of the identity
+          schema:
+              type: object
+              properties:
+                clients:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Client'
+        400:
+          description: "bad input parameter"
+      security:
+      - oauth2:
+        - "https://api.d10l.de/identities:read"
+  /identities/{identityid}/clients/{clientid}:
+    get:
+      summary: Get the details for a client of an identity.
+      operationId: api.identities.client_get
+      parameters: 
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: path
+          name: clientid
+          type: string
+          description: The NAME of the client (is used as the clientid) of the identity.
+          required: true
+      responses:
+        200:
+          description: 0K
+          schema:
+            $ref: '#/definitions/Client'
+        400:
+          description: "bad input parameter"
+      security: 
+        - oauth2: 
+          - "https://api.d10l.de/identities:read"
+    patch:
+      summary: Update the client of an identity
+      description: https://auth0.com/docs/api/management/v2#!/Clients/patch_clients_by_id
+      operationId: api.identities.clients_patch
+      parameters: 
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: path
+          name: clientid
+          type: string
+          description: The id of the client of the identity.
+          required: true
+        - in: body
+          name: client
+          schema:
+            $ref: '#/definitions/Client'
+      responses:
+        200:
+          description: OK
+      security: 
+        - oauth2: 
+          - "https://api.d10l.de/identities:write"
+    delete:
+      summary: Delete a client of an identity
+      operationId: api.identities.clients_delete
+      parameters:
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: path
+          name: clientid
+          type: string
+          description: The id of the client of the identity.
+          required: true
+      responses:
+        200:
+          description: The client was deleted sucessfully.
+  /identities/{identityid}/clients/{clientid}/secrets:
+    patch:
+      summary: Update the client secret.
+      operationId: api.identities.client_secret_patch
+      parameters: 
+        - in: path
+          name: identityid
+          type: string
+          description: The id of the identity.
+          required: true
+        - in: path
+          name: clientid
+          type: string
+          description: The NAME of the client (is used as the clientid) of the identity.
+          required: true
+      responses:
+        200:
+          description: 0K
+          schema:
+            type: object
+            required:
+              - client_secret
+            properties:
+              client_secret:
+                type: string
+                example: "94YJaDlR5QDpaS7Em6aC02_gj6kA1Q_G"
+        400:
+          description: "bad input parameter"
+      security: 
+        - oauth2: 
+          - "https://api.d10l.de/identities:write"
+securityDefinitions:
+  oauth2:
+    type: oauth2
+    authorizationUrl: 'https://d10l.eu.auth0.com/authorize'
+    tokenUrl: 'https://d10l.eu.auth0.com/oauth/token'
+    x-tokenInfoFunc: "api.auth.checktoken"
+    flow: accessCode
+    scopes:
+      'https://api.d10l.de/identities:write': Access right needed to write to the identity service.
+      'https://api.d10l.de/identities:read': Access right needed to read from the identity service.
+definitions:
+  Client:
+    type: object
+    required:
+      - client_id
+      - client_name
+      - date_created  
+    properties:
+      client_id:
+        type: string
+        example: 94YJaDlR5QDpaS7Em6aC02_gj6kA1Q_G
+      client_name:
+        type: string
+        example: 'Peffermiza Broker Frontend'
+      client_description:
+        type: string
+        example: 'The frontend client for our new insurance platform.'
+      date_created:
+        type: string
+        format: int32
+        example: '2016-08-29T09:12:33.001Z'
+      client_secret:
+        type: string
+        example: 94YJaDlR5QDpaS7Em6aC02_gj6kA1Q_G
+      allowed_callback_urls: 
+        type: array
+        items:
+          type: string
+          example: 'http://localhost:3000/callback'
+      allowed_logout_urls:
+        type: array
+        items:
+          type: string
+          example: 'http://localhost:3000/logout'
+  Identity:
+    type: object
+    required:
+      - identity_id
+    properties:
+      identity_id:
+        type: string
+        example: auth0|94YJaDlR5QDpaS7Em6aC02_gj6kA1Q_G
+      developer_id:
+        type: string
+        example: e3e3ae38-28b2-4e40-a208-24a2d3a1c150
