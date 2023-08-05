@@ -1,0 +1,25 @@
+from typing import List
+from urllib.parse import urlparse, urljoin, urldefrag
+
+from aiohttp import ClientResponse
+import lxml.html as lh
+
+from scrapio.structures.filtering import AbstractURLFilter, URLFilter
+from scrapio.parsing.valid_url import valid_url
+
+
+def link_extractor(response: ClientResponse, url_filter: URLFilter) -> List[str]:
+    defrag = url_filter.__getattribute__('defragment')
+    html = response._body.decode('utf-8', errors='ignore')
+    req_url = response._url
+    dom = lh.fromstring(html)
+    found_urls = []
+    for href in dom.xpath('//a/@href'):
+        url = urljoin(str(req_url), href)
+        if defrag:
+            url = urldefrag(url)[0]
+        netloc = urlparse(url).netloc
+        can_crawl = url_filter.can_crawl(netloc, url)
+        if can_crawl and valid_url(url):
+            found_urls.append(url)
+    return found_urls
