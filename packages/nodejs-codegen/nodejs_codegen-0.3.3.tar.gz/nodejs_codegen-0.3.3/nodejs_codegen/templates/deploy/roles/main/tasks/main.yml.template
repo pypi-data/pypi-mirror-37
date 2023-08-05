@@ -1,0 +1,49 @@
+---
+- name: "configure {{ name }}"
+  template:
+    src: default.json.template
+    dest: "{{ '{{' }} {{ name }}_root {{ '}}' }}/config/default.json"
+
+
+- name: "deploy {{ '{{' }} {{ name }} {{ '}}' }} for debug"
+  docker_container:
+    name: "{{'{{'}} {{ name }} {{'}}'}}"
+    image: "node:6.10.3"
+    working_dir: "/var/app"
+    volumes:
+      - "{{'{{'}} {{ name }}_root {{'}}'}}:/var/app:Z"
+    ports:
+      - "{{'{{'}} {{ name }}_port {{'}}'}}:{{'{{'}} {{ name }}_port {{'}}'}}"
+{% if dep_services is not none %} 
+    links:
+{% for service in dep_services %}      - "{{'{{'}}{{service.name}}{{'}}'}}:{{'{{'}}{{service.name}}{{'}}'}}"
+{% endfor %}      
+{% endif %}      
+    restart: yes
+    recreate: yes
+    state: started
+    entrypoint: "node app.js"
+    when: {{ name }}_debug=="true"
+
+- Name: "deploy {{'{{'}} {{ name }} {{'}}'}} for integration"
+  docker_container:
+    name: "{{'{{'}} {{ name }} {{'}}'}}"
+    image: "node:6.10.3"
+    working_dir: "/var/app"
+    volumes:
+      - "{{'{{'}} {{ name }}_root{{'}}'}}:/var/app:Z"
+    exposed: "{{'{{'}} {{ name }}_port{{'}}'}}"
+{% if dep_services is not none %} 
+    links:
+{% for service in dep_services %}      - "{{'{{'}}{{service.name}}{{'}}'}}:{{'{{'}}{{service.name}}{{'}}'}}"
+{% endfor %}      
+{% endif %}      
+    restart: yes
+    recreate: yes
+    state: started
+    entrypoint: "node app.js"
+    when: {{ name }}_debug=="false"
+
+
+
+...

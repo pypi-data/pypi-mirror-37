@@ -1,0 +1,1 @@
+{{name}}_test_url: "http://{{'{{'}}public_host{{'}}'}}:{{'{{'}}{{name}}_port{{'}}'}}"
