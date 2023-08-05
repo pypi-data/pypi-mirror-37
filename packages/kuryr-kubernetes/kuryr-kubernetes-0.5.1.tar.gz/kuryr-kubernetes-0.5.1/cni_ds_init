@@ -1,0 +1,50 @@
+#!/bin/bash -ex
+
+function cleanup() {
+    rm -f "/etc/cni/net.d/10-kuryr.conf"
+    rm -f "/opt/cni/bin/kuryr-cni"
+}
+
+function deploy() {
+    POD_NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
+
+    # Write the script to a file.
+    cat > /kuryr-cni << EOF
+#!/bin/bash -x
+
+finder="
+import json
+import sys
+
+containers=json.load(sys.stdin)
+for container in containers:
+    if ('Labels' in container and
+            container['Labels'].get('io.kubernetes.pod.name') == '${KURYR_CNI_POD_NAME}' and
+            container['Labels'].get('io.kubernetes.pod.namespace') == '${POD_NAMESPACE}' and
+            container['Labels'].get('io.kubernetes.docker.type') == 'container'):
+        print(container['Id'])
+        break
+"
+
+# TODO(dulek): We might want to fetch socket path from config.
+CONTAINERID=\`curl --unix-socket /var/run/docker.sock http://v1.24/containers/json 2> /dev/null | python -c "\${finder}"\`
+
+envs=(\$(env | grep ^CNI_))
+docker exec \${envs[@]/#/--env } -i "\${CONTAINERID}" kuryr-cni --config-file /etc/kuryr/kuryr.conf
+EOF
+
+    # Copy the script into the designated location
+    cp /kuryr-cni "/opt/cni/bin/kuryr-cni"
+    chmod +x /opt/cni/bin/kuryr-cni
+    cp /opt/kuryr-kubernetes/etc/cni/net.d/* /etc/cni/net.d
+}
+
+cleanup
+deploy
+
+# Start CNI daemon if required
+if [ "$CNI_DAEMON" == "True" ]; then
+    exec kuryr-daemon --config-file /etc/kuryr/kuryr.conf
+else
+    exec sleep infinity
+fi
