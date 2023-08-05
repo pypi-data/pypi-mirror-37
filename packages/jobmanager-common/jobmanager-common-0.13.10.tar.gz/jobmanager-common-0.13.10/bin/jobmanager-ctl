@@ -1,0 +1,312 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: ai ts=4 sts=4 et sw=4 nu
+"""
+(c) 2014-2018 Ronan Delacroix
+Job Manager Common - Control Script
+:author: Ronan Delacroix
+"""
+import os
+import re
+import six
+import sys
+import time
+import configargparse
+import jobmanager
+import jobmanager.common
+import jobmanager.common.host as host
+import jobmanager.common.job as job
+import mongoengine
+import tbx
+import tbx.process
+import tbx.text
+import tbx.service
+import tbx.log
+import tbx.network
+import logging
+import signal
+import platform
+import cmd
+import shlex
+from tabulate import tabulate
+
+
+class JobManagerCLI(cmd.Cmd, object):
+    ### Generic
+    prompt = 'JmCLI> '
+    intro = '\n<< Welcome to Job Manager CLI >>\n'
+    doc_leader = '\n<<Job Manager CLI Help Section>>\n'
+
+    def __init__(self, server_ip, server_port, database):
+        """
+        Constructor
+        """
+        # hack : for windows 7 usage, need to set show-all-if-ambiguous to on for readline
+        import importlib, readline
+        readline.parse_and_bind("set show-all-if-ambiguous on")
+        importlib.reload(sys)  ## So as to enable setdefaultencoding
+        #
+
+        self.server_ip = server_ip
+        self.server_port = server_port
+        self.database = database
+        super(JobManagerCLI, self).__init__()
+
+    def preloop(self):
+        """
+        At launch...
+        """
+
+        print("Connection...")
+        try:
+            mongoengine.connect(host=self.server_ip, port=self.server_port, db=self.database)
+        except:
+            print("Connection to %s failed." % self.server_ip)
+            self.do_exit('')
+            exit(1)
+        print("Connected to Job Manager Database %s" % self.server_ip)
+
+        super(JobManagerCLI, self).preloop()
+
+    def postloop(self):
+        """
+        End...
+        """
+        print('\nGoodbye!\n')
+        super(JobManagerCLI, self).postloop()
+
+    ### Commands specifics
+
+
+    def do_jobs(self, s):
+        """
+        Job listing command.
+        """
+
+        arg_dict = self.parse_args(s)
+
+        lim = int(arg_dict.pop('limit', 10))
+        off = int(arg_dict.pop('offset', 0))
+        job_type = arg_dict.pop('type', None)
+        host = arg_dict.pop('host', None)
+        filters = {}
+        if job_type:
+            filters['_cls'] = job_type
+        if host:
+            filters['host'] = host
+        filters.update(arg_dict)
+        job_list = job.Job.objects(**filters).order_by('-created')[off:lim]
+        print(tabulate(job_list))
+
+
+    def do_hosts(self, s):
+        """
+        Host listing command.
+        """
+
+        arg_dict = self.parse_args(s)
+
+        lim = int(arg_dict.pop('limit', 10))
+        off = int(arg_dict.pop('offset', 0))
+        format = arg_dict.pop('format', None)
+
+
+        def extract_columns(dict_list, keys):
+            return [{v for k,v in d.items() if k in keys} for d in dict_list]
+
+        try:
+            host_list = host.Host.objects(**arg_dict).order_by('-created')[off:lim]
+        except mongoengine.errors.InvalidQueryError as e:
+            print(e)
+            return
+        host_table = []
+
+        if len(host_list) > 1:
+            for h in host_list:
+                formatted_host = [h.hostname, h.platform.get('system'), h.updated, h.alive(), h.last_seen_alive()]
+                host_table.append(formatted_host)
+
+            if not format:
+                format = 'simple'
+            print(tabulate(host_table, headers=['hostname', 'system', 'updated', 'alive', 'last seen alive'], tablefmt=format ))
+            return
+        else:
+            if not format:
+                format = 'text'
+            print(tbx.text.render_dict_from_format(host_list[0].to_safe_dict(), format=format))
+            return
+
+    def complete_jobs(self, text, line, begidx, endidx):
+        """
+            Method called to complete convert command
+        """
+        command = shlex.split(line)[0]
+
+        listparams = []
+        for p in ['blah', 'blih']:
+            if not p+"=" in line:
+                listparams.append(p+"=")
+
+        if text.strip()!='':
+            arg_list = shlex.split(text)
+            last_arg=arg_list[len(arg_list)-1]
+            filtered_list = []
+            for p in listparams:
+                if p.startswith(last_arg):
+                    filtered_list.append(p)
+            return filtered_list
+
+        return listparams
+
+    def parse_args(self, args):
+        """
+        Parse arguments of a command line and return a dict.
+        """
+        arg_dict = {}
+        if args != '':
+            for i in re.finditer('([^ ]*)="([^"]*)"', args):
+                to_remove = i.group(0)
+                arg_dict[i.group(1)] = i.group(2)
+                args = args.replace(to_remove, '')
+
+            args = shlex.split(args)
+            for arg in args:
+                if arg.strip() != '':
+                    if not '=' in arg:
+                        print(" ** Invalid argument '%s', can't be parsed. Should be like 'foo=bar'." % arg)
+                    else:
+                        arg_dict[arg.split('=')[0]] = arg.split('=')[1]
+
+        return arg_dict
+
+    ### Help
+
+    def help_howto(self):
+        print("""
+==============How to=================
+
+Tip 1 : Use Auto Completion! Press tab key once or twice to see available commands and parameters!
+Tip 2 : Use "!" to launch shell commands.
+
+""")
+
+    def help_howto_long(self):
+        print("""
+============Long How to==============
+
+Tip 1 : Use Auto Completion! Press tab key once or twice to see available commands and parameters!
+Tip 2 : Use "!" to launch shell commands.
+
+You're done!
+""")
+
+    ### Shell access
+    def do_shell(self, s):
+        """
+        Allows to call shell commands
+        """
+        os.system(s)
+
+    def help_shell(self):
+        """
+        Help on shell commands.
+        """
+        print("Execute shell commands")
+
+    ### Exiting CLI
+    def do_exit(self, s):
+        """
+        Exit
+        """
+        print("Exiting Job Manager CLI.")
+        return True
+
+    def help_exit(self):
+        print("Exiting Job Manager CLI.")
+        print("You can also use the Ctrl-D shortcut.")
+
+    do_quit = do_exit
+    help_quit = help_exit
+
+    do_EOF = do_exit
+    help_EOF = help_exit
+
+
+def get_version():
+    """
+    Retrieves the version number
+    """
+    try:
+        return open(os.path.join(os.path.dirname(os.path.abspath(host.__file__)), 'COMMON.VERSION.txt')).read().strip()
+    except:
+        print('Error - Unable to retrieve version number...')
+        exit(1)
+
+
+def main():
+    parser = configargparse.ArgParser(
+        description="""Job Manager Control Scripts""",
+        epilog='"According to this program calculations, there is no such things as too much wine."',
+        config_file_parser_class=configargparse.YAMLConfigFileParser,
+        formatter_class=configargparse.DefaultsRawFormatter,
+        default_config_files=['/etc/jobmanager/common.yaml', './common.yaml'],
+        ignore_unknown_config_file_keys=True,
+        add_env_var_help=True,
+        auto_env_var_prefix='JOBMANAGER_',
+        add_config_file_help=True,
+        add_help=False
+    )
+
+    database_group = parser.add_argument_group('Job Database')
+    database_group.add_argument('-s', '--server', help='Address of the MongoDB database server containing jobs.', required=True, env_var='JOBMANAGER_DATABASE_HOST')
+    database_group.add_argument('-p', '--port', type=int, default=27017, help='Port to connect the MongoDB database.', env_var='JOBMANAGER_DATABASE_PORT')
+    database_group.add_argument('-d', '--database', default="jobmanager", help='Database name containing jobs.', env_var='JOBMANAGER_DATABASE_NAME')
+
+    command_group = parser.add_argument_group('Command')
+    command_group.add_argument('command', metavar='COMMAND', type=str,
+                               choices=['cli', 'logs', 'job-logs', 'host-logs', 'jobs', 'hosts', 'retry', 'delete'],
+                               help='Command to execute.')
+    command_group.add_argument('args', metavar='ARGS', type=str, nargs='*',
+                             help='Command line arguments.')
+
+    log_group = parser.add_argument_group('Log output')
+    log_group.add_argument('-l', '--log-file', type=configargparse.FileType('w'), default=None, help='Optionally log to file.')
+    log_group.add_argument('-q', '--quiet', action="store_true", default=False, help='Do not output on screen.')
+    log_group.add_argument('-v', '--verbosity', default="INFO", help='Log verbosity to screen.',
+                           choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
+
+    config_group = parser.add_argument_group('Config file')
+    config_group.add_argument("-c", "--config-file", dest="config_file",
+                              help="config file path", is_config_file_arg=True)
+    config_group.add_argument('--create-config-file', metavar="CONFIG_OUTPUT_PATH",
+                              help="takes the current command line "
+                                   "args and writes them out to a config file at the given path, then "
+                                   "exits", is_write_out_config_file_arg=True)
+
+    misc_group = parser.add_argument_group('Miscellaneous commands')
+    misc_group.add_argument("-h", "--help", action="help", help="show this help message and exit.")
+    misc_group.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=get_version()), env_var=None)
+
+
+    args = vars(parser.parse_args())
+
+    # Logging setup
+    log_file = os.path.abspath(args.get('log_file').name) if args.get('log_file') else None
+
+    from pprint import pprint
+    pprint(args)
+
+
+    if args.get('command')=="cli":
+        interpreter = JobManagerCLI(args.get('server'), args.get('port'), args.get('database'))
+        try:
+            interpreter.cmdloop()
+        except KeyboardInterrupt as k:
+            print("\nExiting Job Manager CLI.")
+
+    exit(0)
+
+
+
+if __name__ == "__main__":
+    main()
