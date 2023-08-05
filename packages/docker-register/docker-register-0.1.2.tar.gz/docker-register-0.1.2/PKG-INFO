@@ -1,0 +1,71 @@
+Metadata-Version: 1.1
+Name: docker-register
+Version: 0.1.2
+Summary: A in-memory register for Docker services and containers with published ports and labels.
+Home-page: http://pypi.python.org/pypi/docker-register/
+Author: Steven hk Wong
+Author-email: steven@wongsrus.net
+License: LICENSE.txt
+Description: Summary
+        =======
+        This provides a in-memory register of docker services.
+        
+        Author: Steven hk Wong
+        Date:   Oct 2018
+        
+        Credits:
+          monitor.py is based on the work of Miki Tebeka from http://pythonwise.blogspot.com/2015/07/dockermon-docker-process-monitor.html
+        
+        Description
+        ===========
+          The life cycle events of create,delete and update of docker services are captured to maintain a in-memory register.
+          At startup all active services are loaded from docker.
+          A web UI is provided to see the jason representation of the objects. (see --help)
+          Callbacks can be registered at startup. A callback json object is passed via stdin.
+        
+          Callbacks are called with "-c script|program .e.g "python -m docker-register -c jq"
+        
+          run eg: docker-register -c cb1.sh - cb1.sh is a simple democall back that logs callbacks input into /tmp/cb.log
+                  docker-register -c consul_cb.sh - simple callback that register services to consul on localhost:8500
+        
+        
+          The callback json object:
+        
+          { "type": "service" | "container" , "operation":  "register|unregister|update" , "data": { "ports":[ { "PublishedPort": [PORT], "TargetPort":[PORT] .. ], "labels": {}, "id": "THE ID" , "name": "THE NAME]" }
+        
+          E.g.:
+              {
+                  "type": "service",
+                  "operation": "register",
+                  "labels": {
+                      "name": "cfssl", 
+                      "env": "prod"
+                  }, 
+                  "ports": [
+                      {
+                          "PublishedPort": 8888, 
+                          "TargetPort": 8888
+                      }
+                  ], 
+                  "name": "cfssl", 
+                  "id": "mq6cluihpbe89in6743r3cn1b"
+              }
+        
+          
+        
+        Install
+        =======
+          To install the python module run: python setup.py install
+          
+        
+        WIP
+        ===
+          Adding containers into register.
+        
+        
+        
+        
+Platform: UNKNOWN
+Requires: docker
+Requires: jsonpickle
+Requires: flask
