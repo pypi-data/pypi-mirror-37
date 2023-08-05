@@ -1,0 +1,215 @@
+# Copyright 2018 TensorHub, Inc. and contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ===================================================================
+# Package def
+# ===================================================================
+
+- package: gpkg.slim.models
+  version: 0.5.0.dev5
+  description: TF-Slim models
+  url: https://github.com/guildai/packages/tree/master/slim/models
+  author: Guild AI
+  author-email: packages@guild.ai
+  license: Apache 2.0
+  tags: [slim]
+  requires:
+    - gpkg.slim
+    - gpkg.tflite
+
+# ===================================================================
+# Generic images
+# ===================================================================
+
+- model: images
+  description: Generic images dataset
+  extends:
+    - gpkg.slim/images-base
+
+# ===================================================================
+# Image classifier base
+# ===================================================================
+
+- config: classifier-base
+  extends:
+    - gpkg.slim/examples-support
+    - gpkg.tflite/tflite-support
+  params:
+    prepare-op: images:prepare
+    tflite-input-layers: '{{input-layers}}'
+    tflite-output-layers: '{{output-layers}}'
+
+# ===================================================================
+# Image classifiers
+# ===================================================================
+
+- model: inception
+  description: TF-Slim Inception v1 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/inception
+
+- model: inception-v2
+  description: TF-Slim Inception v2 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/inception-v2
+
+- model: inception-v3
+  description: TF-Slim Inception v3 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/inception-v3
+
+- model: inception-v4
+  description: TF-Slim Inception v4 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/inception-v4
+
+- model: inception-resnet-v2
+  description: TF-Slim Inception ResNet v2 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/inception-resnet-v2
+
+- model: resnet-50
+  description: TF-Slim ResNet v1 50 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-50
+
+- model: resnet-101
+  description: TF-Slim ResNet v1 101 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-101
+
+- model: resnet-152
+  description: TF-Slim ResNet v1 152 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-152
+
+- model: resnet-v2-50
+  description: TF-Slim ResNet v2 50 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-v2-50
+
+- model: resnet-v2-101
+  description: TF-Slim ResNet v2 101 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-v2-101
+
+- model: resnet-v2-152
+  description: TF-Slim ResNet v2 152 layer classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/resnet-v2-152
+
+- model: vgg-16
+  description: TF-Slim VGG 16 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/vgg-16
+
+- model: vgg-19
+  description: TF-Slim VGG 19 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/vgg-19
+
+- model: mobilenet
+  description: TF-Slim Mobilenet v1 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/mobilenet
+
+- model: mobilenet-v2-1.4
+  description: TF-Slim Mobilenet v2 classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/mobilenet-v2-1.4
+
+- model: nasnet-mobile
+  description: TF-Slim NASNet mobile classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/nasnet-mobile
+
+- model: nasnet-large
+  description: TF-Slim NASNet large classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/nasnet-large
+
+- model: pnasnet-mobile
+  description: TF-Slim PNASNet mobile classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/pnasnet-mobile
+
+- model: pnasnet-large
+  description: TF-Slim PNASNet classifier
+  extends:
+    - classifier-base
+    - gpkg.slim/pnasnet-large
+
+# ===================================================================
+# Tests
+# ===================================================================
+
+- test: package-help
+  description: Check package help
+  steps:
+    - compare-help: test/help
+
+- test: models
+  description: Basic test of package models
+  steps:
+    - run-op: images:prepare
+      flags:
+        images: test/sample-images
+        random-seed: 801
+      expected:
+        - file: data/train-weights.txt
+          compare: test/sample-images/train-weights.txt
+    - for-each-model:
+        except:
+          - images
+        steps:
+          - run-op: transfer-learn
+            flags:
+              auto-scale: no
+              clone_on_cpu: 'True'
+              train-steps: 1
+            expect:
+              - file: train/checkpoint
+              - file: train/graph.pbtxt
+          - run-op: evaluate
+            flags:
+              eval-batches: 1
+              batch-size: 5
+            expect:
+              - output: eval/Accuracy\[.+\]
+              - output: eval/Recall_5\[1\]
+          - run-op: export-and-freeze
+            expect:
+              - file: graph.pb
+              - file: frozen_graph.pb
+          - run-op: tflite
+            expect:
+              - file: model.tflite
