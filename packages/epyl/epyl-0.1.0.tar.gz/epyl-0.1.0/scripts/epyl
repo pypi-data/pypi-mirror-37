@@ -1,0 +1,42 @@
+#!/usr/bin/python3
+
+import argparse, logging, sys
+from karamel.exception import KaramelException
+
+__version__ = '0.1.0'
+__program__ = 'karamel'
+
+logger = logging.getLogger(__program__)
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+formatter = logging.Formatter('%(message)s')
+stream_handler.setFormatter(formatter)
+stream_handler.setLevel(logging.INFO)
+logger.addHandler(stream_handler)
+
+
+def main(args):
+    show_karamel_version(args)
+
+
+def show_karamel_version(args):
+    if args.version:
+        logger.info('{0} {1}\nPython {2}'.format(__program__, __version__, sys.version))
+        raise SystemExit(0)
+
+
+if __name__ == '__main__':
+
+    try:
+        parser = argparse.ArgumentParser(prog=__program__, add_help=False)
+        parser.add_argument('-v', '--version', help='Show program\'s version number and exit.', action='store_true')
+        parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='Show this help message and exit.')
+
+        args = parser.parse_args()
+        main(args)
+
+    except KaramelException as e:
+        logger.error(e)
+
+    except (KeyboardInterrupt, SystemExit):
+        pass
