@@ -1,0 +1,187 @@
+{% extends "bee_django_course/user_base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load bee_django_course_filter %}
+{% block styles %}
+    <style>
+
+        .question_view_div {
+            margin: 10px;
+            padding: 10px;
+        }
+
+        .question_answer_worng {
+            background-color: #FFFAE4;
+
+        }
+
+    </style>
+{% endblock %}
+{% block content %}
+
+    {% include 'bee_django_course/question/_answer.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'bee_django_course/vue/vue.js' %}"></script>
+    <script src="{% static 'bee_django_course/axios/axios.min.js' %}"></script>
+
+    <script type="text/javascript">
+
+        var ucs_id = '{{ucs.id}}';
+        var section_id = '{{ucs.section.id}}';
+        var url = '{{ url }}';
+
+        $(document).ready(function () {
+
+            load_questions()
+        });
+
+        function load_questions() {
+            var url = "{{ ex_url}}" + '/course/section/question/list_json/' + section_id + "/";
+            axios.get(url).then(function (resp) {
+                if (resp.data.error == 0) {
+                    var question_list = resp.data.question_list;
+                    question_list = JSON.parse(question_list);
+                    for (var i = 0; i < question_list.length; i++) {
+                        question_list[i]["result"] = "";
+                        question_list[i]["disabled"] = false;
+                    }
+                    questions_vm.questions = question_list;
+                }
+
+            });
+        }
+
+
+        {#===回答问题区===#}
+        var question_answer_cp = Vue.component('question-answer', {
+                    props: {
+                        question: Object
+                    },
+                    data: function () {
+                        return {answers: []}
+                    },
+                    template: '#question-answer-template',
+                    methods: {
+                        submit_answer: function () {
+                            {#单选#}
+                            if (this.question.question_type == 1) {
+                                this.question.answers = [this.answers];
+
+                            }
+                                    {#多选#}
+                            else if (this.question.question_type == 2) {
+                                this.question.answers = this.answers;
+                            }
+                        }
+                    }
+
+                })
+                ;
+        var questions_vm = new Vue({
+            el: '#questions',
+            data: {
+                questions: []
+            }
+
+        });
+        {#===回答问题区完===#}
+
+        {#===验证答案区===#}
+        var submit_answers = new Vue({
+            el: '#submit_answers',
+            data: {result: false, url: null, error_message: null},
+            components: {
+                "question_answer_cp": question_answer_cp
+            },
+            methods: {
+                check_answers: function () {
+                    var rc = true;
+                    var questions = questions_vm.questions;
+                    if (questions.length < 1) {
+                        this.error_message = "问卷错误";
+                        return;
+                    }
+                    for (var i = 0; i < questions.length; i++) {
+
+                        var res = check_answers(questions[i]);
+                        if(!res){
+                            rc = false
+                        }
+                    }
+
+                    if (rc) {
+                        this.error_message = "网络错误，请重新提交";
+                        {#向服务器提交结果#}
+                        var url = '{{ ex_url }}' + '/ucs_question_passed/' + ucs_id;
+                        var params = new FormData();
+                        params.append("ucs_id", ucs_id);
+                        params.append("questions", JSON.stringify(questions));
+                        axios.defaults.xsrfCookieName = 'csrftoken';
+                        axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                        var _this = this;
+                        axios.post(url, params).then(function (resp) {
+                            _this.url = resp.data.return_link;
+                            _this.result = rc;
+                            _this.error_message = null;
+                            {#提交成功后，答案不可更改#}
+                            for (var j = 0; j < questions.length; j++) {
+                                questions[j]["disabled"] = true;
+                            }
+                        })
+
+                    }
+                }
+            }
+
+        });
+
+        function check_answers(question) {
+            var options = question.options;
+            var answers = question.answers;
+            {#用户选择答案#}
+            if (!question.answers) {
+                question["result"] = 'wrong';
+
+                return null;
+            }
+            if (answers.length == 0) {
+                question["result"] = "wrong";
+                return null;
+            }
+            var correct_answers = [];
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].is_correct) {
+                    correct_answers.push(options[i].id)
+                }
+            }
+            {#如果没答案，即为开放题，算正确#}
+            if (correct_answers.length == 0) {
+                question["result"] = 'correct';
+                return true;
+            }
+            if (correct_answers.length != answers.length) {
+                question["result"] = 'wrong';
+                return;
+            }
+            for (var j = 0; j < correct_answers.length; j++) {
+                var index = $.inArray(correct_answers[j], answers);
+                if (index < 0) {
+                    question["result"] = 'wrong';
+                    return;
+                }
+            }
+            question["result"] = 'correct';
+            return true
+
+
+        }
+        {#===验证答案区完===#}
+
+
+    </script>
+
+
+{% endblock %}
