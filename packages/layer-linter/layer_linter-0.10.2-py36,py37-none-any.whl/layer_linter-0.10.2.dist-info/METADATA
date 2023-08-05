@@ -1,0 +1,255 @@
+Metadata-Version: 2.1
+Name: layer-linter
+Version: 0.10.2
+Summary: Layer Linter checks that your project follows a custom-defined layered architecture.
+Home-page: https://github.com/seddonym/layer_linter
+Author: David Seddon
+Author-email: david@seddonym.me
+License: BSD license
+Keywords: layer-linter layer-lint
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: networkx (<3,>=2.1)
+Requires-Dist: PyYAML (<4,>=3.12)
+Requires-Dist: click (<7,>=6.7)
+
+============
+Layer Linter
+============
+
+
+.. image:: https://img.shields.io/pypi/v/layer_linter.svg
+        :target: https://pypi.python.org/pypi/layer_linter
+
+.. image:: https://img.shields.io/pypi/pyversions/layer-linter.svg
+    :alt: Python versions
+    :target: http://pypi.python.org/pypi/layer-linter/
+
+.. image:: https://api.travis-ci.org/seddonym/layer_linter.svg?branch=master
+        :target: https://travis-ci.org/seddonym/layer_linter
+
+.. image:: https://codecov.io/gh/seddonym/layer_linter/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/seddonym/layer_linter
+
+.. image:: https://readthedocs.org/projects/layer-linter/badge/?version=latest
+        :target: https://layer-linter.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
+Layer Linter checks that your project follows a custom-defined layered architecture, based on
+its internal dependencies (i.e. the imports between its modules).
+
+* Free software: BSD license
+* Documentation: https://layer-linter.readthedocs.io.
+
+**Warning:** This software is currently in beta. This means there may be changes that break backward
+compatibility. However, due to it being a development tool (rather than something that needs to be installed
+on a production system), it should be suitable for inclusion in your testing pipeline. It also means we actively
+encourage people to try it out and `submit bug reports`_.
+
+.. _submit bug reports: https://layer-linter.readthedocs.io/en/stable/contributing.html#report-bugs
+
+Overview
+--------
+
+Layer Linter is a command line tool to check that you are following a self-imposed
+architecture within your Python project. It does this by analysing the internal
+imports between all the modules in your code base, and compares this
+against a set of simple rules that you provide in a ``layers.yml`` file.
+
+For example, you can use it to check that no modules inside ``myproject.foo``
+import from any modules inside ``myproject.bar``, even indirectly.
+
+This is particularly useful if you are working on a complex codebase within a team,
+when you want to enforce a particular architectural style. In this case you can add
+Layer Linter to your deployment pipeline, so that any code that does not follow
+the architecture will fail tests.
+
+Quick start
+-----------
+
+Install Layer Linter::
+
+    pip install layer-linter
+
+Decide on the dependency flows you wish to check. In this example, we have
+organised our project into three subpackages, ``myproject.high``, ``myproject.medium``
+and ``myproject.low``. These subpackages are known as *layers*. Note: layers must
+have the same parent package (i.e. all be in the same directory). This parent is known as a *container*.
+
+Create a ``layers.yml`` in the root of your project. For example:
+
+.. code-block:: none
+
+    My Layers Contract:
+      containers:
+        - myproject
+      layers:
+        - high
+        - medium
+        - low
+
+(This contract tells Layer Linter that the order of the layers runs from ``low`` at the bottom
+to ``high`` at the top. Layers higher up can import ones lower down, but not the other way around.)
+
+Note that the container is an absolute name of a Python package, while the layers are relative to the container.
+
+Now, from your project root, run::
+
+    layer-lint myproject
+
+If your code violates the contract, you will see an error message something like this:
+
+.. code-block:: none
+
+    ============
+    Layer Linter
+    ============
+
+    ---------
+    Contracts
+    ---------
+
+    Analyzed 23 files, 44 dependencies.
+    -----------------------------------
+
+    My layer contract BROKEN
+
+    Contracts: 0 kept, 1 broken.
+
+    ----------------
+    Broken contracts
+    ----------------
+
+
+    My layer contract
+    -----------------
+
+
+    1. myproject.low.x imports myproject.high.y:
+
+        myproject.low.x <-
+        myproject.utils <-
+        myproject.high.y
+
+For more details, see `Usage`_.
+
+.. _Usage: https://layer-linter.readthedocs.io/en/latest/usage.html
+
+
+=======
+History
+=======
+
+0.1.0 (2018-06-20)
+------------------
+
+* First release on PyPI.
+
+0.2.0 (2018-06-23)
+------------------
+
+* Look for ``layers.yml`` in current working directory.
+
+0.3.0 (2018-06-24)
+------------------
+
+* Renamed command to ``layer-lint``.
+* Changed order of layers in ``layers.yml`` to be listed high level to low level.
+
+0.4.0 (2018-07-22)
+------------------
+
+* Made dependency analysis more efficient and robust.
+* Improved report formatting.
+* Removed illegal dependencies that were implied by other, more succinct illegal dependencies.
+* Added ``--debug`` command line argument.
+
+0.5.0 (2018-08-01)
+------------------
+
+* Added count of analysed files and dependencies to report.
+* Fixed issues from running command in a different directory to the package.
+* Increased speed of analysis.
+* Changed ``--config_directory`` command line argument to ``--config-directory``.
+
+0.6.0 (2018-08-07)
+------------------
+
+* Added ability to whitelist paths.
+
+0.6.1 (2018-08-07)
+------------------
+
+* Added current working directory to path.
+
+0.6.2 (2018-08-17)
+------------------
+
+* Don't analyse children of directories that aren't Python packages.
+* Prevented installing incompatible version of Pydeps (1.6).
+
+0.7.0 (2018-09-04)
+------------------
+
+* Completed rewrite of static analysis used to build dependency graph.
+* Added quiet and verbose reporting.
+* Added type annotation and mypy.
+* Built earlier versions of Python using pybackwards.
+* Corrected docs to refer to ``layers.yml`` instead of ``layers.yaml``.
+
+0.7.1 (2018-09-04)
+------------------
+
+* Fixed packaging bug with 0.7.0.
+
+0.7.2 (2018-09-05)
+------------------
+
+* Fixed bug with not checking all submodules of layer.
+
+0.7.3 (2018-09-07)
+------------------
+
+* Dropped support for Python 3.4 and 3.5 and adjust packaging.
+
+0.7.4 (2018-09-20)
+------------------
+
+* Tweaked command line error handling.
+* Improved README and `Core Concepts` documentation.
+
+0.8.0 (2018-09-29)
+------------------
+
+* Replace ``--config-directory`` parameter with ``--config`` parameter, which takes a file name instead.
+
+0.9.0 (2018-10-13)
+------------------
+
+* Moved to beta version.
+* Improved documentation.
+* Better handling of invalid package names passed to command line.
+
+0.10.0 (2018-10-14)
+-------------------
+
+* Renamed 'packages' to 'containers' in contracts.
+
+0.10.1 (2018-10-14)
+-------------------
+
+* Improved handling of invalid containers.
+
+latest
+------
+
+* Error if a layer is missing.
+
+
+
