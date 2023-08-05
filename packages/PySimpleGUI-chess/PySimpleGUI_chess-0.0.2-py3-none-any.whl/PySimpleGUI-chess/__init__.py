@@ -1,0 +1,1 @@
+name = "PySimpleGUI-chess"
