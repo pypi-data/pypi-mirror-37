@@ -1,0 +1,16 @@
+<li class="md-nav__item">
+  <a href="{{ toc_item.url }}" title="{{ toc_item.title }}" class="md-nav__link">
+    {{ toc_item.title }}
+  </a>
+  {% if level and toc_item.children %}
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        {% for toc_item in toc_item.children %}
+          {% with level = level - 1 %}
+            {% include "partials/toc-item.html" %}
+          {% endwith %}
+        {% endfor %}
+      </ul>
+    </nav>
+  {% endif %}
+</li>
