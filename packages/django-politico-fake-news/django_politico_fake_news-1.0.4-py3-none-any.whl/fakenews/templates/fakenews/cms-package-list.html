@@ -1,0 +1,144 @@
+{% extends "fakenews/cms-base.html" %}
+{% load tz %}
+{% load getkey %}
+
+{% block content %}
+<div id="packageList" class="container cms">
+
+  <div class="row">
+    <h1 class="col-sm-8">Articles</h1>
+    <div class="col-sm-1">
+      <a href="{% url 'fakenews-cms-package-new' %}" class="btn btn-primary">New</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="section col-md-7 col-sm-8 col-xs-12">
+      {% for check in object_list %}
+      <div class="package">
+        <h3><a href="{% url 'fakenews-cms-package-edit' slug=check.slug %}">{{ check.headline }}</a></h3>
+        <p>{{ check.deck }}</p>
+
+        <div class="row context">
+          <div class="author col col-sm-6">
+            <p>By {{ check.author.first_name }} {{ check.author.last_name }}</p>
+          </div>
+
+          <div class="disinformation-type col col-sm-3">
+            <p>{{ check.claim_reviewed.disinformation_type }}</p>
+          </div>
+
+          <div class="col col-sm-3 status {{ check.status }}">
+            <p>
+              {{ statusTypes | getkey:check.status}}
+            </p>
+          </div>
+        </div>
+
+        <div class="date-modified">
+          <p>
+            {% timezone "America/New_York" %}
+            <em>Last Updated {{ check.date_modified }}
+            {% ifequal check.status "pub"  %}
+              | Published {{ check.publish_date }}
+            {% endifequal %}
+            </em>
+            {% endtimezone %}
+          </p>
+        </div>
+      </div>
+
+      {% empty %}
+        <p>Sorry. No articles match all of your filters.</p>
+      {% endfor %}
+    </div>
+
+    <div class="col-md-3 offset-md-1 col-sm-4 col-xs-0">
+      <div class="widget-area">
+        <div id="search" class="row search">
+          <div class="col col-sm-9">
+            <input id="search-input" class="form-control" type="search" placeholder="Search..." aria-label="Search" value="{{ search }}">
+          </div>
+          <div class="col col-sm-3">
+            <button id="search-submit" class="btn btn-outline-success" type="submit"><b class="bt-icon bt-icon--search"></b></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="widget-area">
+        <h4 class="widget-title">Filters</h4>
+        <h5>Status</h5>
+        <div class="search-filter-list filter-status">
+          {% for status in statuses %}
+            <div class="custom-control custom-checkbox">
+              <input
+                id="filter_checkbox_{{ status.label }}"
+                type="checkbox"
+                class="custom-control-input filter-input"
+                name="{{ status.label }}"
+                data-filter="status"
+                data-slug="{{ status.slug }}"
+                {% if status.active %}checked{% endif %}
+              >
+              <label class="custom-control-label" for="filter_checkbox_{{ status.label }}">{{ status.label }}</label>
+            </div>
+          {% endfor %}
+        </div>
+        <h5>Types</h5>
+        <div class="search-filter-list filter-type">
+          {% for type in types %}
+            <div class="custom-control custom-checkbox">
+              <input
+                id="filter_checkbox_{{ type.label }}"
+                type="checkbox"
+                class="custom-control-input filter-input"
+                name="{{ type.label }}"
+                data-filter="type"
+                {% if type.active %}checked{% endif %}
+              >
+              <label class="custom-control-label" for="filter_checkbox_{{ type.label }}">{{ type.label }}</label>
+            </div>
+          {% endfor %}
+        </div>
+        <h5>Authors</h5>
+        <div class="search-filter-list filter-author">
+          {% for author in authors %}
+            <div class="custom-control custom-checkbox">
+              <input
+                id="filter_checkbox_{{ author.pk }}"
+                type="checkbox"
+                class="custom-control-input filter-input"
+                name="{{ author.label }}"
+                data-filter="authors"
+                data-fname="{{ author.first }}"
+                data-lname="{{ author.last }}"
+                {% if author.active %}checked{% endif %}
+              >
+              <label class="custom-control-label" for="filter_checkbox_{{ author.pk }}">{{ author.label }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="widget-area">
+        <a href="./" class="btn btn-primary">Clear</a>
+      </div>
+    </div>
+  </div>
+
+
+  {% if pages|length > 1 %}
+    <ul class="pagination">
+      {% for pageNum in pages %}
+        <li class="{% if pageNum == page %}active{% endif %}">
+          <a href="{% url 'fakenews-cms-page' page=pageNum %}">{{ pageNum }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+
+{% endblock %}
