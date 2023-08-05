@@ -1,0 +1,51 @@
+Metadata-Version: 2.1
+Name: metasdk
+Version: 0.0.21
+Summary: Devision Meta SDK
+Home-page: https://github.com/devision-io/metasdk
+Author: Artur Geraschenko
+Author-email: arturgspb@gmail.com
+License: MIT
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Requires-Dist: elasticsearch (==2.3.0)
+Requires-Dist: jsonklog (==0.15.0)
+Requires-Dist: six (==1.10.0)
+Requires-Dist: croniter (==0.3.14)
+Requires-Dist: python-logstash (==0.4.6)
+Requires-Dist: fluent-logger (==0.9.3)
+Requires-Dist: PyJWT (==1.5.3)
+
+# Meta  SDK
+
+
+Документация: http://metasdk.readthedocs.io
+
+Полный список примеров: https://github.com/devision-io/metasdk/tree/master/metasdk/examples
+
+## Структура каталогов
+- doc - Автоматически собираемая документация
+- metasdk
+  - services - API службы, доступные к управелению через SDK
+  - logger - общий и массовый логгер, вызывать стоит **только** через **META.log**  
+  - examples - примеры работы с сервисами и прочей функциональостью SDK 
+  - tools - скрипты для **только** консольных вызовов через python -m. Например тут вспомогальеные скрипты деплоя и разработки API сервисов
+
+## Tools
+
+### Сбока и деплой контейнера
+
+```bash
+# Подготовка машины разработчика
+python3 -m metasdk.tools.esp_deploy_init
+
+# Загрузка дескриптора api в google cloud endpoints
+python3 -m metasdk.tools.esp_deploy --service=hello --lang=python --workdir=$(CWD)
+
+# Билд docker image и загрузка на docker hub
+python3 -m metasdk.tools.build_docker_image --docker_repo=apisgarpun/apis --workdir=$(CWD)
+
+# Деплой в кубер
+python3 -m metasdk.tools.kuber_deploy --service=hello --docker_repo=apisgarpun/apis
+```
+
