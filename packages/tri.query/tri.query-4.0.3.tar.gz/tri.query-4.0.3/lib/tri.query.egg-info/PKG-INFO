@@ -1,0 +1,248 @@
+Metadata-Version: 1.1
+Name: tri.query
+Version: 4.0.3
+Summary: tri.query is a library to define queries
+Home-page: https://github.com/TriOptima/tri.query
+Author: Anders Hovmöller
+Author-email: anders.hovmoller@trioptima.com
+License: BSD
+Description: .. image:: https://travis-ci.org/TriOptima/tri.query.svg?branch=master
+            :target: https://travis-ci.org/TriOptima/tri.query
+        
+        .. image:: http://codecov.io/github/TriOptima/tri.query/coverage.svg?branch=master
+            :target: http://codecov.io/github/TriOptima/tri.query?branch=master
+        
+        tri.query
+        ==========
+        
+        tri.query makes it easy to implement searching and filtering in your Django app.
+        
+        Major features:
+        
+        - Generate simple filtering GUIs easily while at the same time:
+        - Supply your views with advanced query languages
+        - Query language can be used stand alone without the GUI parts
+        - Highly customizable GUI based on `tri.form <http://github.com/trioptima/tri.form#tri.form>`_
+        
+        
+        Example
+        -------
+        
+        
+        Simple view that allows the user to search for a car by choosing the make from a drop down, and search
+        for specific model in the advanced mode:
+        
+        .. code:: python
+        
+            class CarQuery(Query):
+                make = Variable.choice(
+                    choices=['Toyota', 'Volvo', 'Ford'],
+                    form_field__show=True)  # Display this field in the simple style GUI
+                model = Variable.text()
+        
+            def cars(request):
+                query = CarQuery()
+                cars_query_set = query.request_to_q(request)
+                form = query.form()
+                return render(
+                    template_name='cars.html',
+                    context_instance=RequestContext(request, {'query_form': form, 'cars': cars_query_set}))
+        
+        
+        .. code:: html
+        
+            <!-- cars.html -->
+            {% include "tri_query/form.html" with form=query_form %}
+        
+            <ul>
+                {% for car in cars %}
+                    <li>{{ car }}</li>
+                {% endfor %}
+            </ul>
+        
+        
+        .. image:: simple_gui.png
+        
+        After switching to the advanced mode:
+        
+        .. image:: advanced_gui.png
+        
+        Programmatically call the search API:
+        
+        .. code:: python
+        
+            query = CarQuery()
+            cars_query_set = query.parse('make=Toyota and (make=1991 or make=1992)')
+        
+        
+        Running tests
+        -------------
+        
+        You need tox installed then just `make test`.
+        
+        
+        License
+        -------
+        
+        BSD
+        
+        
+        Documentation
+        -------------
+        
+        http://triquery.readthedocs.org
+        
+        
+        Changelog
+        ---------
+        
+        
+        4.0.3 (2018-10-10)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * A more helpful error message if you didn't specify `value_to_q_lookup` but you need to.
+        
+        * Removed buggy use of `setdefaults`. This could cause overriding of nested arguments to not take.
+        
+        
+        
+        4.0.2 (2018-10-04)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Added `Variable.boolean_tristate` for editing boolean fields with null value allowed
+        
+        
+        4.0.1 (2018-09-21)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Made Query a `RefinableObject`
+        
+        
+        4.0.0 (2017-08-22)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Moved to tri.declarative 0.34 and tri.form 5.0
+        
+        * Note that `gui__class` to specify a constructor/callable is no longer a valid parameter, because of updated tri.form. Use `gui__call_target` or just `gui`.
+        
+        * You no longer need to specify the `model` parameter to `choice_queryset` or `multi_choice_queryset` if you give it a `QuerySet` as `choices` (as opposed to giving a callable)
+        
+        
+        3.3.0 (2017-04-27)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Move default behaviors out from the shortcuts so they can be used externally
+        
+        * Removed jquery dependency for toggling simple/advanced filtering
+        
+        * Removed support for Django 1.7
+        
+        
+        3.2.0 (2017-03-22)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * `Variable` class now inherits from `object`, making the implementation more pythonic.
+          (Attributes still possible to override in constructor call, see `NamespaceAwareObject`)
+        
+        
+        3.1.0 (2016-09-19)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Moved to the simplified factory system for `from_model`
+        
+        * Added shortcuts to `Variable`: url, time, datetime, date, email, decimal
+        
+        
+        3.0.0 (2016-09-14)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Updated to latest major tri.form
+        
+        
+        2.2.0 (2016-08-16)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Variable.choice_queryset handles the string "null" the same way as everything else
+        
+        * Queries that have multi-select inputs now work
+        
+        
+        2.1.1 (2016-08-08)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Report invalid operators for choice queryset as errors instead of crashing
+        
+        
+        2.1.0 (2016-07-12)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Check for dates that are out of range
+        
+        
+        2.0.0 (2016-06-02)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Cache form on Query
+        
+        * Render global form errors
+        
+        * Query.form() no longer takes a request parameter, since it was redundant anyway. This is a potential breaking change.
+        
+        * Correctly dispatch attr to underlying tri.form
+        
+        * Support for ajax backend. New parameter to Query: endpoint_dispatch_prefix.
+        
+        
+        
+        1.11.0 (2016-04-25)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Minor bugfix for variable-from-model handling of auto fields
+        
+        
+        1.10.0 (2016-04-21)
+        ~~~~~~~~~~~~~~~~~~~
+        
+        * Fix over-eager assert not allowing variable-less Query objects.
+        
+        
+        1.9.0 (2016-04-21)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Enable mixing variable definitions in both declared variables and class meta.
+        
+        * Added `after` attribute on `Variable` to enable custom variable ordering (See `tri.declarative.sort_after()`)
+        
+        * Added Variable.from_model, Query.from_model
+        
+        
+        1.8.0 (2016-04-19)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Added robustness in when arguments are passed as `dict(foo=dict(bar=17))` or `foo__bar=17`
+        
+        
+        1.7.0 (2016-04-08)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * Add python 3 support
+        
+        
+        1.6.0 (2016-03-03)
+        ~~~~~~~~~~~~~~~~~~
+        
+        * `Variable.float` shortcut added
+          
+        * Add support for Django 1.7 and 1.8.
+        
+        
+Keywords: tri.query
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
