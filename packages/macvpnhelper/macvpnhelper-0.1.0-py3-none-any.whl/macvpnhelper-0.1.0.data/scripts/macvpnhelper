@@ -1,0 +1,299 @@
+#!python
+
+import argparse # accept commandline input
+import keyring
+import getpass
+import sys
+import subprocess
+import time
+import datetime
+try:
+    import httplib
+except:
+    import http.client as httplib
+
+#configuration options
+app_name = "macvpnhelper"
+#update_interval = "5" #how often to check VPN (in seconds)
+dayBegins = datetime.datetime.now().replace(hour=9, minute=0, second=0)
+dayEnds =  datetime.datetime.now().replace(hour=18, minute=0, second=0)
+lunchBegins = datetime.datetime.now().replace(hour=12, minute=0, second=0)
+lunchEnds = datetime.datetime.now().replace(hour=13, minute=0, second=0)
+clickspeed = {'superslow':4, 'slow':2, 'normal':1, 'fast':0.5, 'superfast':0.25}
+defaults = {'fillpassword':'andReturn', 'duration':'fd', 'clickspeed':'normal', 'updatepass':'chrome', 'warning':'yes', 'interval':5}
+# Run for workday, fill in password, don't hit enter, use normal delays. If user wishes to update password, defaults to chrome.
+
+
+def screenActive():
+    """Returns False if screen is locked.  True otherwise."""   
+    command = r"""ioreg -n IODisplayWrangler | grep -i IOPowerManagement | perl -pe 's/^.*DevicePowerState"=([0-9]+).*$/\1/'"""
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+    output, err = proc.communicate()    
+    #Terminal ommand should output 4 if screen is active on mac, 0 otherwise:    
+    if int(output) == 4:
+       return True
+    else:
+        return False
+
+def connectionResponsive():
+    """Checks if it's possible to talk to google"""
+    connection = httplib.HTTPConnection("www.google.com", timeout=5)
+    try:
+        connection.request("HEAD", "/")
+        connection.close()
+        return True
+    except:
+        connection.close()
+        return False
+    
+def fetchCredentials():
+    global username
+    global password
+    global app_name
+    username = keyring.get_password(app_name, "username")
+    if username == None:
+        raise
+    password = keyring.get_password(app_name, "password")
+    
+def resetCredentials():
+    global username
+    global password
+    global app_name
+    
+    username = input("Please supply the vpn username:")
+    password = getpass.getpass("Please supply the vpn password:")
+    keyring.set_password(app_name, "username", username)
+    keyring.set_password(app_name, "password", password)
+
+def setVpnName():
+    global vpn_name
+    global args
+    global app_name
+    
+    #Get VPN Name
+    if args.vpn != None:
+        vpn_name = args.vpn
+        print("VPN name set to {}. In the future, this name will be used by default unless reset with --vpn=\"name\".".format(vpn_name))
+    else:
+        try:
+            vpn_name = keyring.get_password(app_name, "vpn_name")
+            print("Using previous VPN name of {}.  To use a different VPN name, run with --vpn=\"name\".".format(vpn_name))
+        except NameError:
+            vpn_name = input("No VPN name was given. Please supply the vpn name:")  
+            print("VPN name set to {}. In the future, this name will be used by default unless reset with --vpn=\"name\".".format(vpn_name))
+    if vpn_name == None:
+        vpn_name = input("No VPN name was given. Please supply the vpn name:")
+        print("VPN name set to {}. In the future, this name will be used by default unless reset with --vpn=\"name\".".format(vpn_name))
+    keyring.set_password(app_name, "vpn_name", vpn_name)
+    
+def setupCommandlineInputs():
+    global args
+    
+    parser = argparse.ArgumentParser(description="""
+Examples:
+      macvpnhelper
+  Uses existing defaults of --warning=yes --duration=fd --clickspeed=normal.  The app will display a warning (which must be clicked) before filling password information and stop executing at 6pm.
+
+      macvpnhelper --fillpassword=andReturn --warning=no --clickspeed=fast --interval=3
+  Fills password prompt and doesn't warn that it is doing so (could type password into a different active dialog!), clicks dialog buttons quickly (use on fast machine)
+
+      macvpnhelper --reset --vpn="ISS Wi-fi" --duration=3h
+  Clears existing user/password information and defines a new VPN name. Runs for 3 hours before terminating.
+""", formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--duration", "-d", default=defaults['duration'], help="(time in hours|'wd'|'fd'|'runOnce') E.g., 8h, the amount of time (in hours) to keep the VPN active. Use 'wd' to do 9-12 and 1-6 (default), 'fd' to do 9-6, and 'runOnce' to do a single check and then terminate.")
+    parser.add_argument("--clickspeed", "-cs", default=defaults['clickspeed'], help="(superfast|fast|normal|slow|superslow) adjust based on responsiveness of your GUI")
+    parser.add_argument("--fillpassword", "-fp", default=defaults['fillpassword'],  help="(yes|no|andReturn) type in password and optionally hit return in the dialogs.  CAUTION: since this password is provided to the GUI, it is possible that intermediate clicks will result in your password being typed to, e.g., chat dialogs. Prevent this by using 'yes' instead of 'andReturn', or making sure the clickspeed matches your GUI responsiveness.")
+    parser.add_argument("--warning", "-w", default=defaults['warning'], help="(yes|no) Displays warning message prior to filling in password.")
+    parser.add_argument("--interval", "-i", default=defaults['interval'], help="number of seconds to wait between polling connection status (default is 5)")
+    parser.add_argument("--simulate", "-s", action="store_true", help="When set, script which would be executed is instead printed to the terminal.")
+    parser.add_argument("--reset", action="store_true", help="Use to reset your login information.")
+    parser.add_argument("--vpn", "-n", help="Name of VPN to connect to. Must match your configured connection.")
+    args = parser.parse_args()
+
+def setupDelayArgs():
+    global majorDelay
+    global minorDelay
+    global update_interval
+    
+    minorDelay = clickspeed[args.clickspeed]
+    majorDelay = minorDelay*2
+    update_interval = args.interval
+    
+
+def setupFillPasswordArgs():
+    """Sets up applescript pieces for filling in the password.  Must setup delay first."""
+
+    global inputPassword
+    global closeDialog
+    
+    #Default: fill password, don't do anything else
+    inputPassword = """
+		delay {majorDelay}
+		keystroke passwd
+    """.format(majorDelay=majorDelay)
+    closeDialog = ""
+    
+    if(args.fillpassword == 'yes'):
+        pass
+    elif(args.fillpassword == 'no'):
+        inputPassword = ""
+    elif(args.fillpassword == 'andReturn'):
+        closeDialog =  """
+		keystroke return
+		delay {minorDelay}
+		keystroke return
+
+    """.format(minorDelay=minorDelay)        
+    else:
+        print("Invalid argument passed to --fillpassword / -fp")
+        sys.exit(2)
+
+def setupWarningArgs():
+    if(args.warning == 'yes'):
+        pass
+    elif(args.warning == 'no'):
+        pass
+    elif(args.warning == 'warnOnly'):
+        pass
+    else:
+        print("Invalid argument passed to --warning / -w")
+        sys.exit(2)
+
+
+        
+def warn():
+    global vpn_name
+    alert_applescript = """set vpn_name to "\\\"{vpn_name}\\\""
+    set rc to do shell script "scutil --nc status " & vpn_name
+    if rc starts with "Disconnected" then
+       display dialog "VPN has disconnected, click OK to reconnect." ¬
+       with title "{vpn_name} no longer active" ¬
+       with icon caution ¬
+       buttons {{"Cancel", "OK"}} default button "OK" cancel button "Cancel"
+    end if
+    """.format(vpn_name=vpn_name)
+    
+    #process = subprocess.Popen(["osascript", "-e","'{}'".format(alert_applescript)], stdout=subprocess.PIPE, universal_newlines=True)
+    #out, err = process.communicate() #blocks until the process terminates
+    #print(out)
+
+    #returns 0 if user hits okay, 0 if user hits cancel
+    out = subprocess.call("""osascript -e '{}'""".format( alert_applescript ), shell=True)
+    if out == 0:                 
+        return("OK")
+    elif out == 1:
+        return("Cancel")
+    else:
+        print("ERROR: terminal returned unexpected output (not 0 or 1) from warning script execution.")
+        raise
+
+def checkVpnConnected():
+    command = """scutil --nc status \"{vpn_name}\" | grep Connected""".format(vpn_name=vpn_name)
+    out = subprocess.call(command, shell=True)
+    if(out == 0):
+        return(True)
+    elif(out == 1):
+        return(False)
+    else:
+        print("ERROR: terminal returned unexpected output (not 0 or 1) from warning script execution.")
+        raise
+        
+def genAppleScript():
+    """Outputs applescript to be run by program."""
+    
+    setupDelayArgs()
+    setupFillPasswordArgs()
+    setupWarningArgs()
+    
+    return """set vpn_name to "\\\"{vpn_name}\\\""
+set user_name to "{username}"
+set passwd to "{password}"
+
+tell application "System Events"
+	set rc to do shell script "scutil --nc status " & vpn_name
+	if rc starts with "Disconnected" then
+		do shell script "scutil --nc start " & vpn_name & " --user " & user_name
+    {inputPassword}
+    {closeDialog}
+	end if
+end tell
+""".format(vpn_name=vpn_name,username=username,password=password,inputPassword=inputPassword, closeDialog=closeDialog)
+
+def runScript():
+    if(args.simulate == True):
+        print(genAppleScript())
+        return
+    elif(args.warning == 'warnOnly'):
+        choice = warn()
+        if choice == "Cancel":
+            print("Halting app because user chose to cancel.")
+            sys.exit(0)
+        time.sleep(60)
+        return
+    elif(args.warning == 'yes'):
+        choice = warn()
+        if choice == "Cancel":
+            print("Halting app because user chose to cancel.")
+            sys.exit(0)
+    out = subprocess.call("""osascript -e '{}' """.format( genAppleScript() ), shell=True)
+    if (out != 0):
+        print("Error executing main script, returned exit code of ", out)
+        sys.exit(out)
+   
+        
+def main():
+    global vpn_name
+    
+    setupCommandlineInputs()
+    setVpnName()
+
+    if (args.reset == True):
+        resetCredentials()
+        
+    try:
+        fetchCredentials()
+    except:    
+        resetCredentials()        
+        
+    if args.duration == 'fd':
+        while(datetime.datetime.now() < dayEnds):
+            runScript()
+            time.sleep(int(update_interval))
+        print("Completed work day. Good bye!")    
+        sys.exit(0)        
+    elif args.duration == 'wd':
+        while(datetime.datetime.now() < dayEnds):
+            if ( not( lunchBegins < datetime.datetime.now() < lunchEnds) ):
+                runScript()
+                time.sleep(int(update_interval))
+        print("Completed work day. Good bye!")    
+        sys.exit(0)
+    elif args.duration == 'runOnce':
+         runScript()
+         sys.exit(0)
+    else:        
+        try:
+            startTime = time.time()
+            hours = float(str(args.duration).split("h")[0])
+            secondsToRun = hours*60
+        except:
+            print("Invalid option passed to --duration / -d")
+            sys.exit(2)
+
+        while( (time.time() - startTime) < secondsToRun):
+            runScript()
+            time.sleep(int(update_interval))
+
+        print("Completed {} hour interval. Good bye!".format(hours))    
+        sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+#    setupCommandlineInputs()
+#    setVpnName()
+#    try:
+#        fetchCredentials()
+#    except:    
+#       resetCredentials()
+#    checkVpnConnected()
+
