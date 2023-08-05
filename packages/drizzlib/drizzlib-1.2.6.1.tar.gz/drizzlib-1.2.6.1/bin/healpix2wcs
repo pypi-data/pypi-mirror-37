@@ -1,0 +1,76 @@
+#! /usr/bin/env python
+
+# This is the CLI executable version of drizzlib's healpix2wcs, for convenience
+
+try:
+    from drizzlib.healpix2wcs import healpix2wcs
+except ImportError, e:
+    print("There was an import error: %s" % e.message)
+    exit()
+
+from os.path import exists, isfile
+from argparse import ArgumentParser, RawTextHelpFormatter
+
+description = """
+A tool to extract a rectangular subset of a HEALPIx image into the WCS format
+with the projection and resolution of your choosing.
+It will recombine using a weighted mean by the shared surface.
+"""
+
+epilog = """
+This software is provided as-is without any warranty of any kind.
+Send bugs and feature requests to <deborah.paradis@irap.omp.eu>.
+"""
+
+
+def is_valid_file(_parser, _arg):
+    if not exists(_arg):
+        _parser.error("The file '%s' does not exist!" % _arg)
+    else:
+        return _arg
+
+
+parser = ArgumentParser(
+    formatter_class=RawTextHelpFormatter,
+    description=description,
+    epilog=epilog
+)
+
+parser.add_argument('healpix_filename', metavar='<healpix>',
+                    type=lambda x: is_valid_file(parser, x),
+                    help='A HEALPIx FITS file to read from.')
+
+parser.add_argument('header_filename', metavar='<header>',
+                    type=lambda x: is_valid_file(parser, x),
+                    help='A FITS file with a WCS header to read configuration '
+                         'from.')
+
+parser.add_argument('output_filename', metavar='<out>',
+                    help='The filepath of the output FITS file with the data\n'
+                         'from the healpix file in the region specified by\n'
+                         'the header file.\n'
+                         'This file must not exist, or you must specify\n'
+                         'the -f option to overwrite it.')
+
+parser.add_argument('--hdu', default=0, dest='header_hdu',
+                    help='Id of the HDU (Header Data Unit) to read\n'
+                         'in the header FITS file. (default: 0)')
+
+parser.add_argument('-f', '--force', dest='clobber', action='store_true',
+                    default=False,
+                    help="Overwrite output if existing "
+                         "(default: do not overwrite)")
+
+args = parser.parse_args()
+
+if isfile(args.output_filename) and not args.clobber:
+    parser.error("There already is a file at '%s'.\n"
+                 "Use the --force to overwrite it." % args.output_filename)
+
+healpix2wcs(
+    args.healpix_filename,
+    header=args.header_filename,
+    output=args.output_filename,
+    clobber=args.clobber,
+    header_hdu=int(args.header_hdu)
+)
