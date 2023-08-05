@@ -1,0 +1,317 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Books &#8212; Django-Vitae 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Chapters" href="chapters.html" />
+    <link rel="prev" title="Articles" href="articles.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="books">
+<span id="topics-pubs-books"></span><h1>Books<a class="headerlink" href="#books" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="book-model">
+<h2>Book Model<a class="headerlink" href="#book-model" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Model field reference</td>
+<td><a class="reference internal" href="../../reference/models.html#cv.models.publications.Book" title="cv.models.publications.Book"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.models.publications.Book</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Authorship set</td>
+<td><a class="reference internal" href="../../reference/models.html#cv.models.publications.BookAuthorship" title="cv.models.publications.BookAuthorship"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.models.publications.BookAuthorship</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.publications.Book" title="cv.models.publications.Book"><code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code></a> model represents an instance
+of books, including information about different
+<a class="reference internal" href="#topics-pubs-book-editions"><span class="std std-ref">editions</span></a> of the same book.</p>
+</div>
+<div class="section" id="book-views">
+<h2>Book Views<a class="headerlink" href="#book-views" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>Book List</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference internal" href="../../reference/views.html#cv.views.CVListView" title="cv.views.CVListView"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.views.CVListView</span></code></a></span></dt>
+<dd><table border="1" class="first docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Context object</td>
+<td><code class="docutils literal notranslate"><span class="pre">{{object_list}}</span></code></td>
+</tr>
+<tr class="row-even"><td>Template</td>
+<td><code class="docutils literal notranslate"><span class="pre">'cv/lists/book_list.html'</span></code></td>
+</tr>
+<tr class="row-odd"><td>URL</td>
+<td><code class="docutils literal notranslate"><span class="pre">'books/'</span></code></td>
+</tr>
+<tr class="row-even"><td>MIME type</td>
+<td><code class="docutils literal notranslate"><span class="pre">text/html</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The book list view produces a page with a list of the author’s
+books. This may be useful for profiling an authors’ books with,
+for example, summaries and blurbs. This can be accomplished through
+the use of custom templates. The default template produces a list of
+books using the same section formatting as the listing in the book
+section of the complete CV.</p>
+<p>The page renders an instance of the <a class="reference internal" href="../../reference/views.html#cv.views.CVListView" title="cv.views.CVListView"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.views.CVListView</span></code></a> view
+with the named parameter <code class="docutils literal notranslate"><span class="pre">model_name</span></code> set to <code class="docutils literal notranslate"><span class="pre">'book'</span></code>. The view
+returns <code class="docutils literal notranslate"><span class="pre">{{object_list}}</span></code> in the context with four objects on its
+dot path:</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">total_books</span></code></dt>
+<dd>Integer of total number of books from all three managers:</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">book_published_list</span></code></dt>
+<dd>queryset of all published books (uses the <code class="xref py py-attr docutils literal notranslate"><span class="pre">published()</span></code>
+method of the <a class="reference internal" href="../../reference/managers.html#cv.models.managers.PublicationManager" title="cv.models.managers.PublicationManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">PublicationManager</span></code></a>)</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">book_revise_list</span></code></dt>
+<dd>queryset of all books in the revision process (uses the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">revise()</span></code> method of the
+<a class="reference internal" href="../../reference/managers.html#cv.models.managers.PublicationManager" title="cv.models.managers.PublicationManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">PublicationManager</span></code></a>)</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">book_inprep_list</span></code></dt>
+<dd>queryset of all books in preparation for submission (uses
+the <code class="xref py py-attr docutils literal notranslate"><span class="pre">inprep()</span></code> method of the
+<a class="reference internal" href="../../reference/managers.html#cv.models.managers.PublicationManager" title="cv.models.managers.PublicationManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">PublicationManager</span></code></a>)</dd>
+</dl>
+<p>The URL can be accessed in templates by using the <a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/templates/builtins/#url">URL template
+filter</a> with the named URL <code class="docutils literal notranslate"><span class="pre">section_list</span></code> and <code class="docutils literal notranslate"><span class="pre">model_name</span></code>
+parameter equal to <code class="docutils literal notranslate"><span class="pre">book</span></code>, i.e.:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">url</span> <span class="n">section_list</span> <span class="n">model_name</span><span class="o">=</span><span class="s1">&#39;book&#39;</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="docutils">
+<dt><strong>Book Detail</strong>: <a class="reference internal" href="../../reference/views.html#cv.views.CVDetailView" title="cv.views.CVDetailView"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.views.CVDetailView</span></code></a></dt>
+<dd><table border="1" class="first docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Context object</td>
+<td><code class="docutils literal notranslate"><span class="pre">{{book}}</span></code></td>
+</tr>
+<tr class="row-even"><td>Template</td>
+<td><code class="docutils literal notranslate"><span class="pre">'cv/details/book_detail.html'</span></code></td>
+</tr>
+<tr class="row-odd"><td>URL</td>
+<td><code class="docutils literal notranslate"><span class="pre">'books/&lt;slug:slug&gt;/'</span></code></td>
+</tr>
+<tr class="row-even"><td>MIME type</td>
+<td><code class="docutils literal notranslate"><span class="pre">text/html</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The book detail view produces a page that represents a single book.
+This could be used to, for example, create a feature page for a
+published book. The default view includes the title, abstract,
+edition information, and links to download the citation information
+in both RIS and BibTeX formats (described below). The page is
+rendered as an instance of the <a class="reference internal" href="../../reference/views.html#cv.views.CVDetailView" title="cv.views.CVDetailView"><code class="xref py py-class docutils literal notranslate"><span class="pre">cv.views.CVDetailView</span></code></a> with
+the named parameters <code class="docutils literal notranslate"><span class="pre">model_name</span></code> set to <code class="docutils literal notranslate"><span class="pre">'book'</span></code> and <code class="docutils literal notranslate"><span class="pre">slug</span></code>
+set to the book’s slug attribute. The view returns the context
+<code class="docutils literal notranslate"><span class="pre">{{book}}</span></code> that represents the <code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code> instance.</p>
+<p>The URL can be accessed using the named URL <code class="docutils literal notranslate"><span class="pre">item_detail</span></code> with
+<code class="docutils literal notranslate"><span class="pre">model_name</span></code> set to <code class="docutils literal notranslate"><span class="pre">'book'</span></code> and <code class="docutils literal notranslate"><span class="pre">slug</span></code> set to the book’s
+slug attribute, i.e.:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">url</span> <span class="n">item_detail</span> <span class="n">model_name</span><span class="o">=</span><span class="s1">&#39;book&#39;</span> <span class="n">slug</span><span class="o">=</span><span class="s1">&#39;slug-from-short-title&#39;</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Book Citation</strong>: <a class="reference internal" href="../../reference/views.html#cv.views.citation_view" title="cv.views.citation_view"><code class="xref py py-func docutils literal notranslate"><span class="pre">cv.views.citation_view()</span></code></a></dt>
+<dd><table border="1" class="first docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Context object</td>
+<td><code class="docutils literal notranslate"><span class="pre">{{book}}</span></code></td>
+</tr>
+<tr class="row-even"><td>Templates</td>
+<td><code class="docutils literal notranslate"><span class="pre">'cv/citations/book.ris'</span></code>
+<code class="docutils literal notranslate"><span class="pre">'cv/citations/book.bib'</span></code></td>
+</tr>
+<tr class="row-odd"><td>URL</td>
+<td><code class="docutils literal notranslate"><span class="pre">'books/&lt;slug:slug&gt;/citation/&lt;str:format&gt;/'</span></code></td>
+</tr>
+<tr class="row-even"><td>MIME types</td>
+<td><code class="docutils literal notranslate"><span class="pre">application/x-research-info-systems</span></code> or
+<code class="docutils literal notranslate"><span class="pre">application/x-bibtex</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Returns view to allow citation to be downloaded to citation management software.</p>
+<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">&lt;str:format&gt;</span></code> named parameter should be one of:</p>
+<dl class="last docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">'ris'</span></code></dt>
+<dd>will create downloadable citation using Reference Manager format specification (see
+<a class="reference external" href="http://endnote.com/sites/rm/files/m/direct_export_ris.pdf">http://endnote.com/sites/rm/files/m/direct_export_ris.pdf</a>).</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">'bib'</span></code></dt>
+<dd>will create downloadable citation using the BibTeX format specification (see
+<a class="reference external" href="http://www.bibtex.org/Format/">http://www.bibtex.org/Format/</a>)</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="section" id="book-editions">
+<span id="topics-pubs-book-editions"></span><h2>Book Editions<a class="headerlink" href="#book-editions" title="Permalink to this headline">¶</a></h2>
+<p>Django-Vitae allows users to link multiple editions of a book with the
+<a class="reference internal" href="../../reference/models.html#cv.models.publications.BookEdition" title="cv.models.publications.BookEdition"><code class="xref py py-class docutils literal notranslate"><span class="pre">BookEdition</span></code></a> class. This is done through
+a ForeignKey relationship to the <a class="reference internal" href="#topics-pubs-books"><span class="std std-ref">book</span></a>. The
+<a class="reference internal" href="../../reference/models.html#cv.models.publications.Book" title="cv.models.publications.Book"><code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code></a> model includes the
+<a class="reference internal" href="../../reference/models.html#cv.models.publications.Book.get_editions" title="cv.models.publications.Book.get_editions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_editions()</span></code></a> method to return all
+editions associated with the book in reverse chronological order
+(i.e., newest first).</p>
+<p>If an edition has been related to a book, the default templates will
+use the publication information (publisher, place of publication, ISBN)
+of the edition instance, not the publication information defined for
+the book instance.</p>
+</div>
+<div class="section" id="custom-methods">
+<span id="topics-pubs-book-custom-methods"></span><h2>Custom Methods<a class="headerlink" href="#custom-methods" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.publications.Book" title="cv.models.publications.Book"><code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code></a> class has two custom
+methods related to editions:</p>
+<blockquote>
+<div><dl class="method">
+<dt id="add_edition">
+<code class="descname">add_edition</code><span class="sig-paren">(</span><em>dict</em><span class="sig-paren">)</span><a class="headerlink" href="#add_edition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <a class="reference internal" href="../../reference/models.html#cv.models.publications.BookEdition" title="cv.models.publications.BookEdition"><code class="xref py py-class docutils literal notranslate"><span class="pre">BookEdition</span></code></a>
+instance with the referencing the <code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code> instance
+on which the user calls the method.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dict</span></code>: a dictionary containing field/value pairs for
+<a class="reference internal" href="../../reference/models.html#cv.models.publications.BookEdition" title="cv.models.publications.BookEdition"><code class="xref py py-class docutils literal notranslate"><span class="pre">BookEdition</span></code></a> fields;
+<code class="docutils literal notranslate"><span class="pre">edition</span></code> must be one of the <code class="docutils literal notranslate"><span class="pre">dict</span></code> keys</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="get_editions">
+<code class="descname">get_editions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#get_editions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function that returns a
+<a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/querysets.html#django.db.models.query.QuerySet" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuerySet</span></code></a> of all the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">BookEdition</span></code> objects related to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code>
+instance</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Django-Vitae</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../views/index.html">Complete Vitae Views</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">CV Sections</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Publications</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="common.html">Common Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="articles.html">Articles</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Books</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chapters.html">Chapters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../works/index.html">Other Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../shortcuts.html">Shortcuts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Module Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">CV Sections</a><ul>
+  <li><a href="index.html">Publications</a><ul>
+      <li>Previous: <a href="articles.html" title="previous chapter">Articles</a></li>
+      <li>Next: <a href="chapters.html" title="next chapter">Chapters</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Michael Bader.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/topics/publications/books.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,26 @@
+{% block centerbar %}
+<form method="POST" id="{{model}}-form" class="post-form small" action="{{action_url}}">{% csrf_token %}
+{% block formcontent %}
+    <span class="invalid-feedback">{{form.non_field_errors}}</span>
+    <div class="form-group row form-row">
+        {% for field in form %}
+            <span class="col-12 col-lg-6">
+                {% include "cv/forms/_publication_field.html" %}
+            </span>
+        {% endfor %}
+        <br>
+    </div>
+{% block formsets %}{% endblock %}
+{% endblock formcontent %}
+    <div class="btn-toolbar justify-content-between row" role="toolbar" aria-label="Toolbar for editing {{model}}">
+         <div class="save-group btn-group" role="group" aria-label="Edit degree">
+        	<button id="degree-form-{{form.instance.pk}}" type="submit" class="btn btn-light">Save</button>
+    	</div>
+{% if method == "Edit" %}
+    	<div class="btn-group" role="group" aria-label="Delete degree">
+        	<a href="{{delete_url}}" class="btn btn-danger alert-danger cv-delete">Delete</a>
+        </div>
+{% endif %}
+	</div>
+</form>
+{% endblock %}

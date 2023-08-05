@@ -1,0 +1,205 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Talks &#8212; Django-Vitae 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Other Writing" href="other_writing.html" />
+    <link rel="prev" title="Grants" href="grants.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="talks">
+<span id="topics-works-talks"></span><h1>Talks<a class="headerlink" href="#talks" title="Permalink to this headline">¶</a></h1>
+<p>To list public presentations on CVs, Django-Vitae uses two models representing two different ideas. A “talk”, represented by <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a>, reflects a single idea conveyed with a title. It can optionally also include other other elements related to that talk such as notes and slides. A “presentation”, represented by <a class="reference internal" href="../../reference/models.html#cv.models.works.Presentation" title="cv.models.works.Presentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Presentation</span></code></a>, reflects a specific public performance of a talk at a some location and at some time.</p>
+<p>This structure allows multiple presentations of the same talk to be logically
+connected and can prevent multiple listings with the same title, for example, in the
+“Presentations” section of a C.V.</p>
+<div class="section" id="talk-model">
+<h2>Talk Model<a class="headerlink" href="#talk-model" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> model has three required fields:</p>
+<ul class="simple">
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">title</span></code></li>
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">short_title</span></code></li>
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">slug</span></code></li>
+</ul>
+<p>The publication set for a given talk can be accessed with the <code class="xref py py-attr docutils literal notranslate"><span class="pre">presentations</span></code> attribute of a <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> instance.</p>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> class contains a foreign key field, <code class="xref py py-attr docutils literal notranslate"><span class="pre">article_from_talk</span></code> that connects a talk to an article. This may be useful to provide a link to the article on a page about the talk to make it clear where visitors can find the publication that resulted.</p>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> model also contains a convenience method, <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_latest_presenation()</span></code> that returns the <a class="reference internal" href="../../reference/models.html#cv.models.works.Presentation" title="cv.models.works.Presentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Presentation</span></code></a> instance of the talk that was most recently performed (using the <code class="xref py py-attr docutils literal notranslate"><span class="pre">presentation_date</span></code> field).</p>
+<div class="section" id="talk-views">
+<h3>Talk Views<a class="headerlink" href="#talk-views" title="Permalink to this headline">¶</a></h3>
+<p><strong>Talk List</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">TalkListView</span></code></p>
+<p>Display a list of all talks given in order of most recent presentation date.</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Context object</td>
+<td><code class="docutils literal notranslate"><span class="pre">{{talk_list}}</span></code></td>
+</tr>
+<tr class="row-even"><td>Template</td>
+<td><code class="docutils literal notranslate"><span class="pre">'cv/lists/talk_list.html'</span></code></td>
+</tr>
+<tr class="row-odd"><td>URL</td>
+<td><code class="docutils literal notranslate"><span class="pre">r'^talks/$'</span></code></td>
+</tr>
+<tr class="row-even"><td>URL name</td>
+<td><code class="docutils literal notranslate"><span class="pre">'talk_object_list'</span></code></td>
+</tr>
+<tr class="row-odd"><td>MIME type</td>
+<td><code class="docutils literal notranslate"><span class="pre">text/html</span></code></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>Talk Detail</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">TalkDetailView</span></code></p>
+<p>Display detailed information for a particular talk.</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="81%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Context object</td>
+<td><code class="docutils literal notranslate"><span class="pre">{{talk}}</span></code></td>
+</tr>
+<tr class="row-even"><td>Template</td>
+<td><code class="docutils literal notranslate"><span class="pre">'cv/details/talk_detail.html'</span></code></td>
+</tr>
+<tr class="row-odd"><td>URL</td>
+<td><code class="docutils literal notranslate"><span class="pre">r'^talks/(?P&lt;slug&gt;[-\w]+)/$'</span></code></td>
+</tr>
+<tr class="row-even"><td>URL name</td>
+<td><code class="docutils literal notranslate"><span class="pre">'talk_object_detail'</span></code></td>
+</tr>
+<tr class="row-odd"><td>MIME type</td>
+<td><code class="docutils literal notranslate"><span class="pre">text/html</span></code></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="presentations">
+<h2>Presentations<a class="headerlink" href="#presentations" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../../reference/models.html#cv.models.works.Presentation" title="cv.models.works.Presentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Presentation</span></code></a> model instances relate to a <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> instance through a foreign key. The <a class="reference internal" href="../../reference/models.html#cv.models.works.Presentation" title="cv.models.works.Presentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Presentation</span></code></a> model has three required fields in addition to the <a class="reference internal" href="../../reference/models.html#cv.models.works.Talk" title="cv.models.works.Talk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Talk</span></code></a> foreign key:</p>
+<ul class="simple">
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">presentation_date</span></code> that represents when this presentation was “performed;” presentations are ordered by presentation date with the most recent presentation first</li>
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">type</span></code> represents the form of the presentation; choices are “Invited”, “Conference”, “Workshop”, and “Keynote”.</li>
+<li><code class="xref py py-attr docutils literal notranslate"><span class="pre">event</span></code> contains the name of event or venue at which the presentation was given.</li>
+</ul>
+<p>Django-Vitae assumes that presentations will be displayed in conjunction with talks and, therefore, not displayed on their own.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Django-Vitae</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../views/index.html">Complete Vitae Views</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">CV Sections</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../publications/index.html">Publications</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Other Works</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="grants.html">Grants</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Talks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="other_writing.html">Other Writing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets.html">Datasets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../shortcuts.html">Shortcuts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Module Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">CV Sections</a><ul>
+  <li><a href="index.html">Other Works</a><ul>
+      <li>Previous: <a href="grants.html" title="previous chapter">Grants</a></li>
+      <li>Next: <a href="other_writing.html" title="next chapter">Other Writing</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Michael Bader.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/topics/works/talks.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

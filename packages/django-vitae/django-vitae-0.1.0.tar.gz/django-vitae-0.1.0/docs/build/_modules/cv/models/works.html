@@ -1,0 +1,380 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>cv.models.works &#8212; Django-Vitae 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for cv.models.works</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.db.models.functions</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="k">import</span> <span class="n">ugettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="p">(</span><span class="n">VitaeModel</span><span class="p">,</span> <span class="n">Collaborator</span><span class="p">,</span> <span class="n">CollaborationModel</span><span class="p">,</span>
+                   <span class="n">StudentCollaborationModel</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.managers</span> <span class="k">import</span> <span class="n">GrantManager</span>
+
+<span class="kn">from</span> <span class="nn">markdown</span> <span class="k">import</span> <span class="n">markdown</span>
+
+
+<span class="c1"># class InternalGrantManager(models.Manager):</span>
+<span class="c1">#     &quot;&quot;&quot;Return grant objects for which source of funding is internal.&quot;&quot;&quot;</span>
+
+<span class="c1">#     def get_queryset(self):</span>
+<span class="c1">#         return super(InternalGrantManager, self).get_queryset().filter(</span>
+<span class="c1">#             source=10</span>
+<span class="c1">#         ).filter(</span>
+<span class="c1">#             display=True</span>
+<span class="c1">#         )</span>
+
+
+<span class="c1"># class ExternalGrantManager(models.Manager):</span>
+<span class="c1">#     &quot;&quot;&quot;Return grant objects for which source of funding is external.&quot;&quot;&quot;</span>
+
+<span class="c1">#     def get_queryset(self):</span>
+<span class="c1">#         return super(ExternalGrantManager, self).get_queryset().filter(</span>
+<span class="c1">#             source=40</span>
+<span class="c1">#         ).filter(</span>
+<span class="c1">#             display=True</span>
+<span class="c1">#         )</span>
+
+
+<div class="viewcode-block" id="Grant"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Grant">[docs]</a><span class="k">class</span> <span class="nc">Grant</span><span class="p">(</span><span class="n">VitaeModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create instance of funded grant.&quot;&quot;&quot;</span>
+
+    <span class="n">INTERNAL</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">EXTERNAL</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">((</span><span class="n">INTERNAL</span><span class="p">,</span> <span class="s1">&#39;Internal&#39;</span><span class="p">),</span>
+              <span class="p">(</span><span class="n">EXTERNAL</span><span class="p">,</span> <span class="s1">&#39;External&#39;</span><span class="p">))</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Source&#39;</span><span class="p">),</span> <span class="n">choices</span><span class="o">=</span><span class="n">SOURCE</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Internal/external source of funding&quot;</span><span class="p">)</span>
+    <span class="n">agency</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Agency&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">agency_acronym</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Agency acronym&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">division</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Division&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">division_acronym</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Division acronym&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">grant_number</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Grant number&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">amount</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Amount&#39;</span><span class="p">))</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Start date&#39;</span><span class="p">))</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;End date&#39;</span><span class="p">),</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">is_current</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Is currently funded&#39;</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">abstract</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Abstract&#39;</span><span class="p">),</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">abstract_html</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">collaborators</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span>
+        <span class="n">Collaborator</span><span class="p">,</span> <span class="n">through</span><span class="o">=</span><span class="s1">&#39;GrantCollaboration&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s2">&quot;grants&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_pi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">collaborators</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">grantcollaboration__is_pi</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Grant.save"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Grant.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abstract_html</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Grant</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">force_insert</span><span class="p">,</span> <span class="n">force_update</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-is_current&#39;</span><span class="p">,</span> <span class="s1">&#39;-start_date&#39;</span><span class="p">,</span> <span class="s1">&#39;-end_date&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+    <span class="n">displayable</span> <span class="o">=</span> <span class="n">GrantManager</span><span class="p">()</span></div>
+    <span class="c1"># internal_grants = InternalGrantManager()</span>
+    <span class="c1"># external_grants = ExternalGrantManager()</span>
+
+
+<div class="viewcode-block" id="GrantCollaboration"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.GrantCollaboration">[docs]</a><span class="k">class</span> <span class="nc">GrantCollaboration</span><span class="p">(</span><span class="n">CollaborationModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Store object relating collaborators to grant.&quot;&quot;&quot;</span>
+
+    <span class="n">grant</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">Grant</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s2">&quot;collaboration&quot;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">PROTECT</span><span class="p">)</span>
+    <span class="n">is_pi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Is principal investigator?&#39;</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;display_order&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collaborator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Talk"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Talk">[docs]</a><span class="k">class</span> <span class="nc">Talk</span><span class="p">(</span><span class="n">VitaeModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Store object representing a talk.&quot;&quot;&quot;</span>
+
+    <span class="n">abstract</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># article_from_talk = models.OneToOneField(</span>
+    <span class="c1">#   Article, null=True, blank=True,on_delete=models.CASCADE)</span>
+    <span class="n">collaborator</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Collaborator</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">grants</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Grant</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">abstract_html</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">editable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">latest_presentation_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span>
+        <span class="n">editable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">modified</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-latest_presentation_date&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">short_title</span>
+
+<div class="viewcode-block" id="Talk.save"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Talk.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abstract_html</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Talk</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">force_insert</span><span class="p">,</span> <span class="n">force_update</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_absolute_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span>
+            <span class="s1">&#39;cv:item_detail&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="s1">&#39;talk&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">slug</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">get_latest_presentation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">presentations</span><span class="o">.</span><span class="n">all</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Presentation"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Presentation">[docs]</a><span class="k">class</span> <span class="nc">Presentation</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an instance in which a talk was given.</span>
+
+<span class="sd">    This model creates separate objects for each time the same talk was given.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">INVITED</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">CONFERENCE</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">WORKSHOP</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">KEYNOTE</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">TYPE</span> <span class="o">=</span> <span class="p">((</span><span class="n">INVITED</span><span class="p">,</span> <span class="s1">&#39;Invited&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">CONFERENCE</span><span class="p">,</span> <span class="s1">&#39;Conference&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">WORKSHOP</span><span class="p">,</span> <span class="s1">&#39;Workshop&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">KEYNOTE</span><span class="p">,</span> <span class="s1">&#39;Keynote&#39;</span><span class="p">))</span>
+    <span class="n">talk</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">Talk</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;presentations&#39;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">presentation_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">TYPE</span><span class="p">)</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+    <span class="n">event_acronym</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">city</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">country</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-presentation_date&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">; </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">talk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">presentation_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">presentation_date</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Presentation.save"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Presentation.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save latest presentation date in related talk if instance is later</span>
+<span class="sd">        than current latest presentation date.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">presentation_date</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">talk</span><span class="o">.</span><span class="n">latest_presentation_date</span>
+            <span class="k">assert</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">talk</span><span class="o">.</span><span class="n">latest_presentation_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">presentation_date</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">talk</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Presentation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OtherWriting"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.OtherWriting">[docs]</a><span class="k">class</span> <span class="nc">OtherWriting</span><span class="p">(</span><span class="n">VitaeModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an instance of writing in venues other than</span>
+<span class="sd">    traditional scholarly venues.</span>
+
+<span class="sd">    Default ordering by ``type`` and then ``date`` in descending order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Genre of writing (e.g., &#39;book review&#39;,&#39;op ed&#39;, &quot;</span>
+                    <span class="s2">&quot;&#39;blog post&#39;) that can be used for grouping contributions &quot;</span>
+                    <span class="s2">&quot;by type.&quot;</span><span class="p">))</span>
+    <span class="n">abstract</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">venue</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Pages or section&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">issue</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">abstract_html</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">editable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Orders other writings in reverse chronological order.&quot;&quot;&quot;</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-date&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns string representation of other writing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">short_title</span>
+
+<div class="viewcode-block" id="OtherWriting.save"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.OtherWriting.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves abstract in html format.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abstract_html</span> <span class="o">=</span> <span class="n">markdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">OtherWriting</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="n">force_insert</span><span class="p">,</span> <span class="n">force_update</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">(</span><span class="n">VitaeModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stores instance representing a dataset.&quot;&quot;&quot;</span>
+
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span>
+        <span class="n">Collaborator</span><span class="p">,</span> <span class="n">through</span><span class="o">=</span><span class="s1">&#39;DatasetAuthorship&#39;</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;datasets&#39;</span><span class="p">)</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Publication date&#39;</span><span class="p">),</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">version_number</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Version number&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Format&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Form of data (e.g., </span><span class="se">\&#39;</span><span class="s1">Datafile and Codebook</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+                    <span class="s1">&#39; or </span><span class="se">\&#39;</span><span class="s1">Datafile</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">producer</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Producer&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">producer_place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Producer location&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">distributor</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Distributor&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">distributor_place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Distributor location&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">retrieval_url</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Retrieval URL&#39;</span><span class="p">),</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Used for URL linked to dataset&#39;</span><span class="p">))</span>
+    <span class="n">available_from_url</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">URLField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Available from URL&#39;</span><span class="p">),</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;Used to link to a download page&#39;</span><span class="p">))</span>
+    <span class="n">doi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">(</span><span class="s1">&#39;DOI&#39;</span><span class="p">),</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Dataset.get_absolute_url"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.Dataset.get_absolute_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_absolute_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;Returns reverse URL for an instance of a dataset.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span>
+            <span class="s1">&#39;cv:item_detail&#39;</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">slug</span><span class="p">})</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of a dataset instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">short_title</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DatasetAuthorship"><a class="viewcode-back" href="../../../reference/models.html#cv.models.works.DatasetAuthorship">[docs]</a><span class="k">class</span> <span class="nc">DatasetAuthorship</span><span class="p">(</span><span class="n">CollaborationModel</span><span class="p">,</span> <span class="n">StudentCollaborationModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Store object relating creators of dataset to a dataset instance.&quot;&quot;&quot;</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">Dataset</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s2">&quot;authorship&quot;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;display_order&#39;</span><span class="p">]</span>
+        <span class="n">unique_together</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;display_order&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Django-Vitae</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../views/index.html">Complete Vitae Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/index.html">CV Sections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shortcuts.html">Shortcuts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Module Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Michael Bader.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

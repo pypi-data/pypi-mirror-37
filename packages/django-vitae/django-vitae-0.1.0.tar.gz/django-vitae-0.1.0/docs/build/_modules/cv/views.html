@@ -1,0 +1,238 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>cv.views &#8212; Django-Vitae 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for cv.views</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">django.apps</span> <span class="k">import</span> <span class="n">apps</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="k">import</span> <span class="n">Http404</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="k">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">render</span><span class="p">,</span> <span class="n">redirect</span>
+<span class="kn">from</span> <span class="nn">django.views</span> <span class="k">import</span> <span class="n">generic</span>
+
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">modules</span>
+
+<span class="kn">from</span> <span class="nn">cv.models</span> <span class="k">import</span> <span class="n">Award</span><span class="p">,</span> <span class="n">Position</span><span class="p">,</span> <span class="n">Degree</span><span class="p">,</span> \
+    <span class="n">Article</span><span class="p">,</span> <span class="n">Book</span><span class="p">,</span> <span class="n">Chapter</span><span class="p">,</span> <span class="n">Report</span><span class="p">,</span> \
+    <span class="n">Grant</span><span class="p">,</span> <span class="n">Talk</span><span class="p">,</span> <span class="n">OtherWriting</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> \
+    <span class="n">MediaMention</span><span class="p">,</span> <span class="n">Service</span><span class="p">,</span> <span class="n">JournalService</span><span class="p">,</span> <span class="n">Student</span><span class="p">,</span> <span class="n">Course</span>
+<span class="kn">from</span> <span class="nn">.pdf</span> <span class="k">import</span> <span class="n">cv_pdf</span>
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="k">import</span> <span class="n">CVCreateView</span><span class="p">,</span> <span class="n">CVUpdateView</span><span class="p">,</span> <span class="n">CVDeleteView</span>
+
+
+<span class="n">MODELS</span> <span class="o">=</span> <span class="p">[</span><span class="n">Award</span><span class="p">,</span> <span class="n">Position</span><span class="p">,</span> <span class="n">Degree</span><span class="p">,</span>
+          <span class="n">Article</span><span class="p">,</span> <span class="n">Book</span><span class="p">,</span> <span class="n">Chapter</span><span class="p">,</span> <span class="n">Report</span><span class="p">,</span>
+          <span class="n">Grant</span><span class="p">,</span> <span class="n">Talk</span><span class="p">,</span> <span class="n">OtherWriting</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span>
+          <span class="n">MediaMention</span><span class="p">,</span> <span class="n">Service</span><span class="p">,</span> <span class="n">JournalService</span><span class="p">,</span>
+          <span class="n">Student</span><span class="p">,</span> <span class="n">Course</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="CVListMixin"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListMixin">[docs]</a><span class="k">class</span> <span class="nc">CVListMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class of helper functions to gather data for CV sections.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CVListMixin.sum_items"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListMixin.sum_items">[docs]</a>    <span class="k">def</span> <span class="nf">sum_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sum items across dictionaries.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span></div>
+
+<div class="viewcode-block" id="CVListMixin.get_cv_list"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListMixin.get_cv_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_cv_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gather data for CV section into dictionaries.&quot;&quot;&quot;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">model_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">model_plural</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">verbose_name_plural</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">displayable</span><span class="p">,</span> <span class="s1">&#39;management_lists&#39;</span><span class="p">):</span>
+            <span class="n">management_lists</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">displayable</span><span class="o">.</span><span class="n">management_lists</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">mgr</span> <span class="ow">in</span> <span class="n">management_lists</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">displayable</span><span class="p">,</span> <span class="n">mgr</span><span class="p">)</span>
+                <span class="n">context_key</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">_list&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">mgr</span><span class="p">)</span>
+                <span class="n">data_dict</span><span class="p">[</span><span class="n">context_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span><span class="p">()</span>
+            <span class="n">total_key</span> <span class="o">=</span> <span class="s1">&#39;total_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_plural</span><span class="p">)</span>
+            <span class="n">data_dict</span><span class="p">[</span><span class="n">total_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_items</span><span class="p">(</span><span class="n">data_dict</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">data_dict</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_list&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">):</span> <span class="n">model</span><span class="o">.</span><span class="n">displayable</span><span class="o">.</span><span class="n">all</span><span class="p">()}</span></div>
+
+<div class="viewcode-block" id="CVListMixin.get_cv_primary_positions"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListMixin.get_cv_primary_positions">[docs]</a>    <span class="k">def</span> <span class="nf">get_cv_primary_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return dictionary of CV data with current positions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;primary_positions&#39;</span><span class="p">:</span> <span class="n">Position</span><span class="o">.</span><span class="n">primarypositions</span><span class="o">.</span><span class="n">all</span><span class="p">()}</span></div></div>
+
+
+<div class="viewcode-block" id="CVView"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVView">[docs]</a><span class="k">class</span> <span class="nc">CVView</span><span class="p">(</span><span class="n">generic</span><span class="o">.</span><span class="n">TemplateView</span><span class="p">,</span> <span class="n">CVListMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An HTML representation of a CV.&quot;&quot;&quot;</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;cv/cv.html&#39;</span>
+
+<div class="viewcode-block" id="CVView.get_context_data"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVView.get_context_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return dictionary of different types of CV entries.&quot;&quot;&quot;</span>
+        <span class="n">cv_entry_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cv_list</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">MODELS</span><span class="p">]</span>
+        <span class="n">cv_entry_list</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cv_primary_positions</span><span class="p">()]</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">cv_entry_list</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">context</span></div></div>
+
+
+<span class="c1"># Views</span>
+<span class="n">DETAIL_VIEWS_AVAILABLE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;article&#39;</span><span class="p">,</span> <span class="s1">&#39;book&#39;</span><span class="p">,</span> <span class="s1">&#39;chapter&#39;</span><span class="p">,</span> <span class="s1">&#39;report&#39;</span><span class="p">,</span> <span class="s1">&#39;talk&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span>
+<span class="p">]</span>
+<span class="n">CITATION_VIEWS_AVAILABLE</span> <span class="o">=</span> <span class="n">DETAIL_VIEWS_AVAILABLE</span>
+
+
+<div class="viewcode-block" id="CVListView"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListView">[docs]</a><span class="k">class</span> <span class="nc">CVListView</span><span class="p">(</span><span class="n">generic</span><span class="o">.</span><span class="n">ListView</span><span class="p">,</span> <span class="n">CVListMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates view of all instances for a particular section.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CVListView.dispatch"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListView.dispatch">[docs]</a>    <span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set class parameters based on URL and dispatch.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;model_name&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context_object_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">verbose_name_plural</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CVListView.get_queryset"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListView.get_queryset">[docs]</a>    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">modules</span><span class="p">[</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cv_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CVListView.get_template_names"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVListView.get_template_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_template_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the name template to use to display a list of model instances.</span>
+
+<span class="sd">        Currently returns ``cv/lists/&lt;model_name&gt;_list.html``.</span>
+
+<span class="sd">        Might add a generic template for vitae models in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;cv/lists/</span><span class="si">%s</span><span class="s1">_list.html&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="CVDetailView"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVDetailView">[docs]</a><span class="k">class</span> <span class="nc">CVDetailView</span><span class="p">(</span><span class="n">generic</span><span class="o">.</span><span class="n">DetailView</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates view of a single instance of a CV item.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;model_name&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DETAIL_VIEWS_AVAILABLE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s1">&#39;Detailed information not &#39;</span>
+                          <span class="s1">&#39;available for </span><span class="si">{0}</span><span class="s1">s&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context_object_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">verbose_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CVDetailView.get_template_names"><a class="viewcode-back" href="../../reference/views.html#cv.views.CVDetailView.get_template_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_template_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the name template to use to display a list of model instances.</span>
+
+<span class="sd">        Currently returns ``cv/lists/&lt;model_name&gt;_detail.html``.</span>
+
+<span class="sd">        Might add a generic template for vitae models in the future.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;cv/details/</span><span class="si">%s</span><span class="s1">_detail.html&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)]</span></div></div>
+
+
+<div class="viewcode-block" id="citation_view"><a class="viewcode-back" href="../../reference/views.html#cv.views.citation_view">[docs]</a><span class="k">def</span> <span class="nf">citation_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="n">slug</span><span class="p">,</span> <span class="nb">format</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns view to allow citation to be downloaded to citation management</span>
+<span class="sd">    software.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CITATION_VIEWS_AVAILABLE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s1">&#39;Citation format not &#39;</span>
+                      <span class="s1">&#39;available for </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="n">model_name</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="n">slug</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;ris&quot;</span><span class="p">:</span>
+        <span class="n">template_file</span> <span class="o">=</span> <span class="s1">&#39;cv/citations/</span><span class="si">{0}</span><span class="s1">.ris&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">mime</span> <span class="o">=</span> <span class="s1">&#39;application/x-research-info-systems&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">template_file</span> <span class="o">=</span> <span class="s1">&#39;cv/citations/</span><span class="si">{0}</span><span class="s1">.bib&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">mime</span> <span class="o">=</span> <span class="s1">&#39;application/x-bibtex&#39;</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">template_file</span><span class="p">,</span> <span class="p">{</span><span class="n">model_name</span><span class="p">:</span> <span class="n">p</span><span class="p">},</span> <span class="n">content_type</span><span class="o">=</span><span class="n">mime</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Django-Vitae</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../views/index.html">Complete Vitae Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/index.html">CV Sections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shortcuts.html">Shortcuts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Module Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Michael Bader.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

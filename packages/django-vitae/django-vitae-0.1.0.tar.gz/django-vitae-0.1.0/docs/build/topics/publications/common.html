@@ -1,0 +1,316 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Common Features &#8212; Django-Vitae 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Articles" href="articles.html" />
+    <link rel="prev" title="Publications" href="index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="common-features">
+<span id="topics-pubs-common-features"></span><h1>Common Features<a class="headerlink" href="#common-features" title="Permalink to this headline">¶</a></h1>
+<p>Publications, regardless of type, all have some common traits such as titles and lists of
+authors. Django-Vitae defines a number of common features across the four different types of
+publications. Internally, Django-Vitae does this by defining a series of abstract classes.
+The different publication models inherit from the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">VitaePublicationModel</span></code> abstract model.</p>
+<div class="section" id="common-fields">
+<span id="topics-pubs-common-fields"></span><h2>Common Fields<a class="headerlink" href="#common-fields" title="Permalink to this headline">¶</a></h2>
+<p>The following fields are common across the four types of publications:</p>
+<dl class="docutils">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">title</span></code></dt>
+<dd>The title of the publication (<strong>required</strong>).</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">short_title</span></code></dt>
+<dd><p class="first">A shortened title of the publication with a maximum length of 80 characters
+(<strong>required</strong>).</p>
+<p class="last">This can be the “running head” of a publication. Django-Vitae uses the slugified version
+of the short title to construct URLs for the item.</p>
+</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">slug</span></code></dt>
+<dd><p class="first">A slugified version of the short-title to use in URLs (<strong>required</strong>).</p>
+<p class="last">The slugs are automatically constructed from the <code class="xref py py-attr docutils literal notranslate"><span class="pre">short_title</span></code> in
+<code class="xref py py-class docutils literal notranslate"><span class="pre">admin</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="topics-pubs-status-table">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code></dt>
+<dd><p class="first">The point in the publication process where the publication currently rests
+(<strong>required</strong>).</p>
+<p>All publication models include an <code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code> field, which represents
+the where in publication process the publication currently exists.
+Django-Vitae implements the <code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code> field by using an
+<a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/fields.html#django.db.models.IntegerField" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> with the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">choices</span></code> parameter defined in
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">CV_PUBLICATION_STATUS_CHOICES</span></code>. The default values of
+the <code class="xref py py-attr docutils literal notranslate"><span class="pre">PUBLICATION_STATUS_CHOICES</span></code> setting are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="82%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Integer</th>
+<th class="head">Status</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>In preparation</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>Working paper</td>
+</tr>
+<tr class="row-even"><td>20</td>
+<td>Submitted</td>
+</tr>
+<tr class="row-odd"><td>30</td>
+<td>Revision for resubmission invited</td>
+</tr>
+<tr class="row-even"><td>35</td>
+<td>Resubmitted</td>
+</tr>
+<tr class="row-odd"><td>40</td>
+<td>Conditionally accepted</td>
+</tr>
+<tr class="row-even"><td>50</td>
+<td>Forthcoming</td>
+</tr>
+<tr class="row-odd"><td>55</td>
+<td>In press</td>
+</tr>
+<tr class="row-even"><td>60</td>
+<td>Published</td>
+</tr>
+<tr class="row-odd"><td>99</td>
+<td>“Resting”</td>
+</tr>
+</tbody>
+</table>
+<p class="last">A user may <a class="reference internal" href="../../settings.html#cv-publication-status-choices"><span class="std std-ref">customize</span></a> the integer values and labels by defining their
+own <code class="docutils literal notranslate"><span class="pre">CV_PUBLICATION_STATUS</span></code> option in their <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> file.</p>
+</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code></dt>
+<dd>The date that the publication was published in final form.</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_discipline</span></code></dt>
+<dd><p class="first">The discipline to which the publication contributes most directly.</p>
+<p class="last">A <a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/fields.html#django.db.models.ForeignKey" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> relationship to a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">cv.models.Discipline</span></code> object. Can be useful for researchers who work in
+multiple disciplines to separate their CV into sections for each discipline.</p>
+</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">other_disciplines</span></code></dt>
+<dd><p class="first">Disciplines other than the primary discipline to which the publication contributes.</p>
+<p class="last">A <a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/fields.html#django.db.models.ManyToManyField" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> relationship to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">cv.models.Discipline</span></code> objects.</p>
+</dd>
+</dl>
+<p>Each publication model contains two non-editable fields managed
+internally that can be accessed for instances of the model:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">abstract_html</span></code> that converts text entered in Markdown in</dt>
+<dd><code class="xref py py-attr docutils literal notranslate"><span class="pre">abstract</span></code> field to html, and</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_published</span></code> that indicates whether <code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code> field is</dt>
+<dd>one of “Forthcoming,” “In Press,” or “Published”.</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="ordering">
+<span id="topics-pubs-ordering"></span><h2>Ordering<a class="headerlink" href="#ordering" title="Permalink to this headline">¶</a></h2>
+<p>The publication models order model instances by <code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code> in ascending order then by
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code> in descending order. This places the publications with the highest
+probability of changing at the top of sorted lists.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The publication models do not use <code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code> field to identify published
+articles and the built-in templates do not print the <code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code> field.
+Therefore, users can use the <code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code> field to order unpublished manuscripts
+in a convenient order.</p>
+</div>
+</div>
+<div class="section" id="managers">
+<span id="topics-pubs-common-managers"></span><h2>Managers<a class="headerlink" href="#managers" title="Permalink to this headline">¶</a></h2>
+<p>For all types of publications, users may access instances of publication with the <code class="docutils literal notranslate"><span class="pre">displayable</span></code> custom manager. In addition to the <code class="xref py py-attr docutils literal notranslate"><span class="pre">all()</span></code> method that returns all objects for which the <code class="xref py py-attr docutils literal notranslate"><span class="pre">display</span></code> attribute is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the manager also includes three other methods:</p>
+<dl class="docutils" id="topics-pubs-published-manager">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">published</span></code></dt>
+<dd>returns all publications that have been accepted for publication or
+published (forthcoming, in press, and published).</dd>
+</dl>
+<dl class="docutils" id="topics-pubs-revise-manager">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">revise</span></code></dt>
+<dd>returns all publications that are in the process of submission or revision
+(submitted, under revision for resubmission, resubmitted, or
+conditionally accepted).</dd>
+</dl>
+<dl class="docutils" id="topics-pubs-inprep-manager">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">inprep</span></code></dt>
+<dd>returns all publications being prepared for submission and publication.</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The custom managers the include multiple statuses retain the default
+ordering of the model (that is, they are ordered by <code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code>,
+then <code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code>, then <code class="xref py py-attr docutils literal notranslate"><span class="pre">submission_date</span></code>).</p>
+</div>
+</div>
+<div class="section" id="authorship-sets">
+<span id="topics-pubs-collaboration-sets"></span><h2>Authorship Sets<a class="headerlink" href="#authorship-sets" title="Permalink to this headline">¶</a></h2>
+<p>Publication types also share the common trait of having authors. More
+precisely, publications have <em>authorships</em> since a list of authors
+contains information, such as the order of authorship.</p>
+<p>For all publication type models, Django-Vitae includes an <code class="xref py py-attr docutils literal notranslate"><span class="pre">authorship</span></code>
+attribute that returns a <a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/querysets.html#django.db.models.query.QuerySet" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuerySet</span></code></a> of
+authorships, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cv.models</span> <span class="k">import</span> <span class="n">Article</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">article</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">article</span><span class="o">.</span><span class="n">authorship</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;ArticleAuthorship: Kahneman, Daniel&gt;,</span>
+<span class="go">   &lt;ArticleAuthorship: Tversky, Amos]&gt;]</span>
+</pre></div>
+</div>
+<p>Internally, the authorship attributes are implemented as a
+<a class="reference external" href="https://django.readthedocs.io/en/2.0.x/ref/models/fields.html#django.db.models.ManyToManyField" title="(in Django v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.ManyToManyField</span></code></a> that relate an instance of the
+publication type (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Article</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Book</span></code>, etc.) to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Collaborator</span></code> through a third model.</p>
+<p>Authorship models for all publication types have three common fields:</p>
+<dl class="docutils">
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">display_order</span></code></dt>
+<dd>Integer that classifies the position of the author in the list of authors
+(<strong>required</strong>)</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">print_middle</span></code></dt>
+<dd>Boolean that indicates whether the author’s middle initials should be
+printed in list of authors (default=True)</dd>
+<dt><code class="xref py py-attr docutils literal notranslate"><span class="pre">student_colleague</span></code></dt>
+<dd>Choice field with possible values defined by
+<a class="reference internal" href="../../settings.html#cv-student-levels-choices"><span class="std std-ref">CV_STUDENT_LEVELS_CHOICES</span></a> setting; allows display of student
+collaborations</dd>
+</dl>
+</div>
+<div class="section" id="custom-methods">
+<span id="topics-pubs-custom-methods"></span><h2>Custom Methods<a class="headerlink" href="#custom-methods" title="Permalink to this headline">¶</a></h2>
+<p>Each of the publication models includes the custom functions,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">get_previous_published()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">get_next_published()</span></code> that will
+return next and previous <em>published</em> instance of the model using the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">pub_date</span></code> field.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="xref py py-func docutils literal notranslate"><span class="pre">get_previous_published()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">get_next_published()</span></code>
+functions are designed to emulate the Django <a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/models/instances/#django.db.models.Model.get_next_by_FOO">built-in methods</a>
+<code class="docutils literal notranslate"><span class="pre">get_next_by_FOO</span></code> and <code class="docutils literal notranslate"><span class="pre">get_next_by_FOO</span></code></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Django-Vitae</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../views/index.html">Complete Vitae Views</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">CV Sections</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Publications</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Common Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="articles.html">Articles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="books.html">Books</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chapters.html">Chapters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../works/index.html">Other Works</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../shortcuts.html">Shortcuts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Module Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">CV Sections</a><ul>
+  <li><a href="index.html">Publications</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Publications</a></li>
+      <li>Next: <a href="articles.html" title="next chapter">Articles</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Michael Bader.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/topics/publications/common.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
