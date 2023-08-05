@@ -1,0 +1,114 @@
+# ker_dict_tools
+
+Smart tools to operate on Python's dicts.
+
+  - **_dict_diff()_**: Function to compare two dicts reporting their differences.
+  - **_get_value_by_path()_**: Get single or multiple values from a dict passing the path leading to them.
+  - **_set_value_by_path()_**: Set a value in a nested dict passing the path leading to it.
+  
+### The 'path' concept:
+I needed a smart way to access dict whose structure could change unpredictably (for example nested list of dicts) putting them in relationship with other objects.
+So i developed the functions 'get_value_by_path()' and 'set_value_by_path()' that allows me to access to those values in a safe and rapid way.
+The _path_ is a list of values, each one pointing to a subsequential sub-level of the dict.
+For example, given the dict:
+```
+dct = {
+    "foo": [
+        {"bar":1},
+        {"baz":2}
+    ]
+}
+```
+the path to access to the value _2_ is:
+```
+[
+    "foo",      # Key for outer level of the dict
+    1,          # Index for list contained in the "foo" value
+    "baz"       # Key for dict at index 1 of the list
+]
+```
+Since is designed to be used in a context where the actual dict could be partially unknown, the entry point to define a path to be used is the **_get_value_by_path()_** function, wich accepts a much more "elastic" list (allowing simple queries on the dict).
+## get_value_by_path(_dct_, _path_, _fail=False_, _debug=False_)
+Allows to retrieve the value (or values) stored somewhere in the _dct_ dict if the given _path_ is correct (corresponds to the structure of the dict).
+The _dct_ argument can be either a _dict_ or a _list of dicts_.
+If the _fail_ argument is passed (_True_), when an element in the _path_ doesn't correspond to the the layer of the _dct_ dict where is applied, a _TypeError_ exception will be raised. Otherwise the function will return an empty namedtuple with _0_ as value for _.found_ attribute.
+If the _debug_ argument is passed (_True_), the function will log (using the _logging_ module) every operation with a _debug_ level.
+
+#### Accepted values in the _path_ list when passed to _get_values_by_path()_
+
+| Dict layer type | Accepted Values |
+|-----------------|-----------------|
+| List of dicts | **int** (Index of list) |
+| | **dict** (_key:value_ pair to be matched in one or more dicts inside the list) |
+| | **list (of dicts)** (list of dicts containing a single _key:value_pair, all to be matched in one or more dict inside the list)|
+| | **str** (key to be found among keys of dicts contained in the list)|
+| | **string "\*"** (wildcard to return all the elements in the list)|
+| Dict | **str** (key for the dict) |
+| | **string "\*"** (wildcard to return all items in the dict) |
+
+For example:
+```
+dct = [
+{ "foo": [{"bar":1, "baz":2},{"bar":3, "baz":4}] },
+{ "foo": [{"bar":5, "baz":6},{"bar":7, "baz":8}] },
+]
+path1 = [0, "foo", {"bar":1}, "baz"] 
+path2 = [0, "foo", 0, "baz"]
+```
+_path1_ and _path2_ will lead to the value 2.
+With:
+```
+path3 = [0, "foo", "*", "baz"]
+```
+_path3_ will lead to the values _2_ and _4_
+
+#### Object returned by _get_value_by_path()_
+The function will return a _dict_search_ object.
+```
+res = get_value_by_path(myDict, myPath)
+
+res => 'dict_search'(
+    found=n, # -> number of matches
+    results=[
+        dict_branch(
+            path={list1} # Path leading to the value #1
+            value={value1} # Value #1
+            ),
+        dict_branch(
+            path={list2} # Path leading to the value #2
+            value={any} # Value #2
+            ),
+        ...
+            
+    ]
+    )
+```
+The function will return a '_dict_search_' namedtuple, containing two attributes:
+ - **.found** {int}: Number of elements in the dict matching the given _path_
+ - **.results** {list}: List of _dict_branch_ namedtuples, each one specifing the _path_ and _value_ of for the elements matching the given path.
+##### _dict_branch_ namedtuple structure:
+- **.path** {list}: "normalized" path leading to the value (contains only dict keys or list indexes)
+- **.value** {any}: value found at specified _path_
+### Using _get_value_by_path()_ to query the dict
+Is also possible to verify if a given value is present at a certain layer of the dict passing as path the path leading to it and specifing the value to find as last item in the path's list.
+The function returns a namedtuple that specifies at index 0 (_.found_) the number of matches for the given path.
+
+## set_value_by_path(_dct_, _path_, _value_, _debug=False_)
+Allows to set a given _value_ at a certain position of the _dct_ dict specified with the given _path_.
+The _path_ argument must be a list of _ints_ or _strings_ according to the structure of the dict (such those returned in the _dict_search_ object from _get_value_by_path()_).
+
+## diff_dict(_dct1_, _dct2_, _fail=False_, _startPath=None_)
+Performs a comparison from _dct1_ and _dct2_ dicts. 
+Those two arguments must be of the same type (bot lists of dicts or simple dicts).
+Returns a '_diff_results_' object, containing four attributes:
+- **.compared** {bool}: True if the comparison has been performed without problems.
+- **.updated** {list}: List of '_updated_item_' namedtuple (see below) containing info about elements present in both dicts but with different values.
+- **.added** {list}: List of paths pointing elements found in the _dct2_ but not in the _dct1_.
+- **.removed** {list}: List of paths pointing elements found in the _dct1_ but not in the _dct2_.
+
+The _updated_item_ namedtuple, that populates the _.updated_ list, has the follwing structure:
+- **.path** {list}: Path leading to updated element.
+- **.old_value** {any}: Old value for the element.
+- **.old_type** {type}: Old type for element's value.
+- **.new_value** {any}: New value for the element.
+- **.new_type** {type}: New type for element's value.
