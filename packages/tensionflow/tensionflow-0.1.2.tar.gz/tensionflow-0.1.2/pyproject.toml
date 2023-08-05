@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "tensionflow"
+version = "0.1.2"
+description = "A Tensorflow framework for working with audio data."
+authors = [
+    "Colin Fahy <colin@cfahy.com>",
+]
+license = "LGPL-3.0"
+readme = "README.md"
+homepage = "https://github.com/Curly-Mo/tensionflow"
+repository = "https://github.com/Curly-Mo/tensionflow"
+documentation = "https://tensionflow.readthedocs.org/en/latest/"
+keywords = []
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
+[tool.poetry.scripts]
+tensionflow = 'tensionflow.cli:cli'
+
+# Requirements
+[tool.poetry.dependencies]
+python = "^3.6"
+typing = "^3.6"
+click = "^6.7"
+bidict = "^0.14"
+librosa = "^0.6"
+numpy = "^1.14"
+pandas = "^0.23"
+# latest stable release is broken when using InMemoryEvaluatorHook
+# latest nightly won't play nicely with poetry
+tf-nightly = "=1.11.0.dev20180808"
+llvmlite = "^0.24.0"
+# tensorflow = {path = "./lib/tensorflow-1.8.0rc1-cp36-cp36m-linux_x86_64.sycl.whl"}
+
+tensorboard = "^1.10"
+[tool.poetry.dev-dependencies]
+pytest = "~3.4"
+pytest-cov = "~2.5"
+pytest-mock = "~1.9"
+tox = "*"
+sphinx = "*"
+sphinx-autobuild = "*"
+sphinx_rtd_theme = "*"
+sphinxcontrib-apidoc = "*"
+# black only works on python 3.6+, still in alpha, but it's good
+black = { version = "^18.5b0", python = "^3.6" }
+yapf = "*"
+flake8 = "*"
+isort = "*"
+bandit = "*"
+mypy = { version = "*", optional = true }
+ipython = "^6.4"
+pylint = "^2.0"
+
+[tool.poetry.extras]
+mypy = ["mypy"]
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
