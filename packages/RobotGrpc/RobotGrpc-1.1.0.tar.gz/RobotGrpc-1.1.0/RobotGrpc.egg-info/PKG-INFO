@@ -1,0 +1,137 @@
+Metadata-Version: 2.1
+Name: RobotGrpc
+Version: 1.1.0
+Summary: robot grpc support
+Home-page: https://github.com/pypa/sampleproject
+Author: jinkerjiang
+Author-email: jinkerjiang@gmail.com
+License: UNKNOWN
+Description: ##  环境要求
+         
+        - python >= 2.7
+        - pip
+        - node >= 10，设置环境变量保证`node -v`正常输出
+        
+        ## 安装
+        - `npm config set registry https://registry.npm.taobao.org && npm config set @yunke:registry https://registry-npm.myscrm.cn/repository/yunke/`
+        - `npm i -g robot-grpc`
+        - `pip install RobotGrpc`
+        - 如果使用Windows系统的RIDE，需要重启机器
+        
+        ## 使用示例
+        
+        ### robot脚本文件
+        
+        ```robot
+        *** Settings ***
+        Library   RobotGrpc      api.myscrm.cn:30051    https://git.myscrm.cn/jiangj01/panther-proto.git    f-20180508-project   b1wZx77sDx1YQPLyLww3
+        
+        *** Test Cases ***
+        调用grpc方法
+            ${res} =  invoke grpc method  article_project.ProjectArticleService.GetArticleInfo  { "sid": "12323553" }
+            log  ${res}
+        
+        执行所有用例
+            run grpc cases  ${CURDIR}/GetArticleInfo.js
+        
+        指定运行特定用例
+            run grpc cases  ${CURDIR}/GetArticleInfo.js  异常
+        
+        运行场景用例
+            run grpc cases  ${CURDIR}/login.js
+        ```
+        
+        ### GetArticleInfo.js
+        
+        ```js
+        const id = "article_project.ProjectArticleService.GetArticleInfo";
+        
+        module.exports = {
+          id: id,
+          cases: {
+            正常: {
+              id: id,
+              name: "正常",
+              desc: 'desc',
+              request: {
+                "article_id": 0,
+                "yk_org_code": "string",
+                "project_id": 0
+              },
+              response: {
+                "article_id": 0,
+                "yk_org_code": "string",
+                "user_id": 0,
+                "title": "string", // 标题
+                "thumbnail": "string",
+                "publish_time": 0,
+                "record_info": {
+                  "read_num": 0,
+                  "read_person_num": 0,
+                  "forwarded_num": 0,
+                  "forwarded_person_num": 0,
+                  "like_num": 0,
+                  "like_list": [{}]
+                },
+                "project_id": 0,
+                "post_content": "string",
+                "status": 0
+              }
+            },
+            异常: {
+              id: id,
+              name: "异常",
+              desc: '',
+              request: {
+                "article_id": 0,
+                "yk_org_code": "string",
+                "project_id": 0
+              },
+              response: {
+                "article_id": 1,
+                "yk_org_code": "string",
+                "user_id": 0,
+                "title": "string", // 标题
+                "thumbnail": "string",
+                "publish_time": 0,
+                "record_info": {
+                  "read_num": 0,
+                  "read_person_num": 0,
+                  "forwarded_num": 0,
+                  "forwarded_person_num": 0,
+                  "like_num": 0,
+                  "like_list": [
+                    {
+                    }
+                  ]
+                },
+                "project_id": 0,
+                "post_content": "string",
+                "status": 0
+              }
+            }
+          }
+        }
+        
+        ```
+        
+        
+        ### login.js
+        
+        ```js
+        const GetArticleInfo = require('./GetArticleInfo');
+        
+        module.exports = {
+          id: 'login',
+          cases: [
+            GetArticleInfo.cases.正常,
+            GetArticleInfo.cases.异常,
+          ],
+        }
+        
+        ```
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
