@@ -1,0 +1,267 @@
+---
+version: '2.0'
+name: tripleo.package_update.v1
+description: TripleO update workflows
+
+workflows:
+
+  package_update_plan:
+    description: >-
+      Update the heat stack outputs for purposes of
+      update/upgrade. This workflow assumes that previously the
+      plan_management.update_deployment_plan workflow has already been
+      run to process the templates and environments (the same way as
+      'deploy' command processes them).
+
+    input:
+      - container
+      - timeout: 240
+      - queue_name: tripleo
+      - skip_deploy_identifier: False
+      - config_dir: '/tmp/'
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      container_image_prepare_params:
+        action: tripleo.container_images.prepare_params
+        input:
+          container: <% $.container %>
+        publish-on-error:
+          message: <% task().result %>
+        on-success: update_stack
+        on-error: set_update_failed
+
+      update_stack:
+        action: tripleo.package_update.update_stack
+        input:
+          timeout: <% $.timeout %>
+          container: <% $.container %>
+        on-success: send_message
+        on-error: set_update_failed
+
+      set_update_failed:
+        on-success: send_message
+        publish:
+          status: FAILED
+          message: <% task(update).result %>
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>
+
+  get_config:
+    input:
+      - container
+      - queue_name: tripleo
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      get_config:
+        action: tripleo.config.get_overcloud_config container=<% $.container %>
+        publish:
+          status: SUCCESS
+          message: <% task().result %>
+        publish-on-error:
+          status: FAILED
+          message: Init Minor update failed
+        on-complete: send_message
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>
+
+  update_nodes:
+    description: Take a container and perform an update nodes by nodes
+
+    input:
+      - node_user: tripleo-admin
+      - nodes
+      - playbook
+      - inventory_file
+      - ansible_queue_name: tripleo
+      - module_path: /usr/share/ansible-modules
+      - ansible_extra_env_variables:
+            ANSIBLE_LOG_PATH: /var/log/mistral/package_update.log
+            ANSIBLE_HOST_KEY_CHECKING: 'False'
+      - verbosity: 1
+      - work_dir: /var/lib/mistral
+      - tags: ''
+      - skip_tags: ''
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      download_config:
+        action: tripleo.config.download_config
+        input:
+          work_dir: <% $.work_dir %>/<% execution().id %>
+        on-success: get_private_key
+        on-error: node_update_failed
+
+      get_private_key:
+        action: tripleo.validations.get_privkey
+        publish:
+          private_key: <% task().result %>
+        on-success: node_update
+
+      node_update:
+        action: tripleo.ansible-playbook
+        input:
+          inventory: <% $.inventory_file %>
+          playbook: <% $.work_dir %>/<% execution().id %>/<% $.playbook %>
+          remote_user: <% $.node_user %>
+          become: true
+          become_user: root
+          verbosity: <% $.verbosity %>
+          ssh_private_key: <% $.private_key %>
+          extra_env_variables: <% $.ansible_extra_env_variables %>
+          limit_hosts: <% $.nodes %>
+          module_path: <% $.module_path %>
+          queue_name: <% $.ansible_queue_name %>
+          execution_id: <% execution().id %>
+          tags: <% $.tags %>
+          skip_tags: <% $.skip_tags %>
+          trash_output: true
+        on-success:
+          - node_update_passed: <% task().result.returncode = 0 %>
+          - node_update_failed: <% task().result.returncode != 0 %>
+        on-error: node_update_failed
+        publish:
+          output: <% task().result %>
+
+      node_update_passed:
+        on-success: send_message
+        publish:
+          status: SUCCESS
+          message: Updated nodes - <% $.nodes %>
+
+      node_update_failed:
+        on-success: send_message
+        publish:
+          status: FAILED
+          message: Failed to update nodes - <% $.nodes %>, please see the logs.
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.ansible_queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>
+
+  update_converge_plan:
+    description: Take a container and perform the converge for minor update
+
+    input:
+      - container
+      - queue_name: tripleo
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      remove_noop:
+        action: tripleo.plan.remove_noop_deploystep
+        input:
+          container: <% $.container %>
+        on-success: send_message
+        on-error: set_update_failed
+
+      set_update_failed:
+        on-success: send_message
+        publish:
+          status: FAILED
+          message: <% task(remove_noop).result %>
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>
+
+  converge_upgrade_plan:
+    description: Take a container and perform the converge step of a major upgrade
+
+    input:
+      - container
+      - timeout: 240
+      - queue_name: tripleo
+      - skip_deploy_identifier: False
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      remove_noop:
+        action: tripleo.plan.remove_noop_deploystep
+        input:
+          container: <% $.container %>
+        on-success: send_message
+        on-error: set_update_failed
+
+      set_update_failed:
+        on-success: send_message
+        publish:
+          status: FAILED
+          message: <% task(upgrade_converge).result %>
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>
+
+  ffwd_upgrade_converge_plan:
+    description: ffwd-upgrade converge removes DeploymentSteps no-op from plan
+
+    input:
+      - container
+      - queue_name: tripleo
+
+    tags:
+      - tripleo-common-managed
+
+    tasks:
+      remove_noop:
+        action: tripleo.plan.remove_noop_deploystep
+        input:
+          container: <% $.container %>
+        on-success: send_message
+        on-error: set_update_failed
+
+      set_update_failed:
+        on-success: send_message
+        publish:
+          status: FAILED
+          message: <% task(remove_noop).result %>
+
+      send_message:
+        workflow: tripleo.messaging.v1.send
+        input:
+          queue_name: <% $.queue_name %>
+          type: <% execution().name %>
+          status: <% $.get('status', 'SUCCESS') %>
+          message: <% $.get('message', '') %>
+          execution: <% execution() %>

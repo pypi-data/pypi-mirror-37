@@ -1,0 +1,68 @@
+- name: Lookup deployment UUID
+  set_fact:
+    deployment_uuid: "{{ lookup('file', tripleo_role_name ~ '/' ~ ansible_hostname | lower ~ '/' ~ item) | from_yaml | json_query(item ~ '.id')}}"
+
+- name: "Render deployment file for {{ item }}"
+  copy:
+    content: "[ {{ lookup('file', tripleo_role_name ~ '/' ~ ansible_hostname | lower ~ '/' ~ item) | from_yaml | json_query(item) }} ]"
+    dest: "/var/lib/heat-config/tripleo-config-download/{{ item ~ '-' ~ deployment_uuid }}"
+  become: true
+
+- name: "Check if deployed file exists for {{ item }}"
+  stat:
+    path: /var/lib/heat-config/deployed/{{ deployment_uuid }}.json
+  register: deployed_file_stat
+
+- name: "Check previous deployment rc for {{ item }}"
+  shell: |
+    exit $(jq .deploy_status_code /var/lib/heat-config/deployed/{{ deployment_uuid }}.notify.json)
+  register: previous_deployment_result
+  ignore_errors: true
+  failed_when: false
+  when: deployed_file_stat.stat.exists
+
+- name: "Remove deployed file for {{ item }} when previous deployment failed"
+  file:
+    path: /var/lib/heat-config/deployed/{{ deployment_uuid }}.json
+    state: absent
+  become: true
+  when:
+    - not ansible_check_mode
+    - deployed_file_stat.stat.exists
+    - previous_deployment_result.rc != 0
+
+- name: "Force remove deployed file for {{ item }}"
+  file:
+    path: /var/lib/heat-config/deployed/{{ deployment_uuid }}.json
+    state: absent
+  become: true
+  when: (force | bool)
+
+- name: "Run deployment {{ item }}"
+  shell: |
+    /usr/libexec/os-refresh-config/configure.d/55-heat-config
+    exit $(jq .deploy_status_code /var/lib/heat-config/deployed/{{ deployment_uuid }}.notify.json)
+  become: true
+  environment:
+    HEAT_SHELL_CONFIG: /var/lib/heat-config/tripleo-config-download/{{ item ~ '-' ~ deployment_uuid }}
+  register: deployment_result
+  ignore_errors: yes
+
+- name: "Output for {{ item }}"
+  debug:
+    msg:
+      - stderr: "{{ deployment_result.stderr.split('\n') }}"
+      - status_code: "{{ deployment_result.rc }}"
+  tags:
+    - output
+  failed_when: deployment_result.rc != 0
+  when: not ansible_check_mode
+
+- name: "Check-mode for Run deployment {{ item }} (changed status indicates deployment would run)"
+  stat:
+    path: /var/lib/heat-config/deployed/{{ deployment_uuid }}.json
+  become: true
+  register: deploy_exists
+  changed_when: not deploy_exists.stat.exists
+  when: ansible_check_mode
+  ignore_errors: yes
