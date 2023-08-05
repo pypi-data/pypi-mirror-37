@@ -1,0 +1,61 @@
+Metadata-Version: 2.1
+Name: dictfilter
+Version: 1.2
+Summary: Filter dictionaries based on a list of field names.
+Home-page: https://git.bink.com/libs/dictfilter
+Author: Chris Latham
+Author-email: backwardspy@gmail.com
+License: UNKNOWN
+Description: # dictfilter
+        
+        [![pipeline status](https://git.bink.com/libs/dictfilter/badges/master/pipeline.svg)](https://git.bink.com/libs/dictfilter/commits/master) [![coverage report](https://git.bink.com/libs/dictfilter/badges/master/coverage.svg)](https://git.bink.com/libs/dictfilter/commits/master)
+        
+        ## installation
+        
+        ```shell
+        pip install dictfilter
+        ```
+        
+        ## usage
+        
+        ```python
+        bsg = {
+            'class': 'Battlestar',
+            'model': 'Jupiter',
+            'name': 'Galactica',
+            'crew': {
+                'commander': 'William Adama',
+                'xo': 'Saul Tigh',
+                'cag': 'Kara Thrace',
+            }
+        }
+        
+        result = query(some_data, ['class', 'name', 'crew.commander'])
+        
+        # {
+        #     'class': 'Battlestar',
+        #     'name': 'Galactica',
+        #     'crew': {
+        #         'commander': 'William Adama',
+        #     }
+        # }
+        ```
+        
+        ## django integration
+        
+        Register the dictfilter middleware in `settings.py`:
+        
+        ```python
+        MIDDLEWARE = [
+            ...
+            'dictfilter.django.middleware.dictfilter_middleware',
+        ]
+        ```
+        
+        By default, every 2xx series response will be filtered based on a comma-separated `fields` parameter in the query string.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
