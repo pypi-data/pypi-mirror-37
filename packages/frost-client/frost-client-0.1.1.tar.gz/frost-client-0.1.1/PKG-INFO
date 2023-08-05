@@ -1,0 +1,77 @@
+Metadata-Version: 2.1
+Name: frost-client
+Version: 0.1.1
+Summary: Python wrapper for the frost.met.no API
+Home-page: https://github.com/BergensTidende/frost-client
+Author: Anders G. Eriksen
+Author-email: anders.eriksen@bt.no
+License: MIT
+Description: # frost-client
+        
+        This Python client wraps the [Frost API](https://frost.met.no/concepts#getting_started). You should 
+        read up on those docs before using this client. And be sure to check out met.no's 
+        [Terms of Use](https://frost.met.no/termsofuse)
+        
+        The main purpose of this client is returns Pandas Dataframes from Frost API data.
+        
+        This is an unofficial client. We have no relationship to met.no
+        
+        ## Install
+        
+        `pipenv install git+https://github.com/bergenstidende/frost-client.git@master#egg=frost-client`
+        
+        This will install the frost-client and Pandas.
+        
+        ## Usage
+        
+        The Frost API key should be exposed as a environment variable:
+        
+        `FROST_API_KEY=xxxxxx` 
+        
+        or passed as a username parameter when creating and instance of the class.
+        
+        ### Get weather data sources
+        
+        ```
+        from client import APIError, Frost
+        f = Frost()
+        res = self.f.get_sources(county='12')
+        
+        # return as Pandas Dataframe
+        df = res.to_df()
+        
+        # return IDs of sources as list
+        ids = res.to_ids_list()
+        ```
+        
+        ## Local development
+        
+        You should use pipenv
+        
+        ### Tests
+        
+        Enable the pipenv with
+        
+        `pipenv shell`
+        
+        Make sure to export env variable 
+        
+        `FROST_API_KEY=xxxxxx`
+        
+        To run all tests: 
+        
+        `nosetests`
+        
+        To run specific tests:
+        
+        `nosetests tests.test_requests:TestFrostRequests.test_get_sources`
+        
+        ## Packaging etc
+        
+        https://packaging.python.org/tutorials/packaging-projects/
+Keywords: weather pandas
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.7
+Description-Content-Type: text/markdown
