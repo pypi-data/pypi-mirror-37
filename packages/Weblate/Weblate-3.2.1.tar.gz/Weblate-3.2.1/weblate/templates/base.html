@@ -1,0 +1,248 @@
+{% load i18n %}
+{% load static %}
+{% load translations %}
+{% load compress %}
+
+{% if not request.is_ajax %}
+<!DOCTYPE html>
+
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+ <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="referrer" content="origin" />
+  <meta name="author" content="Michal Čihař" />
+  <meta name="copyright" content="Copyright &copy; 2003 - {{ current_year }} Michal Čihař" />
+  {% if not allow_index %}<meta name="robots" content="noindex,nofollow" />{% endif %}
+
+  <title>{% include "title.html" %}</title>
+  <meta name="description" content="{{ description }}" />
+
+{% compress css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}{{ cache_param }}" />
+{% if LANGUAGE_BIDI %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-rtl.css' %}{{ cache_param }}" />
+{% endif %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-theme.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-datepicker3.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'font-awesome/css/font-awesome.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'font-linux/font-linux.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'chartist.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'multi.css' %}{{ cache_param }}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'style-bootstrap.css' %}{{ cache_param }}" />
+{% endcompress %}
+  <script src="{% url 'js-catalog' %}" type="text/javascript"></script>
+{% compress js %}
+{% if rollbar_token %}
+<script>
+var _rollbarConfig = {
+    accessToken: "{{ rollbar_token }}",
+    captureUncaught: true,
+    ignoredMessages: ["__gCrWeb"],
+    captureUnhandledRejections: false,
+    payload: {
+        environment: "{{ rollbar_environment }}"
+    },
+    checkIgnore: function(isUncaught, args, payload) {
+        if (window.navigator.userAgent && (window.navigator.userAgent.indexOf('Baiduspider') !== -1 || window.navigator.userAgent.indexOf('Seznam screenshot-generator') !== -1)) {
+            // ignore javascript errors from spiders with know javascript problems
+            return true;
+        }
+        // no other ignores
+        return false;
+    }
+};
+// Rollbar Snippet
+!function(r){function e(n){if(o[n])return o[n].exports;var t=o[n]={exports:{},id:n,loaded:!1};return r[n].call(t.exports,t,t.exports,e),t.loaded=!0,t.exports}var o={};return e.m=r,e.c=o,e.p="",e(0)}([function(r,e,o){"use strict";var n=o(1),t=o(4);_rollbarConfig=_rollbarConfig||{},_rollbarConfig.rollbarJsUrl=_rollbarConfig.rollbarJsUrl||"https://cdnjs.cloudflare.com/ajax/libs/rollbar.js/2.4.1/rollbar.min.js",_rollbarConfig.async=void 0===_rollbarConfig.async||_rollbarConfig.async;var a=n.setupShim(window,_rollbarConfig),l=t(_rollbarConfig);window.rollbar=n.Rollbar,a.loadFull(window,document,!_rollbarConfig.async,_rollbarConfig,l)},function(r,e,o){"use strict";function n(r){return function(){try{return r.apply(this,arguments)}catch(r){try{console.error("[Rollbar]: Internal error",r)}catch(r){}}}}function t(r,e){this.options=r,this._rollbarOldOnError=null;var o=s++;this.shimId=function(){return o},"undefined"!=typeof window&&window._rollbarShims&&(window._rollbarShims[o]={handler:e,messages:[]})}function a(r,e){if(r){var o=e.globalAlias||"Rollbar";if("object"==typeof r[o])return r[o];r._rollbarShims={},r._rollbarWrappedError=null;var t=new p(e);return n(function(){e.captureUncaught&&(t._rollbarOldOnError=r.onerror,i.captureUncaughtExceptions(r,t,!0),i.wrapGlobals(r,t,!0)),e.captureUnhandledRejections&&i.captureUnhandledRejections(r,t,!0);var n=e.autoInstrument;return e.enabled!==!1&&(void 0===n||n===!0||"object"==typeof n&&n.network)&&r.addEventListener&&(r.addEventListener("load",t.captureLoad.bind(t)),r.addEventListener("DOMContentLoaded",t.captureDomContentLoaded.bind(t))),r[o]=t,t})()}}function l(r){return n(function(){var e=this,o=Array.prototype.slice.call(arguments,0),n={shim:e,method:r,args:o,ts:new Date};window._rollbarShims[this.shimId()].messages.push(n)})}var i=o(2),s=0,d=o(3),c=function(r,e){return new t(r,e)},p=d.bind(null,c);t.prototype.loadFull=function(r,e,o,t,a){var l=function(){var e;if(void 0===r._rollbarDidLoad){e=new Error("rollbar.js did not load");for(var o,n,t,l,i=0;o=r._rollbarShims[i++];)for(o=o.messages||[];n=o.shift();)for(t=n.args||[],i=0;i<t.length;++i)if(l=t[i],"function"==typeof l){l(e);break}}"function"==typeof a&&a(e)},i=!1,s=e.createElement("script"),d=e.getElementsByTagName("script")[0],c=d.parentNode;s.crossOrigin="",s.src=t.rollbarJsUrl,o||(s.async=!0),s.onload=s.onreadystatechange=n(function(){if(!(i||this.readyState&&"loaded"!==this.readyState&&"complete"!==this.readyState)){s.onload=s.onreadystatechange=null;try{c.removeChild(s)}catch(r){}i=!0,l()}}),c.insertBefore(s,d)},t.prototype.wrap=function(r,e,o){try{var n;if(n="function"==typeof e?e:function(){return e||{}},"function"!=typeof r)return r;if(r._isWrap)return r;if(!r._rollbar_wrapped&&(r._rollbar_wrapped=function(){o&&"function"==typeof o&&o.apply(this,arguments);try{return r.apply(this,arguments)}catch(o){var e=o;throw e&&("string"==typeof e&&(e=new String(e)),e._rollbarContext=n()||{},e._rollbarContext._wrappedSource=r.toString(),window._rollbarWrappedError=e),e}},r._rollbar_wrapped._isWrap=!0,r.hasOwnProperty))for(var t in r)r.hasOwnProperty(t)&&(r._rollbar_wrapped[t]=r[t]);return r._rollbar_wrapped}catch(e){return r}};for(var u="log,debug,info,warn,warning,error,critical,global,configure,handleUncaughtException,handleUnhandledRejection,captureEvent,captureDomContentLoaded,captureLoad".split(","),f=0;f<u.length;++f)t.prototype[u[f]]=l(u[f]);r.exports={setupShim:a,Rollbar:p}},function(r,e){"use strict";function o(r,e,o){if(r){var t;"function"==typeof e._rollbarOldOnError?t=e._rollbarOldOnError:r.onerror&&!r.onerror.belongsToShim&&(t=r.onerror,e._rollbarOldOnError=t);var a=function(){var o=Array.prototype.slice.call(arguments,0);n(r,e,t,o)};a.belongsToShim=o,r.onerror=a}}function n(r,e,o,n){r._rollbarWrappedError&&(n[4]||(n[4]=r._rollbarWrappedError),n[5]||(n[5]=r._rollbarWrappedError._rollbarContext),r._rollbarWrappedError=null),e.handleUncaughtException.apply(e,n),o&&o.apply(r,n)}function t(r,e,o){if(r){"function"==typeof r._rollbarURH&&r._rollbarURH.belongsToShim&&r.removeEventListener("unhandledrejection",r._rollbarURH);var n=function(r){var o,n,t;try{o=r.reason}catch(r){o=void 0}try{n=r.promise}catch(r){n="[unhandledrejection] error getting `promise` from event"}try{t=r.detail,!o&&t&&(o=t.reason,n=t.promise)}catch(r){t="[unhandledrejection] error getting `detail` from event"}o||(o="[unhandledrejection] error getting `reason` from event"),e&&e.handleUnhandledRejection&&e.handleUnhandledRejection(o,n)};n.belongsToShim=o,r._rollbarURH=n,r.addEventListener("unhandledrejection",n)}}function a(r,e,o){if(r){var n,t,a="EventTarget,Window,Node,ApplicationCache,AudioTrackList,ChannelMergerNode,CryptoOperation,EventSource,FileReader,HTMLUnknownElement,IDBDatabase,IDBRequest,IDBTransaction,KeyOperation,MediaController,MessagePort,ModalWindow,Notification,SVGElementInstance,Screen,TextTrack,TextTrackCue,TextTrackList,WebSocket,WebSocketWorker,Worker,XMLHttpRequest,XMLHttpRequestEventTarget,XMLHttpRequestUpload".split(",");for(n=0;n<a.length;++n)t=a[n],r[t]&&r[t].prototype&&l(e,r[t].prototype,o)}}function l(r,e,o){if(e.hasOwnProperty&&e.hasOwnProperty("addEventListener")){for(var n=e.addEventListener;n._rollbarOldAdd&&n.belongsToShim;)n=n._rollbarOldAdd;var t=function(e,o,t){n.call(this,e,r.wrap(o),t)};t._rollbarOldAdd=n,t.belongsToShim=o,e.addEventListener=t;for(var a=e.removeEventListener;a._rollbarOldRemove&&a.belongsToShim;)a=a._rollbarOldRemove;var l=function(r,e,o){a.call(this,r,e&&e._rollbar_wrapped||e,o)};l._rollbarOldRemove=a,l.belongsToShim=o,e.removeEventListener=l}}r.exports={captureUncaughtExceptions:o,captureUnhandledRejections:t,wrapGlobals:a}},function(r,e){"use strict";function o(r,e){this.impl=r(e,this),this.options=e,n(o.prototype)}function n(r){for(var e=function(r){return function(){var e=Array.prototype.slice.call(arguments,0);if(this.impl[r])return this.impl[r].apply(this.impl,e)}},o="log,debug,info,warn,warning,error,critical,global,configure,handleUncaughtException,handleUnhandledRejection,_createItem,wrap,loadFull,shimId,captureEvent,captureDomContentLoaded,captureLoad".split(","),n=0;n<o.length;n++)r[o[n]]=e(o[n])}o.prototype._swapAndProcessMessages=function(r,e){this.impl=r(this.options);for(var o,n,t;o=e.shift();)n=o.method,t=o.args,this[n]&&"function"==typeof this[n]&&("captureDomContentLoaded"===n||"captureLoad"===n?this[n].apply(this,[t[0],o.ts]):this[n].apply(this,t));return this},r.exports=o},function(r,e){"use strict";r.exports=function(r){return function(e){if(!e&&!window._rollbarInitialized){r=r||{};for(var o,n,t=r.globalAlias||"Rollbar",a=window.rollbar,l=function(r){return new a(r)},i=0;o=window._rollbarShims[i++];)n||(n=o.handler),o.handler._swapAndProcessMessages(l,o.messages);window[t]=n,window._rollbarInitialized=!0}}}}]);
+// End Rollbar Snippet
+</script>
+{% endif %}
+  <script data-cfasync="false" src="{% static 'js/jquery.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/js.cookie.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/autosize.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/multi.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/mousetrap.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/mousetrap-global-bind.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/chartist.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/clipboard.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'bootstrap/js/bootstrap.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'bootstrap/js/bootstrap-datepicker.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/modernizr.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'js/slugify.js' %}{{ cache_param }}" type="text/javascript"></script>
+  <script data-cfasync="false" src="{% static 'loader-bootstrap.js' %}{{ cache_param }}" type="text/javascript"></script>
+{% endcompress %}
+  <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+
+  <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+  <link rel="image_src" type="image/png" href="{% static 'weblate-128.png' %}"/>
+  <link rel="apple-touch-icon" href="{% static 'weblate-128.png' %}"/>
+  <link rel="apple-touch-icon-precomposed" href="{% static 'weblate-152.png' %}">
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+  <meta name="msapplication-TileImage" content="{% static 'weblate-144.png' %}">
+  <meta name="robots" content="index, follow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta property="og:site_name" content="{% if site_title %}{{ site_title }}{% else %}Weblate{% endif %}" />
+  <meta property="og:title" content="{% if title %}{{ title }}{% else %}{% if object %}{{ object }}{% else %}{% if page_profile %}{{ page_profile.get_user_name }}{% else %}{% if site_title %}{{ site_title }}{% else %}Weblate{% endif %}{% endif %}{% endif %}{% endif %}" />
+  <meta property="og:description" content="{{ description }}" />
+
+{% block extra_meta %}
+{% endblock %}
+
+ </head>
+
+ <body {% if LANGUAGE_BIDI %}class="dir-rtl"{% endif %}>
+ <header>
+<nav class="navbar navbar-default navbar-static-top navbar-inverse" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#wl-navbar-main" id="navbar-toggle">
+        <span class="sr-only">{% trans "Toggle navigation" %}</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{% url 'home' %}"><img class="avatar" src="{% static 'weblate-128.png' %}" /> {{ site_title }}</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="wl-navbar-main">
+      <ul class="nav navbar-nav">
+        <li><a href="{% url 'home' %}">{% trans "Dashboard" %}</a></li>
+        {% if subscribed_projects %}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Watched projects" %}<b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            {% for project in subscribed_projects %}
+            <li><a href="{{ project.get_absolute_url }}">{{ project }}</a></li>
+            {% endfor %}
+            <li role="separator" class="divider"></li>
+            <li><a href="{% url 'profile' %}#subscriptions">{% trans "Manage watched projects" %}</a></li>
+          </ul>
+        </li>
+        {% endif %}
+        <li><a href="{% url 'projects' %}">{% trans "Projects" %}</a></li>
+        <li><a href="{% url 'languages' %}">{% trans "Languages" %}</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right flip">
+        
+        {# Superuser link to admin #}
+        {% if user.is_superuser %}
+        <li><a class="button" id="admin-button" href="{% url 'admin:index' %}" title="{% trans "Administration" %}"><i class="fa fa-wrench"></i></a></li>
+        {% if configuration_errors.exists %}
+        <li><a class="button" id="errors-button" href="{% url 'admin:performance' %}" title="{% trans "Configuration errors" %}"><i class="fa fa-exclamation-triangle text-danger"></i></a></li>
+        {% endif %}
+        {% endif %}
+
+        {# Login and register for not authenticated #}
+        {% if not user.is_authenticated %}
+        {% if registration_open %}
+        <li><a class="button" id="register-button" href="{% url 'register' %}">{% trans "Register" %}</a></li>
+        {% endif %}
+        <li><a class="button" id="login-button" href="{% url 'login' %}{% if not skip_next %}?next={{ login_redirect_url|urlencode }}{% endif %}">{% trans "Login" %}</a></li>
+        {% endif %}
+
+        {# Adding new translations #}
+        {% if user.is_authenticated %}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{% trans "Add" %}"><i class="fa fa-plus"></i><b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'create-project' %}">{% trans "Add new translation project" %}</a></li>
+            <li><a href="{% url 'create-component' %}">{% trans "Add new translation component" %}</a></li>
+          </ul>
+        </li>
+        {% endif %}
+
+        {# Support menu #}
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{% trans "Help" %}"><i class="fa fa-question-circle"></i><b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+            <li><a href="{% url 'about' %}">{% blocktrans %}About Weblate{% endblocktrans %}</a></li>
+            <li><a href="{% url 'keys' %}">{% blocktrans %}Weblate keys{% endblocktrans %}</a></li>
+            {% if has_legal %}<li><a href="{% url 'legal:index' %}">{% trans "Legal" %}</a></li>{% endif %}
+            <li><a href="{% documentation 'index' %}">{% trans "Documentation" %}</a></li>
+            {% if status_url %}<li><a href="{{ status_url }}">{% trans "Service status" %}</a></li>{% endif %}
+          </ul>
+        </li>
+
+        {# Profile and logout for authenticated #}
+        {% if user.is_authenticated %}
+        <li class="dropdown">
+          <a href="#" id="user-dropdown" class="dropdown-toggle" data-toggle="dropdown" title="{% trans "Your profile" %}">
+            {% if enable_avatars %}
+            <img class="avatar" src="{% url 'user_avatar' user=user.username size=32 %}" />
+            {% else %}
+            {{ user.profile.get_user_name }}
+            {% endif %}
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="button" id="profile-button" href="{% url 'user_page' user=user.username %}">{% blocktrans with user=user.profile.get_user_name %}Logged in as {{ user }}{% endblocktrans %}</a></li>
+            <li role="separator" class="divider"></li>
+            {% if has_billing %}
+            <li><a class="button" id="billing-button" href="{% url 'billing' %}">{% trans "Billing overview" %}</a></li>
+            {% endif %}
+            <li><a id="memory-button" href="{% url 'memory' %}">{% trans "Translation memory" %}</a></li>
+            <li><a class="button" id="settings-button" href="{% url 'profile' %}">{% trans "Settings" %}</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a class="button link-post" id="logout-button" href="{% url 'logout' %}">{% trans "Logout" %}</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+{% block breadcrumbs_container %}
+<h1>
+<ol class="breadcrumb">
+{% block breadcrumbs %}
+<li><a href="{% url 'home' %}">{% trans "Dashboard" %}</a></li>
+{% endblock %}
+</ol>
+</h1>
+{% endblock %}
+</header>
+
+<div class="content">
+<!--[if lte IE 8]>
+{% trans 'Weblate does not support Microsoft Internet Explorer 8 and older, please use some more recent browser like Firefox, Chrome or Edge.' as msg %}
+{% show_message "error" msg %}
+<![endif]-->
+{% if messages %}
+{% for message in messages %}
+{% show_message message.tags message %}
+{% endfor %}
+{% endif %}
+
+{% endif %}
+
+{% block content %}
+{% endblock %}
+
+{% if not request.is_ajax %}
+</div>
+<form id="link-post" method="POST">
+{% csrf_token %}
+</form>
+<!-- Creates the bootstrap modal where the image will appear -->
+<div class="modal fade fullmodal" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{% trans "Close" %}</span></button>
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+      <div class="modal-body">
+        <img src="" id="imagepreview" class="img-responsive">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Close" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'footer.html' %}
+ </body>
+</html>
+{% endif %}

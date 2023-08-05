@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<li><a href="{% url 'home' %}">{% trans "Internal Server Error" %}</a></li>
+{% endblock %}
+
+{% block content %}
+<h2>{% trans "Server Error" %}</h2>
+
+<p>
+{% blocktrans %}The server had serious problems serving your request. Trained monkeys are en-route fixing the issue.{% endblocktrans %}
+</p>
+
+{% if request.sentry.id %}
+<p>{% blocktrans with error_id=request.sentry.id %}If you need assistance, you may reference this error as {{ error_id }}.{% endblocktrans %}</p>
+
+{% if sentry_dsn %}
+<script src="https://cdn.ravenjs.com/3.15.0/raven.min.js"></script>
+<script>
+Raven.showReportDialog({
+    eventId: '{{ request.sentry.id }}',
+
+    // use the public DSN (dont include your secret!)
+    dsn: '{{ sentry_dsn }}'
+});
+</script>
+{% endif %}
+{% endif %}
+
+{% endblock %}
