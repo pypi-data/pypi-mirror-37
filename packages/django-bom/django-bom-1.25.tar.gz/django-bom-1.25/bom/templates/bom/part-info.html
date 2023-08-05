@@ -1,0 +1,378 @@
+{% extends 'bom/bom-action-btn.html' %}
+
+{% load staticfiles %}
+
+{% block head-title %}Part Info{% endblock %}
+
+{% block title %}{{ part.description }}
+<link rel="stylesheet" type="text/css" href="{% static 'bom/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'bom/css/jquery.treetable.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'bom/treetable-theme.css' %}" />
+{% endblock %}
+
+{% block menu %}
+{% if profile.role == 'A' %}
+<li><a href="{% url 'bom:part-edit' part_id=part.id %}">Edit Part</a></li>
+<li><a href="{% url 'bom:part-manage-bom' part_id=part.id %}">Manage BOM</a></li>
+{% endif %}
+<li><a href="{% url 'bom:part-export-bom' part_id=part.id %}">Export</a></li>
+{% endblock%}
+
+{% block content %}
+<div class="part-info push-footer">
+    <div class="row">
+        <div class="col s8">
+            <h5 class="light">Part Number: {{ part.full_part_number}}</h5>
+        </div>
+        <div class="col s4 right-align">
+            <form action="{% url 'bom:part-info' part_id=part.id %}" method="post">
+            {% csrf_token %}
+                Cost estimates at:
+                <div class="input-field inline">
+                    {{ part_info_form }}
+                </div>
+                 units.
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <ul id="tabs" class="tabs tabs-fixed-width">
+                <li class="tab"><a href="#specs">Specifications</a></li>
+                <li class="tab"><a href="#bom">Bill of Materials</a></li>
+                <li class="tab"><a href="#used">Where Used</a></li>
+                <li class="tab"><a href="#sourcing">Sourcing</a></li>
+            </ul>
+        </div>
+
+        <div id="specs" class="col s12">
+            <br>
+            <div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Description:
+                    </div>
+                    <div class="col s8">
+                        {{ part.description }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Part Number:
+                    </div>
+                    <div class="col s8">
+                        {{ part.full_part_number }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Revision:
+                    </div>
+                    <div class="col s8">
+                        {{ part.revision }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Part Class:
+                    </div>
+                    <div class="col s8">
+                        {{ part.number_class }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Primary Manufacturer:
+                    </div>
+                    <div class="col s8">
+                        {{ part.primary_manufacturer_part.manufacturer.name }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Primary Manufacturer Part Number:
+                    </div>
+                    <div class="col s8">
+                        {{ part.primary_manufacturer_part.manufacturer_part_number }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Est. Cost:
+                    </div>
+                    <div class="col s8">
+                        ${{ unit_cost|floatformat:4 }}{% if not extended_cost_complete %}&nbsp;(!){% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Est. Total NRE:
+                    </div>
+                    <div class="col s8">
+                        ${{ unit_nre|floatformat:2 }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        Est. Unit Out Of Pocket:
+                    </div>
+                    <div class="col s8">
+                        ${{ unit_out_of_pocket_cost|floatformat:2 }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        <b>Est. Total Out Of Pocket:</b>
+                    </div>
+                    <div class="col s8">
+                        <b>${{ total_out_of_pocket_cost|floatformat:2 }}</b>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s4 text-right">
+                        <img title="Via Octopart.com" style="width: 16px; vertical-align: middle;" src="{% static 'bom/img/octopart_blue.svg' %}"></img>&nbsp;Datasheets:
+                    </div>
+                    <div class="col s8">
+                        {% for source, datasheet in datasheets.items %}
+                        <a href="{{ datasheet.url }}" target="blank">{{ source }}</a>&nbsp;{% if datasheet.last_updated %}<i>(Updated {{ datasheet.last_updated|date:"M d, Y" }})</i>{% endif %}<br>
+                        {% empty %}
+                        None found.
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- File upload to come ! Need to pull in remote storage first... -->
+                <!-- <div class="row">
+                    <div class="col s4 text-right">
+                        Files:
+                    </div>
+                    <div class="col s8">
+                        {% if not files %}
+                            <i>None Found</i>
+                        {% else %}
+                        <ul>
+                        {% for partfile in files %}
+                            <li><a href="{{ partfile.file.url }}">{{ partfile.file.name }}</a>&nbsp;[<a href="{% url 'bom:part-delete-partfile' part_id=part.id partfile_id=partfile.id %}">delete</a>]</li>
+                        {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if profile.role == 'A' and organization.subscription == 'P' %}
+                        <form action="{% url 'bom:part-upload-partfile' part_id=part.id %}" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col s8 file-field input-field">
+                                    <div class="green lighten-1 btn">
+                                        <span>File</span>
+                                        {{ upload_file_to_part_form.file }}
+                                    </div>
+                                    <div class="file-path-wrapper">
+                                        <input class="file-path validate" type="text" placeholder="Upload a file.">
+                                        {{ upload_file_to_part_form.file.errors }}
+                                    </div>
+                                </div>
+                                <div class="col s1 input-field">
+                                    <input class="green lighten-1 btn" type="submit" value="Upload"/>
+                                </div>
+                            </div>
+                        </form>
+                        {% elif organization.subscription == 'F' %}
+                        <i>Upgrade to pro to upload files.</i>
+                        {% endif %}
+                    </div>
+                </div> -->
+            </div>
+        </div>
+
+        <div id="bom" class="col s12">
+            {% if order_by == 'indented' %}<a href="#" onclick="jQuery('#indented-bom').treetable('expandAll'); return false;">Expand all</a>{% endif %}
+            <div class="responsive-table-wrapper">
+                <table id="indented-bom" class="highlight part-list tight single-line">
+                    <thead>
+                        <tr>
+                            <th class="text-normal"><a href="?order_by=indented">Level</a></th>
+                            <th class="text-normal">Part No.</th>
+                            <th class="text-normal">Qty</th>
+                            <th class="text-normal">Description</th>
+                            <th class="text-normal">Rev</th>
+                            <th class="text-normal">Manufacturer</th>
+                            <th class="text-normal">MPN</th>
+                            <!-- <th class="text-normal"><i>Ext. Qty</i></th> -->
+                            <!-- <th class="text-normal"><i>Order Qty</i></th> -->
+                            <th class="text-normal"><i>Seller</i></th>
+                            <th class="text-normal"><a href="?order_by=seller_price"><i>Price</i></a></th>
+                            <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
+                            <th class="text-normal"><a href="?order_by=seller_nre"><i>NRE</i></a></th>
+                        </tr>
+                    </thead>
+                    {% for subpart in parts %}
+                        <tr data-tt-id="{{ subpart.part.id }}" {% if subpart.parent_id %}data-tt-parent-id="{{ subpart.parent_id }}"{% endif %}>
+                            <td class="text-normal">{{ subpart.indent_level }}</td>
+                            <td class="text-normal"><a href="{% url 'bom:part-info' part_id=subpart.part.id %}">{{ subpart.part.full_part_number }}</a></td>
+                            <td class="text-normal">{{ subpart.quantity }}</td>
+                            <td class="text-normal">{{ subpart.part.description }}</td>
+                            <td class="text-normal">{{ subpart.part.revision }}</td>
+                            <td class="text-normal">{{ subpart.part.manufacturer.name }}</td>
+                            <td class="text-normal">{{ subpart.part.manufacturer_part_number }}</td>
+                                <!-- <td class="text-normal">{{ subpart.extended_quantity }}</td> -->
+                            <!-- <td class="text-normal">{{ subpart.order_quantity }}</td> -->
+                            <td class="text-normal">{% if subpart.seller_part.data_source == 'octopart' %}<img title="Seller via Octopart." style="width: 16px; vertical-align: middle;" src="{% static 'bom/img/octopart_blue.svg' %}"></img>&nbsp;{% endif %}{{ subpart.seller_part.seller.name | default:"-" }}</td>
+                            <td class="text-normal">{{ subpart.seller_price | default:"-"}}</td>
+                            <!-- <td class="text-normal">{{ subpart.extended_cost | default:"-" }}</td> -->
+                            <td class="text-normal">{{ subpart.seller_nre | default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="99" style="text-align: center;"><i>This part does not contain any other parts.</i></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <br>
+        </div>
+
+        <div id="used" class="col s12">
+            <div class="responsive-table-wrapper">
+                <table class="highlight tight">
+                    <thead>
+                        <tr>
+                            <th>Part Number</th>
+                            <th>Description</th>
+                            <th>Rev</th>
+                            <th>Manufacturer</th>
+                            <th>MPN</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for used_part in where_used %}
+                        <tr>
+                            <td><a href="{% url 'bom:part-info' part_id=used_part.id %}">{{ used_part.full_part_number }}</a></td>
+                            <td>{{ used_part.description }}</td>
+                            <td>{{ used_part.revision }}</td>
+                            <td>{{ used_part.manufacturer.name }}</td>
+                            <td>{{ used_part.manufacturer_part_number }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="99" style="text-align: center;"><i>This part is not currently used in any of your other parts.</i></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="sourcing" class="col s12">
+            <div class="responsive-table-wrapper">
+                <table id="manufacturer-parts" class="highlight tight treetable">
+                    <thead>
+                        <tr>
+                            <th>MPN</th>
+                            <th>Manufacturer</th>
+                            <th>Seller</th>
+                            <th>MOQ</th>
+                            <th>MPQ</th>
+                            <th>Price</th>
+                            <th>Lead Time (days)</th>
+                            <th>NRE</th>
+                            <th>NCNR</th>
+                            <th></th>
+                            <th colspan=2></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for manufacturer_part in part.manufacturer_parts %}
+                        <tr data-tt-id="{{ manufacturer_part.id }}">
+                            <td>{{ manufacturer_part.manufacturer_part_number }}<br>
+                                <a href="{% url 'bom:manufacturer-part-edit' manufacturer_part_id=manufacturer_part.id %}">edit</a><br>
+                                <a href="{% url 'bom:manufacturer-part-delete' manufacturer_part_id=manufacturer_part.id %}">delete</a><br>
+                                <a href="{% url 'bom:manufacturer-part-octopart-match' manufacturer_part_id=manufacturer_part.id %}">find sellers <img title="Sourcing information via Octopart." style="width: 16px; vertical-align: middle;" src="{% static 'bom/img/octopart_blue.svg' %}"></img></a><br>
+                            </td>
+                            <td>{{ manufacturer_part.manufacturer }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.seller.name }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.minimum_order_quantity }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.minimum_pack_quantity }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.unit_cost }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.lead_time_days }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.nre_cost }}</td>
+                            <td>{{ manufacturer_part.optimal_seller.ncnr }}</td>
+                            <td style="min-width: 0px;">{% if manufacturer_part.optimal_seller.data_source == 'octopart' %}<img title="Sourcing information via Octopart." style="width: 20px; vertical-align: middle;" src="{% static 'bom/img/octopart_blue.svg' %}"></img>{% endif %}</td>
+                            <td colspan=2></td>
+                        </tr>
+                        {% for seller_part in manufacturer_part.seller_parts %}
+                        <tr data-tt-id="0" data-tt-parent-id="{{ manufacturer_part.id }}">
+                            <td></td>
+                            <td></td>
+                            <td>{{ seller_part.seller.name }}</td>
+                            <td>{{ seller_part.minimum_order_quantity }}</td>
+                            <td>{{ seller_part.minimum_pack_quantity }}</td>
+                            <td>{{ seller_part.unit_cost }}</td>
+                            <td>{{ seller_part.lead_time_days }}</td>
+                            <td>{{ seller_part.nre_cost }}</td>
+                            <td>{{ seller_part.ncnr }}</td>
+                            <td style="min-width: 0px;">{% if seller_part.data_source == 'octopart' %}<img title="Sourcing information via Octopart." style="width: 20px; vertical-align: middle;" src="{% static 'bom/img/octopart_blue.svg' %}"></img>{% endif %}</td>
+                            <td><a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">edit</a></td>
+                            <td><a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">delete</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr data-tt-id="0" data-tt-parent-id="{{ manufacturer_part.id }}">
+                            <td colspan="99" style="text-align: center;"><i>This manufacturer part has no sellers entered yet.</i></td>
+                        </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="99" style="text-align: center;"><i>This part has no manufacturer parts.</i></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: center; width: 100%;">
+                <a class="btn green lighten-1 waves-button-input" href="{% url 'bom:part-add-manufacturer-part' part_id=part.id %}" style="margin: 10px;">Add Manufacturer Part</a>
+                <a class="btn green lighten-1 waves-button-input" href="{% url 'bom:part-add-sellerpart' part_id=part.id %}" style="margin: 10px;">Add Seller Part</a>
+                <a class="btn green lighten-1 waves-button-input" href="{% url 'bom:part-octopart-match' part_id=part.id %}" style="margin: 10px;">Find Sellers From Octopart</a></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+{% if order_by == 'indented' %}
+<!-- Tree Table -->
+<script src="{% static 'bom/js/jquery.treetable.js' %}"></script>
+<script>
+    $("#indented-bom").treetable({ 
+        expandable: true, 
+        indent: 2,
+        initialState: 'collapsed',
+        onInitialized: function () {
+            $("#indented-bom").treetable("reveal", {{ part.id }});
+        }
+        });
+    $("#manufacturer-parts").treetable({ 
+        expandable: true, 
+        indent: 2,
+        initialState: 'collapsed',
+        });
+</script>
+{% endif %}
+
+<!-- Handle if there's an anchor, select tab -->
+<script type='text/javascript'>
+    $(document).ready(function(){
+        {% if anchor %}
+        $('.tabs').tabs('select_tab', '{{ anchor }}');
+        {% else %}
+        $('.tabs').tabs();
+        {% endif %}
+    });
+</script>
+
+<!-- Floating Horizontal Scrollbar -->
+<script type="text/javascript" src="{% static 'bom/js/jquery.ba-floatingscrollbar.min.js' %}"></script>
+<script>
+$(function() {
+  $('.responsive-table-wrapper').floatingScrollbar();
+});
+</script>
+{% endblock script %}
