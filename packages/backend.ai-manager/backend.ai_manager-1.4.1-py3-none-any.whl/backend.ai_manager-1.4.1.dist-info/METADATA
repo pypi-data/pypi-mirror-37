@@ -1,0 +1,149 @@
+Metadata-Version: 2.1
+Name: backend.ai-manager
+Version: 1.4.1
+Summary: Backend.AI Manager
+Home-page: https://backend.ai
+Author: Lablup Inc.
+Author-email: joongi@lablup.com
+License: LGPLv3
+Project-URL: Documentation, https://docs.backend.ai
+Project-URL: Source, https://github.com/lablup/backend.ai-manager
+Project-URL: Tracker, https://github.com/lablup/backend.ai-manager/issues
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development
+Requires-Python: >=3.6,<3.7
+Description-Content-Type: text/markdown
+Requires-Dist: aioconsole (>=0.1.3)
+Requires-Dist: aiodataloader
+Requires-Dist: aiohttp (~=3.4.0)
+Requires-Dist: aiohttp-cors (~=0.7)
+Requires-Dist: aiojobs (>=0.1)
+Requires-Dist: aiopg (~=0.15.0)
+Requires-Dist: aioredis (~=1.1.0)
+Requires-Dist: aiotools (>=0.7.3)
+Requires-Dist: aiozmq (>=0.7)
+Requires-Dist: alembic (~=1.0.0)
+Requires-Dist: async-timeout (~=3.0)
+Requires-Dist: attrs (>=18.0)
+Requires-Dist: coloredlogs (>=5.2)
+Requires-Dist: ConfigArgParse (==0.12)
+Requires-Dist: graphene (~=2.1.0)
+Requires-Dist: psycopg2-binary (>=2.7.0)
+Requires-Dist: python-dateutil (>=2.5)
+Requires-Dist: python-snappy (~=0.5.1)
+Requires-Dist: pytz
+Requires-Dist: PyYAML
+Requires-Dist: pyzmq (>=17.1.2)
+Requires-Dist: SQLAlchemy (~=1.1.14)
+Requires-Dist: uvloop (~=0.11.0)
+Requires-Dist: backend.ai-common
+Requires-Dist: dataclasses; python_version < "3.7"
+Provides-Extra: build
+Requires-Dist: wheel (>=0.31.0); extra == 'build'
+Requires-Dist: twine (>=1.11.0); extra == 'build'
+Provides-Extra: ci
+Provides-Extra: dev
+Requires-Dist: pytest-sugar (>=0.9.1); extra == 'dev'
+Provides-Extra: monitor
+Requires-Dist: datadog (>=0.16.0); extra == 'monitor'
+Requires-Dist: raven (>=6.1); extra == 'monitor'
+Provides-Extra: test
+Requires-Dist: aiodocker (>=0.14.0); extra == 'test'
+Requires-Dist: pytest (>=3.7.0); extra == 'test'
+Requires-Dist: pytest-asyncio (>=0.9.0); extra == 'test'
+Requires-Dist: pytest-aiohttp; extra == 'test'
+Requires-Dist: pytest-cov; extra == 'test'
+Requires-Dist: pytest-mock; extra == 'test'
+Requires-Dist: codecov; extra == 'test'
+Requires-Dist: flake8; extra == 'test'
+
+Backend.AI Manager with API Gateway
+===================================
+
+Package Structure
+-----------------
+
+* `ai.backend`
+  - `manager`: Abstraction of agents and computation kernels
+  - `gateway`: User and Admin API (REST/GraphQL) gateway based on aiohttp
+
+Installation
+------------
+
+Please visit [the installation guides](https://github.com/lablup/backend.ai/wiki).
+
+### For development
+
+#### Prerequisites
+
+* `libnsappy-dev` or `snappy-devel` system package depending on your distro
+* Python 3.6 or higher with [pyenv](https://github.com/pyenv/pyenv)
+and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) (optional but recommneded)
+* Docker 17.03 or later with docker-compose (18.03 or later is recommended)
+
+Clone [the meta repository](https://github.com/lablup/backend.ai) and install a "halfstack" configuration.
+The halfstack configuration installs and runs dependency daemons such as etcd in the background.
+
+```console
+~$ git clone https://github.com/lablup/backend.ai halfstack
+~$ cd halfstack
+~/halfstack$ docker-compose -f docker-compose.halfstack.yml up -d
+```
+
+Then prepare the source clone of the agent as follows.
+First install the current working copy.
+
+```console
+~$ git clone https://github.com/lablup/backend.ai-manager manager
+~$ cd manager
+~/manager$ pyenv virtualenv venv-manager
+~/manager$ pyenv local venv-manager
+~/manager (venv-manager) $ pip install -U pip setuptools   # ensure latest versions
+~/manager (venv-manager) $ pip install -U -r requirements-dev.txt
+```
+
+With the halfstack, you can run the agent simply like
+(note that you need a working manager running with the halfstack already):
+
+```console
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh python -m ai.backend.gateway.server --debug
+```
+
+To develop and debug, configure the manager as follows:
+
+```console
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh backend.ai-manager etcd put vfolder/_mount /mnt
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh backend.ai-manager etcd update-images -f sample-configs/image-metadata.yml
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh backend.ai-manager etcd update-aliases -f sample-configs/image-aliases.yml
+~/manager (venv-manager) $ cp alembic.ini.sample alembic.ini
+~/manager (venv-manager) $ edit alembic.ini  # match the config with the halfstack
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh backend.ai-manager schema oneshot head
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh backend.ai-manager fixture populate example_keypairs
+```
+
+To run tests:
+
+```console
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh python -m pytest -m 'not integration'
+```
+
+To run tests including integration tests, you first need to install the agent in the same virtualenv.
+
+```console
+~$ git clone https://github.com/lablup/backend.ai-agent agent
+~$ cd manager
+~/manager (venv-manager) $ pip install -e ../agent
+~/manager (venv-manager) $ scripts/run-with-halfstack.sh python -m pytest
+```
+
+
