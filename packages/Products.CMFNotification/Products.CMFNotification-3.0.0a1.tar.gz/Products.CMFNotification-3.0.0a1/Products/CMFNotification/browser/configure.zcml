@@ -1,0 +1,60 @@
+<configure xmlns:plone="http://namespaces.plone.org/plone"
+           xmlns:browser="http://namespaces.zope.org/browser"
+           xmlns:zcml="http://namespaces.zope.org/zcml">
+
+  <include package="Products.CMFCore" file="configure.zcml" />
+  
+  <!-- Subscription portlet -->
+  <include package="plone.app.portlets"/>
+  <plone:portlet
+     name="portlets.Subscription"
+     interface=".portlet.ISubscriptionPortlet"
+     assignment=".portlet.Assignment"
+     renderer=".portlet.Renderer"
+     addview=".portlet.AddForm"
+     />
+
+  <!-- Subscription browser views -->
+  <browser:page
+     for="*"
+     name="subscribe"
+     class=".subscription.Subscription"
+     attribute="subscribe"
+     permission="zope2.View"
+     />
+
+  <browser:page
+     for="*"
+     name="unsubscribe"
+     class=".subscription.Subscription"
+     attribute="unsubscribe"
+     permission="zope2.View"
+     />
+
+  <browser:page
+     for="*"
+     name="unsubscribeFromAbove"
+     class=".subscription.Subscription"
+     attribute="unsubscribeFromAbove"
+     permission="zope2.View"
+     />
+
+
+  <!-- KSS -->
+  <include zcml:condition="installed kss.core" file="kss_support.zcml" />
+
+  <!-- CSS stylesheet -->
+  <browser:resource
+     name="cmfnotification.css"
+     file="resources/cmfnotification.css"/>
+
+  <!-- Configlet Menu -->
+  <browser:page
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      name="unsubscribemenu_configlet"
+      class="Products.CMFNotification.browser.configlet.UnsubscribeMenuConfiglet"
+      permission="cmf.ModifyPortalContent"
+      allowed_interface="Products.CMFNotification.browser.interfaces.IUnsubscribeMenuConfiglet"
+      />
+ 
+</configure>

@@ -1,0 +1,82 @@
+<configure xmlns:zope="http://namespaces.zope.org/zope">
+
+    <!-- See ``events.txt`` for further details. -->
+
+    <!-- Item creation event handler -->
+    <zope:subscriber
+       for="Products.ATContentTypes.interface.interfaces.IATContentType
+            Products.Archetypes.interfaces.IObjectInitializedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectInitializedEvent"
+       />
+
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            zope.lifecycleevent.IObjectCreatedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectInitializedEvent"
+       />
+
+    <!-- Item copy and paste event handler -->
+    <zope:subscriber
+       for="Products.ATContentTypes.interface.interfaces.IATContentType
+            OFS.interfaces.IObjectClonedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectClonedEvent"
+       />
+
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            OFS.interfaces.IObjectClonedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectClonedEvent"
+       />
+
+    <!-- Item modification event handler -->
+    <zope:subscriber
+       for="Products.ATContentTypes.interface.interfaces.IATContentType
+            Products.Archetypes.interfaces.IObjectEditedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectEditedEvent"
+       />
+
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            zope.lifecycleevent.IObjectModifiedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectEditedEvent"
+       />
+
+    <!-- Item removal event handler -->
+    <zope:subscriber
+       for="Products.ATContentTypes.interface.interfaces.IATContentType
+            zope.lifecycleevent.IObjectRemovedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectRemovedEvent"
+       />
+
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            zope.lifecycleevent.IObjectRemovedEvent"
+       handler="Products.CMFNotification.events.handlers.onObjectRemovedEvent"
+       />
+
+    <!-- Workflow transition event handler -->
+    <zope:subscriber
+       for="Products.ATContentTypes.interface.interfaces.IATContentType
+            Products.CMFCore.interfaces.IActionSucceededEvent"
+       handler="Products.CMFNotification.events.handlers.onActionSucceededEvent"
+       />
+
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            Products.CMFCore.interfaces.IActionSucceededEvent"
+       handler="Products.CMFNotification.events.handlers.onActionSucceededEvent"
+       />
+
+    <!-- Discussion item creation event handler -->
+    <zope:subscriber
+       for="Products.CMFCore.interfaces.IDiscussionResponse
+            zope.lifecycleevent.IObjectAddedEvent"
+       handler="Products.CMFNotification.events.handlers.onDiscussionItemAddedEvent"
+       />
+    <zope:subscriber
+       for="plone.dexterity.interfaces.IDexterityContent
+            zope.lifecycleevent.IObjectAddedEvent"
+       handler="Products.CMFNotification.events.handlers.onDiscussionItemAddedEvent"
+       />
+
+</configure>
