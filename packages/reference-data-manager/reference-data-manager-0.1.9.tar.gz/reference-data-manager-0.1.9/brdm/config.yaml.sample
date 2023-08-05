@@ -1,0 +1,115 @@
+######################################################
+###           Configuration file for               ###
+### Bioinformatics Reference Data Manager (BRDM)   ###
+######################################################
+# Modify this file and rename to config.yaml
+
+root_folder: "/path/to/database/root/folder/"
+backup_folder: "/path/to/database/backup/folder/"
+
+### Name of the BRDM-specific readme file. This file is automatically placed in every folder with data and has dual use:
+### for user reference and for backup.
+readme_file: "README+"
+
+### Number of times BRDM will re-try failed download and failed connections
+download_retry_num: 3
+connection_retry_num: 3
+sleep_time: 2
+
+### Folder mode and file mode
+folder_mode: 0o750
+file_mode: 0o640
+
+
+
+######################################################
+### Setup, specific for each download module       ###
+######################################################
+
+ncbi:
+    destination_folder: "ncbi/"
+    login_url: "https://ftp.ncbi.nlm.nih.gov"
+    user: "your_ncbi_ID"
+    password: "your_ncbi_password"
+    chunk_size: 524288
+
+    blast_db:
+        destination_folder: "blast/"
+        download_folder: "blast/db/"
+        info_file_name: "README"
+        
+    taxonomy:       
+        destination_folder: "taxonomy/"
+        info_file_name: "taxdump_readme.txt"
+        download_folder: "pub/taxonomy/new_taxdump"
+        download_file: "new_taxdump.tar.gz"
+        taxonomy_file: "rankedlineage"
+    
+    whole_genome:       
+        destination_folder: "wholeGenome/"
+        info_file_name: "README.txt"
+        download_folder: "genomes/refseq/"
+        download_file: "assembly_summary.txt"
+        assembly_level: "Complete Genome"
+        species:
+            - bacteria
+            - viral
+
+    subsets:
+        destination_folder: "subsets/"
+        entrez_email: "your_email_address"
+        info_file_name: "README"
+        taxonomy_file: "/path/to/ncbi/taxonomy/rankedlineage.txt"
+        nt_file: "/path/to/ncbi/blast/nt"
+        ext_accID: ".accID"
+        ext_sequence: ".fasta"
+        ext_taxonomy: ".taxon"
+        batch_size: 50
+        line_width: 80
+        query_set:
+            - "CO1p | COI and Phyllocnistis citrella"
+            - "ITSD | Internal Transcribed Spacer[All Fields] and Diplodia seriata"
+    
+greengene:
+    destination_folder: "greengene/"
+    info_file_name: "00README"
+    download_url: "ftp://greengenes.microbio.me/greengenes_release/gg_13_5/"
+    chunk_size: 524288
+    download_file:
+        - "gg_13_5.fasta.gz"
+        - "gg_13_5_taxonomy.txt.gz"
+    
+    
+######################################################
+###                 Logging                        ###
+######################################################
+## Keep below structure - this format is expected by python's logging module
+
+logging:
+
+    version: 1
+    disable_existing_loggers: true
+
+    formatters:
+        briefFormatter:
+            format: '%(levelname)s: %(message)s'
+        preciseFormatter:
+            format: '%(asctime)s - %(module)s - %(levelname)s: %(message)s'
+            datefmt: '%Y/%m/%d %H:%M:%S'
+
+    handlers:
+        console:
+            class: logging.StreamHandler
+            formatter: briefFormatter
+            level: ERROR
+            stream: ext://sys.stdout
+        file:
+            class : logging.FileHandler
+            formatter: preciseFormatter
+            level: DEBUG
+            ## Note that file does not have to exist, but the directories (in case of full path name) should
+            filename: reference_data_manager.log
+
+    root:
+        level: DEBUG
+        handlers: [console, file]
