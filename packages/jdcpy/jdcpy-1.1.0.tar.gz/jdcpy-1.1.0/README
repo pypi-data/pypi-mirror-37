@@ -1,0 +1,56 @@
+jdcpy module
+============
+
+本模块是吉富数据中心的python版接口 提供下载基金相关信息的功能
+
+使用方法
+^^^^^^^^
+
+导入模块
+''''''''
+
+.. code:: python
+
+    from jdcpy import jdcpy
+    ex = jdcpy()
+
+ex.login('username', 'password')
+''''''''''''''''''''''''''''''''
+
+登录 成功登录返回整数0 失败返回string错误信息
+
+.. code:: python
+
+    ex.login("username","password")
+
+jdcpy.info(基金list,基本信息list,投资分布信息list,业绩表现list)
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+获得基金基本信息 成功返回pandas.DataFrame 失败返回string错误信息 例:
+
+.. code:: python
+
+    t = ex.info(["ZCCUHKD HK Equity", "ZCCUUSD HK Equity"],
+        ["Bloomberg_Ticker", "LONG_COMP_NAME", "LEI_NAME", "NAME", "ID_ISIN", "FUND_TYP", "NAV_CRNCY", "DVD_FREQ", "SECURITY_TYP", "FUND_COMP_NAME", "FUND_MGR", "FUND_STRATEGY", "CNTRY_OF_INCORPORATION", "FUND_INCEPT_DT", "FT_Ticker", "FT_RISK"],
+        ["ASSET_CLASS_Lv1", "ASSET_CLASS_Lv2", "GEO", "GEO_Lv2", "Category_Lv1", "Category_Lv2", "Category_Lv3", "Category"]
+        ["DayEndDate", "DayEndNAV", "AFUNDNAV", "Return1Day", "Return1Week", "Return1Mth", "Return3Mth", "Return6Mth", "Return1Yr", "Return3Yr", "Return5Yr", "Return10Yr", "ReturnMTD", "ReturnQTD", "ReturnYTD", "ReturnSinceInception", "Year1", "Year2", "Year3", "Year4", "Year5", "Year6", "Year7", "Year8", "Year9", "Year10"])
+
+    if type(t) != str:
+        t.to_csv('info.csv', encoding='gbk')
+        # 保存为info.csv,注意encoding
+
+jdcpy.nav(基金list,起始日期timestamp,最终日期timestamp,信息类别list)
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+获得基金历史数据 成功返回pandas.DataFrame 失败返回string错误信息 例:
+
+.. code:: python
+
+    t = ex.nav(["ZCCUHKD HK Equity", "ZCCUUSD HK Equity"],
+        1515117098000,
+        1533659645000,
+        ["av_p", "nav_cal", "split", "div_p"])
+        
+    if type(t) != str:
+        t.to_csv('nav.csv', encoding='gbk')
+        # 保存为nav.csv,注意encoding
