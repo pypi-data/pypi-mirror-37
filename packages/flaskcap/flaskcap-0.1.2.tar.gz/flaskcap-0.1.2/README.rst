@@ -1,0 +1,146 @@
+FlaskCap
+########
+
+FlaskCap是一个基于flask封装的Web框架，集成了orator和DBUtils来提供数据库ORM及连接池的支持，并包含了一些工具类。
+
+安装
+====
+
+使用pip安装和更新flaskcap:
+
+.. code-block:: bash
+
+    pip install flaskcap
+
+
+示例
+====
+
+flaskcap
+-------------
+
+* flaskcap的使用与flask完全一致，请参见flask的使用。
+
+.. code-block:: python
+
+    from flaskcap import FlaskCap
+    from flaskcap import jsonify
+
+    app = FlaskCap(__name__)
+
+    @app.route('/foo')
+    def foo():
+        return 'Hello World'
+
+    @app.route('/bar')
+    def bar():
+        return jsonify({'hello': 'world'})
+
+    if __name__ == '__main__':
+        app.run()
+
+
+* 通过 g 获取请求参数
+
+.. code-block:: python
+
+    from flaskcap import g, jsonify
+
+    @app.route('/', methods=['GET', 'POST'])
+    def index():
+        return jsonify(g.request_payload)
+
+
+* 访问日志
+
+.. code-block:: python
+
+    from flaskcap import current_app
+
+    app.access_logger.addHandler(NaturalTimedRotatingHandler('access.log'))
+
+    # 方法调用方式
+    def access_func(req, res):
+        current_app.access_logger.info('...')
+    app.log_access(access_func)
+
+    # 装饰器方式
+    @app.log_access
+    def access_func(request, response):
+        current_app.access_logger.info('...')
+
+
+orm
+----
+
+* orm的使用与orator一致，请参见orator的使用。
+
+.. code-block:: python
+
+    from flaskcap import FlaskCap
+    from flaskcap.orator import Orator
+
+    app = FlaskCap(__name__)
+
+    app.config['DATABASE'] = {
+        'mysql': {
+            'driver': 'mysql',
+            'host': 'localhost',
+            'database': 'db',
+            'user': 'user',
+            'password': 'password',
+            # 是否开启慢查询日志，默认关闭
+            'log_slow_query': True,
+            # 慢查询时间阀值(毫秒)，默认2000
+            'slow_query_time': 3000,
+            # 连接池策略，即DBUtils的连接池方案，包含'PersistentDB'和'PooledDB'两种，
+            # 对应配置值为'persistent'和'pooled'，默认为'pooled'
+            'pool_policy': 'persistent',
+            # 其它连接池参数，参见DBUtils
+            # 'maxcached': 4,
+            # 'maxusage': 10,
+            # ...
+        }
+    }
+
+    db = Orator(app)
+
+    # 定义Model
+    class User(db.Model):
+        pass
+
+    users = User.all()
+
+
+* 配置数据库慢查询日志。
+
+.. code-block:: python
+
+    import logging
+
+    from flaskcap.logging import NaturalTimedRotatingHandler
+
+    # 定义慢查询日志
+    from flaskcap.orator import slow_query_logger
+
+    log_handler = NaturalTimedRotatingHandler('slow_query.log',
+                                               when='d',
+                                               backupCount=7)
+    slow_query_logger.addHandler(log_handler)
+
+
+    # 使用自定义日志
+    from flask.orator import register_slow_query_logger
+
+    def my_logger():
+        _logger = logging.getLogger('my_log')
+        _logger.setLevel(logging.WARNING)
+        _handler = NaturalTimedRotatingHandler('slow_query.log',
+                                               when='d',
+                                               backupCount=7)
+        _formatter = logging.Formatter('%(asctime)s %(query)s in %(elapsed_time)sms')
+        _handler.setFormatter(_formatter)
+        _logger.addHandler(_handler)
+        return _logger
+
+    register_slow_query_logger(my_logger())
