@@ -1,0 +1,94 @@
+## Teradata Python package for Advanced Analytics.
+
+teradataml makes available to Python users a collection of analytic functions that reside on Teradata Vantage. This allows users to perform analytics with no SQL coding. In addition, teradataml library  provides functions for scaling data manipulation and transformation, data filtering and sub-setting, and can be used in conjunction with other open-source python libraries. 
+
+For community support, please visit the [Connectivity Forum](http://community.teradata.com/t5/Tools/bd-p/DevXToolsBoard).
+
+For Teradata customer support, please visit [Teradata Access](https://access.teradata.com/).
+
+### Table of Contents
+* [Installation and Requirements](#installation-and-requirements)
+* [Using the Teradata Python Package](#using-the-teradata-python-package)
+* [Documentation](#documentation)
+* [License](#license)
+* [Release Notes](#release-notes)
+
+## Installation and Requirements
+
+### Package Requirements:
+* Python 3.4.3 or later
+
+Note: 32-bit Python is not supported.
+
+### Minimum System Requirements:
+* Windows 7 (64Bit) or later
+* macOS 10.9 (64Bit) or later
+* Teradata Vantage:
+  * Teradata Database 16.20 Feature Update 1
+  * Teradata Machine Learning Engine 08.00.00.00
+
+### Installation
+
+Use pip to install the Teradata Python Package for Advanced Analytics.
+
+Platform       | Command
+-------------- | ---
+macOS          | `pip install teradataml`
+Windows        | `py -3 -m pip install teradataml`
+
+When upgrading to a new version of the Teradata Python Package, you may need to use pip install's `--no-cache-dir` option to force the download of the new version.
+
+Platform       | Command
+-------------- | ---
+macOS          | `pip install --no-cache-dir -U teradataml`
+Windows        | `py -3 -m pip install --no-cache-dir -U teradataml`
+
+## Using the Teradata Python Package
+
+Your Python script must import the `teradataml` package in order to use the Teradata Python Package:
+
+```
+>>> import teradataml as tdml
+>>> from teradataml import create_context, get_context, remove_context
+>>> create_context(host = 'hostname', username = 'user', password = 'password')
+>>> df = tdml.DataFrame('my_table')
+>>> df
+                id masters   gpa     stats programming  admitted
+            0  34.0     yes  3.85  advanced    beginner       0.0
+            1   6.0     yes  3.50  beginner    advanced       1.0
+            2  36.0      no  3.00  advanced      novice       0.0
+            3  15.0     yes  4.00  advanced    advanced       1.0
+            4  18.0     yes  3.81  advanced    advanced       1.0
+            5  13.0      no  4.00  advanced      novice       1.0
+            6  38.0     yes  2.65  advanced    beginner       1.0
+            7  19.0     yes  1.98  advanced    advanced       0.0
+            8  17.0      no  3.83  advanced    advanced       1.0
+            9  29.0     yes  4.00    novice    beginner       0.0
+
+>>> select_df = df.select(['id', 'masters']) 
+
+>>> filtered_df = df[(df.masters == 'yes') | (df.id > 10)]
+
+>>> remove_context()
+```
+
+## Documentation
+
+General product information, including installation instructions, is available in the [Teradata Documentation website](https://docs.teradata.com/)
+-	Teradata Python Package User Guide – B700-4006
+-	Teradata Python Package Function Reference – B700-4008
+
+## License
+
+Use of the Teradata Python Package is governed by the *License Agreement for the teradataml version 16.20.00.00*. 
+After installation, the `LICENSE` and `LICENSE-3RD-PARTY` files are located in the `teradataml` directory of the Python installation directory.
+
+## Release Notes:
+`teradataml 16.20.00.00` is the first release version. Please refer to the _Teradata Python Package User Guide_ for a list of Limitations and Usage Considerations.
+
+```
+Teradata Python Package – teradataml 16.20.00.00
+Teradata Vantage Client Python Analytic library
+```
+
+Copyright 2018, Teradata. All Rights Reserved.
