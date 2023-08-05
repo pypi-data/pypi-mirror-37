@@ -1,0 +1,24 @@
+{% extends 'telegram_blog/base.html' %}
+
+{% block title %}Blogs{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center">Blogs</h1>
+
+<div class="blog-list">
+  {% for blog in blogs %}
+
+    <div class="blog-list-item">
+      {% if blog.photo_url_small %}
+        <a href="{% url 'telegram_blog:blog_detail' blog.pk %}">
+          <img src="{{ blog.photo_url_small }}">
+        </a>
+      {% endif %}
+      <h2><a href="{% url 'telegram_blog:blog_detail' blog.pk %}">{{ blog.title }}</a></h2>
+      <p>{{ blog.entries.count }} entries</p>
+      {% if blog.last_updated %}<p>Updated {{ blog.last_updated|timesince }} ago</p>{% endif %}
+    </div>
+
+  {% endfor %}
+</div>
+{% endblock content %}
