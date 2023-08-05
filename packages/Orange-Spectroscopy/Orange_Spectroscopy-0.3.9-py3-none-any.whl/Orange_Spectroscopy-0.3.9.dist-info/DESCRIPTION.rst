@@ -1,0 +1,8 @@
+Spectral Orange
+===============
+
+Orange add-on for spectral data analysis. Provides spectra and
+hyperspectra plotting, interpolation, preprocessing (cutting, smoothing,
+normalization), and integration. Supports common spectral file formats.
+
+
