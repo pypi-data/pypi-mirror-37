@@ -1,0 +1,50 @@
+Metadata-Version: 2.1
+Name: correcthorse
+Version: 0.1.1
+Summary: Secure but memorable passphrase generator
+Home-page: https://github.com/nickovs/correcthorse
+Author: Nicko van Someren
+Author-email: nicko@nicko.org
+License: UNKNOWN
+Keywords: password,passphrase
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.4
+Description-Content-Type: text/markdown
+
+# Correct Horse: A memorable passphrase generator
+
+Correct Horse is a tool for generating resonably secure but reasonably
+memorable passphrases. It does this by picking a set of words from a
+dictionary and then sorting them into an order that plausibly makes
+sense as a phrase. It can be used either as a command line tool to
+generate and print a passphrase that one might enter into another
+application or through an API to pick new passphrases for something
+like a rotating code on a WiFi network.
+
+## Usage
+
+### Command line
+
+```
+correcthorse [-h] [-n WORD_COUNT] [-l] [-c] [-u] [-s] [-j] [-H]
+                   [-S SEPARATOR] [-f FILENAME] [-L LOCALE]
+```
+
+Use the `-n  WORD_COUNT` or `--word-count WORD_COUNT` option to set the number of words in the passphrase.
+
+The `-l` or `--lower-case` will cause all of the words in the passphrase to be printed in lower case while the `-c` or `--capitalise` flag will cause the first letter of each word to be capitalised. The default is to capitalise the first letter.
+
+When the words of the passphrase are printed a seperator string will be placed between then. This can be set using the `-S SEPARATOR` or `--separator SEPARATOR` option. For convenience you can use `-u` or `--underscore` to join the words with an underscore, `-s` or `--space` to join the words with a space, `-H` or `--hyphen` to join the words with a hyphen or `-j` or `--join` to simply run the words together without a separator.
+
+By default `correcthorse` will detect your locale and pick a word set that matches your local language. You can override the detected locale using the `-L LOCALE` or `--locale LOCALE` options. While great in theory, unless your language is English the chances are that currently there is no built in word file for your language. You can however specify a custom word file using the `-f FILENAME`or `--word-file FILENAME` options. 
+
+### Use as a python module
+
+To use the `correcthorse` module through the API create an instance of the `WordSet` using `WordSet(filename=None, locale=None, encoding='UTF-8')` and then call `random_phrase(word_count=4)`.
+
+
+
