@@ -1,0 +1,68 @@
+<!-- The CamCom review box -->
+<div metal:define-macro="portlet"
+     tal:define="DateTime python:modules['DateTime'].DateTime;
+                 results_tuple python:context.my_camcom_worklist(limitAt=5);
+				 results python:results_tuple[0];
+				 hasReviewLev2 python:results_tuple[1];
+				 member view/getMember;
+                 toLocalizedTime nocall:context/@@plone/toLocalizedTime;">
+
+    <dl class="portlet" id="portlet-workflow-camcom-review"
+	     tal:condition="python: results or member.has_permission('CamCom: Approvazione livello 2', context)">
+
+        <dt class="portletHeader">
+        	<span class="portletTopLeft"></span>
+			<span class="tile">Da controllare</span>
+			<span class="portletTopRight"></span></dt>
+			
+        <dd class="portletItem">
+
+            <div class="portletContent odd" tal:condition="not:results">
+                Nessuno
+            </div>
+
+            <tal:block repeat="o results">
+            <div tal:define="oddrow repeat/o/odd"
+                 tal:attributes="class python:(oddrow and 'portletContent odd') or 'portletContent even'">
+
+                    <a href="#"
+                       class="marker"
+                       tal:attributes="href string:${o/absolute_url}/view;
+                                       title o/Description">
+                        <!--img src="" height="16" width="16"
+                             tal:attributes="src string:${here/portal_url}/${o/getIcon};
+                                             title o/Type;" /-->
+                        <span tal:replace="o/Title|o/getId">
+                        	My Document
+                        </span>
+                    </a>
+
+                    <div class="portletDetails"
+                         tal:define="moddate o/ModificationDate;"
+                         tal:content="python:toLocalizedTime(moddate)">July 7, 08:11</div>
+            </div>
+            </tal:block>
+
+        </dd>
+
+    <dd class="portletFooter footer_1">
+        <a class="tile"
+           tal:attributes="href view/full_review_link">Mostra tutti</a>
+        <span class="portletBottomLeft"></span>
+        <span class="portletBottomRight"></span>
+    </dd>
+
+	<dd class="portletFooter"
+        tal:condition="python:member.has_permission('CamCom: Approvazione livello 2', context)"
+        tal:define="url_to_here python:(context.isPrincipiaFolderish and context.absolute_url()) or context.getParentNode().absolute_url()">
+            <a class="tile"
+			   tal:condition="python:context.REQUEST.get('showcuff',None)!='y'" href="#" tal:attributes="href string:${url_to_here}?showcuff=y">Vedi lista C.Uff.</a>
+	        <a class="tile"
+			   tal:condition="python:context.REQUEST.get('showcuff',None)=='y'" href="#" tal:attributes="href string:${url_to_here}">Vedi lista C.Serv.</a>
+        <span class="portletBottomLeft"></span>
+        <span class="portletBottomRight"></span>
+     </dd>
+
+    </dl>
+
+</div>
