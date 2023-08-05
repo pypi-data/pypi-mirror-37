@@ -1,0 +1,96 @@
+#+TITLE: Python google analytics library
+
+* Introduction
+This library is a simple server side implementation of google analytics it is based on the documentation here.
+https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide
+
+It uses the requests library to send requests directly to google with out any javascript which may be blocked client side.
+
+* Installation
+#+BEGIN_SRC shell :results silent
+pip install pygass
+#+END_SRC
+
+The code is also available at this location for bug fixes or to pull from master.
+https://gitlab.com/python-open-source-library-collection/pygass
+
+* Examples
+** Simple Page tracking event
+
+The below example sends a page view event to google, you will need to provide an anonymous client id and the page url as a minimum.
+
+#+NAME: Page tracking example
+#+BEGIN_SRC python :results output code :exports code
+  import random
+  import pprint
+  import constants as st
+  import pygass as an
+
+  # set your analytics code
+  st.ANALYTICS_CODE = "UA-10000000-1"
+
+  # use the test api for json responses
+  st.ANALYTICS_URL = "https://www.google-analytics.com/debug/collect"
+
+  # show the response
+  pprint.pprint(
+      an.track_pageview(client_id=123, page="/test/client/pageview"), width=1
+  )
+#+END_SRC
+
+#+RESULTS: Page tracking example
+#+BEGIN_SRC python
+{'hitParsingResult': [{'hit': '/debug/collect?v=1&tid=UA-10000000-1&cid=123&t=pageview&dp=%2Ftest%2Fclient%2Fpageview',
+                       'parserMessage': [],
+                       'valid': True}],
+ 'parserMessage': [{'description': 'Found '
+                                   '1 '
+                                   'hit '
+                                   'in '
+                                   'the '
+                                   'request.',
+                    'messageType': 'INFO'}]}
+#+END_SRC
+
+
+The below example demonstrates how to track a transaction with analytics, you will need to send an anonymous client id with the requests.
+
+** Simple transaction tracking event
+
+#+NAME: Transaction tracking example
+#+BEGIN_SRC python :results output code :exports code
+  import random
+  import pprint
+  import constants as st
+  import pygass as an
+
+  # set your analytics code
+  st.ANALYTICS_CODE = "UA-10000000-1"
+
+  # use the test api for json responses
+  st.ANALYTICS_URL = "https://www.google-analytics.com/debug/collect"
+
+  # show the response
+  transaction_id = random.randint(1, 10000000)
+  an.track_transaction(client_id=1001, transaction_id=transaction_id)
+  pprint.pprint(
+      an.track_item(
+          client_id=1001, transaction_id=transaction_id, name="Test Product 3"
+      ),
+      width=1,
+  )
+#+END_SRC
+
+#+RESULTS: Transaction tracking example
+#+BEGIN_SRC python
+{'hitParsingResult': [{'hit': '/debug/collect?v=1&tid=UA-10000000-1&cid=1001&t=item&ti=4801535&in=Test+Product+3&iq=1',
+                       'parserMessage': [],
+                       'valid': True}],
+ 'parserMessage': [{'description': 'Found '
+                                   '1 '
+                                   'hit '
+                                   'in '
+                                   'the '
+                                   'request.',
+                    'messageType': 'INFO'}]}
+#+END_SRC
