@@ -1,0 +1,27 @@
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     lang="en">
+  <channel tal:define="results context/results">
+    <title tal:content="context/Title">${context/Title}</title>
+    <link rel="alternate"
+          type="application/rss+xml"
+          tal:attributes="href string:${context/absolute_url}/rss" />
+    <description tal:content="context/Description"></description>
+    <language tal:content="view/get_current_language">en-us</language>
+    <tal:items condition="results" repeat="item results">
+      <item>
+        <title tal:content="item/Title">This is an Instant Article</title>
+        <!-- <link>http://example.com/article.html</link> -->
+        <link tal:attributes="href item/getURL" />
+        <guid tal:content="item/UID">11111111111111</guid>
+        <pubDate tal:content="item/effective">2014-12-11T04:44:16Z</pubDate>
+        <author tal:content="item/Creator">Mr. Author</author>
+        <description tal:content="item/Description">This is my first Instant Article. How awesome is this?</description>
+        <content:encoded tal:content="structure python:view.get_item_html(item)">
+        </content:encoded>
+      </item>
+    </tal:items>
+  </channel>
+</rss>
