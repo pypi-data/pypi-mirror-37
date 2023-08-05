@@ -1,0 +1,121 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=cp1252" />
+    <title>t-SNE</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="Louvain Clustering" href="louvain.html" />
+    <link rel="prev" title="Filter" href="filter.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="louvain.html" title="Louvain Clustering"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="filter.html" title="Filter"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">scOrange 0.5 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="t-sne">
+<h1>t-SNE</h1>
+<p>Two-dimensional data projection with t-SNE.</p>
+<dl class="docutils">
+<dt>Inputs</dt>
+<dd><dl class="first last docutils">
+<dt>Data</dt>
+<dd>input dataset</dd>
+<dt>Data Subset</dt>
+<dd>subset of instances</dd>
+</dl>
+</dd>
+<dt>Outputs</dt>
+<dd><dl class="first last docutils">
+<dt>Selected Data</dt>
+<dd>instances selected from the plot</dd>
+<dt>Data</dt>
+<dd>data with an additional column showing whether a point is selected</dd>
+</dl>
+</dd>
+</dl>
+<p>The <strong>t-SNE</strong> widget plots the data with a t-distributed stochastic neighbor embedding method. <a class="reference external" href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding" target="_blank">t-SNE</a> is a dimensionality reduction technique, similar to MDS, where points are mapped to 2-D space by their probability distribution.</p>
+<div class="figure">
+<img alt="../_images/tSNE-stamped.png" src="../_images/tSNE-stamped.png" />
+</div>
+<ol class="arabic simple">
+<li>Number of iterations for optimization and the measure of <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html" target="_blank">perplexity</a>. Press Start to (re-)run the optimization.</li>
+<li>Select the number of PCA components used for projection.</li>
+<li>Set the color of the displayed points (you will get colors for discrete
+values and grey-scale points for continuous). Set shape, size and
+label to differentiate between points. Set symbol size and opacity for
+all data points. Set jittering to randomly disperse data points.</li>
+<li>Adjust <em>plot properties</em>:<ul>
+<li><em>Show legend</em> displays a legend on the right. Click and drag the legend to move it.</li>
+<li><em>Show all data on mouse hover</em> enables information bubbles if the cursor is placed on a dot.</li>
+<li><em>Show class density</em> colors the graph by class.</li>
+<li><em>Label only selected points</em> allows you to select individual data instances and label them.</li>
+</ul>
+</li>
+<li>If <em>Send selected automatically</em> is ticked, changes are communicated automatically.
+Alternatively, press <em>Send Selected</em>.</li>
+<li><em>Select, zoom, pan and zoom to fit</em> are the options for exploring the graph.
+The manual selection of data instances works as an angular/square
+selection tool. Double click to move the projection. Scroll in or out
+for zoom.</li>
+<li>Access help, save image or produce a report.</li>
+</ol>
+<div class="section" id="example">
+<h2>Example</h2>
+<p>We will use <a class="reference internal" href="singlecelldatasets.html"><span class="doc">Single Cell Datasets</span></a> widget to load <em>Bone marrow mononuclear cells with AML (sample)</em> data. Then we will pass it through <strong>k-Means</strong> and select 2 clusters from Silhouette Scores. Ok, it looks like there might be two distinct clusters here.</p>
+<p>But can we find subpopulations in these cells? Let us load <em>Bone marrow mononuclear cells with AML (markers)</em> with <a class="reference internal" href="singlecelldatasets.html"><span class="doc">Single Cell Datasets</span></a>. Now, pass the marker genes to <strong>Data Table</strong> and select, for example, natural killer cells from the list (NKG7).</p>
+<p>Pass the markers and k-Means results to <a class="reference internal" href="scorecells.html"><span class="doc">Score Cells</span></a> widget and select <em>geneName</em> to match markers with genes. Finally, add <strong>t-SNE</strong> to visualize the results.</p>
+<p>In <strong>t-SNE</strong>, use <em>Scores</em> attribute to color the points and set their size. We see that killer cells are nicely clustered together and that t-SNE indeed found subpopulations.</p>
+<div class="figure">
+<img alt="../_images/tSNE-Example.png" src="../_images/tSNE-Example.png" />
+</div>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="louvain.html" title="Louvain Clustering"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="filter.html" title="Filter"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">scOrange 0.5 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Biolab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+  </body>
+</html>
