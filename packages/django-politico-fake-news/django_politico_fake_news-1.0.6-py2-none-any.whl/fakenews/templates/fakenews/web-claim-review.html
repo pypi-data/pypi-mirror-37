@@ -1,0 +1,34 @@
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "ClaimReview",
+    "datePublished": "{{ data.publish_date }}",
+    "url": "https://politico.com/interactives/2018/is-this-true/",
+    "author": {
+        "@type": "Politico",
+        "url": "https://www.politico.com/",
+        "image": "https://static.politico.com/da/f5/44342c424c68b675719324b1106b/politico.jpg",
+        "sameAs": "https://twitter.com/politico"
+    },
+    "claimReviewed": "{{ data.claim_reviewed.short_text }}",
+    "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": 1,
+        "worstRating": 1,
+        "bestRating": 2,
+        "alternateName": "Disinformation"
+    },
+    "itemReviewed": [
+    {% for share in data.claim_reviewed.share_set %}
+      {
+          "@type": "CreativeWork",
+          "author": {
+              "@type": "Organization",
+              "name": "{{ share.source }}",
+          }
+          "datePublished": "{{ share.publish_date }}",
+      }{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ]
+}
+</script>
