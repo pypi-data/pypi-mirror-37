@@ -1,0 +1,84 @@
+SDI Pipeline
+This is an image processing pipeline built for the University of California Santa Barbara's Experimental Cosmology Lab to be used in the SDI Optical SETI program in conjunction with the Las Cumbres Observatory Telescope Network. The pipeline downloads source images from LCO's network, aligns and co-adds them to create template images, and subtracts each template from the source images to create residual frames. These residuals are then searched for exceedingly large flux distributions indicative of an extraterrestrial's laser hitting LCO's CCD. More documentation can be found at ().
+
+
+INSTALL:
+Install on Linux machines from PyPi with
+    pip install sdi_pipeline
+    
+
+DEPENDENCIES:
+Running the pipeline requires a number of supplementary image processing packages to function properly. Install these on your machine before running the pipeline.
+
+-Sextractor (source extraction code written by Emmanuel Bertin)
+    *To install download tarball from astromatic.net and unpack
+    
+-SWarp (image registration and co-addition code written by Emmanuel Bertin)
+    *To install, download tarball from astromatic.net and unpack
+    
+-PSFex (PSF computation software written by Emmanuel Bertin)
+    *To install download tarball from astromatic.net and unpack
+    
+-Skymaker (astromatic.net) (OPTIONAL, only needed for simulations)
+    *To install download tarball and unpack.
+    
+-hotpants (image subtraction program written by Andrew Becker)
+
+-ISIS (image subtraction code written by Christophe Alard) 
+    *Included in pipeline's source code, does not need to  be installed seperately. To install run the pipeline's initialization script.
+    
+-CFITSIO (fits image proccessing package from NASA)
+    *To install download tarball and unpack.
+    
+-astroalign (image registration package written by Martin Beroiz)
+    *To install run "pip install astroalign"
+    
+-image_registration (image registration package written by Adam Ginsburg)
+    *To install run "pip install image_registration"
+
+    
+The pipeline itself will run on any OS, however, many of the supplementary image processing packages are only distrubuted for Linux systems.
+
+TESTING:
+To test the pipeline install and make sure you have all of the dependencies, run the test.py module by
+
+    "python -m sdi_pipeline.test"
+
+The test module downloads two images of a farily sparse star field (21:40:47.388, +00:28:35.11) and runs them through the entire pipeline, from download to alignment to combination to subtraction and finally to source extraction. In order to test the detection abilities of the pipeline, three fake stars are added to one of the images (the non-reference image). They should survive the subtraction and appear in the non-reference residual as three obvious stars in a dog-leg pattern in the middle of the image.
+At the end the function will display the residual image containing the fake stars with ds9, as well as the detected sources in each residual. Finally, the function will compare your machine's results with a standard "control" set of results located in the 'test_config' directory, which is located in the same directory as the pipeline's source code. You can view these control results by visiting this directory. The pertinent files are "test_sources.txt" and "09:14:00.260_A_residual_.fits". If successful, the function will print "TEST SUCCESSFUL!"
+
+USING THE PIPELINE:
+The software's physical architecture is a tree of directories created in the "loc" path. The "loc" variable is defined in the initialize.py script and defaults to the user's home directory. If you want to install the pipeline's directory tree in a different location, you need to change the "loc" variable before running the initialize.py script.
+
+The basic pipeline functions are-
+initialize-- Run this script after installing the package. This will create the pipeline's architecture and ensure all of the appropriate auxillary software is installed. This will also allow the option to install the ISIS image subtraction code, denoted here as AIS.
+
+get-- Move downloaded LCO images from the Downloads directory (or any other specified directory) to the SDI directory tree, decompress the images, and rename and sort them according to observation target/filter/exposure time/etc.
+
+align-- Align all images in a target's "data" directory to a chosen reference image. This reference image is chosen by the software as that with the least amount of sky noise. There are two different alignment methods: one that uses a DFT upsampling method written by Adam Ginsberg and another that uses the package astroalign written by Martin Beroiz. Astroalign is sufficient for initial alignment, while the chi2 method is used for subpixel registration between a test image and the template before subtraction. The chi2 method is especially good for extended objects such as galaxies. Images that are aligned with astroalign alone are given the "_a_.fits" suffix, while the images that have been aligned with both methods are given a "_A_.fits" suffix. Images need to have a "_A_.fits" suffix in order to be subtracted. Images that are not aligned remain with the "_N_.fits" suffix. Running the 'align' method will only run astroalign. Chi2 is run automatically whenever a subtraction takes place, no user input is needed.
+
+combine-- Combines all "_A_.fits" images in a directory into one co-added template image, then moves this image to the target's "template" directory. There are two combination methods: SWarp and numpy. All of these should give the same outputted image, with the main difference being each's computation time. Numpy is the fastest method by a large margin, but takes the most memory since it deals with python arrays. SWarp takes very little memory but is much slower. It also requires configuration in the form of a "default.swarp" config file. 
+
+subtract-- Subtracts the template created with the "combine" function from each source image, then places the resulting residual image in the "residuals" directory. There are two subtraction methods: hotpants and ais. AIS is a image subtraction algorithm written by Christophe Alard. It matches the template's PSF to each source image's and convolces the template to allow for an accurate subtraction. See documentation here http://www2.iap.fr/users/alard/package.html. Hotpants accomplishes the same task but in a slightly different manner. See hotpant's documentation here https://github.com/acbecker/hotpants. They are both extrmeely accurate methods, and differ little in computation time. The main difference is configuring the subtraction parameters. This will determine the effectiveness of the code. I find AIS's configurable parameters are fewer and easier to understand than hotpants. Both will require thorough reading of the code's documentation and practice with real images. This is the toughest part about using these two methods, but if the correct parameters are chosen the usefulness of the codes will make itself clear. AIS's config file "process_config" is located in the "AIS/package/register" directory, which itself wil be located wherever the sdi_pipeline source code is installed on your machine. Hotpants's parameters are defined when calling the command itself, so to modify them you need to modify the actual "subtract_hotpants" script.
+
+pipeline-- Simply combines the align, combine, and subtract functions into one command. Running this will implement these in the order align->combine->subtract.
+
+sextractor-- First finds the PSF of each source image using PSFex (written by Emmanuel Bertin). Using this PSF SExtractor is run on each residual looking for sources exceeding a certain multiple of the background noise. A catalog of detected sources for each image is placed in the target's "sources" directory. These catalogs are then combined into a single text file. The sources in this text file are then filtered according to the SExtractor parameter "spread_model." Spread_model assesses the PSF-like morphology of each detection and reports a sigle value. A negative value represents a source that is smaller than the PSF, likely something like a cosmic ray strike or subtraction artifact. A value close to one represents an exnteded object such as a galaxy. A positive number close to zero represents a source with a flux profile similar to the PSF of the original source image. This pipeline will throw away any detection with a spread_model <0 and > 0.1. The final list of detecitons for each iamge can be found in the "sources.txt" file in the sources directory. SExtractor parameters can be configured in the package's .param and .config files. These are located in the "config" directory, which is located wherever the sdi_pipeline source code is installed on your machine. The pertinent files for SExtractor are "default.sex" (configuration for final source extraction), "default.param" (the paramters that will be included in the final 'sources.txt' file", "psfex.config" (PSFex's configuration file), and "psf.sex" (SExtractor's configuration file used for feeding data into PSFex). "default.sex" and "default.param" are likely to be the only things you'll ever have to change. See SExtractor's documentation on astromatic.net.
+
+run-- This is the main script that brings all of the pipeline's functions together. I reccommend this be the only script that is run. It begins by asking what method (initialize, get, align, combine, subtract, extract, or pipeline) you want to run. Then it will take you through whatever method you specified.
+
+
+Run these scripts in the terminal with
+    python -m sdi_pipeline.scriptname
+    
+    Example: To run pipeline -> python -m sdi_pipeline.run
+    
+    
+
+The simulation of ETI laser signals is done with Skymaker. The code for this is included but not yet neatly packaged into a singular function. It is still possible for users to use this code, but it will require manipulating scripts that are largely uncommented and have little documentation. I am working on an updated package that will include easy source-simulation functionality. Until then let me know if you have any questions about this part of the pipeline.
+
+
+FUTURE IMPROVEMENTS:
+There is much room for improvement with the current code. Comments need to be added and a more detailed documentation needs to be created. Until then give the pipeline a shot and email me with any questions/critiques. andrew.henry.stewart@emory.edu
+
+
