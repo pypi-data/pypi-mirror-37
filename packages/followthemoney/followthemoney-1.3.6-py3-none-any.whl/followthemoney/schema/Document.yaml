@@ -1,0 +1,190 @@
+Document:
+  extends: Thing
+  label: File
+  plural: Files
+  icon: fa-file-o
+  hidden: true
+  matchable: false
+  properties:
+    contentHash:
+      label: "Content checksum"
+      description: "SHA1 hash of the data"
+      type: identifier
+    title:
+      label: "Title"
+      rdf: http://purl.org/dc/elements/1.1/title
+    author:
+      label: "Author"
+      description: "The original author, not the uploader"
+      rdf: http://purl.org/dc/elements/1.1/creator
+    generator:
+      label: "Generator"
+      description: "The program used to generate this file"
+    crawler:
+      label: "Crawler"
+      description: "The crawler used to acquire this file"
+    fileSize:
+      label: "File size"
+    fileName:
+      label: "File name"
+    extension:
+      label: "File extension"
+    encoding:
+      label: "File encoding"
+    mimeType:
+      label: "MIME type"
+      rdf: http://purl.org/dc/terms/format
+    language:
+      label: "Language"
+      rdf: http://purl.org/dc/terms/language
+    date:
+      label: "Date"
+      description: "If not otherwise specified"
+      type: date
+      rdf: http://purl.org/dc/elements/1.1/date
+    authoredAt:
+      label: "Authored on"
+      type: date
+    modifiedAt:
+      label: "Modified on"
+      type: date
+    publishedAt:
+      label: "Published on"
+      type: date
+    retrievedAt:
+      label: "Retrieved on"
+      type: date
+    parent:
+      label: "Parent document"
+      type: entity
+      schema: Folder
+      reverse:
+        name: children
+        label: "Child documents"
+      rdf: http://purl.org/dc/terms/isPartOf
+    namesMentioned:
+      label: "Mentioned names"
+      type: name
+    ibanMentioned:
+      label: "IBANs"
+      type: iban
+    ipMentioned:
+      label: "IP addresses"
+      type: ip
+    locationMentioned:
+      label: "Locations"
+      type: address
+    phoneMentioned:
+      label: "Phone numbers"
+      type: phone
+    emailMentioned:
+      label: "E-Mail addresses"
+      type: email
+    # Not included:
+    # * pdf version
+    # * columns
+    # * headers
+
+
+PlainText:
+  # Text files, like .txt or source code.
+  extends: Document
+  label: Text file
+  plural: Text files
+  icon: fa-file-text-o
+  hidden: true
+  matchable: false
+
+Pages:
+  # Like PDF, word document, ...
+  extends: Document
+  label: Document
+  plural: Documents
+  icon: fa-file-pdf-o
+  hidden: true
+  matchable: false
+
+Folder:
+  extends: Document
+  label: Folder
+  plural: Folders
+  icon: fa-folder
+  hidden: true
+  matchable: false
+
+Package:
+  extends: Folder
+  label: Package
+  plural: Packages
+  icon: fa-file-archive-o
+  hidden: true
+  matchable: false
+
+Workbook:
+  extends: Folder
+  label: Workbook
+  plural: Workbooks
+  icon: fa-file-excel-o
+  hidden: true
+  matchable: false
+
+Image:
+  extends: Document
+  label: Image
+  plural: Images
+  icon: fa-file-image-o
+  hidden: true
+  matchable: false
+
+Video:
+  extends: Document
+  label: Video
+  plural: Videos
+  icon: fa-file-video-o
+  hidden: true
+  matchable: false
+
+Audio:
+  extends: Document
+  label: Audio
+  plural: Audio files
+  icon: fa-file-audio-o
+  hidden: true
+  matchable: false
+
+HyperText:
+  # HTML document
+  extends: Document
+  label: Web page
+  plural: Web pages
+  icon: fa-file-code-o
+  hidden: true
+  matchable: false
+
+Email:
+  extends:
+    - Folder
+    - PlainText
+    - HyperText
+  label: E-Mail
+  plural: E-Mails
+  icon: fa-envelope-o
+  hidden: true
+  matchable: false
+  properties:
+    messageId:
+      label: "Message ID"
+      description: "Message ID of an email; unique in most cases"
+      type: identifier
+    inReplyTo:
+      label: "In Reply To"
+      description: "Message IDs of the preceding emails in the thread"
+      type: identifier
+
+Table:
+  extends: Document
+  label: Table
+  plural: Tables
+  icon: fa-table
+  hidden: true
+  matchable: false
