@@ -1,0 +1,38 @@
+- project:
+    templates:
+      - check-requirements
+      - lib-forward-testing
+      - lib-forward-testing-python3
+      - openstack-lower-constraints-jobs
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - openstack-python36-jobs
+      - publish-openstack-docs-pti
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - legacy-tempest-dsvm-full-ceph-plugin-src-os-brick:
+            voting: false
+            irrelevant-files:
+              - ^(test-|)requirements.txt$
+              - ^setup.cfg$
+        - legacy-tempest-dsvm-full-lio-src-os-brick:
+            irrelevant-files:
+              - ^(test-|)requirements.txt$
+              - ^setup.cfg$
+        - os-brick-cinder-tempest-dsvm-lvm-lio-barbican
+    gate:
+      jobs:
+        - legacy-tempest-dsvm-full-lio-src-os-brick:
+            irrelevant-files:
+              - ^(test-|)requirements.txt$
+              - ^setup.cfg$
+        - os-brick-cinder-tempest-dsvm-lvm-lio-barbican
+    experimental:
+      jobs:
+        - openstack-tox-pylint
+- job:
+    name: os-brick-cinder-tempest-dsvm-lvm-lio-barbican
+    parent: cinder-tempest-dsvm-lvm-lio-barbican
+    required-projects:
+      - openstack/cinder
