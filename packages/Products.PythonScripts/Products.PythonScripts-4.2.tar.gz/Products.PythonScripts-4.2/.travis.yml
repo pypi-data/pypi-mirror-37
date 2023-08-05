@@ -1,0 +1,27 @@
+language: python
+sudo: false
+python:
+    - 2.7
+    - 3.5
+    - 3.6
+matrix:
+    include:
+        - python: "3.7"
+          dist: xenial
+          sudo: true
+install:
+    - pip install coverage coveralls
+    - pip install zc.buildout
+    - buildout bootstrap
+    - buildout install test
+script:
+    - coverage run bin/test --all -v1
+notifications:
+    email: false
+after_success:
+    - coverage combine
+    - coveralls
+cache:
+  - pip: true
+  - directories:
+    - eggs/
