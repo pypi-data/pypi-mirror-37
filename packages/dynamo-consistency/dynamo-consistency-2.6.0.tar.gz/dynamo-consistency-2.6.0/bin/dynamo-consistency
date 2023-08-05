@@ -1,0 +1,116 @@
+#! /usr/bin/env python
+
+"""
+This program runs the Site Consistency Check for
+Dyanmo Dynamic Data Management System.
+See https://ddm-dynamo.readthedocs.io
+for information about Dynamo and
+http://dynamo-consistency.readthedocs.io
+for information about this tool.
+"""
+
+__usage__ = '%prog [options]'
+
+import os
+import time
+import signal
+import logging
+import datetime
+import traceback
+
+import psutil
+
+from dynamo_consistency import opts
+from dynamo_consistency import config
+from dynamo_consistency import logsetup
+from dynamo_consistency import summary
+from dynamo_consistency import picker
+from dynamo_consistency import signaling
+from dynamo_consistency import lock
+
+from dynamo_consistency.parser import pretty_exe
+from dynamo_consistency.main import main
+
+pretty_exe('dynamo-consistency')
+
+if __name__ == '__main__':
+
+    logger = logging.getLogger('dynamo-consistency')
+
+    config_dict = config.config_dict()
+    logdir = config.vardir('logs')
+
+    # Setup log before spewing stuff
+    global_log = os.path.join(logdir, 'consistency.log')
+    logsetup.change_logfile(global_log)
+
+    mem_have = psutil.virtual_memory().available
+    mem_want = (int(config_dict['FreeMem']) * 1024**3)
+
+    if mem_have < mem_want:
+        logger.warning('Not enough available memory: Have %f GBs Want %f GBs',
+                       float(mem_have)/1024**3,
+                       float(mem_want)/1024**3)
+        logger.warning('Not running now.')
+        exit(0)
+
+    # Get the site to run on
+    site = picker.pick_site(opts.SITE_PATTERN)
+
+    # Check if needs lock (like for gfal)
+    needed_lock = lock.which(site)
+
+    try:
+
+        signal.signal(signal.SIGINT, signaling.halt)
+        signal.signal(signal.SIGTERM, signaling.halt)
+
+        if needed_lock:
+            logger.info('%s needs %s lock', site, needed_lock)
+            needed_lock = lock.acquire(needed_lock)
+
+        # Start run and make site green on summary table
+        logger.info('Starting run on %s', site)
+        summary.running(site)
+
+        # Try running on site
+        weblog = os.path.join(config_dict['WebDir'], '%s.log' % site)
+        if os.path.exists(weblog):
+            os.remove(weblog)
+
+        logsetup.change_logfile(
+            os.path.join(weblog),
+            os.path.join(logdir, site, '%s.log' %
+                         datetime.datetime.fromtimestamp(time.time()).\
+                             strftime('%y%m%d_%H%M%S')
+                        )
+            )
+
+        main(site)
+
+    except Exception as e:
+        # Report error
+        full = traceback.format_exc()
+
+        logger.error(full)
+        logger.error(e)
+
+        if opts.EMAIL:
+            from cmstoolbox.emailtools import send_email
+
+            mail_config = config_dict['Email']
+            send_email(
+                sender=mail_config['Sender'],
+                recipients=mail_config['Recipients'],
+                subject='Exception in dynamo-consistency',
+                message_text=full)
+
+    # Release locks
+    if needed_lock:
+        logger.info('%s dropping %s lock', site, needed_lock)
+        lock.release(needed_lock)
+
+    summary.unlock_site(site)
+
+    logsetup.change_logfile(global_log)
+    logger.info('Finished run on %s', site)

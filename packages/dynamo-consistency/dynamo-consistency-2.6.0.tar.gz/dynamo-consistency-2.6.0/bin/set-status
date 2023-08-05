@@ -1,0 +1,73 @@
+#! /usr/bin/env python
+
+"""
+This script changes the status of a site on the summary webpage.
+It can be used to unlock from a dead process, disable sites from running,
+and change whether or not to act on the site.
+
+This script can take a ``--config <FILE>`` parameter to point
+to a configuration file, a la ``dynamo-consistency``.
+
+For the last two arguments, ``SITE`` will match
+the name of the site to change.
+``ACTION`` can be one of the following
+
++-------------+-------------------------------------------+
+|   Action    |               Description                 |
++=============+===========================================+
+|             | This sets the site status back to idle.   |
+| ``ready``   | This means the site is ready to run.      |
+|             | Should be used on a site that's disabled. |
++-------------+-------------------------------------------+
+|  ``halt``   | This stops a currently running or locked  |
+|             | site. This site is still eligible to run. |
++-------------+-------------------------------------------+
+|             | Can be applied to a site that is either   |
+| ``disable`` | running or ready. It halts the site and   |
+|             | also prevents it from running until set   |
+|             | to ``ready`` again.                       |
++-------------+-------------------------------------------+
+|   ``act``   | Marks a site as one to report results     |
+|             | to the registry.                          |
++-------------+-------------------------------------------+
+|             | Opposite of ``act``, this action prevents |
+|   ``dry``   | this site from making entries into the    |
+|             | registry in future runs.                  |
++-------------+-------------------------------------------+
+"""
+
+__usage__ = '%prog [options] SITE ACTION'
+
+
+from dynamo_consistency import args
+from dynamo_consistency import summary
+from dynamo_consistency.parser import pretty_exe
+
+pretty_exe('set-status')
+
+if __name__ == '__main__':
+    if len(args) != 3:
+        print __doc__
+        exit()
+
+    _, site, action = args
+
+    statuses = {
+        'ready': summary.READY,
+        'halt': summary.HALT,
+        'disable': summary.DISABLED
+        }
+
+    reporting = {
+        'act': summary.ACT,
+        'dry': summary.DRY
+        }
+
+    if action in statuses:
+        summary.set_status(site, statuses[action])
+
+    elif action in reporting:
+        summary.set_reporting(site, reporting[action])
+
+    else:
+        raise summary.BadAction('Invalid action: %s' % action)
