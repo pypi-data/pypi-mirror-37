@@ -1,0 +1,30 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="collective.lazysizes">
+
+  <genericsetup:registerProfile
+      name="default"
+      title="collective.lazysizes v10"
+      directory="profile"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:upgradeSteps
+      source="9"
+      destination="10"
+      profile="collective.lazysizes:default">
+
+    <genericsetup:upgradeDepends
+        title="Deprecate resource registries"
+        import_profile="collective.lazysizes.upgrades.v10:default"
+        />
+
+    <genericsetup:upgradeStep
+        title="Cook JavaScripts resources"
+        handler="..cook_javascript_resources"
+        />
+  </genericsetup:upgradeSteps>
+
+</configure>
