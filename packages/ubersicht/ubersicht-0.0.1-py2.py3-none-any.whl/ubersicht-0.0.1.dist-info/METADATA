@@ -1,0 +1,74 @@
+Metadata-Version: 2.1
+Name: ubersicht
+Version: 0.0.1
+Summary: Ubersicht.app
+Home-page: https://github.com/looking-for-a-job/ubersicht.py
+License: UNKNOWN
+Keywords: ubersicht
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development
+Description-Content-Type: text/markdown
+Requires-Dist: public
+Requires-Dist: setuptools
+
+[![](https://img.shields.io/pypi/pyversions/ubersicht.svg?longCache=True)](https://pypi.org/pypi/ubersicht/)
+
+### Install
+```bash
+$ [sudo] pip install ubersicht
+```
+
+### Features
++   generate Ubersicht.app Widgets with python
+
+### Examples
+generate widget
+```python
+>>> import ubersicht
+>>> widget = ubersicht.Widget(name="name.widget", command="echo hello world", refresh="1s",style="color: red")
+>>> widget.create()
+>>> widget.path
+'/Users/username/Library/Application Support/Übersicht/widgets/name.widget'
+```
+
+```bash
+$ cat ~/Library/Application Support/Übersicht/widgets/name.widget/index.coffee
+command: "echo hello world"
+
+refreshFrequency: '1s'
+
+update: (output, domEl) ->
+    $(domEl).empty().append("#{output}")
+
+style: """
+color: red
+"""
+```
+
+```python
+>>> ubersicht.widgets()
+['/Users/username/Library/Application Support/Übersicht/widgets/name.widget']
+```
+
+Ubersicht.app process
+```python
+>>> ubersicht.start()
+>>> ubersicht.pid()
+1234
+>>> ubersicht.kill()
+```
+
+### Links
++   [Uebersicht.app](https://github.com/felixhageloh/uebersicht)
+
