@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -e
+
+function __trap_clean_up {
+  set +e
+  gcloud pubsub topics delete {{ vm_name }} --quiet &>> /tmp/gcloud.log
+  gcloud compute instances delete {{ vm_name }} --quiet --zone {{ zone }} &>> /tmp/gcloud.log
+}
+
+trap __trap_clean_up EXIT
+
+{% for bucket in gcs_mounts %}
+if ! [ -x "$(command -v gcsfuse)" ]; then
+  echo 'Error: Could not mount bucket. gcsfuse is not installed.' >&2
+else
+  mkdir -p {{ gcs_mounts[bucket] }}
+  gcsfuse --implicit-dirs {{ bucket }} {{ gcs_mounts[bucket] }}
+fi
+{% endfor %}
+
+{% for directory in gcs_target %}
+mkdir -p {{ directory }}
+{% endfor %}
+
+set +e
+bash /var/script.sh
+success=$?
+
+{% for directory in gcs_target %}
+if [ -z "$(ls {{ directory }})" ]; then
+  echo "No artifacts found in {{ directory }}"
+else
+  gsutil cp -r {{ directory }}/* gs://{{ gcs_target[directory] }}
+fi
+{% endfor %}
+set -e
+
+gcloud pubsub topics publish {{ vm_name }} --message="{\"status\": $success}" &>> /tmp/gcloud.log
