@@ -1,0 +1,50 @@
+#
+# Appveyor build
+#
+# @author Natesh Narain <nnaraindev@gmail.com>
+
+os: Visual Studio 2015
+
+clone_folder: c:\projects\gameboycore
+
+environment:
+  VCPKG_TOOLCHAIN: c:\tools\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+configuration:
+  - Release
+
+install:
+  - cd c:\tools\vcpkg
+  - vcpkg install gtest
+  - vcpkg integrate install
+
+before_build:
+  - cd c:\projects\gameboycore
+  - mkdir build && cd build
+  - cmake .. -DBUILD_TESTS="ON" -DBUILD_EXAMPLE="OFF" -DBUILD_DOCS="OFF" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_TOOLCHAIN%
+
+build:
+  project: c:\projects\gameboycore\build\gameboycore.sln
+  verbosity: minimal
+
+after_build:
+  - cd C:\projects\gameboycore\build
+  - cmake --build . --target check
+  - msbuild C:\projects\gameboycore\build\PACKAGE.vcxproj /verbosity:quiet
+
+artifacts:
+- path: .\build\gameboycore-*-win32.zip
+  name: zip-file
+
+deploy:
+  provider: GitHub
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  description: 'v$(APPVEYOR_REPO_TAG_NAME)'
+  auth_token:
+    secure: +F7/lKFe9fc9q4w0lCpc9tR1H4JucHiE7WuevfJCaWOeU/5ul8QojqNACB6ODFgT
+  artifact: zip-file
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true
+  force_update: true
