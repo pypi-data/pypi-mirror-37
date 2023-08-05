@@ -1,0 +1,754 @@
+# Copyright 2018 TensorHub, Inc. and contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ===================================================================
+# Package def
+# ===================================================================
+
+- package: gpkg.slim
+  version: 0.5.0.dev5
+  description: TF-Slim models library
+  url: https://github.com/guildai/packages/tree/master/slim
+  author: Guild AI
+  author-email: packages@guild.ai
+  license: Apache 2.0
+  requires:
+    - Pillow
+
+# ===================================================================
+# Shared flag defs
+# ===================================================================
+
+- config: log-flags
+  # Flag defs associated with logging - use via $include
+  flags:
+    log-steps:
+      description: Frequency of summary logs in steps
+      default: 100
+      arg-name: log_every_n_steps
+    log-save-seconds:
+      description: Frequency of log summary saves in seconds
+      default: 60
+      arg-name: save_summaries_secs
+
+- config: train-flags
+  # Flag defs associated with training - use via $include
+  flags:
+    auto-scale:
+      description: >
+        Adjust applicable flags for multi-GPU systems
+
+        Set to 'no' to disable any flag value adjustments.
+
+        When this value is 'yes' (the default) the following flags are
+        adjusted on multi-GPU systems:
+
+          - clones
+          - learning-rate
+
+        `clones` is set to the number of available GPUs.
+
+        `learning-rate` is adjusted by multiplying its specified value
+        by the number of GPUs.
+
+        Flags are not adjusted on single GPU or CPU only systems.
+      default: yes
+    batch-size:
+      description: Number of examples in each training batch
+      default: 32
+      arg-name: batch_size
+    clones:
+      description: >
+        Number of model clones
+
+        This value is automatically set to the number of available
+        GPUs if `auto-scale` is 'yes'.
+
+        When `auto-scale` is 'no' this value can be increased from 1
+        to train the model in parallel on multiple GPUs.
+      arg-name: num_clones
+      null-label: calculated
+    learning-rate-decay-type:
+      description: Method used to decay the learning rate
+      default: exponential
+      choices:
+        - exponential
+        - fixed
+        - polynomial
+      arg-name: learning_rate_decay_type
+    learning-rate:
+      description: Initial learning rate
+      default: 0.001
+      arg-name: learning_rate
+    learning-rate-decay-epochs:
+      description: Number of epochs after which learning rate decays
+      default: 2.0
+      arg-name: num_epochs_per_decay
+    learning-rate-decay-factor:
+      description: Learning rate decay factor
+      default: 0.94
+      arg-name: learning_rate_decay_factor
+    learning-rate-end:
+      description: Minimal learning rate used by polynomial learning rate decay
+      default: 0.0001
+      arg-name: learning_rate_end
+    model-save-seconds:
+      description: Frequency of model saves (checkpoints) in seconds
+      default: 600
+      arg-name: save_interval_secs
+    optimizer:
+      description: Optimizer used to train
+      default: rmsprop
+      choices:
+        - adadelta
+        - adagrad
+        - adam
+        - ftrl
+        - momentum
+        - rmsprop
+        - sgd
+    preprocessing:
+      description: Preprocessing to use
+      arg-name: preprocessing_name
+      null-label: default for model
+    preprocessors:
+      description: >
+        Number of preprocessing threads
+
+        This value is automatically set to logical CPU count / 2 if
+        `auto-scale` is 'yes'.
+
+        When `auto-scale` is 'no' this value can be set to optimize
+        the preprocessor thread count for the system.
+      arg-name: num_preprocessing_threads
+      null-label: calculated
+    readers:
+      description: >
+        Number of parallel data readers
+
+        This value is automatically set to logical CPU count / 2 if
+        `auto-scale` is 'yes'.
+
+        When `auto-scale` is 'no' this value can be set to optimize
+        data reader performance for the system.
+      arg-name: num_readers
+      null-label: calculated
+    train-steps:
+      description: Number of steps to train
+      arg-name: max_number_of_steps
+      null-label: train indefinitely
+    weight-decay:
+      description: Decay on the model weights
+      default: 0.00004
+      arg-name: weight_decay
+
+# ===================================================================
+# Shared resources
+# ===================================================================
+
+- config: models-lib-support
+  resources:
+    models-lib:
+      sources:
+        - url: https://github.com/tensorflow/models/archive/2aec950cf5670a86eb0681e3a0348570c4a4638c.zip
+          sha256: cc97bed49476a1984325561dcb29f88a26910689050d9112d02e371209455997
+          select: models-2aec950cf5670a86eb0681e3a0348570c4a4638c/research/slim
+
+# ===================================================================
+# Model base
+# ===================================================================
+
+- config: model-base
+  # Model base config defining core operations and resources
+  extends:
+    - models-lib-support
+  # Ensure that all params below are defined by extending
+  # models.
+  params:
+    prepare-examples-op: DEFINE-prepare-examples-op
+    examples-path: DEFINE-examples-path
+    model-name: DEFINE-model-name
+    image-size: DEFINE-image-size
+    dataset-path: DEFINE-dataset-path
+    transfer-learn-checkpoint-path: DEFINE-transfer-learn-checkpoint-path
+    transfer-learn-train-layers: DEFINE-transfer-learn-train-layers
+    input-layers: DEFINE-input-layers
+    output-layers: DEFINE-output-layers
+  operations:
+    train:
+      description: Train model from scratch
+      main:
+        train
+          --model_name {{model-name}}
+          --dataset_dir {{examples-path}}
+          --train_dir train
+          --train_image_size {{image-size}}
+      requires:
+        - models-lib
+        - examples
+      label-template: examples=${examples}
+      flags:
+        $include:
+          - train-flags
+          - log-flags
+    transfer-learn:
+      description: Train model using transfer learning
+      main:
+        train
+          --model_name {{model-name}}
+          --dataset_dir {{examples-path}}
+          --train_dir train
+          --train_image_size {{image-size}}
+          --checkpoint_path {{transfer-learn-checkpoint-path}}
+          --checkpoint_exclude_scopes {{transfer-learn-train-layers}}
+          --trainable_scopes {{transfer-learn-train-layers}}
+      requires:
+        - models-lib
+        - examples
+        - labels
+        - transfer-learn-checkpoint
+      label-template: examples=${examples}
+      flags:
+        $include:
+          - train-flags
+          - log-flags
+    finetune:
+      description: Finetune a trained model
+      main:
+        train
+          --model_name {{model-name}}
+          --dataset_dir {{examples-path}}
+          --train_dir train
+          --train_image_size {{image-size}}
+          --checkpoint_path model
+      requires:
+        - models-lib
+        - examples
+        - trained-model
+      label-template: model=${trained-model} examples=${examples}
+      flags:
+        $include:
+          - train-flags
+          - log-flags
+        learning-rate:
+          default: 0.0001
+    evaluate:
+      description: Evaluate a trained model
+      main:
+        eval
+          --alsologtostderr
+          --model_name {{model-name}}
+          --checkpoint_path model
+          --dataset_dir {{examples-path}}
+          --dataset_split_name validation
+          --eval_image_size {{image-size}}
+          --eval_dir .
+      requires:
+        - models-lib
+        - examples
+        - trained-model
+      label-template: model=${trained-model} examples=${examples}
+      flags:
+        step:
+          description: Checkpoint step to evaluate
+          arg-name: checkpoint_step
+          null-label: latest checkpoint
+        batch-size:
+          description: Number of examples in each evaluated batch
+          default: 100
+          arg-name: batch_size
+        eval-batches:
+          description: Number of batches to evaluate
+          arg-name: max_num_batches
+          null-label: all available
+    export-and-freeze:
+      description:
+        Export an inference graph with checkpoint weights
+      main:
+        export_and_freeze
+          --input_checkpoint model
+          --model_name {{model-name}}
+          --image_size {{image-size}}
+          --dataset_dir {{examples-path}}
+          --output_dir .
+          --output_node_names {{output-layers}}
+      requires:
+        - models-lib
+        - examples
+        - trained-model
+      label-template: model=${trained-model}
+      flags:
+        step:
+          description:
+            Checkpoint step to use for the frozen graph
+          arg-name: checkpoint_step
+          null-label: latest checkpoint
+    label:
+      description: Classify an image using a trained model
+      main:
+        label_image
+          --graph frozen_graph.pb
+          --image ${image}
+          --input_width {{image-size}}
+          --input_height {{image-size}}
+          --input_layer {{input-layers}}
+          --output_layer {{output-layers}}
+          --labels labels.txt
+      requires:
+        - label-image-script
+        - frozen-graph
+        - labels
+      label-template: image=${image|basename}
+      flags:
+        image:
+          description: Path to image to classify
+          required: yes
+  resources:
+    label-image-script:
+      description: TensorFlow label_image script
+      sources:
+        - url: https://raw.githubusercontent.com/tensorflow/tensorflow/b9018073ec1afc7dfc302ab171db8bf5b177c2dd/tensorflow/examples/label_image/label_image.py
+          sha256: 58ce0de9fe2d0a75dc3c59d10a1d4e2fd6aa4b8b2192ff4499593542f4847eb8
+    trained-model:
+      description: Trained model from train, transfer-learn, or finetune
+      path: model
+      sources:
+        - operation: train,transfer-learn,finetune
+          select:
+            - train/model\.ckpt-.+
+            - train/checkpoint
+    frozen-graph:
+      description: Frozen inference graph
+      sources:
+        - operation: export-and-freeze
+          select: frozen_graph\.pb
+
+# ===================================================================
+# Images support
+# ===================================================================
+
+- config: images-base
+  extends:
+    - models-lib-support
+  params:
+    output-path: .
+  operations:
+    prepare:
+      description: Prepare images for training
+      main: images_prepare -o {{output-path}}
+      requires:
+        - models-lib
+      flags:
+        images:
+          description: Directory containing images to prepare
+          required: yes
+          arg-name: images-dir
+        val-split:
+          description: Percentage of images reserved for validation
+          default: 30
+        random-seed:
+          description: Seed used for train/validation split
+          default: null
+          null-label: randomly generated
+      label-template: images=${images|basename}
+
+- config: examples-support
+  params:
+    prepare-op: prepare
+    examples-select: .+\.tfrecord
+    examples-path: data
+    labels-select: labels.txt
+    labels-path: data
+  resources:
+    examples:
+      description: Dataset generated with {{prepare-op}}
+      path: '{{examples-path}}'
+      sources:
+        - operation: '{{prepare-op}}'
+          select: '{{examples-select}}'
+    labels:
+      path: '{{labels-path}}'
+      sources:
+        - operation: '{{prepare-op}}'
+          select: '{{labels-select}}'
+
+# ===================================================================
+# Inception
+# ===================================================================
+
+- config: inception
+  extends:
+    - model-base
+  params:
+    model-name: inception_v1
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/inception_v1.ckpt
+    transfer-learn-train-layers: InceptionV1/Logits
+    input-layers: input
+    output-layers: InceptionV1/Logits/Predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/inception_v1_2016_08_28.tar.gz
+          sha256: 7a620c430fcaba8f8f716241f5148c4c47c035cce4e49ef02cfbe6cd1adf96a6
+          select: .+\.ckpt
+
+- config: inception-v2
+  extends:
+    - model-base
+  params:
+    model-name: inception_v2
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/inception_v2.ckpt
+    transfer-learn-train-layers: InceptionV2/Logits
+    input-layers: input
+    output-layers: InceptionV2/Predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/inception_v2_2016_08_28.tar.gz
+          sha256: 3b9d269984402003d8330affc4e1463c0b4cfd536339ad12446a48d72477480a
+          select: .+\.ckpt
+
+- config: inception-v3
+  extends:
+    - model-base
+  params:
+    model-name: inception_v3
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/inception_v3.ckpt
+    transfer-learn-train-layers: InceptionV3/Logits,InceptionV3/AuxLogits
+    input-layers: input
+    output-layers: InceptionV3/Predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/inception_v3_2016_08_28.tar.gz
+          sha256: 9430692d3002277fa1e1a94fb82331fe5da68b9afd725c2679c21a0319933228
+          select: .+\.ckpt
+
+- config: inception-v4
+  extends:
+    - model-base
+  params:
+    model-name: inception_v4
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/inception_v4.ckpt
+    transfer-learn-train-layers: InceptionV4/Logits,InceptionV4/AuxLogits
+    input-layers: input
+    output-layers: InceptionV4/Logits/Predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz
+          sha256: 272a2b24f68b2e51f3081479df075dd62b019ccda630e998fb7f6cf314c0f304
+          select: .+\.ckpt
+
+# ===================================================================
+# Inception-ResNet
+# ===================================================================
+
+- config: inception-resnet-v2
+  extends:
+    - model-base
+  params:
+    model-name: inception_resnet_v2
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/inception_resnet_v2_2016_08_30.ckpt
+    transfer-learn-train-layers: InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits
+    input-layers: input
+    output-layers: InceptionResnetV2/Logits/Predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/inception_resnet_v2_2016_08_30.tar.gz
+          sha256: 3471bf35c5322271081346a0bdfae0aee706561b8243ec3ba2249aea2dcb8506
+          select: .+\.ckpt
+
+# ===================================================================
+# ResNet
+# ===================================================================
+
+- config: resnet-50
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v1_50
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v1_50.ckpt
+    transfer-learn-train-layers: resnet_v1_50/logits
+    input-layers: input
+    output-layers: resnet_v1_50/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz
+          sha256: 91a0dc25289e7ef648df304b15f06c43ce6f4446d08eb0168479dd2295101c73
+          select: .+\.ckpt
+
+- config: resnet-101
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v1_101
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v1_101.ckpt
+    transfer-learn-train-layers: resnet_v1_101/logits
+    input-layers: input
+    output-layers: resnet_v1_101/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v1_101_2016_08_28.tar.gz
+          sha256: 5d813fcf5e56e7c9c2483d73b46644394cdbb31f9f4bf7140fb2809f7aa11a19
+          select: .+\.ckpt
+
+- config: resnet-152
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v1_152
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v1_152.ckpt
+    transfer-learn-train-layers: resnet_v1_152/logits
+    input-layers: input
+    output-layers: resnet_v1_152/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v1_152_2016_08_28.tar.gz
+          sha256: c89b549ada486d9c0db6d90e874a1a652d899f9b541ae9c430fee8251572181d
+          select: .+\.ckpt
+
+- config: resnet-v2-50
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v2_50
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v2_50.ckpt
+    transfer-learn-train-layers: resnet_v2_50/logits
+    input-layers: input
+    output-layers: resnet_v2_50/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz
+          sha256: 2c5c3a852526d0d6e8a35829d4e50533468baaed834a0046ba430e80982ed57c
+          select: .+\.ckpt
+
+- config: resnet-v2-101
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v2_101
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v2_101.ckpt
+    transfer-learn-train-layers: resnet_v2_101/logits
+    input-layers: input
+    output-layers: resnet_v2_101/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v2_101_2017_04_14.tar.gz
+          sha256: b324d02f28839d11f382785bdf4444ec3bdccb28e1b691a4f45b8f04370e4191
+          select: .+\.ckpt
+
+- config: resnet-v2-152
+  extends:
+    - model-base
+  params:
+    model-name: resnet_v2_152
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/resnet_v2_152.ckpt
+    transfer-learn-train-layers: resnet_v2_152/logits
+    input-layers: input
+    output-layers: resnet_v2_152/predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/resnet_v2_152_2017_04_14.tar.gz
+          sha256: c3ec824f19b4919fc7d069dc3a2a9d0f045f35e843c563c4eeeefbedf4852867
+          select: .+\.ckpt
+
+# ===================================================================
+# VGG
+# ===================================================================
+
+- config: vgg-16
+  extends:
+    - model-base
+  params:
+    model-name: vgg_16
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/vgg_16.ckpt
+    transfer-learn-train-layers: vgg_16/fc8
+    input-layers: input
+    output-layers: vgg_16/fc8/squeezed
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz
+          sha256: de44460bf79d3da5d843946bbee82a9a872a8bf020787922914aa9a4b125126e
+          select: .+\.ckpt
+
+- config: vgg-19
+  extends:
+    - model-base
+  params:
+    model-name: vgg_19
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/vgg_19.ckpt
+    transfer-learn-train-layers: vgg_19/fc8
+    input-layers: input
+    output-layers: vgg_19/fc8/squeezed
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz
+          sha256: 9071fd96f91e261c62378cd073897cf038a278a1fbd6c763a8f9eecf311a3cf8
+          select: .+\.ckpt
+
+# ===================================================================
+# Mobilenet
+# ===================================================================
+
+- config: mobilenet
+  extends:
+    - model-base
+  params:
+    model-name: mobilenet_v1
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/mobilenet_v1_1.0_224.ckpt
+    transfer-learn-train-layers: MobilenetV1/Logits
+    input-layers: input
+    output-layers: MobilenetV1/Predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz
+          sha256: 1ccb74dbd9c5f7aea879120614e91617db9534bdfaa53dfea54b7c14162e126b
+          select: .+\.ckpt\..+
+
+- config: mobilenet-v2-1.4
+  extends:
+    - model-base
+  params:
+    model-name: mobilenet_v2_140
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/mobilenet_v2_1.4_224.ckpt
+    transfer-learn-train-layers: MobilenetV2/Logits
+    input-layers: input
+    output-layers: MobilenetV2/Predictions/Reshape_1
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.4_224.tgz
+          sha256: a20d0c8d698502dc6a620528871c97a588885df7737556243a3412b39fce85e0
+          select: .+\.ckpt\..+
+
+# ===================================================================
+# NASNet
+# ===================================================================
+
+- config: nasnet-mobile
+  extends:
+    - model-base
+  params:
+    model-name: nasnet_mobile
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/model.ckpt
+    transfer-learn-train-layers: final_layer,aux_7
+    input-layers: input
+    output-layers: final_layer/predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_mobile_04_10_2017.tar.gz
+          sha256: aafa7066c238f02776da34b12fd6560e8d6784f73687ec5519d863a531335f38
+          select: .+\.ckpt\..+
+
+- config: nasnet-large
+  extends:
+    - model-base
+  params:
+    model-name: nasnet_large
+    image-size: 331
+    transfer-learn-checkpoint-path: checkpoint/model.ckpt
+    transfer-learn-train-layers: final_layer,aux_11
+    input-layers: input
+    output-layers: final_layer/predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_large_04_10_2017.tar.gz
+          sha256: 385a9aa44f1554e1e6cedf19b4e1bfe9b14b704b32acbf8f9f4f8327d72ad3fb
+          select: .+\.ckpt\..+
+
+# ===================================================================
+# PNASNet
+# ===================================================================
+
+- config: pnasnet-mobile
+  extends:
+    - model-base
+  params:
+    model-name: pnasnet_mobile
+    image-size: 224
+    transfer-learn-checkpoint-path: checkpoint/model.ckpt
+    transfer-learn-train-layers: final_layer,aux_5
+    input-layers: input
+    output-layers: final_layer/predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: https://storage.googleapis.com/download.tensorflow.org/models/pnasnet-5_mobile_2017_12_13.tar.gz
+          sha256: 06ce8bf80d7711e820d6d1266c5b23c4820c8cabf827c65b1cfed2e4b16b5b93
+          select: .+\.ckpt\..+
+
+- config: pnasnet-large
+  extends:
+    - model-base
+  params:
+    model-name: pnasnet_large
+    image-size: 331
+    transfer-learn-checkpoint-path: checkpoint/model.ckpt
+    transfer-learn-train-layers: final_layer,aux_7
+    input-layers: input
+    output-layers: final_layer/predictions
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: https://storage.googleapis.com/download.tensorflow.org/models/pnasnet-5_large_2017_12_13.tar.gz
+          sha256: ce5fa64421d5285ae0a434b51d9ab142c88b3d7e542558e6c91bd4f6533d17e3
+          select: .+\.ckpt\..+
