@@ -1,0 +1,323 @@
+{% extends "master.html" %}
+{% from "functions.html" import render_field_in_row %}
+
+{% block title %}{{ context }} Project · Anitya{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+  <h1>{{ context }} project</h1>
+</div>
+{% if context == 'Add' -%}
+<form method="POST" action="{{ url_for('anitya_ui.new_project') }}" >
+{%- elif context == 'Edit' -%}
+<form method="POST" action="{{ url_for('anitya_ui.edit_project', project_id=project.id) }}" >
+{%- endif %}
+  <div class="row">
+    <div class="col-md-6">
+      <p> {{ context }} your project</p>
+      <div class="list-group">
+        <span class="list-group-item">
+          <table class="table table-condensed">
+            <tr>
+              {{ render_field_in_row(form.name, tabindex=1) }}
+            </tr>
+            <tr>
+              {{ render_field_in_row(form.homepage, type="url", tabindex=2) }}
+            </tr>
+            <tr>
+              {{ render_field_in_row(form.backend, tabindex=3) }}
+            </tr>
+            <tr>
+              {{ render_field_in_row(form.version_scheme, tabindex=4) }}
+            </tr>
+            <tr id="version_url_row">
+              {{ render_field_in_row(form.version_url, tabindex=5) }}
+            </tr>
+            <tr id="version_prefix_row">
+              {{ render_field_in_row(form.version_prefix, tabindex=6) }}
+            </tr>
+            <tr id="regex_row">
+              {{ render_field_in_row(form.regex, tabindex=7) }}
+            </tr>
+            <tr id="default_regex_row">
+              <td><label>Default regex:</label></td>
+              <td id="regex_example_txt"></td>
+            </tr>
+            <tr id="examples_row">
+              <td><label>Examples:</label></td>
+              <td id="example_urls"></td>
+            </tr>
+            <tr id="insecure_row">
+              {{ render_field_in_row(form.insecure, tabindex=7) }}
+            </tr>
+            <tr id="check_release_row">
+              {{ render_field_in_row(form.check_release, tabindex=8) }}
+            </tr>
+
+            {%- if context == 'Add' -%}
+            <tr>
+              {{ render_field_in_row(form.distro, tabindex=9) }}
+              <td></td>
+            </tr>
+            <tr>
+              {{ render_field_in_row(form.package_name, tabindex=10) }}
+              <td></td>
+            </tr>
+            {%- endif -%}
+          </table>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-success" tabindex=10>
+    <span class="glyphicon glyphicon-plus"></span>
+    Submit
+  </button>
+  {%- if context == 'Add' -%}
+  <a href="{{ url_for('anitya_ui.projects') }}">
+  {%- elif context == 'Edit' -%}
+  <a href="{{ url_for('anitya_ui.project', project_id=project.id) }}">
+  {%- endif -%}
+    <button type="button" class="btn btn-danger" tabindex=11>
+      <span class="glyphicon glyphicon-ban-circle"></span>
+      Cancel
+    </button>
+  </a>
+  {{ form.csrf_token }}
+</form>
+
+  <div class="row">
+    <div class="col-md-6" id="info_field">
+      <div class="list-group">
+        <span class="list-group-item">
+          <p id="info_field_title"></p>
+          <ul id="info_field_list"></ul>
+        </span>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block jscript %}
+<script type="text/javascript">
+
+    var examples = {};
+    var more_info = {};
+    var default_regex = {};
+    var default_version_plugin = {};
+
+    {% for plugin in plugins -%}
+      {%- autoescape false -%}
+
+        examples["{{ plugin.name }}"]="{{ plugin.examples | format_examples }}";
+        more_info["{{ plugin.name }}"]="{{ plugin.more_info}}";
+        {% if plugin.default_regex -%}
+        default_regex["{{ plugin.name }}"]="{{ plugin.default_regex.replace('\\', '\\\\') }}";
+        {% else %}
+        default_regex["{{ plugin.name }}"]="{{ plugin.default_regex }}";
+        {% endif -%}
+        {% if plugin.default_version_scheme -%}
+        default_version_plugin["{{ plugin.name }}"]="{{ plugin.default_version_scheme }}";
+        {% endif -%}
+
+      {%- endautoescape -%}
+    {%- endfor %}
+
+  function add_tooltips(){
+    $("#name").prop('title', "Project upstream name");
+    $("#homepage").prop('title', "Project homepage");
+    $("#version_scheme").prop('title', "Version scheme used for sorting project versions.");
+    $("#version_url").prop('title', "URL where to look for new releases");
+    $("#version_prefix").prop('title', "Prefix filled here will be removed " +
+        "from retrieved version. For example version prefix " +
+        "'v' will convert 'v1.2.3' to '1.2.3'.");
+    $("#regex").prop('title', "Python regex to use for version retrieval. " + 
+        "Matched groups will be concatenated by '.'. " + 
+        "For example regex '(\d)_(\d)_(\d)' applied to '1_2_3' " +
+        "will convert version to '1.2.3'.");
+    $("#insecure").prop('title', "This should only be set when the version URL " +
+        "is HTTPS and the host does not have a trusted certificate");
+    $("#check_release").prop('title', "Check the release immediately");
+    {%- if context == 'Add' -%}
+    $("#distro").prop('title', "Distribution where the project is delivered");
+    $("#package_name").prop('title', "Package name in the distribution");
+    {%- endif -%}
+  }
+
+  function show_hide(){
+
+    add_tooltips();
+
+    if ($('#version_url').parent().find('p')) {
+      $('#version_url').parent().find('p').remove()
+    }
+
+    $('#regex_row').hide();
+    $('#default_regex_row').hide();
+    $('#version_url_row').hide();
+    $('#insecure_row').hide();
+    $('#regex').attr('placeholder', '');
+
+    $("label[for='version_url']").text('Version URL');
+    var str = $( '#backend option:selected' ).text();
+
+    if (str == 'folder'){
+      $('#version_url_row').show();
+      $('#insecure_row').show();
+    };
+    if (str == 'GitHub'){
+      $("label[for='version_url']").text('GitHub owner/project');
+      $('#version_url_row').show();
+      $("#version_url").prop('title', "Owner/project from GitHub. " +
+        "For example if the project URL is 'https://github.com/fedora-infra/fedocal' " +
+        "this field should contain 'fedora-infra/fedocal'.");
+    };
+    if (str == 'GitLab'){
+      $("label[for='version_url']").text('GitLab project url');
+      $('#version_url_row').show();
+      $("#version_url").prop('title', "This field should be filled when " +
+      "homepage doesn't point to GitLab URL.");
+    };
+    if (str == 'BitBucket'){
+      $("label[for='version_url']").text('BitBucket owner/project');
+      $('#version_url_row').show();
+      $("#version_url").prop('title', "Owner/project from Bitbucket. " +
+        "For example if the project URL is 'https://bitbucket.org/zzzeek/sqlalchemy' " +
+        "this field should contain 'zzzeek/sqlalchemy'.");
+    };
+    if (str == 'Packagist'){
+      $("label[for='version_url']").text('Packagist owner/group');
+      $('#version_url_row').show();
+      $("#version_url").prop('title', "Owner/project from Packagist. " +
+        "For example if the project URL is " +
+        "'https://packagist.org/packages/phpunit/php-code-coverage' " +
+        "this field should contain 'phpunit/php-code-coverage'.");
+    };
+    if (str == 'Sourceforge'){
+      $("label[for='version_url']").text('Sourceforge name');
+      $('#version_url').prop('title', "Use this field if the name used " +
+        "on the rss page of the project differs from the name of the project." );
+      $('#version_url_row').show();
+    };
+    if (str == 'Maven Central'){
+      $("label[for='version_url']").text('Maven groupId:artifactId');
+      $('#version_url_row').show();
+      $("#version_url").prop('title', "groupId is reversed domain name of project. " + 
+        "artifactId is project name itself. For example this field contains value " +
+        "'org.apache.maven:maven-core' for 'maven-core' project hosted on " +
+        "'https://maven.apache.org/'.");
+    };
+    if (str == 'custom'){
+      $('#version_url_row').show();
+      $('#insecure_row').show();
+      $('#regex_row').show();
+      $('#default_regex_row').show();
+      $('#regex').attr('placeholder', 'Leave empty for default regex');
+    };
+
+    $('#example_urls').html(examples[str]);
+
+    if (more_info[str] != 'None') {
+      $('#example_urls').append('<br /> <br /> <span id="more-info"> ' + more_info[str] + '</span>');
+    }
+
+    var temp = default_regex[str];
+    if ($('#name').val()) {
+      temp = temp.replace('{project name}', $('#name').val());
+    }
+    if (default_version_plugin[str]) {
+      $('#version_scheme').val("default_version_plugin[str]")
+    }
+    $('#regex_example_txt').html('<div id="default_regex_txt">' + temp + '</div>');
+  };
+
+  function show_similar_projects(_url, type) {
+    $.ajax({
+        url: _url,
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          $('#info_field_list').html('');
+          if (res.total > 0){
+            $('#info_field_title').html('Project with the same ' + type);
+            for (i = 0; i < res.projects.length; i++){
+              $('#info_field_list').append(
+                '<li>'+ res.projects[i].name + '</li>');
+            }
+            $('#info_field').show();
+          } else {
+            $('#info_field').hide();
+          }
+        },
+        error: function(res) {
+          console.log(res);
+          $('#info_field_list').html('');
+          $('#info_field').show();
+          $('#info_field_title').html(
+            'An error occured while retrieving the list of similar project '
+            + 'please re-try or report the problem to an admin'
+          );
+        },
+      });
+  }
+
+  $(document).ready(function() {
+    $('#info_field').hide();
+    show_hide();
+    $('#backend').change(function() {
+      show_hide();
+    });
+
+    $('#name').focusout(function(){
+        var _name = $('#name').val().trim();
+        show_hide();
+        if (_name) {
+          var _url = "{{ url_for('anitya_apiv1.api_projects') }}?pattern=" + _name;
+          show_similar_projects(_url, 'name');
+        } else {
+          $('#info_field').hide();
+        }
+    });
+    $('#homepage').focusout(function(){
+      var _homepage = $('#homepage').val().trim();
+      if (_homepage) {
+        var _url = "{{ url_for('anitya_apiv1.api_projects') }}?homepage=" + _homepage;
+        show_similar_projects(_url, 'homepage');
+      } else {
+        $('#info_field').hide();
+      }
+    });
+  });
+
+  $('body').bind('keyup', function(event) {
+    if (event.which == 27) { // esc
+      {% if context == 'Add' %}
+      window.location.replace("{{ url_for('anitya_ui.projects') }}");
+      {% elif context == 'Edit' %}
+      window.location.replace("{{ url_for('anitya_ui.project', project_id=project.id) }}");
+      {% endif %}
+    }
+  });
+
+  {% if context == 'Add' %}
+  $(function() {
+    $('#distro').autocomplete({
+        source: function( request, response ) {
+            $.getJSON(
+              "{{ url_for('anitya_apiv1.api_distro_names') }}", {
+                pattern: request.term
+              },
+              function( data ) {
+                response( data.distro );
+              }
+            );
+        },
+        minLength: 2,
+        delay: 200,
+    });
+  });
+  {% endif %}
+</script>
+{% endblock %}
