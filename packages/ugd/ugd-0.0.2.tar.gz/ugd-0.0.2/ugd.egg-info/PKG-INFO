@@ -1,0 +1,116 @@
+Metadata-Version: 2.1
+Name: ugd
+Version: 0.0.2
+Summary: drawing uniformly graphs under constraint. Commonly used for the estimation of the test distribution
+Home-page: UNKNOWN
+Author: Andrin Pelican
+Author-email: andrin.pelican@student.unisg.ch
+License: UNKNOWN
+Description: # Unifor Graph Draw
+        *currently in production*
+        
+        
+        This package implements random draw algorithm for networks. In particular it creates uniform samples of networks with a
+        given degreesequence and further constraints (fixed number of crossing edges/arrows between node-groups) 
+        
+        
+        It is implement according to the papers:
+        
+        - ...
+        - ...
+        
+        The papers also include a proof of correctness and a discussion of the statistical background. 
+        
+        ## Get it running 
+        
+        Install the paper via pip:
+        
+        - pip install ugd
+         
+        then run
+        
+            import ugd
+            import numpy
+            adj_m = numpy.zeros((4,4))
+            adj_m[0,1] = 1
+            adj_m[1,0] = 1
+            adj_m[3,2] = 1
+            adj_m[2,3] = 1
+            var_dict ={
+                0: {'gender': 'm'},
+                1: {'gender': 'm'},
+                2: {'gender': 'f'},
+                3: {'gender': 'f'},
+            }
+            graphs, stats_list = graph_hyp_test(adj_m=adj_m, var_dict = var_dict, test_variable= ('gender','m','f'),mixing_time=10000, anz_sim=100, show_polt=True)
+        
+        
+        
+        For an illustration more extensive use cases, see the examples scripts in:
+        
+        - www.github/mcd.com .... 
+        
+        
+        
+        ## API
+        
+        There are two functions provided.
+        
+        - digraph_hyp_test
+            - generating a sequence of uniform sapled *digraphs* under the desired set of constrains.
+        - graph_hyp_test
+            - generating a sequence of uniform sapled *digraphs* under the desired set of constrains.
+        
+        For a exact API documentation as well as a usage examples see the function documentation.
+        
+        **Comment:**
+        
+        The current implementation, includes only controlling of a fixed number of crossing edges/arrows between node-groups as 
+        constraints. More complex complex can be implemented by writing a consum implementation of the *no_violation* function 
+        in *constraint_violation_check*. Note, that depending on the constraint the construction of the Schlaufensequence should
+         not be stopped because a feasible one is found, but only due to the random stop. This in order to preserve correctness.
+         
+        
+        
+        ## Architecture:
+        
+        
+        All the logic is implemented in the digraph_draw folder. it is divided into
+        
+        *  model
+              * containing the data models (appropriate Graph representation  and node representation for 
+                efficient construction of the altering paths in the Schlaufen)
+          
+        * high_level_intervace
+        
+            Contains the all the logic used for *input validation, parsing of input, estimation of runtime, 
+            transformation of the graph format, output processing*.
+            
+            
+        *  help_functions
+        
+        The actual logic for sampling the graphs is in:
+        
+        *  markow_walk
+               * Implementation of algoritm "" from the paper ....
+        
+        * schlaufen_construction
+               * Implementation of algoritm "" from the paper ....
+        
+        ## Testing
+        
+        based on pytest. cd into mcd directory and run
+        
+        - pytest
+        
+        
+        
+        
+        
+        
+        
+        
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown
