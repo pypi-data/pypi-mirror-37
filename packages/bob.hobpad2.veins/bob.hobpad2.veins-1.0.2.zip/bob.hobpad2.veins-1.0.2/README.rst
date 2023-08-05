@@ -1,0 +1,253 @@
+.. vim: set fileencoding=utf-8 :
+.. Wed 14 Mar 14:41:21 2018 CET
+
+.. image:: https://gitlab.idiap.ch/bob/bob.hobpad2.veins/badges/v1.0.2/build.svg
+   :target: https://gitlab.idiap.ch/bob/bob.hobpad2.veins/commits/v1.0.2
+.. image:: https://gitlab.idiap.ch/bob/bob.hobpad2.veins/badges/v1.0.2/coverage.svg
+   :target: https://gitlab.idiap.ch/bob/bob.hobpad2.veins/commits/v1.0.2
+.. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
+   :target: https://gitlab.idiap.ch/bob/bob.hobpad2.veins
+.. image:: https://img.shields.io/pypi/v/bob.hobpad2.veins.svg
+   :target: https://pypi.python.org/pypi/bob.hobpad2.veins
+
+
+============================================================
+ An Introduction to Vein Presentation Attacks and Detection
+============================================================
+
+This package is part of the signal-processing and machine learning toolbox
+Bob_. It reproduces results presented in Chapter 18 of the "Handbook of
+Biometric Anti- Spoofing: Presentation Attack Detection 2nd Edition".
+
+
+Installation
+------------
+
+We use conda_ to manage the software stack installation. To install this
+package and all dependencies, first install conda_, and then run the
+following command on your shell::
+
+  $ conda create --name hobpad2-veins --override-channels -c https://www.idiap.ch/software/bob/conda -c defaults python=3 bob.hobpad2.veins
+  $ conda activate hobpad2-veins
+  (hobpad2-veins) $ #type all commands inside this "activated" environment
+
+
+.. note::
+
+   At the present time, Bob_ only offers support to Linux and MacOS operating
+   systems. Windows installations are **not** supported.
+
+
+This will install all the required software to reproduce this paper.
+
+You now need to procure the raw data to run the experiments. Visit the web page
+for the `VERA FingerVein`_ and click on the "Download" link on that page.
+Follow the instructions to sign the End-User License Agreement (EULA) and then
+you'll be able to access the package with the data. Download and uncompress it.
+Annotate the directory leading to the root of the dataset. In this guide, we'll
+refer to it using a generic path ``/path/to/verafinger``.
+
+Once the data is downloaded and uncompressed, configure Bob_'s access to it by
+editing (or creating) a file called ``${HOME}/.bob_bio_databases.txt`` and set
+the path to the dataset there. Here is an example::
+
+   (hobpad2-veins) $ cat ~/.bob_bio_databases.txt
+   [YOUR_VERAFINGER_DIRECTORY] = /path/to/verafinger
+
+
+You're now all set. Proceed to the instructions to re-run algorithms and
+analysis routines available in this package.
+
+
+Re-running Vulnerability Analysis
+---------------------------------
+
+To re-run results for vulnerability analysis, first run the baseline
+experiments based on Maximum Curvature and Miura Matching using the `Vera
+Fingervein`_ "Nom" Protocol::
+
+   (hobpad2-veins) $ verify.py mc_bio
+   (hobpad2-veins) $ verify.py mc_pa
+
+This should take about 2 hours to complete in a modest computer. If you have
+more cores available, it is adviseable to run the jobs in parallel. Just
+execute it like this instead::
+
+   (hobpad2-veins) $ verify.py mc_bio parallel
+
+
+Results are stored in the ``results`` folder, which is created if it doesn't
+already exist. Then, run the analysis script to produce the vulnerability
+analysis merit figures for the algorithm/protocol above::
+
+   (hobpad2-veins) $ bob vuln hist results/scores/mc/{Nom,Nom-va}/nonorm/scores-dev
+
+
+The last script should produce a figure like Figure 10 in the book chapter,
+together with error rates you can quote. Repeat the above analysis for other
+protocols like the following, for the "Full" protocol::
+
+   (hobpad2-veins) $ verify.py --protocol='Full' mc_bio
+   (hobpad2-veins) $ verify.py --protocol='Full-va' mc_pa
+
+There is a total of 4 different `Vera Fingervein`_ protocols supported: "Full",
+"Nom" (the default), "Fifty" and "B". There is a total of 3 different baseline
+algorithms that vary only on the feature extraction (binarisation) technique
+used. All baselines use pre-annotated regions of interest pre-processing and
+Miura Matching (correlation) for scoring: Maximum Curvature (configuration
+``mc_bio``), Repeated Line Tracking (configuration ``rlt_bio``) and Wide-Line
+Detector (configuration ``wld_bio``). You may refer to the documentation of
+bob.bio.vein_ for details on the implementation. You can list available
+baselines using the following command::
+
+   (hobpad2-veins) $ resources.py --types=config --packages=bob.hobpad2.veins
+
+
+Once you ran all baselines, you should be able to reproduce Table 2 in the
+book chapter.
+
+For your reference, these are the EER values at the operation point:
+
++-----------------------+----------+-----------+-----------+
+| **Protocol/Baseline** |  **mc**  |  **rlt**  |  **wld**  |
++-----------------------+----------+-----------+-----------+
+| *Nom*                 |    2%    |    19%    |     7%    |
++-----------------------+----------+-----------+-----------+
+| *Full*                |    1%    |    11%    |     4%    |
++-----------------------+----------+-----------+-----------+
+| *B*                   |    1%    |    17%    |     3%    |
++-----------------------+----------+-----------+-----------+
+| *Fifty*               |    1%    |    17%    |     3%    |
++-----------------------+----------+-----------+-----------+
+
+This is Impostor Attack Presentation Match Rate (IAPMR) for thresholds on the
+EER point for the baseline systems above:
+
++-----------------------+----------+-----------+-----------+
+| **Protocol/Baseline** |  **mc**  |  **rlt**  |  **wld**  |
++-----------------------+----------+-----------+-----------+
+| *Nom*                 |    83%   |    38%    |    76%    |
++-----------------------+----------+-----------+-----------+
+| *Full*                |    89%   |    34%    |    80%    |
++-----------------------+----------+-----------+-----------+
+| *B*                   |    86%   |    32%    |    75%    |
++-----------------------+----------+-----------+-----------+
+| *Fifty*               |    77%   |    35%    |    70%    |
++-----------------------+----------+-----------+-----------+
+
+
+Re-running Competition_ Baselines
+---------------------------------
+
+You can re-run the baseline algorithm for presentation-attack detection
+provided by Idiap during "The 1st Competition_ on Counter Measures to Finger
+Vein Spoofing Attacks", presented on ICB 2018. To do so, run::
+
+   (hobpad2-veins) $ #runs the FFT-based algorithm for the "full" PAD protocol
+   (hobpad2-veins) $ spoof.py -vv verafinger-pad fourier
+   (hobpad2-veins) $ # the same as above for the "cropped" protocol
+   (hobpad2-veins) $ spoof.py -vv --protocol=cropped verafinger-pad fourier
+
+
+The above commands should get your scores in the directory ``results``. You may
+then run the analysis, which will lead you to results reported in Figure 11 in
+the book chapter (see the last two plots of each PDF)::
+
+   (hobpad2-veins) $ bob bio hist --output=idiap-full.pdf --eval results/scores/fourier/full/nonorm/scores-{dev,eval}
+   (hobpad2-veins) # The next line dumps a table with the calculated metrics
+   (hobpad2-veins) $ bob bio metrics --eval results/scores/fourier/full/nonorm/scores-{dev,eval}
+
+
+Some of the results reported rely on scores provided by other teams that
+participated on the competition_. Those scores are loaded from the folder
+``scores`` available within this package. You can find the directory containing
+the scores with the following command::
+
+   (hobpad2-veins) $ bob_hobpad2_veins_scores.py
+   Scores are located at /path/to/bob.hobpad2.veins/bob/hobpad2/veins/scores
+   (hobpad2-veins) $ ls -l /path/to/bob.hobpad2.veins/bob/hobpad2/veins/scores
+   total 0
+   drwxr-xr-x  6 foobar users 204 Apr 16 15:02 pad-competition/
+   drwxr-xr-x 10 foobar users 340 Apr 16 15:02 mc/
+   drwxr-xr-x 10 foobar users 340 Apr 16 15:02 rlt/
+   drwxr-xr-x 10 foobar users 340 Apr 16 15:02 wld/
+
+
+Results from Table 3 in the book chapter can be reproduced with the following
+script::
+
+   mkdir competition-results
+   SCORES_DIR=/path/to/bob.hobpad2.veins/bob/hobpad2/veins/scores
+
+   for participant in idiap guc blab grip-priamus; do
+     for protocol in full cropped; do
+       plotfname="competition-results/${participant}-${protocol}.pdf"
+       logfname="competition-results/${participant}-${protocol}.txt"
+       echo "PAD of '${participant}' on protocol '${protocol}' -> ${logfname}"
+       bob bio hist --output=${plotfname} --eval ${SCORES_DIR}/pad-competition/${participant}/${protocol}/scores-{dev,eval}
+       bob bio metrics --output=${plotfname} --eval ${SCORES_DIR}/pad-competition/${participant}/${protocol}/scores-{dev,eval}
+     done
+   done
+
+
+By looking at all log files generated from the metrics commands, you should be
+able to reconstruct the data on Table 1 relative to results published
+alongside the 1st. Competition on Counter Measures to Fingervein Spoofing.
+Results shown here correspond to the HTER on the test set for a threshold
+chosen *a priori* on the development set EER (in parenthesis):
+
++--------------+-------------+-------------+-------------+------------------+
+| **Protocol** |  **Idiap**  |   **GUC**   |  **B-Lab**  | **Grip-Priamus** |
++--------------+-------------+-------------+-------------+------------------+
+| *full*       |   0% ( 0%)  |    4% (0%)  |   0% (0%)   |    0% (0%)       |
++--------------+-------------+-------------+-------------+------------------+
+| *cropped*    |  19% (24%)  |    3% (0%)  |   1% (0%)   |    0% (0%)       |
++--------------+-------------+-------------+-------------+------------------+
+
+
+Scores
+------
+
+To improve reproducibility aspects, we include all pre-generated scores after
+running the systems described above, in the ``scores`` folder within this
+package. The contents are the same as ``results/scores`` if you run all
+variants described above. You may reproduce all analysis described in the book
+chapter only by using them, instead of running all baseline scripts. To do so,
+just replace the path on the relevant analysis command-line instructions above
+from ``results/scores`` to ``/path/to/scores``, which may obtained with the
+script ``bob_hobpad2_veins_scores.py`` as described above.
+
+The scores sub-directory also contains de-anonymized scores provided by
+competitors of our paper "The 1st Competition_ on Counter Measures to Finger
+Vein Spoofing Attacks", presented on ICB 2018. You'll need these to reproduce
+some of the figures shown in the book chapter. Notice we have not received
+source code contributions for competitors and therefore cannot reproduce or
+provide code to reproduce such results.
+
+
+Extending Functionality
+-----------------------
+
+To extend functionality provided by this package, you'll need to develop new
+components for either bob.bio.vein_ (our biometric vein recognition framework)
+or bob.pad.vein_ (our presentation-attack detection framework for vein
+recognition systems). Start by reading their user guides.
+
+
+Contact
+-------
+
+For questions or reporting issues to this software package, contact our
+development `mailing list`_.
+
+
+.. Place your references here:
+.. _conda: https://conda.io/
+.. _bob: https://www.idiap.ch/software/bob
+.. _installation: https://www.idiap.ch/software/bob/install
+.. _bob.bio.vein: https://pypi.python.org/pypi/bob.bio.vein
+.. _bob.pad.vein: https://pypi.python.org/pypi/bob.pad.vein
+.. _vera fingervein: https://www.idiap.ch/software/bob/docs/bob/bob.db.verafinger/v1.0.2/index.html
+.. _vera fingervein dataset: https://www.idiap.ch/dataset/vera-fingervein
+.. _competition: http://publications.idiap.ch/index.php/publications/show/3095
+.. _mailing list: https://www.idiap.ch/software/bob/discuss
