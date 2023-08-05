@@ -1,0 +1,184 @@
+Metadata-Version: 2.1
+Name: youtube-metrics
+Version: 0.2.1
+Summary: YouTube Metrics - Calculate Delivery Time of Videos
+Home-page: https://gitlab.com/CryptidVulpes/youtube-metrics/
+Author: CryptidVulpes
+Author-email: "CryptidVulpes" <cvulpes@protonmail.com>
+License: MIT License
+Requires-Dist: geoip2
+Requires-Dist: geopy
+Requires-Dist: requests
+Requires-Dist: dnspython
+Requires-Dist: youtube-dl
+Requires-Dist: humanize
+
+Copyright (c) 2018 CryptidVulpes <cvulpes@protonmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Description: # youtube-metrics
+        Gather network metrics about YouTube videos
+        
+        Supported Python versions:
+        * 3.4
+        * 3.5
+        * 3.6
+        * 3.7
+        
+        ## Installation
+        ```
+        python3 -m pip install youtube-metrics
+        ```
+        
+        ## Usage
+        ```
+        usage: youtube_metrics [-h] {analyze,es} ...
+        
+        Gather metrics about a video download.
+        
+        positional arguments:
+          {analyze,es}
+            analyze     Analyze video
+            es          Print ES template
+        
+        optional arguments:
+          -h, --help    show this help message and exit
+        ```
+        
+        ```
+        usage: youtube_metrics es [-h]
+        
+        optional arguments:
+          -h, --help  show this help message and exit
+        ```
+        
+        ```
+        usage: youtube_metrics analyze [-h] [--chunk-size CHUNK_SIZE]
+                                       [--download-limit DOWNLOAD_LIMIT]
+                                       [--output-file OUTPUT_FILE]
+                                       [--output-format OUTPUT_FORMAT]
+                                       video_url [video_url ...]
+        
+        positional arguments:
+          video_url             The target video to download. Supports same services
+                                as youtube_dl.
+        
+        optional arguments:
+          -h, --help            show this help message and exit
+          --chunk-size CHUNK_SIZE, -c CHUNK_SIZE
+                                Bytesize of each downloaded chunks (each chunk is
+                                timed). Default: 1024
+          --download-limit DOWNLOAD_LIMIT, -l DOWNLOAD_LIMIT
+                                Bytesize of the maximum download before stopping
+                                measurements. Default: 41943040
+          --output-file OUTPUT_FILE, -of OUTPUT_FILE
+                                Filepath for output. Output will be appended to the
+                                file. If not defined, stdout is used
+          --output-format OUTPUT_FORMAT, -o OUTPUT_FORMAT
+                                Format for output. Valid values: json, csv. Default:
+                                json
+        ```
+        ### Results
+        * Time: milliseconds
+        * Distances: kilometers
+        * Data: bytes
+        * Throughput: bytes per second
+        
+        Results are printed to `stdout`. Logging is printed to `stderr`
+        
+        ### Example
+        To pretty-print results, you can use `jq` or `python -m json.tool`:
+        
+        ```json
+        $ youtube_metrics analyze -c 1 -l 1 "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 2>/dev/null | jq
+        {
+          "me": {
+            "ip": "0.0.0.0",
+            "coords": {
+              "lat": 7.2,
+              "long": 5.6
+            }
+          },
+          "videos": [
+            {
+              "metadata": {
+                "id": "dQw4w9WgXcQ",
+                "uploader": "RickAstleyVEVO",
+                "title": "Rick Astley - Never Gonna Give You Up (Video)",
+                "duration": 212000,
+                "webpage_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "view_count": 487059212,
+                "url": "https://r4---sn-qo5-9a4e.googlevideo.com/videoplayback?gir=yes&itag=248&clen=48318078&ei=EErHW9KKFeWE7ASyhaLAAQ&pl=21&fvip=6&ms=au%2Crdu&mv=m&source=youtube&lmt=1537435386492907&ip=95.175.104.81&key=yt6&expire=1539808880&id=o-ANjlPe_raUhixlzpWPPw982Me7AlJYBdMOBjf3yaVaud&dur=212.040&mn=sn-qo5-9a4e%2Csn-5go7yn7z&mm=31%2C29&keepalive=yes&requiressl=yes&ipbits=0&sparams=aitags%2Cclen%2Cdur%2Cei%2Cgcr%2Cgir%2Cid%2Cinitcwndbps%2Cip%2Cipbits%2Citag%2Ckeepalive%2Clmt%2Cmime%2Cmm%2Cmn%2Cms%2Cmv%2Cpl%2Crequiressl%2Csource%2Cexpire&mt=1539787173&initcwndbps=1157500&gcr=fi&c=WEB&aitags=133%2C134%2C135%2C136%2C137%2C160%2C242%2C243%2C244%2C247%2C248%2C278%2C394%2C395%2C396%2C397%2C398&mime=video%2Fwebm&signature=B96E93FF93CAE8866FF5DAF6BCFAA613730A7A83.1C827D982E985AD3CC87B3F1EED9324CC3993063&ratebypass=yes",
+                "ext": "webm",
+                "height": 1080,
+                "format_note": "1080p",
+                "filesize": 48318078,
+                "width": 1920,
+                "error": ""
+              },
+              "statistics": {
+                "cache_url": "r4---sn-qo5-9a4e.googlevideo.com",
+                "ping": {
+                      "min": 1.505,
+                      "avg": 1.981,
+                      "max": 1.679,
+                      "mdev": 0.503,
+                      "ip": "62.115.64.87"
+                },
+                "processing_time": {
+                  "dns_a_time": 1.0,
+                  "ping_time": 1.0,
+                  "dns_aaaa_time": 1.0,
+                  "ping6_time": 1.0
+                },
+                "distance": {
+                    "ip": "62.115.64.87",
+                    "coordinates": {
+                      "lat": 42.43,
+                      "long": -72.64
+                    },
+                    "distance": 1
+                },
+                "download": {
+                  "downloaded": 2048,
+                  "throughput": 61394.828157497876,
+                  "processing_time": {
+                    "request_time": 0.0,
+                    "response_time": 0.0
+                  },
+                  "format": "webm_1080p"
+                }
+              }
+            }
+          ]
+        }
+        ```
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Science/Research
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: Microsoft :: Windows :: Windows 10
+Description-Content-Type: text/markdown
