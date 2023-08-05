@@ -1,0 +1,21 @@
+language: nix
+before_install:
+- sudo mkdir -p /etc/nix
+- echo "substituters = https://cache.nixos.org/ https://datakurre.cachix.org/" | sudo tee -a /etc/nix/nix.conf
+- echo "trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= datakurre.cachix.org-1:ayZJTy5BDd8K4PW9uc9LHV+WCsdi/fu1ETIYZMooK78=" | sudo tee -a /etc/nix/nix.conf
+script:
+- nix-shell setup.nix -A shell --run "flake8 src && python -m robotkernel.install && jupyter nbconvert --execute tests/smoketest.ipynb"
+after_success:
+- nix-shell setup.nix -A shell --run "LC_ALL=C sphinx-build docs build"
+- touch build/.nojekyll
+deploy:
+  provider: pages
+  github-token: "$GITHUB_TOKEN"
+  local-dir: "./build"
+  target-branch: gh-pages
+  keep-history: false
+  skip-cleanup: true
+  on:
+    branch: master
+env:
+  secure: Wv4c+F3xbIv62otaFencdxI2MZ4nVOmqkKaMKyJNC+01rjjiPXsxV85H5CYbnvZ9T8OKAAmKCewO8kkuFxY0Crwj12Oh5fk6i4M+4aGq8vmtjO59nJ0rarvos3rfhQlR6BWMQLIx7PqHOrOs698WxIYUEKNgxkcUwJJMakGfpQmwppK720No6DWm5O8BPXRoAIeM0uO/vvMQxJCPqbmTZca1QUQ94JW3hKnlIQkeNyPnAUGiBA4eeB44UkR8zUXRlXH6/v4c8oUEB4NLkjwaGHMLsdXJOkxhdD3z4hja/LEMIQb8OA1W2Hqt0cBrxDjIrSCKvqP0rwlku2yyZcmJMcnjzqiMTwpZtT0SFGki7mJyr7Zxs94E2OpqtJBjdKC37XMcuIdqpbjxNcu7WQ5PACv+IyEvBpG9zsaBrYLoc7hYTgszuVhOrqq5Ekv431hAxI5+vrD2N092ZGjVTEjMqlRGYpuMMVo1RGFGqfs2VOcUUJB2QAELiu81KH3J4ibe4GR8gVElM43AD8mw24OAhUa8SWPbYvnTVW9Gi5YCE/+wnQeeaWdVK8zMdYm6y9qYW+Fql1WA5K6SxkYNPz7Guqse4d0ccEDmYbA/4GhZIqB/4en0x+u1PIPustFc+HspaABPwy1PKTFfySEIotON5yvaA+oLykA6fpdaaGRj5Sw=
