@@ -1,0 +1,26 @@
+{% extends "base.jinja2" %}
+{% block links %}
+  {% webpack 'layout', '.js' -%}
+  <script src="{{ ASSET.url }}" async defer></script>
+  {% endwebpack %}
+  {% webpack 'layout', '.css' -%}
+  <link rel="stylesheet" type="text/css" href="{{ ASSET.url }}">
+  {% endwebpack %}
+{% endblock %}
+{% block body %}
+  <header>
+    {% include "header.jinja2" %}
+  </header>
+  <main class="py-4">
+  <article class="container">
+    {% block content %}
+    {% if content %}
+    {{content|markdown}}
+    {% endif %}
+    {% endblock %}
+  </article>
+  </main>
+  <footer class="page-footer">
+    {% include "footer.jinja2" %}
+  </footer>
+{% endblock %}
