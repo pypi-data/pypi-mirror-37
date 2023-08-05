@@ -1,0 +1,129 @@
+Metadata-Version: 2.1
+Name: Flask-Storm
+Version: 0.2.0
+Summary: Storm integration for Flask.
+Home-page: https://www.github.com/runfalk/flask_storm
+Author: Andreas Runfalk
+Author-email: andreas@runfalk.se
+License: MIT
+Description: Flask-Storm
+        ===========
+        |test-status| |documentation-status| |pypi-version|
+        
+        *I only recommend using this package if your project is already heavily invested in Storm. Instead use* `SQLAlchemy <https://github.com/zzzeek/sqlalchemy>`_ *and* `Flask-SQLAlchemy <https://github.com/mitsuhiko/flask-sqlalchemy>`_. *It's uncertain if Storm will ever receive another update*
+        
+        Flask-Storm is an extension for `Flask <https://www.palletsprojects.com/p/flask/>`_ that adds support for Canonical's ORM `Storm <https://storm.canonical.com/>`_ to your application. Flask-Storm automatically opens and closes database connections on demand when requests need them.
+        
+        
+        Example
+        -------
+        Access to the database is done using the `store` `application context local <http://flask.pocoo.org/docs/0.11/appcontext/>`_. Within an application context this variable holds a reference to a Storm Store instance. If no connection is opened it will automatically open one. When the application context is torn down, normally after the request has returned, the store is closed.
+        
+        .. code-block:: python
+        
+            from flask_storm import store
+            from storm.locals import Int, Unicode
+        
+            class User(object):
+                __storm_table__ = "users"
+        
+                id = Int(primary=True)
+                name = Unicode()
+        
+        
+            @app.route("/")
+            def index():
+                # Get name of user with ID 1
+                return store.get(User, 1).name
+        
+        
+        Installation
+        ------------
+        
+        .. code-block:: bash
+        
+            $ pip install flask_storm[fancy]
+        
+        This installs Flask-Storm with SQL highlighting and reformatting support. If you do not want this drop the ``fancy``.
+        
+        .. code-block:: bash
+        
+            $ pip install flask_storm
+        
+        Documentation
+        -------------
+        Documentation is available on `<http://flask-storm.readthedocs.io/>`_
+        
+        
+        Why not Python 3
+        ----------------
+        Sadly Storm is not Python 3 compatible, which is why it doesn't make sense to make Flask-Storm compatible yet.
+        
+        .. |test-status| image:: https://travis-ci.org/runfalk/flask-storm.svg
+            :alt: Test status
+            :scale: 100%
+            :target: https://travis-ci.org/runfalk/Flask-Storm
+        
+        .. |documentation-status| image:: https://readthedocs.org/projects/flask-storm/badge/
+            :alt: Documentation status
+            :scale: 100%
+            :target: http://flask-storm.readthedocs.io/
+        
+        .. |pypi-version| image:: https://badge.fury.io/py/Flask-Storm.svg
+            :alt: PyPI version status
+            :scale: 100%
+            :target: https://pypi.python.org/pypi/Flask-Storm/
+        
+        .. Include changelog on PyPI
+        
+        Changelog
+        =========
+        Version are structured like the following: ``<major>.<minor>.<bugfix>``. Unless
+        explicitly stated, changes are made by
+        `Andreas Runfalk <https://github.com/runfalk>`_.
+        
+        
+        Version 0.2.0
+        -------------
+        Released on 8th October 2018
+        
+        - Added Python 3 support
+        - Removed ``storm`` as a dependency since ``storm-legacy`` can be used as well
+        
+        
+        Version 0.1.2
+        -------------
+        Released on 14th June 2017
+        
+        - Fixed an issue with query logging in ``flask shell`` and PostgreSQL
+        
+        
+        Version 0.1.1
+        -------------
+        Released on 9th June 2017
+        
+        - Fixed issue with new versions of sqlparse by bumping its version requirement
+        
+        
+        Version 0.1.0
+        -------------
+        Released on 19 July 2016
+        
+        - Initial release
+        
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: Flask
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Database
+Classifier: Topic :: Utilities
+Classifier: Topic :: Software Development :: Libraries
+Provides-Extra: fancy
+Provides-Extra: dev
