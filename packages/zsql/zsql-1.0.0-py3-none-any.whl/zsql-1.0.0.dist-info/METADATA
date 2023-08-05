@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: zsql
+Version: 1.0.0
+Summary: 简单的mysql封装库, 使用非常简单, 直接调用方法操作, 不需要再去想sql代码了
+Home-page: https://pypi.org/
+Author: zlyuan
+Author-email: 1277260932@qq.com
+License: GNU GENERAL PUBLIC LICENSE
+Platform: all
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: pymysql
+
+#简单的mysql封装库
+
+##使用非常简单, 直接调用方法操作, 不需要再去想sql代码了
+
+*测试代码:
+
+'''
+if __name__ == '__main__':
+    # 创建操作数据库的实例
+    sql = zsql()
+    # 创建一个库
+    sql.create_db('db_name')
+    # 使用库
+    sql.use_db('db_name')
+    # 创建一个表
+    sql.create_table_ex('table_name', ID='int', name='char(16)', pwd='char(32)')
+    # 保存数据
+    sql.save_values('table_name', (0, '用户0', '密码0'), (1, '用户1', '密码1'))
+    # 更新数据
+    sql.update('table_name', new_item=dict(name='新用户名', pwd='新密码'), where=dict(name='用户1', pwd='密码1'))
+    # 查询数据
+    data = sql.select_all('table_name')
+    # 删除表
+    sql.drop_table('table_name')
+    # 删除库
+    sql.drop_db('db_name')
+    # 显示数据
+    for v in data:
+        print(v)
+    # 关闭
+    sql.close()
+
+'''
+***
+###打印出以下结果
+>CREATE DATABASE IF NOT EXISTS db_name DEFAULT CHARSET=utf8;
+>USE db_name;
+>USE db_name;
+>CREATE TABLE table_name (ID int, name char(16), pwd char(32)) DEFAULT CHARSET=utf8;
+>INSERT INTO table_name VALUES (0,'用户0','密码0'), (1,'用户1','密码1');
+>UPDATE table_name SET name = '新用户名', pwd = '新密码' WHERE name='用户1' AND pwd='密码1';
+>SELECT * FROM table_name;
+>DROP TABLE IF EXISTS table_name;
+>DROP DATABASE IF EXISTS db_name;
+>(0, '用户0', '密码0')
+>(1, '新用户名', '新密码')
+
