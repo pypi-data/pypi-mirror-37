@@ -1,0 +1,52 @@
+#!/bin/bash
+target=ansible
+inventory=
+ARGS=
+while getopts ":i:, :h, :t:" opt; do
+  case $opt in
+    h)
+      echo "USAGE: ansible-deploy [any ansible-playbook arguments]"
+      exit
+      ;;
+    t)
+    target=$OPTARG
+      ;;
+
+    i)
+    inventory=$OPTARG
+      ;;
+
+    \?)
+      ARGS+="$ARGS $OPTARG"
+      echo $ARGS $OPTARG $opt
+      ;;
+  esac
+done
+
+install_gh_pkg() {
+  echo "Installing $1"
+  file=$(echo $1 | cut -d/ -f2)
+  latest=$(curl --silent -L https://api.github.com/repos/$1/releases/latest | jq -rc '.tag_name')
+  download="https://github.com/$1/releases/download/$latest"
+  if which rpm 2>&1 > /dev/null; then
+    rpm -i $download/$file.rpm
+  elif which dpkg 2>&1 > /dev/null; then
+    tmp=$(mktemp --suffix deb)
+    curl -LK $download/$file.deb > $tmp
+    dpkg -i --force all $tmp
+    rm $tmp
+  fi
+}
+
+if [[ ! -e /etc/ansible/roles/extras && ! -e ~/.ansible/roles/extras ]]; then
+  install_gh_pkg "moshloop/ansible-extras"
+fi
+
+if [[ ! -e /etc/ansible/roles/deploy && ! -e ~/.ansible/roles/deploy ]]; then
+  install_gh_pkg "moshloop/ansible-deploy"
+fi
+
+
+cp /etc/ansible/roles/deploy/deploy.yml .ansible-deploy.yml
+ANSIBLE_HASH_BEHAVIOUR=merge
+ansible-playbook .ansible-deploy.yml $@
