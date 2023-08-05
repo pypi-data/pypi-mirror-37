@@ -1,0 +1,30 @@
+#!/usr/bin/python
+'''Main method that calls module to create csv file fron website table
+
+'''
+
+import sys
+from helper import grab
+from helper import parse
+from helper import create
+
+def main():
+    '''Call methods from module to grab info from website and output to .csv file
+
+    Raises:
+       IndexError: Throws error when trying to read name from system line
+    that doesn't exist and makes name with default.
+    '''
+    url = "http://www.ecsu.edu/faculty-staff/profiles/index.html"
+    data = grab.getit(url)
+    ready = parse.parser(data)
+    try:
+        create.file_maker(ready, sys.argv[1])
+    except IndexError:
+        print "You didn't enter a name when running the file.\n"
+        print "Name was set to default, change name or file will be overwritten."
+    finally:
+        create.file_maker(ready, 'default.csv')
+
+if __name__ == '__main__':
+    main()
