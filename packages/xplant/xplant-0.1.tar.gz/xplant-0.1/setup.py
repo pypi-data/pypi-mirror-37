@@ -1,0 +1,47 @@
+from setuptools import setup, find_packages
+
+long_description = open('README.rst').read()
+
+setup(
+    name='xplant',
+    version='0.1',
+    author='Michal Kaczmarczyk',
+    author_email='michal.s.kaczmarczyk@gmail.com',
+    maintainer='Michal Kaczmarczyk',
+    maintainer_email='michal.s.kaczmarczyk@gmail.com',
+    license='MIT license',
+    url='https://gitlab.com/kamichal/xplant',
+    description='XML tree builder',
+    long_description=long_description,
+    packages=find_packages('xplant'),
+    requires=[],
+    install_requires=[],
+    keywords='static xml generator',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Telecommunications Industry',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: System Administrators',
+        'Topic :: Database :: Front-Ends',
+        'Topic :: Documentation',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Browsers',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Scientific/Engineering :: Visualization',
+        'Topic :: Software Development :: Code Generators',
+        'Topic :: Utilities',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Operating System :: OS Independent',
+        'License :: OSI Approved :: MIT License',
+    ]
+)
