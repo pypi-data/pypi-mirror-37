@@ -1,0 +1,456 @@
+Metadata-Version: 1.1
+Name: qtarmsim
+Version: 0.4.9
+Summary: Easy to use graphical ARM simulator
+Home-page: http://lorca.act.uji.es/project/qtarmsim/
+Author: Sergio Barrachina Mir
+Author-email: barrachi@uji.es
+License: UNKNOWN
+Description-Content-Type: UNKNOWN
+Description: QtARMSim
+        ========
+        
+        QtARMSim is an easy to use graphical ARM simulator. It provides an easy
+        to use multiplatform ARM emulation environment that has been designed
+        to be used on Computer Architecture introductory courses. It is a
+        graphical interface to the ARMSim ARM simulator.
+        
+        The ARMSim ARM simulator, Copyright (c) 2014-18 by Germán Fabregat, is
+        bundled with QtARMSim. It can be found on the ``armsim/``
+        subdirectory of the QtARMSim installation path.
+        
+        
+        1. Installing QtARMSim and its dependencies
+        -------------------------------------------
+        
+        QtARMSim has the following dependencies:
+        `Python3 <https://www.python.org/>`_,
+        `Qt for Python (PySide2) <https://wiki.qt.io/Qt_for_Python>`_, and
+        ARMSim.
+        
+        ARMSim, which is bundled with QtARMSim, has the next dependencies:
+        `Ruby <https://www.ruby-lang.org/en/>`_,
+        `Gosu <https://www.libgosu.org/>`_, and the
+        `GNU Gcc toolchain targeting the ARM EABI platform <http://gcc.gnu.org/>`_.
+        
+        The next sections describe how to install QtARMSim, ARMSim, and their
+        dependencies on GNU/Linux, Windows and macOS.
+        
+        
+        1.1 Installing QtARMSim on GNU/Linux
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        The major GNU/Linux distributions already provide packages for
+        ``Python3`` and ``Ruby``. Therefore, the actual GNU/Linux
+        distribution package manager can be used to install this software. As
+        for the GNU Gcc, the required part of the GNU Gcc toolchain targeting
+        the ARM platform is bundled with QtARMSim. ``Gosu`` can be installed
+        using the Ruby package manager ``gem``. Finally, ``Qt for Python``
+        and ``QtARMSim`` can be installed using the ``pip3`` command provided by
+        ``Python3``. (If after installing ``python3``, the ``pip3`` command is
+        not available, it can be manually installed by downloading `get-pip.py
+        <https://bootstrap.pypa.io/get-pip.py>`_, and
+        executing it: ``sudo python3 get-pip.py``.)
+        
+        For example, on Ubuntu you can install QtARMSim, ARMSim and their
+        dependencies using::
+        
+           $ sudo apt-get install python3-pip ruby
+           $ # See https://github.com/gosu/gosu/wiki/Getting-Started-on-Linux
+           $ # for gosu dependencies
+           $ sudo gem install gosu
+           $ sudo pip3 install PySide2 QtARMSim
+        
+        On a Gentoo distribution, you can install QtARMSim, ARMSim and their
+        dependencies issuing (as root)::
+        
+           # emerge -av ruby
+           $ # See https://github.com/gosu/gosu/wiki/Getting-Started-on-Linux
+           $ # for gosu dependencies
+           # gem install gosu
+           # pip3 install PySide2 QtARMSim
+        
+        **Note about PySide2.** If the command '``pip3 install PySide2``' fails
+        to install ``PySide2``, you can follow the instructions in
+        `Qt for Python/GettingStarted <https://wiki.qt.io/Qt_for_Python/GettingStarted>`_
+        to install the latest PySide2 snapshot wheel, which at the time this installation
+        guide was written, consisted in executing the following command::
+        
+          pip3 install --index-url=http://download.qt.io/snapshots/ci/pyside/5.11/latest/ PySide2 --trusted-host download.qt.io
+        
+        
+        1.2 Installing QtARMSim on Windows
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        To install QtARMSim, ARMSim, and their dependencies on Windows,
+        please follow the next steps:
+        
+        1. Download and install a 64 bits Python version, either the 3.5 or the 3.6 version,
+           from the
+           `Python releases for Windows <https://www.python.org/downloads/windows/>`_ page.
+           Please check the '``Add Python 3.X to PATH``' option when installing it.
+        
+        2. Download and install a 64 bits Ruby version from the
+           `Ruby Installer for Windows <http://rubyinstaller.org/>`_ page.
+           During the installation process, make sure that the
+           '``Add Ruby executables to your PATH``' option is selected.
+        
+        3. Open a Windows console (executing either ``Windows PowerShell`` or
+           ``cmd``, depending on your Windows version), and execute the commands
+           indicated in the next steps.
+        
+        4. Install the ``Gosu`` library using the ``gem`` command::
+        
+             PS C:\Users\Username> gem install gosu
+        
+        5. Install ``PySide2`` using the ``pip3`` command::
+        
+             PS C:\Users\Username> pip3 install PySide2
+        
+           If the latest version of ``PySide2`` is not automatically installed,
+           please follow the instructions in
+           `Qt for Python/GettingStarted <https://wiki.qt.io/Qt_for_Python/GettingStarted>`_
+           to install the latest ``PySide2 snapshot wheel`` for Windows.
+        
+        6. Install QtARMSim using the ``pip3`` command::
+        
+             PS C:\Users\Username> pip3 install QtARMSim
+        
+        
+        1.3 Installing QtARMSim on macOS
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        To install QtARMSim, ARMSim, and their dependencies on macOS,
+        please follow the next steps:
+        
+        1. Install the `MacPorts package manager <https://www.macports.org/>`_.
+           (If you use the `Homebrew package manager <http://brew.sh/>`_, please
+           adapt conveniently the next instructions.)
+        
+        2. Open a ``Terminal`` and execute the commands indicated in the next steps.
+        
+        3. Install ``Python 3.6`` (or ``Python 3.5``) and ``pip``::
+        
+             $ sudo port install python36 py36-pip
+             $ sudo port select --set python3 python36
+             $ sudo port select --set pip pip36
+        
+        4. Install ``Ruby``::
+        
+             $ sudo port install ruby25
+             $ sudo port select --set ruby ruby25
+        
+        5. Install ``libsdl2`` and ``Gosu``::
+        
+             $ sudo port install libsdl2 gosu
+        
+        6. Install ``PySide2``::
+        
+             $ sudo pip install PySide2
+        
+           If the latest version of ``PySide2`` is not automatically installed,
+           please follow the instructions in
+           `Qt for Python/GettingStarted <https://wiki.qt.io/Qt_for_Python/GettingStarted>`_
+           to install the latest ``PySide2 snapshot wheel`` for macOS.
+        
+        7. Install ``QtARMSim``::
+        
+             $ sudo pip install QtARMSim
+        
+        After installing QtARMSim, its executable will be at:
+        ``/opt/local/Library/Frameworks/Python.framework/Versions/3.6/bin/qtarmsim``.
+        
+        QtARMSim python source code will be at:
+        ``/opt/local/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/qtarmsim/``.
+        
+        And the ARMSim ruby source code will be at:
+        ``/opt/local/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/qtarmsim/armsim``.
+        
+        
+        1.4 Installing the ``GNU Gcc toolchain targeting the ARM EABI``
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        Starting with version 0.3.1 of QtARMSim, the required part of the ``GNU
+        Gcc toolchain targeting the ARM platform`` is already bundled with
+        QtARMSim. So this step is no longer required, unless there is some
+        problem with the bundled GNU Gcc toolchain (for example, if QtARMSim
+        does not assemble a given source code). In this case, another
+        instance of GNU Gcc can be installed and used.
+        
+        On GNU/Linux, this can be accomplished by installing a GNU Gcc for ARM
+        package provided by the GNU/Linux distribution being used, by building
+        a cross-compiling toolchain, or by extracting the
+        ``gcc-arm-none-eabi`` ``tar.gz`` for linux32 from the `Arduino
+        download page
+        <https://code.google.com/p/arduino/downloads/list>`_. For example, on
+        Ubuntu, this optional step can be achieved with::
+        
+          $ sudo apt-get install gcc-arm-linux-gnueabi
+        
+        And on Gentoo with::
+        
+          # emerge -av crossdev
+          # echo "PORDIR_OVERLAY=/usr/local/portage" >> /etc/portage/make.conf
+          # crossdev --target arm --ov-output /usr/local/portage
+        
+        On Windows, to perform this optional step, download the GNU Gcc ARM
+        cross compiler for Windows from the `Arduino download page
+        <https://code.google.com/p/arduino/downloads/list>`_.  Open the
+        ``gcc-arm-none-eabi-x.y.y-win32.tar.gz`` file, and extract the
+        ``gcc-arm-none-eabi`` folder on any path you prefer.
+        
+        Once a new ``GNU Gcc toolchain targeting the ARM platform`` is installed,
+        please configure the ``ARMSim Gcc Compiler`` QtARMSim option to point
+        to the new '``arm-none-eabi-gcc``' command.
+        
+        
+        2. Executing QtARMSim
+        ---------------------
+        
+        To execute QtARMSim, run the ``qtarmsim`` command, or click on the
+        corresponding entry on the applications menu (on GNU/Linux, under the
+        ``Education`` category).
+        
+        
+        3. Upgrading QtARMSim
+        ---------------------
+        
+        To upgrade an already installed QtARMSim, execute the following
+        command on GNU/Linux::
+        
+          $ sudo pip3 install --upgrade QtARMSim
+        
+        On Windows::
+        
+          PS C:\Users\Username> pip3 install --upgrade QtARMSim
+        
+        On macOS::
+        
+          sudo pip install --upgrade QtARMSim
+        
+        
+        4. Uninstalling QtARMSim
+        ------------------------
+        
+        To uninstall QtARMSim on GNU/Linux, execute the following command::
+        
+          $ sudo pip3 uninstall QtARMSim
+        
+        On Windows::
+        
+          PS C:\Users\Username> pip3 uninstall QtARMSim
+        
+        On macOS::
+        
+          sudo pip uninstall QtARMSim
+        
+        
+        License
+        -------
+        
+        Copyright 2014-18 Sergio Barrachina Mir <barrachi@uji.es>
+        
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation; either version 3 of the License, or (at
+        your option) any later version.
+        
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        General Public License for more details.
+        
+        You should have received a copy of the GNU General Public License
+        along with this program.  If not, see <http://www.gnu.org/licenses/>.
+        
+        3rd party software acknowledgments
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+        The next 3rd party software is used and distributed with QtARMSim.
+        
+        ARMSim: an ARM simulator, copyright Germán Fabregat Llueca, licensed
+        under the GPLv3+. Included under the ``qtarmsim/armsim`` directory.
+        
+        `GCC, the GNU Compiler Collection <https://www.gnu.org/software/gcc/>`_,
+        copyright the Free Software Foundation, Inc, licensed under the GPLv3,
+        with the addition under section 7 of an exception described in the “GCC
+        Runtime Library Exception, version 3.1”
+        (see <https://gcc.gnu.org/onlinedocs/libstdc++/manual/license.html>).
+        Binary versions targeting the ARM EABI are included under the
+        ``qtarmsim/gcc-arm`` directory.
+        
+        `Qfplib: an ARM Cortex-M0 floating-point library in 1 kbyte
+        <https://www.quinapalus.com/qfplib.html>`_, copyright Mark Owen,
+        licensed under the GPLv2. Source code
+        included under the ``3rdparty/`` directory. This part of the code
+        is only available under the GPLv2 license.
+        
+        `1 Digit font <https://www.1001fonts.com/01-digit-font.html>`_,
+        copyright David Chung, licensed under the
+        `1001Fonts Free For Commercial Use License (FFC)
+        <https://www.1001fonts.com/licenses/ffc.html>`_. Source code
+        included under the ``3rdparty/`` directory.
+        
+        
+        
+        Changelog
+        ---------
+        
+        0.4.9 (2018-10-16)
+        ^^^^^^^^^^^^^^^^^^
+        - Changed LCD font to "1 Digit" by David Chung.
+        - Fixed bug that prevented code to be resized.
+        
+        0.4.8 (2018-10-8)
+        ^^^^^^^^^^^^^^^^^
+        - Properly acknowledging Qfplib by Mark Owen.
+        
+        0.4.7 (2018-7-27)
+        ^^^^^^^^^^^^^^^^^
+        - Added memory contents tooltips.
+        - Added new example, LCD/ascii, and revised previous ones.
+        - Changed the way the monospaced font is selected.
+        
+        0.4.4 (2018-7-25)
+        ^^^^^^^^^^^^^^^^^
+        - Migrated to Qt for Python (PySide2).
+        - Speeded up the filling of the simulator data.
+        - Added examples as a File menu entry.
+        - Added ARMSim tabs to separate the source code of the different ROMs.
+        - Added Qfplib (floating point library) API documentation to the help.
+        - Added UseLabels ARMSim option.
+        - Memory dock: first RAM is expanded by default and whenever a memory entry is modified it scrolls to its position.
+        
+        0.3.16 (2018-1-17)
+        ^^^^^^^^^^^^^^^^^^^
+        - Corrected typo on the restructured text format of the changelog documentation.
+        
+        0.3.15 (2018-1-17)
+        ^^^^^^^^^^^^^^^^^^^
+        - Added support in the simulator to showing jump labels instead of
+          their addresses.
+        - Corrected errata on Qfp library acknowledgments.
+        - Removed legacy code from GlSpim.
+        
+        0.3.14 (2017-11-08)
+        ^^^^^^^^^^^^^^^^^^^
+        - Added SVG icon support explicitly: the toolbar icons now will be
+          also shown on Windows.
+        - ARMSyntaxHighlighter rules are now generated only the first time.
+        - ARMSim:
+          - Added support for floating point operations including Qfplib: an ARM Cortex-M0 floating-point library in 1 kbyte.
+          - Corrected minor bug: .global declared labels generated a linking error.
+          - Corrected minor bug: negative displacements on 'bl' instructions where incorrectly displayed.
+        
+        0.3.13 (2017-11-02)
+        ^^^^^^^^^^^^^^^^^^^
+        - Added preliminary printing support.
+        
+        0.3.12 (2017-04-21)
+        ^^^^^^^^^^^^^^^^^^^
+        - Changed the icon set to the KDE Breeze one.
+        - LCD Display not rescaling correctly on some desktop environments
+          fixed.
+        - LCD display can now be zoomed with CTRL+mouse wheel.
+        - Editors and panels now honor the system default point size.
+        - Now the menu bar is displayed on the system menu bar on Mac OS X.
+        
+        0.3.11 (2016-10-30)
+        ^^^^^^^^^^^^^^^^^^^
+        - The Edit menu actions have been implemented.
+        - Settings values are now automatically stripped to avoid errors due
+          to misplaced spaces.
+        - ARMSim: updated firmware to correct a bug on sdivide subroutine.
+        
+        0.3.10 (2016-09-19)
+        ^^^^^^^^^^^^^^^^^^^
+        - ARMSim: updated firmware to provide a signed division subroutine.
+        
+        0.3.8 (2016-09-19)
+        ^^^^^^^^^^^^^^^^^^
+        - Bug corrected: waiting spinner occluded File and Edit menus.
+        
+        0.3.7 (2016-09-18)
+        ^^^^^^^^^^^^^^^^^^
+        - Added firmware ROM that provides, among others, functions to display
+          strings and numbers on the LCD display. The new memory organization
+          consists of two ROM blocks and two RAM blocks. The first ROM block
+          is filled with the assembled user code. The second ROM, with the
+          firmware machine code. The first RAM can be used to store the user
+          program data. The second RAM is used by the LCD display.
+        - The graphical interface now uses a thread to retrieve the memory
+          contents and the disassembled code from the two ROM blocks.
+        - The regular expressions used to highlight the code on the editors
+          have been optimized to increase the highlighting process speed.
+        
+        0.3.5 (2016-09-12)
+        ^^^^^^^^^^^^^^^^^^
+        - Improved the Mac OS X compatibility and added installation
+          instructions for this platform.
+        - Changed the minimum size of the code editor container to accommodate
+          lower resolution screens.
+        - ARMSim: (i) LSL result is now bounded to 32 bits; (ii) command
+          redirection is performed explicitly to avoid an error on newer
+          Windows versions; and (iii) the method used to compare whether
+          memory blocks where not defined has been changed to avoid errors on
+          Ruby with version >= 2.3.
+        
+        0.3.4 (2016-01-21)
+        ^^^^^^^^^^^^^^^^^^
+        - Added a memory dump dock widget that allows to see and edit the
+          memory at byte level. It also shows the ASCII equivalent of each
+          byte.
+        - Added a LCD display dock widget that provides a simple output
+          system. It has a size of 32x6 and each character is mapped to a
+          memory position starting a 0x20070000.
+        
+        0.3.3 (2015-11-28)
+        ^^^^^^^^^^^^^^^^^^
+        - Added a visual indication of which instructions have already been
+          executed on the left margin of the ARMSim panel.
+        - Added automatic scroll on simulation mode in order to keep the next
+          line that is going to be executed visible.
+        - Improved the automatic selection of a mono spaced font (previously
+          selected font used ligatures).
+        - Fixed an error on the Preferences Dialog which prevented to select
+          the ``ARMSim directory`` and the ``Gcc ARM command line`` using the
+          corresponding directory/file selector dialogs.
+        - ARMSim: Fixed the simulation of shift instructions: only the 8 least
+          significant bits are now used to obtain the shift amount.
+        - ARMSim.: Fixed the behavior when memory outside the current memory
+          map is accessed: each wrong access now raises a memory access error.
+        - Bundled a reduced set of the GNU compiler toolchain. To reduce the
+          package size, only those files actually required to assemble an
+          assembly source code have been included.
+        
+        0.3.0 (2015-06-09)
+        ^^^^^^^^^^^^^^^^^^
+        - Migrated from PyQt to PySide to allow a simpler installation of
+          QtARMSim.
+        - Developed a new source code editor based on QPlainTextEdit, though
+          removing the prior QScintilla dependency, which allows a simpler
+          installation of QtARMSim.
+        - Improved the ARM Assembler syntax highlighting.
+        
+        0.2.7 (2014-11-05)
+        ^^^^^^^^^^^^^^^^^^
+        - Last revision of the first functional QtARMSim implementation. This
+          implementation  was used on the first semester of an introductory
+          course on Computer Architecture at Jaume I University. This is the
+          last version of that implementation, which used PyQt and QScintilla.
+        
+Keywords: ARM,simulator,assembler,disassembler,debugger
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Education
+Classifier: Topic :: Software Development :: Assemblers
+Classifier: Topic :: Software Development :: Debuggers
+Classifier: Topic :: Software Development :: Disassemblers
+Classifier: Topic :: System :: Emulators
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
