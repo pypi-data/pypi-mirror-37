@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title></title>
+<link rel="stylesheet" href="default.css" type="text/css" />
+</head>
+<body>
+
+<h1>My songbook</h1>
+
+
+<a id="TOC"><h1>Table of contents</h1></a>
+<ul>
+    {% for artist in library.artists | sort(attribute='name') %}
+    <li>
+        <a href="#{{artist.name|artist_anchor}}">{{ artist.name }}</a>
+        <ul>
+            {% for song in artist.songs | sort(attribute='title') %}
+                <li><a href="#{{song.title|song_anchor(artist.name)}}">{{ song.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+
+
+{% for artist in library.artists | sort(attribute='name') %}
+    <h1 id="{{artist.name|artist_anchor}}">{{ artist.name }}</h1>
+    {% for song in artist.songs | sort(attribute='title') %}
+        <h2 class="chapter" id="{{song.title|song_anchor(artist.name)}}">
+            {{ song.title }} <small>({{ artist.name }})</small>
+        </h2>
+        <p class="noindent">
+        {{song.content | song_content}}
+        </p>
+    {% endfor %}
+{% endfor %}
+
+</body>
+</html>
