@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {% trans "Comments administration" %}
+{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="col-lg-4">
+                <a href="{% url 'app_admin:admin_comment_list' %}?mod=all&page=1">{% trans "All" %}</a>
+            </div>
+            <div class="col-lg-4">
+                <a href="{% url 'app_admin:admin_comment_list' %}?mod=true&page=1">{% trans "Moderated" %}</a>
+            </div>
+            <div class="col-lg-4">
+                <a href="{% url 'app_admin:admin_comment_list' %}?mod=false&page=1">{% trans "Not moderated" %}</a>
+            </div>
+        </div><hr>
+            <table class="table table-striped">
+                <thead>
+                    <th width="5%">#</th>
+                    <th width="10%">Author</th>
+                    <th width="15%">Time</th>
+                    <th width="50%">Message</th>
+                    <th width="10%">Moderate</th>
+                    <th width="10%">Delete</th>
+                </thead>
+                <tbody>
+                {% for comment in comments %}
+                    <tr>
+                        <td>{{ comment.id }}</td>
+                        <td>{{ comment.author_name }}</td>
+                        <td>{{ comment.time }}</td>
+                        <td>{{ comment.message }}</td>
+                        <td>
+                            {% if not comment.is_moderated %}
+                                {% if comment.blog %}
+                                    <form method="GET" action="{% url "app_admin:admin_comment_moderate" pk=comment.id %}">
+                                        <button class="btn btn-success btn-xs" name="moderated" type="submit">
+                                            {% trans "Moderate" %}
+                                        </button>
+                                    </form>
+                                {% else %}
+                                <form method="GET" action="{% url "app_admin:admin_comment_moderate_sec" pk=comment.id %}">
+                                    <button class="btn btn-success btn-xs" name="moderated" type="submit">
+                                        {% trans "Moderate" %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <th>
+                            {% if comment.blog %}
+                                <form method="GET" action="{% url "app_admin:admin_comment_delete" pk=comment.id %}">
+                                    <button class="btn btn-danger btn-xs" name="delete" type="submit">
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="GET" action="{% url "app_admin:admin_comment_delete_sec" pk=comment.id %}">
+                                    <button class="btn btn-danger btn-xs" name="delete" type="submit">
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </th>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% if page_obj.has_previous %}
+            <a href="{% url 'app_admin:admin_comment_list' %}?mod={{ request.GET.mod }}&page={{ page_obj.previous_page_number }}">{% trans "Previous page" %}</a>
+            <hr>
+        {% endif %}
+        {% if page_obj.has_next %}
+            <a href="{% url 'app_admin:admin_comment_list' %}?mod={{ request.GET.mod }}&page={{ page_obj.next_page_number }}">{% trans "Next page" %}</a>
+            <hr>
+        {% endif %}
+    </div>
+{% endblock %}

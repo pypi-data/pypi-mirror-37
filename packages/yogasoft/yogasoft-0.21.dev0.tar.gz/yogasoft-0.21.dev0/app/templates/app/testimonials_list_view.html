@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {% trans "Testimonials" %}
+{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+        <h1 class="text-center">{% trans "Testimonials" %}</h1>
+        {% if page_obj.has_previous %}
+        <a href="{% url 'app:testimonials' %}?page={{ page_obj.previous_page_number }}">{% trans "Next" %}</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="{% url 'app:testimonials' %}?page={{ page_obj.next_page_number }}">{% trans "Previous" %}</a>
+        {% endif %}
+        {% for tstm in testimonials %}
+           <div class="well"> <blockquote style="margin-bottom: 0"><em>{{ tstm.message }}</em><footer class="blockquote-reverse">{{ tstm.author_name }}</footer></blockquote></div>
+        {% endfor %}
+        <hr>
+        <h3>{% trans "Leave your testimonial" %}</h3>
+        <form action="{% url 'app:testimonials_list_view' %}" method="POST" onsubmit="return confirm('Зберегти відгук?')">
+            {% csrf_token %}
+            <p><label for="id_author_name">{% trans "Author name:" %}</label><input class="form-control" id="id_author_name" maxlength="100" name="author_name" type="text" required /></p>
+            <p><label for="id_author_email">{% trans "Author email:" %}</label><input class="form-control" id="id_author_email" maxlength="254" name="author_email" type="text" required /></p>
+            <p><label for="id_message">{% trans "Message:" %}</label><textarea class="form-control" cols="40" id="id_message" name="message" rows="7" required></textarea></p>
+            <input type="submit" class="btn btn-success" value="{% trans "Save" %}" name="save">
+        </form>
+        <hr>
+    </div>
+{% endblock %}

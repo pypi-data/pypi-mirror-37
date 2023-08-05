@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {% trans "Testimonials administration" %}
+{% endblock %}
+{% block content %}
+
+    {% if page_obj.has_previous %}
+    <a href="{% url 'app_admin:admin_testimonials' %}?mod={{ request.GET.mod }}&page={{ page_obj.previous_page_number }}">{% trans "Next" %}</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a href="{% url 'app_admin:admin_testimonials' %}?mod={{ request.GET.mod }}&page={{ page_obj.next_page_number }}">{% trans "Previous" %}</a>
+    {% endif %}
+    <p></p>
+    <div class="col-lg-4"><a href="{% url 'app_admin:admin_testimonials' %}?mod=all&page=1">{% trans "All" %}</a></div>
+    <div class="col-lg-4"><a href="{% url 'app_admin:admin_testimonials' %}?mod=true&page=1">{% trans "Moderated" %}</a></div>
+    <div class="col-lg-4"><a href="{% url 'app_admin:admin_testimonials' %}?mod=false&page=1">{% trans "Not moderated" %}</a></div>
+    <br /> <br />
+    <ol>
+        {% for tstm in testimonials %}
+            <form action="{% url 'app_admin:admin_testimonial_detail' tstm.id %}?mod={{ request.GET.mod }}&page={{ request.GET.page}}"
+                  method="POST" onsubmit="return confirm('Ви впевнені?')">
+                {% csrf_token %}
+            <li>{{ tstm.author_name }} - {{ tstm.author_email }} - {{ tstm.message }} - {{ tstm.date}}
+            {% if not tstm.is_moderated %}
+                <input type="submit" value="{% trans "Submit" %}" name="moderated">
+            {% endif %}
+                <input type="submit" value="{% trans "Delete" %}" name="delete"></li>
+            </form>
+        {% endfor %}
+    </ol>
+    <form action="{% url 'app_admin:admin_testimonials' %}?mod={{ request.GET.mod }}&page={{ request.GET.page }}"
+          method="POST" onsubmit="return confirm('Зберегти відгук?')">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <td>{% trans "Name" %}</td>
+                <td><input type="text" name="author_name" maxlength="30" required></td>
+            </tr>
+            <tr>
+                <td>{% trans "E-mail" %}</td>
+                <td><input type="email" name="author_email" maxlength="30" required></td>
+            </tr>
+            <tr>
+                <td>{% trans "Text" %}</td>
+                <td><textarea name="message" maxlength="400" required></textarea></td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="{% trans "Save" %}" name="save"></td>
+            </tr>
+        </table>
+    </form>
+
+{% endblock %}

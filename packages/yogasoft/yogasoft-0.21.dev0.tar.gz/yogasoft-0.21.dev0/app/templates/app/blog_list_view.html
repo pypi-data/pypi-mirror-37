@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {% trans "Blog" %}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        {% for blog in object_list %}
+            <div class="row">
+                <div class="col-lg-5">
+                    <img src="{{ blog.blogpostimage_set.all.0.image.url }}" class="img-responsive">
+                </div>
+                <div class="col-lg-7">
+                    <br>
+                    <a href="{% url 'app:blog_detail_view' blog.id %}">{{ blog.name }}</a>
+                    <br><br>
+                    Author of this blog post is {{ blog.author }}
+                    <br><br>
+                    Tags:
+                    {% for tag in blog.tags.all %}
+                        <a href="{% url 'app:blog_list_view_tag' tag=tag.name %}">{{ tag }}</a>
+                    {% endfor %}
+                    <br><br>
+                    {{ blog.date }}
+                    <br><br>
+                    Preview
+                    {% if LANGUAGE_CODE == 'en' %}
+                    <p>{{ blog.text|slice:"0:100" }}...</p>
+                    <a href="{% url 'app:blog_detail_view' blog.id %}">More</a>
+                    {% else %}
+                                <p>{{ blog.textUA|slice:"0:100" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <hr>
+        {% endfor %}
+    </div>
+{% endblock %}

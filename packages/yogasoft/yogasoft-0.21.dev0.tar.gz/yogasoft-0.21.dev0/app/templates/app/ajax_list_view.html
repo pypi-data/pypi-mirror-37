@@ -1,0 +1,47 @@
+{% load custom_tags %}
+{% load i18n %}
+{% for object in object_list %}
+         {% if object|object_type == 'BlogPost' %}
+                    <div class="container bg-3">
+                    <h2>
+                        <a href="{% url 'app:blog_detail_view' object.id %}">{{ object.name }}</a>
+                    </h2>
+                    <p class="lead">
+                        by <a href="#">{{ object.author }}</a>
+                    </p>
+                    <p><span class="glyphicon glyphicon-time"></span> Posted on {{ object.date }}</p>
+                    <hr>
+                    <img class="img-responsive imageblogclass" src="{{ object.blogpostimage_set.all.0.image.url }}" alt="">
+                    <hr>
+                    <p>{{ object.text }}</p>
+                    <a class="btn btn-primary" href="{% url 'app:blog_detail_view' object.id %}">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
+
+                    <hr>
+                    </div>
+                {% else %}
+                    <div class="col-md-6">
+                        <div class="row-fluid">
+                            <a href='{% url "app:portfolio_detail" pk=object.id %}'>
+                                 <img class="ratio" src={{  object|image_url }}>
+                            </a>
+                        </div>
+                         <div class="row-fluid">
+                            {% if LANGUAGE_CODE == 'en' %}
+                                <h3>{{ object.name }}</h3>
+                            {% else %}
+                                <h3>{{ object.nameUA }}</h3>
+                            {% endif %}
+                         </div>
+                        <div class="row-fluid">
+                            <a href="{% url "app:portfolio_detail" pk=object.id %}">{% trans "More" %}</a>
+                            {% if LANGUAGE_CODE == 'en' %}
+                                <p>{{ object.description|slice:"0:100" }}</p>
+                            {% else %}
+                                <p>{{ object.descriptionUA|slice:"0:100" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% endif %}
+{% endfor %}
+

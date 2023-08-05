@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {{ portfoliocontent.name }}
+{% endblock %}
+{% load static %}
+{% block content %}
+     <div class="row-fluid">
+             <div class="row-fluid">
+                 {% if LANGUAGE_CODE == 'en' %}
+                     <h1 class="col-sm-offset-1">{{ portfoliocontent.name }}</h1>
+                 {% else %}
+                     <h1 class="col-sm-offset-1">{{ portfoliocontent.nameUA }}</h1>
+                 {% endif %}
+             </div>
+             <div class="row-fluid">
+             {% if next_images %}
+                 <div class="col-sm-6 col-md-2">
+                 <div class="visible-sm">
+                    <a class="visible-sm" data-fancybox="gallery" href="{{ first_image.image.url }}">
+                        <img class="img-responsive img-thumbnail visible-sm"  src={{ first_image.image.url }}>
+                    </a>
+                </div>
+                     {% for image_obj in next_images %}
+                         <a data-fancybox="gallery" href="{{ image_obj.image.url }}">
+                            <img class="img-responsive img-thumbnail" src={{ image_obj.image.url }}>
+                         </a>
+                         &nbsp;
+                     {% endfor %}
+                 </div>
+
+                <div class="col-sm-6 col-md-6 hidden-sm">
+                    <a class="hidden-sm" data-fancybox="gallery" href="{{ first_image.image.url }}">
+                        <img class="img-responsive img-thumbnail hidden-sm"  src={{ first_image.image.url }}>
+                    </a>
+                </div>
+             {% else %}
+                 <div class="col-sm-6 col-md-8 vi">
+                     <a data-fancybox="gallery" href="{{ first_image.image.url }}">
+                         <img class="img-responsive img-thumbnail"  src={{ first_image.image.url }}>
+                     </a>
+                 </div>
+             {% endif %}
+
+                 <div class="col-sm-6 col-md-4">
+                     {% if portfoliocontent.client %}
+                         <div class="row"><strong>{% trans "Client: " %}</strong>{{ portfoliocontent.client }}</div>
+                     {% endif %}
+                         <div class="row"><strong>{% trans "Tags: " %}</strong>
+                             {% for tag in portfoliocontent.tags.all %}
+                                 {{ tag.name }}
+                             {% endfor %}
+                         </div>
+                     {% if portfoliocontent.technologies %}
+                         <div class="row"><strong>{% trans "Technologies: " %}</strong>
+                                 {{ portfoliocontent.technologies }}
+                         </div>
+                     {% endif %}
+                     {% if portfoliocontent.link %}
+                         <div class="row"><strong>{% trans "Visit website: " %}</strong>
+                             <a href="{{ portfoliocontent.link }}">{{ portfoliocontent.link }}</a></div>
+                     {% endif %}
+                         <hr>
+
+                         <div class="row paddingright">{% if LANGUAGE_CODE == 'en' %}
+                             {{ portfoliocontent.description|linebreaks }}
+                         {% else %}
+                             {{ portfoliocontent.descriptionUA|linebreaks }}
+                         {% endif %}</div>
+
+                 </div>
+
+             </div>
+     </div>
+
+
+{%  endblock  %}

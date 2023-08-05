@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+    {% trans "Users administration" %}
+{% endblock %}
+{% block content %}
+        {% if login_used %}
+            <h3 style="color: red">{% trans "Login is already used" %}</h3>
+        {% endif %}
+    <div class="row">
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12 col-lg-offset-1 col-md-offset-1">
+    <table class="table table-striped">
+        <thead>
+            <th width="10%">#</th>
+            <th width="15%" class="hidden-xs">First Name</th>
+            <th width="15%" class="hidden-xs">Last Name</th>
+            <th width="15%">Username</th>
+            <th width="15%">Email</th>
+            <th width="15%">Edit User</th>
+            <th width="15%">Delete User</th>
+        </thead>
+        <tbody>
+            {% for user_obj in users %}
+            <tr>
+                <th>{{ user_obj.id }}</th>
+                <td class="hidden-xs">{{ user_obj.first_name }}</td>
+                <td class="hidden-xs">{{ user_obj.last_name }}</td>
+                <td>{{ user_obj.username }}</td>
+                <td>{{ user_obj.email }}</td>
+                <td><a href="{% url 'app_admin:admin_user_edit' user_obj.id %}">
+                    {% trans "Edit user" %}</a></td>
+                <td>
+                    <form method="GET" action="{% url "app_admin:admin_user_delete" user_obj.id %}">
+                        <button class="btn btn-danger btn-xs" name="delete" type="submit">
+                            {% trans "Delete" %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+            </div>
+            </div>
+    <hr>
+    <h5>{% trans "Add user" %}</h5>
+    <form action="{% url 'app_admin:admin_user_list'%}" method="POST" onsubmit="return confirm('Save user?')">
+    {% csrf_token %}
+    <table>
+    <tr>
+        <td>{% trans "Username" %}</td>
+        <td><input type="text" name="username" maxlength="30" required></td>
+    </tr>
+     <tr>
+        <td>{% trans "Password" %}</td>
+        <td><input type="password" name="password" maxlength="30" minlength="4" required></td>
+    </tr>
+    <tr>
+        <td><input type="submit" value="{% trans "Save user" %}" name="save"></td>
+    </tr>
+    </table>
+</form>
+{% endblock %}

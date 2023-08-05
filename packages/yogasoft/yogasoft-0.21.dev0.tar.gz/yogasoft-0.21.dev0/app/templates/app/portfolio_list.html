@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans "Portfolio" %}{% endblock %}
+{% block content %}
+
+    <h2 id="small_text" class="row-fluid text-center">{% trans 'Our portfolio' %} </h2>
+    <div class="row-fluid">
+        {% if portfoliocontent_list %}
+            {% for item in portfoliocontent_list %}
+
+                    <div class="col-md-6">
+                        <div class="row-fluid">
+                            <a href='{% url "app:portfolio_detail" pk=item.id %}'>
+                                 <img class="ratio" src={{  item|image_url }}>
+                            </a>
+                        </div>
+                         <div class="row-fluid">
+                            {% if LANGUAGE_CODE == 'en' %}
+                                <h3>{{ item.name }}</h3>
+                            {% else %}
+                                <h3>{{ item.nameUA }}</h3>
+                            {% endif %}
+                         </div>
+                        <div class="row-fluid">
+                            <a href="{% url "app:portfolio_detail" pk=item.id %}">{% trans "More" %}</a>
+                            {% if LANGUAGE_CODE == 'en' %}
+                                <p>{{ item.description|slice:"0:100" }}</p>
+                            {% else %}
+                                <p>{{ item.descriptionUA|slice:"0:100" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+
+            {% endfor %}
+        {% endif %}
+    </div>
+{%  endblock  %}
+

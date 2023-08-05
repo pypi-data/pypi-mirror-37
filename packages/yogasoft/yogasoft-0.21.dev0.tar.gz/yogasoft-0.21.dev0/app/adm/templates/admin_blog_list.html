@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+{% trans "Blogs administration" %}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <a href="{% url 'app_admin:admin_blog_post_create'  %}">{% trans "Create new post" %}</a>
+        <hr>
+        {% for i in object_list %}
+            <div class="row">
+                <div class="col-md-3">
+                    <img src="{{ i.blogpostimage_set.all.0.image.url }}" class="img-responsive">
+                </div>
+                <div class="col-md-9">
+                    <a href="{% url 'app_admin:admin_blog_post_detail' i.id %}">{{ i.name }}</a>
+                    {{ i.author }} {% trans "Tags" %}:
+                    {% for tag in i.tags.all %}
+                        <a href="{% url 'app:blog_list_view_tag' tag=tag.name %}">{{ tag }}</a>
+                    {% endfor %}
+                    <br>
+                    {{ i.date }}
+                    <br>
+                    <a href="{% url 'app_admin:admin_blog_post_edit' pk=i.id %}">{% trans "Edit post" %}</a>
+                    <br>
+                    <a href="{% url 'app_admin:admin_blog_post_delete' pk=i.id %}">{% trans "Delete post" %}</a>
+                    </div>
+                </div>
+            <hr>
+        {% endfor %}
+    </div>
+{% endblock %}

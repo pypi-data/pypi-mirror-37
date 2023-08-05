@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}
+    {{ object.name }}
+{% endblock %}
+{% block content %}
+<div class="col-sm-12">
+    <div class="row-fluid clearfix">
+        <div class="col-sm-12">
+            <div class="row-fluid clearfix">
+                <div class="col-sm-6">
+                    <img src="{{ object.blogpostimage_set.all.0.image.url }}" class="img-responsive">
+                </div>
+                <div class="col-sm-6">
+                    <br>
+                    {% if LANGUAGE_CODE == 'en' %}
+                        <h3>{{ object.name }}</h3>
+                    {% else %}
+                        <h3>{{ object.nameUA }}</h3>
+                    {% endif %}
+                    <br>
+                    <p>{% trans "Date:" %} {{ object.date }} {% trans "Tags:" %}
+                        {% for i in tags %}
+                            <a href="{% url 'app:blog_list_view_tag' tag=i.name %}">{{ i }}</a>
+                        {% endfor %}</p>
+                </div>
+            </div>
+            <div class="row-fluid">
+                <br>
+                {% if LANGUAGE_CODE == 'en' %}
+                    {{ object.text|safe|linebreaks }}
+                {% else %}
+                    {{ object.textUA }}
+                {% endif %}
+                <br><br><br>
+            </div>
+        </div>
+    </div>
+    <!--below is row with comments-->
+    <div class="row-fluid">
+        <!--iteration ower first level comments    type(items) == dict   items.o -comments first level items.1 -comments second level -->
+        {% for i in comments.items %}
+            <div class="media">
+                <div class="media-left">
+                    <img src="https://www.w3schools.com/bootstrap/img_avatar1.png" class="media-object" style="width:45px">
+                </div>
+                <div class="media-body" id="comment_{{ i.0.id }}">
+                    <h4 class="media-heading">{{ i.0.author_name }}
+                        <small>
+                            <i>{% trans "Posted on" %} {{ i.0.time }} </i>
+                        </small>
+                        <button type="button" class="btn btn-info btn-xs" data-toggle="collapse" data-target="#sec_com{{ i.0.pk }}">Reply</button>
+                    </h4>
+                    <p>{{ i.0.message|safe }}</p>
+                    <div id="sec_com{{ i.0.pk }}" class="collapse">
+                        <form id="sec_com{{ i.0.pk }}" method="post" action="{% url 'app:add_second_level_comment' pk=object.pk comm_pk=i.0.pk %}">
+                            {% csrf_token %}
+                            {% if not user.is_authenticated %}
+                                {{ form.as_p }}
+                            {% else %}
+                                <label>{% trans "Message:" %} </label>{{ form.message }}
+                            {% endif %}
+                            <input  class="btn waves-effect waves-light" type="submit" value="{% trans 'Add comment' %}">
+                        </form>
+                        <hr>
+                    </div>
+
+                    <!-- Nested media object -->
+                    {% for q in i.1 %}<!--iteration ower second level comments-->
+                        <div class="media">
+                            <div class="media-left">
+                                <img src="https://www.w3schools.com/bootstrap/img_avatar2.png" class="media-object" style="width:45px">
+                            </div>
+                            <div class="media-body">
+                                <h4 class="media-heading">{{ q.author_name }} <small><i>Posted on {{ q.time }}</i></small></h4>
+                                <p>{{ q.message }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <hr>
+                </div>
+            </div>
+        {% endfor %}  <!-- the end iteration ower first level comments-->
+
+        <div id="add_comments" class="col-lg-4 col-md-4 col-sm-12 col-xm-12"> <!--form to add comments first level-->
+            <form method="post" action="{% url 'app:add_comment' pk=object.pk %}">
+                {% csrf_token %}
+                {% if not user.is_authenticated %}
+                    {{ form.as_p }}
+                {% else %}
+                    <label>Message: </label>{{ form.message }}
+                {% endif %}
+                <input  class="btn waves-effect waves-light" type="submit" value="Add comment">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var id_object = "{{ object.id }}";
+    var user = "{{ request.user.username }}";
+    var host = "{{ request.META.HTTP_HOST|slice:"11" }}";
+    window.onload = function(){
+        var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+        if(user == ''){
+            temp = '<p><label for="id_author_name">Author name:</label>'+
+                   '<input id="id_author_name" class="form-control" name="author_name" maxlength="100" required="" type="text" /></p>'+
+                   '<p><label for="id_author_email">Author email:</label><input type="text" name="author_email" class="form-control" maxlength="254" id="id_author_email" required /></p>'+
+                   '<p><label>Message: </label><textarea name="message" id="id_message" rows="5" class="form-control" cols="40" required></textarea></p>';
+        } else {
+            temp = '<p><label>Message: </label><textarea name="message" id="id_message" rows="5" class="form-control" cols="40" required></textarea></p>';
+        }
+        if(host  == "yogasoft.ga"){
+            {#        for production#}
+            socket = new WebSocket("ws://yogasoft.ga:8002/"+ id_object + '/');
+        }else{
+            {#        for development & testing#}
+            socket = new WebSocket("ws://" + window.location.host + '/'+ id_object + '/');
+        }
+
+        socket.onmessage = function(e){console.log('socket.onmessage');
+            var data = JSON.parse(e.data);
+            if(data.second_comment == "False"){
+                $('<div class="media"><div class="media-left"><img src="https://www.w3schools.com/bootstrap/img_avatar1.png" class="media-object" style="width:45px">' +
+                '</div><div class="media-body" id="comment_"+"'+data.comment_id+'">'+
+                '<h4 class="media-heading">'+data.author_name  +' '+'<small><i>{% trans "Posted on" %} '+ data.time+' </i></small>'+
+                '<button type="button" class="btn btn-info btn-xs" data-toggle="collapse" data-target="#sec_com'+ data.comment_id+'">Reply</button>'+
+                '</h4><p>'+data.message+'</p><div id="sec_com'+ data.comment_id+'" class="collapse" aria-expanded="false">'+
+                '<form id="sec_com'+ data.comment_id+'" method="post" action="#">'+
+                '<input name="csrfmiddlewaretoken" value="'+ csrftoken +'" type="hidden" />'+ temp +
+                '<input  class="btn waves-effect waves-light" type="submit" value="{% trans 'Add comment' %}"></form><hr></div><hr></div></div>').insertBefore('#add_comments');
+
+            }else{
+                var comment_id = '#comment_'+data.father_comment_id+' hr';
+                 $('<div class="media">'+
+                     '<div class="media-left">'+
+                         '<img src="https://www.w3schools.com/bootstrap/img_avatar2.png" class="media-object" style="width:45px">'+
+                     '</div>'+
+                         '<div class="media-body">'+
+                         '<h4 class="media-heading">'+data.author_name  +' '+'<small><i>Posted on '+ data.time+'</i></small></h4>'+
+                     '<p>'+data.message+'</p>'+
+                     '</div>'+
+                     '</div>').insertBefore(comment_id);
+            }
+        }
+
+        // Call onopen directly if socket is already open
+        if(socket.readyState == WebSocket.OPEN) socket.onopen();
+    }
+</script>
+{% endblock %}
