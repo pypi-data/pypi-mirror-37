@@ -1,0 +1,33 @@
+#! /usr/bin/python3
+usage=\
+'''
+# to debug, set the _DEBUG environment variable
+export _DEBUG="debug"
+
+# generate the code in current directory, 
+codegen <url>
+
+# generate the code in the specified directory
+codegen <url> -o "./code/to/output"
+
+# generate the code with username and password
+codegen <url> -u <username> -p <password>
+
+'''
+from optparse import OptionParser
+from md_codegen import run
+from codegenhelper import debug
+import sys
+
+parser = OptionParser()
+parser.add_option("-o", "--output", dest="output", default="./")
+parser.add_option("-u", "--username", dest="username", default=None)
+parser.add_option("-p", "--password", dest="password", default=None)
+
+(lambda ret: \
+ (lambda options, args: \
+  run(options.output, args[1], options.username, options.password)) \
+ (ret[0], ret[1])) \
+ (parser.parse_args(sys.argv))
+
+
