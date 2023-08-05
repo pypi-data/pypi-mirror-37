@@ -1,0 +1,14 @@
+notify_audit: true
+locked: false
+name: '[${environment}] Datadog agent has not reported data for over 5 minutes'
+tags: ['${environment}', reactiveops]
+no_data_timeframe: 5
+silenced: {}
+new_host_delay: 600
+notify_no_data: true
+renotify_interval: 0
+query: '"datadog.agent.up".over("kubernetescluster:${cluster}").by("host").last(5).count_by_status()'
+message: ${notifications}
+type: service check
+thresholds: {warning: 1, ok: 1, critical: 1}
+timeout_h: 0

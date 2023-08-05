@@ -1,0 +1,24 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Deployment replica alert'
+tags: ['${environment}', reactiveops]
+include_tags: true
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: false
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_5m):avg:kubernetes_state.deployment.replicas_available{namespace:${namespace}} by {deployment} < 1
+message: |
+  {{#is_alert}}
+  Available replicas is currently 0 for {{deployment.name}}
+  {{/is_alert}}
+  {{^is_alert}}
+  Available replicas is no longer 0 for {{deployment.name}}
+  {{/is_alert}}
+  ${notifications}
+type: query alert
+thresholds: {critical: 1}
+timeout_h: 0

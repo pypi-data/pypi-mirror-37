@@ -1,0 +1,23 @@
+notify_audit: false
+locked: false
+name: '[${environment}] disk write ops being throttled on host'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: false
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: max(last_1h):max:gcp.gce.instance.disk.throttled_write_ops_count{kubernetescluster:${cluster},kubernetescluster:${cluster}}
+  by {host} >= 1
+message: |
+  This metric indicates disk writes are being throttled. This can result in
+    - timeouts during image pulls
+    - pod startup failure due to longer startups failing livenessprobe expectations
+  Are one or more pods using more disk write ops than expected?
+  ${notifications}
+type: query alert
+thresholds: {critical: 1, critical_recovery: 0}
+timeout_h: 0

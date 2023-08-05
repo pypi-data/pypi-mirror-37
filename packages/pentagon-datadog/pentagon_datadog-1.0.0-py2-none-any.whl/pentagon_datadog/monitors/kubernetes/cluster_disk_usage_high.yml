@@ -1,0 +1,30 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Host Disk Usage High'
+tags: ['${environment}', reactiveops, hardware]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_15m):( avg:system.disk.total{kubernetescluster:${cluster}} by {host} - avg:system.disk.free{kubernetescluster:${cluster}} by {host} ) / avg:system.disk.total{kubernetescluster:${cluster}} by {host} * 100 > 90
+message: |
+    {{#is_alert}}
+    Disk Usage has been above threshold over 15 minutes on {{host.name}}
+    {{/is_alert}}
+    {{#is_warning}}
+    Disk Usage has been above threshold over 15 minutes on {{host.name}}
+    {{/is_warning}}
+    {{^is_alert}}
+    Disk Usage has recovered on {{host.name}}
+    {{/is_alert}}
+    {{^is_warning}}
+    Disk Usage has recovered on {{host.name}}
+    {{/is_warning}}
+    ${notifications}
+type: query alert
+thresholds: {critical: 90, warning: 80, warning_recovery: 75, critical_recovery: 85}
+timeout_h: 0
