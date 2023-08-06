@@ -1,0 +1,276 @@
+#!python
+'''
+Chameleon Experiment Precis Client
+'''
+import argparse
+import json
+import os
+import re
+import sys
+from datetime import datetime
+
+import prettytable
+import requests
+from keystoneauth1 import loading, session
+from keystoneauth1.identity import v3
+
+import cepclient.exception as exception
+
+OPENSTACK_SERVICES = ['nova', 'neutron', 'heat', 'ironic', 'glance', 'blazar']
+
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+HEX_ELEM = '[0-9A-Fa-f]'
+UUID_PATTERN = '-'.join([HEX_ELEM + '{8}', HEX_ELEM + '{4}',
+                         HEX_ELEM + '{4}', HEX_ELEM + '{4}',
+                         HEX_ELEM + '{12}'])
+
+def append_global_identity_args(parser, argv):
+    loading.register_auth_argparse_arguments(parser, argv, default='password')
+    
+    parser.set_defaults(os_auth_url=os.getenv('OS_AUTH_URL', None))
+    parser.set_defaults(os_username=os.getenv('OS_USERNAME', None))
+    parser.set_defaults(os_password=os.getenv('OS_PASSWORD', None))
+    parser.set_defaults(os_project_name=os.getenv('OS_PROJECT_NAME', None))
+    parser.set_defaults(os_project_id=os.getenv('OS_PROJECT_ID', None))
+    parser.set_defaults(os_project_domain_id=os.getenv('OS_PROJECT_DOMAIN_ID', 'default'))
+    parser.set_defaults(os_project_domain_name=os.getenv('OS_PROJECT_DOMAIN_NAME', 'default'))
+    parser.set_defaults(os_user_domain_id=os.getenv('OS_USER_DOMAIN_ID', 'default'))
+    parser.set_defaults(os_user_domain_name=os.getenv('OS_USER_DOMAIN_NAME', 'default'))
+    parser.set_defaults(os_region_name=os.getenv('OS_REGION_NAME', None))
+
+def authenticate_user(auth_url, username, password, project_id, project_name, user_domain_name = 'default', project_domain_name = 'default'):
+    if auth_url is None or username is None or password is None or (project_id is None and project_name is None):
+        raise exception.InsufficientAuthInfomation()
+    auth = v3.Password(auth_url=auth_url,
+                       username=username,
+                       password=password,
+                       project_id=project_id,
+                       project_name=project_name,
+                       user_domain_name=user_domain_name,
+                       project_domain_name=project_domain_name
+                       )
+    sess = session.Session(auth=auth)
+    
+    return sess
+
+def send_request_and_get_response(session, action, data, region):
+    auth_token = session.get_token()
+    cep_url = session.get_endpoint(service_type='cep', region_name=region)
+    
+    headers = {'User-Agent': 'cepclient',
+               'Accept': 'appliaction/json',
+               'X-Auth-Token': auth_token,
+               'Content-Type': 'appliaction/json'}
+    data = json.dumps(data).encode('utf8') 
+    
+    if not cep_url.endswith('/'):
+       cep_url = cep_url + '/' 
+    resp = requests.get(cep_url + action, headers=headers, data=data)
+    
+    try:
+        body = json.loads(resp.text)
+    except ValueError:
+        raise exception.CepException(message=resp.text)
+        
+    if resp.status_code >= 400:
+        if body is not None:
+            error_message = body.get('error_message', body)
+        else:
+            error_message = resp.text
+        
+        body = "ERROR: {}".format(error_message)
+        raise exception.CepException(message=body, code=resp.status_code)
+    
+    return resp, body
+
+def get_ep_id_and_name(region, ep_id_or_name, eps):
+    is_id = re.match(UUID_PATTERN, ep_id_or_name)
+    if is_id:
+        for ep in eps:
+            if ep['id'] == ep_id_or_name:
+                return ep['id'], ep['name']
+        is_id = False
+    if not is_id:
+        matches = []
+        for ep in eps:
+            if ep['name'] == ep_id_or_name:
+                matches.append((ep['id'], ep['name']))
+        if len(matches) == 0:
+            raise exception.EPNotFound()
+        elif len(matches) > 1:
+            raise exception.NoUniqueMatch()
+        else:
+            return matches[0][0], matches[0][1]
+        
+        
+def list_ep(session, args):
+    # get project id       
+    project_id = args.os_project_id
+    if not project_id:
+        project_id = session.get_project_id()
+        
+    conditions = {'project_id': project_id}
+    resp, body = send_request_and_get_response(session, 'list', conditions, args.os_region_name)
+    
+    if type(body) is not dict:
+        raise exception.CepException()
+
+    title = ['created_at', 'updated_at', 'id', 'name', 'lease_id']
+    
+    pt = prettytable.PrettyTable(title, caching=False)
+    pt.align = 'l'
+    
+    for ep in body['eps']:
+        row = [ep[t] for t in title]
+        pt.add_row(row)  
+    
+    print(pt.get_string(sortby='created_at', reversesort=True))
+    
+def print_ep(session, args):
+    include_services = args.include_services.split(',')
+    exclude_services = args.exclude_services.split(',')
+    for service in include_services:
+        if service not in OPENSTACK_SERVICES:
+            raise exception.UnsupportedService("Service {} is not supported.".format(service))
+        if service in exclude_services:
+            include_services.remove(service)
+    
+    # get project id       
+    project_id = args.os_project_id
+    if not project_id:
+        project_id = session.get_project_id()
+        
+    # get ep id and name
+    conditions = {'project_id': project_id}
+    resp, body = send_request_and_get_response(session, 'list', conditions, args.os_region_name)
+    ep_id, ep_name = get_ep_id_and_name(args.os_region_name, args.ep, body['eps'])
+            
+    conditions = {'project_id': project_id,
+                  'ep_id': ep_id,
+                  'ep_name': ep_name,
+                  'region': args.os_region_name,
+                  'services': ','.join(include_services),
+                  'exclude_event_metadata': args.exclude_event_metadata,
+                  'exclude_event': args.exclude_event,
+                  'exclude_hardware': args.exclude_hardware,
+                  'exclude_metric': args.exclude_metric,
+                  'start_datetime': args.start_datetime,
+                  'end_datetime': args.end_datetime,
+                  'event_pagination': {'page_size': args.event_page_size, 'page_number': args.event_page},
+                  'metric_pagination': {'page_size': args.metric_page_size, 'page_number': args.metric_page},
+                  'hardware_pagination': {'page_size': args.hardware_page_size, 'page_number': args.hardware_page}
+                  }   
+    
+    resp, body = send_request_and_get_response(session, 'print', conditions, args.os_region_name)
+    
+    if type(body) is not dict:
+        raise exception.CepException()
+    
+    if args.pretty:
+        report = json.dumps(body, indent=4, sort_keys=True)
+    else:
+        report = json.dumps(body)
+        
+    if not args.output:
+        print(report)
+    else:
+        with open(args.output, 'w') as f:
+            f.write(report)
+            
+def rename_ep(session, args):    
+    # get project id       
+    project_id = args.os_project_id
+    if not project_id:
+        project_id = session.get_project_id()
+        
+    # get ep id and name
+    conditions = {'project_id': project_id}
+    resp, body = send_request_and_get_response(session, 'list', conditions, args.os_region_name)
+    ep_id, ep_name = get_ep_id_and_name(args.os_region_name, args.ep, body['eps'])
+        
+    conditions = {'project_id': project_id,
+                  'name': args.name,
+                  'ep_id': ep_id}
+    resp, body = send_request_and_get_response(session, 'rename', conditions, args.os_region_name)
+    
+    if type(body) is not dict:
+        raise exception.CepException()
+    
+    print('Experiment precis {id} has been renamed from {old_name} to {new_name}'.format(id=ep_id, old_name=ep_name, new_name=args.name))
+    
+def arg_datetime_type(s):
+    try:
+        datetime.strptime(s, DATETIME_FORMAT)
+        return s
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+def arg_non_negative_int_type(value):
+    ivalue = int(value)
+    if ivalue < 0:
+         raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue
+
+def main(argv):
+    arg_parser = argparse.ArgumentParser(description='Chameleon Experiment Precis Client')
+    append_global_identity_args(arg_parser, argv)
+    
+    subparsers = arg_parser.add_subparsers(dest='action', help='')
+    
+    list_parser = subparsers.add_parser('list', help='list all experiment precis')
+    print_parser = subparsers.add_parser('print', help='print experiment precis')
+    rename_parser = subparsers.add_parser('rename', help='rename experiment precis')
+    
+    # key include/ exclude
+    print_parser.add_argument('--include-services', type=str, help='Comma separated service names to be included in experiment precis', default=','.join(OPENSTACK_SERVICES))
+    print_parser.add_argument('--exclude-services', type=str, help='Comma separated service names to be excluded in experiment precis', default="")
+    print_parser.add_argument('--exclude-event', help='Exclude event from experiment precis', action='store_true', default=False)
+    print_parser.add_argument('--exclude-event-metadata', help='Exclude event metadata from experiment precis', action='store_true', default=False)
+    print_parser.add_argument('--exclude-hardware', help='Exclude hardware info from experiment precis', action='store_true', default=False)
+    print_parser.add_argument('--exclude-metric', help='Exclude metric from experiment precis', action='store_true', default=False)
+    
+    # time filter
+    print_parser.add_argument('--start-datetime', type=arg_datetime_type, help="EP after <datetime> (UTC) in format 'YYYY-MM-DD HH:MM:SS'", default=None)
+    print_parser.add_argument('--end-datetime', type=arg_datetime_type, help="EP before <datetime> (UTC) in format 'YYYY-MM-DD HH:MM:SS'", default=None)
+    
+    # pagination
+    print_parser.add_argument('--event-page-size', type=int, help='Page size for event; ignored if event is excluded; set to negative value to show all', default=25)
+    print_parser.add_argument('--event-page', type=arg_non_negative_int_type, help='Page number for event; ignored if event is excluded', default=0)
+    print_parser.add_argument('--metric-page-size', type=int, help='Page size for metric; ignored if metric is excluded; set to negative value to show all', default=25)
+    print_parser.add_argument('--metric-page', type=arg_non_negative_int_type, help='Page number for metric; ignored if metric is excluded', default=0)
+    print_parser.add_argument('--hardware-page-size', type=int, help='Page size for hardware; ignored if hardware is excluded; set to negative value to show all', default=25)
+    print_parser.add_argument('--hardware-page', type=arg_non_negative_int_type, help='Page number for hardware; ignored if hardware is excluded', default=0)
+    
+    # other
+    print_parser.add_argument('--output', type=str, help='Output file location', default=None)
+    print_parser.add_argument('--pretty', help='Prettyprint json output', action='store_true', default=False)
+    
+    print_parser.add_argument('ep', type=str, help='Chameleon experiment precis name or id')
+    
+    rename_parser.add_argument('--name', type=str, help='New name of experiment precis', required=True)
+    
+    rename_parser.add_argument('ep', type=str, help='Chameleon experiment precis name or id')
+       
+    args = arg_parser.parse_args(argv[1:])
+    
+    sess = authenticate_user(args.os_auth_url, 
+                             args.os_username, 
+                             args.os_password, 
+                             args.os_project_id, 
+                             args.os_project_name, 
+                             args.os_user_domain_name, 
+                             args.os_project_domain_name)
+    
+    if args.action == 'list':
+        list_ep(sess, args)
+    elif args.action == 'print':
+        print_ep(sess, args)
+    elif args.action == 'rename':
+        rename_ep(sess, args)
+    else:
+        raise exception.UnsupportedArgument()
+     
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
