@@ -1,0 +1,67 @@
+{% extends "wagtailadmin/base.html" %}
+{% load i18n %}
+{% block titletag %}{% trans "Flags" %}{% endblock %}
+
+{% block content %}
+    {% trans "Flags" as flags_str %}
+    {% trans "Add a flag" as add_a_flag_str %}
+
+    {% include "wagtailadmin/shared/header.html" with title=flags_str icon="tag" %}
+
+    <div class="nice-padding">
+        {% if flags|length == 0 %}
+        <p>No flags have been defined.</p>
+        {% else %}
+        <h2>Flags</h2>
+
+        <table class="listing">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th></th>
+                    <th>Condition</th>
+                    <th></th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+              {% for name, flag in flags.items %}
+                  {% for condition in flag.conditions %}
+                  <tr>
+                      {% if forloop.first %}
+                      <td rowspan="{{ flag.conditions|length }}">
+                        <b>{{ flag.name }}</b>
+                      </td>
+                      {% endif %}
+                      <td>is enabled when</td>
+                      <td>
+                        <b>{{ condition.condition }}</b>
+                      </td>
+                      <td>is</td>
+                      <td>
+                        <b>{{ condition.value }}</b>
+                      </td>
+                      <td>
+                        {% if condition.obj %}
+                        <a  href="{% url 'wagtailflags:delete' condition.obj.pk %}" class="button icon text-replace hover-no icon-bin">Delete</a>
+                        {% endif %}
+                      </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                      <td>
+                        <b>{{ flag.name }}</b>
+                      </td>
+                      <td colspan="5">is never enabled</td>
+                  </tr>
+                  {% endfor %}
+              {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'wagtailflags:create' %}" class="button bicolor icon icon-plus">Add a condition</a>
+
+        {% endif %}
+    </div>
+
+{% endblock %}
