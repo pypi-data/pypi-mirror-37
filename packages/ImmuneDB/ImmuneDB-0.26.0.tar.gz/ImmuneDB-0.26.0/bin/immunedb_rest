@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+import immunedb.common.config as config
+from immunedb.api.rest_service import run_rest_service
+
+
+if __name__ == '__main__':
+    parser = config.get_base_arg_parser('Provides a restless interface to the'
+                                        'database')
+    parser.add_argument('-p', default=5000, type=int, dest='port',
+                        help='API offer port')
+    parser.add_argument('--allow-shutdown', action='store_true', default=False,
+                        help='Allows remote shutdown by accessing /shutdown. '
+                        'Only use during testing!')
+    args = parser.parse_args()
+
+    run_rest_service(args)
