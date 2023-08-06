@@ -1,0 +1,62 @@
+Metadata-Version: 2.1
+Name: gabbi-tempest
+Version: 0.2.2
+Summary: Run Gabbi Tests as Tempest Plugin
+Home-page: https://git.openstack.org/openstack/gabbi-tempest
+Author: Chris Dent
+Author-email: cdent@anticdent.org
+License: Apache-2
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Testing
+Requires-Dist: pbr
+Requires-Dist: gabbi
+Requires-Dist: six
+
+===============
+Gabbi + Tempest
+===============
+
+Gabbi-tempest is a Tempest_ plugin_ that enables testing the APIs of running
+OpenStack services, integrated with tempest but without needing to write
+Python. Instead the YAML format_ provided by gabbi_ is used to write and
+evaluate HTTP requests and responses.
+
+Tests are placed in YAML files in one or more directories. Those directories
+are added to a ``GABBI_TEMPEST_PATH`` environment variable. When that variable
+is passed into a tempest test runner that is aware of the gabbi plugin, the
+files on that path will be used to create tempests tests.
+
+The test harness sets a series of enviornment variables that can be used in
+the YAML to reach the available services. The available variables may be
+extended in two ways:
+
+* Adding them to the environment that calls tempest if the values are
+  known.
+* Setting them in a subclass of the plugin if the values need to
+  be calculated from what tempest knows.
+
+For each service in the service catalog there are
+``<SERVICE_TYPE>_SERVICE`` and ``<SERVICE_TYPE>_BASE`` variables
+(e.g., ``PLACEMENT_SERVICE`` and ``PLACEMENT_BASE``). A useful
+``SERVICE_TOKEN``, ``IMAGE_REF``, ``FLAVOR_REF`` and ``FLAVOR_REF_ALT``
+are also available.
+
+Read the docs at https://gabbi-tempest.readthedocs.io/
+
+.. _Tempest: https://docs.openstack.org/tempest/latest/
+.. _plugin: https://docs.openstack.org/tempest/latest/plugin.html
+.. _gabbi: https://gabbi.readthedocs.org/
+.. _format: https://gabbi.readthedocs.io/en/latest/format.html
+
+
+
