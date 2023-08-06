@@ -1,0 +1,19 @@
+import setuptools
+
+with open('README.md', 'r') as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name='p2i',
+    version='0.1.1',
+    author='poq',
+    author_email='emerstar.819eff8@m.yinxiang.com',
+    description='This is just a test for p2i package.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url='https://github.com/t-test',
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+    ],
+)
