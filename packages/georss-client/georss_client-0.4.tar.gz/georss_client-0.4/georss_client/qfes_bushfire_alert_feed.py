@@ -1,0 +1,87 @@
+"""
+QFES Bushfire Alert Feed.
+
+Fetches GeoRSS feed from QFES Bushfire Alert Feed.
+"""
+
+import calendar
+import pytz
+from datetime import datetime
+
+from typing import Optional
+
+from georss_client import GeoRssFeed, FeedEntry, ATTR_ATTRIBUTION
+from georss_client.consts import CUSTOM_ATTRIBUTE
+
+REGEXP_ATTR_STATUS = 'Current Status: (?P<{}>[^<]+)[\n\r]'\
+    .format(CUSTOM_ATTRIBUTE)
+
+URL = "https://www.qfes.qld.gov.au/data/alerts/bushfireAlert.xml"
+
+VALID_CATEGORIES = ['Emergency Warning', 'Watch and Act', 'Advice',
+                    'Notification']
+
+
+class QfesBushfireAlertFeed(GeoRssFeed):
+    """QFES Bushfire Alert feed."""
+
+    def __init__(self, home_coordinates, filter_radius=None,
+                 filter_categories=None):
+        """Initialise this service."""
+        super().__init__(home_coordinates, URL, filter_radius=filter_radius)
+        self._filter_categories = filter_categories
+
+    def _new_entry(self, home_coordinates, rss_entry, global_data):
+        """Generate a new entry."""
+        attribution = None if not global_data and ATTR_ATTRIBUTION not in \
+            global_data else global_data[ATTR_ATTRIBUTION]
+        return QfesBushfireAlertFeedEntry(home_coordinates, rss_entry,
+                                          attribution)
+
+    def _filter_entries(self, entries):
+        """Filter the provided entries."""
+        entries = super()._filter_entries(entries)
+        if self._filter_categories:
+            return list(filter(lambda entry:
+                               entry.category in self._filter_categories,
+                               entries))
+        return entries
+
+
+class QfesBushfireAlertFeedEntry(FeedEntry):
+    """QFES Bushfire Alert feed entry."""
+
+    def __init__(self, home_coordinates, rss_entry, attribution):
+        """Initialise this service."""
+        super().__init__(home_coordinates, rss_entry)
+        self._attribution = attribution
+
+    @property
+    def attribution(self) -> str:
+        """Return the attribution of this entry."""
+        return self._attribution
+
+    @property
+    def status(self) -> str:
+        """Return the status of this entry."""
+        return self._search_in_summary(REGEXP_ATTR_STATUS)
+
+    @property
+    def published(self) -> Optional[datetime]:
+        """Return the published date of this entry."""
+        if self._rss_entry:
+            published_date = self._rss_entry.get('published_parsed', None)
+            if published_date:
+                return datetime.fromtimestamp(calendar.timegm(
+                    published_date), tz=pytz.utc)
+        return None
+
+    @property
+    def updated(self) -> Optional[datetime]:
+        """Return the updated date of this entry."""
+        if self._rss_entry:
+            updated_date = self._rss_entry.get('updated_parsed', None)
+            if updated_date:
+                return datetime.fromtimestamp(calendar.timegm(
+                    updated_date), tz=pytz.utc)
+        return None
