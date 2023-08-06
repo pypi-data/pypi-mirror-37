@@ -1,0 +1,37 @@
+# vi: ts=2 sw=2 et filetype=sh
+
+#
+# https://devmanual.gentoo.org/tasks-reference/completion/index.html
+#
+
+__ds_get_context () {
+  filename="$PWD/$$.json"
+  if [[ -f $filename ]]; then
+    echo $(jq '.context' $filename)
+  fi
+}
+
+__ds_comp () {
+  local cur prev opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  context=$(__ds_get_context)
+
+  if [[ -z "$ds_last_context" || "$ds_last_context" != "$context" ]]; then
+    export ds_reply=$(ds list-commands)
+    export ds_last_context=$context
+  fi
+
+  opts="-h -v -vv -vvv $ds_reply"
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+
+}
+
+invalidate-ds-cache () {
+    export ds_reply=
+    export ds_last_context=
+}
+
+complete -F __ds_comp ds
