@@ -1,0 +1,379 @@
+Metadata-Version: 2.1
+Name: guillotina
+Version: 4.2.11
+Summary: asyncio REST API Resource database
+Home-page: https://github.com/plone/guillotina
+Author: Ramon Navarro Bosch & Nathan Van Gheem
+Author-email: ramon@plone.org
+License: BSD
+Description: Introduction
+        ============
+        
+        .. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+           :target: http://guillotina.readthedocs.io/en/latest/
+        
+        .. image:: https://travis-ci.org/plone/guillotina.svg?branch=master
+           :target: https://travis-ci.org/plone/guillotina
+        
+        .. image:: https://codecov.io/gh/plone/guillotina/branch/master/graph/badge.svg
+           :target: https://codecov.io/gh/plone/guillotina/branch/master
+           :alt: Test Coverage
+        
+        .. image:: https://img.shields.io/pypi/pyversions/guillotina.svg
+           :target: https://pypi.python.org/pypi/guillotina/
+           :alt: Python Versions
+        
+        .. image:: https://img.shields.io/pypi/v/guillotina.svg
+           :target: https://pypi.python.org/pypi/guillotina
+        
+        .. image:: https://img.shields.io/pypi/l/guillotina.svg
+           :target: https://pypi.python.org/pypi/guillotina/
+           :alt: License
+        
+        .. image:: https://badges.gitter.im/plone/guillotina.png
+           :target: https://gitter.im/plone/guillotina
+           :alt: Chat
+        
+        Please `read the detailed docs <http://guillotina.readthedocs.io/en/latest/>`_
+        
+        
+        This is the working project of the next generation Guillotina server based on asyncio.
+        
+        
+        Dependencies
+        ------------
+        
+        * python >= 3.6
+        * postgresql >= 9.6
+        
+        
+        Quickstart
+        ----------
+        
+        We use pip::
+        
+          pip install guillotina
+        
+        
+        Run postgresql
+        --------------
+        
+        If you don't have a postgresql server to play with, you can run one easily
+        with docker.
+        
+        Download and start the docker container by running::
+        
+          make run-postgres
+        
+        
+        
+        Run the server
+        --------------
+        
+        To run the server::
+        
+            g
+        
+        
+        Then...
+        
+            curl http://localhost:8080
+        
+        
+        Or, better yet, use postman to start playing with API.
+        
+        You can also navigate in your Guillotina server with its built-in web admin interface by visiting http://localhost:8080/+admin/.
+        
+        Getting started with development
+        --------------------------------
+        
+        Using pip::
+        
+          ./bin/pip install requirements.txt
+          ./bin/pip install -e .[test]
+        
+        
+        Run tests
+        ---------
+        
+        We're using pytest::
+        
+            ./bin/pytest guillotina
+        
+        and for test coverage::
+        
+            ./bin/pytest --cov=guillotina guillotina/
+        
+        With file watcher...
+        
+            ./bin/ptw guillotina --runner=./bin/py.test
+        
+        
+        To run tests with cockroach db::
+        
+           USE_COCKROACH=true ./bin/pytest guillotina
+        
+        Default
+        -------
+        
+        Default root access can be done with AUTHORIZATION header : Basic root:root
+        
+        
+        Docker
+        ------
+        
+        You can also run Guillotina with Docker!
+        
+        
+        First, run postgresql::
+        
+            docker run --rm \
+                -e POSTGRES_DB=guillotina \
+                -e POSTGRES_USER=guillotina \
+                -p 127.0.0.1:5432:5432 \
+                --name postgres \
+                postgres:9.6
+        
+        Then, run guillotina::
+        
+            docker run --rm -it \
+                --link=postgres -p 127.0.0.1:8080:8080 \
+                guillotina/guillotina:latest \
+                g -c '{"databases": [{"db": {"storage": "postgresql", "dsn": "postgres://guillotina:@postgres/guillotina"}}], "root_user": {"password": "root"}}'
+        
+        
+        This assumes you have a config.yaml in your current working directory
+        
+        
+        Chat
+        ----
+        
+        Join us to talk about Guillotina at https://gitter.im/plone/guillotina
+        
+        
+        4.2.11 (2018-10-30)
+        -------------------
+        
+        - Do not error on indexing with invalid payload
+          [vangheem]
+        
+        - Be able to override factory for content types
+          [vangheem]
+        
+        - Workaround to fix aiohttp bug: https://github.com/aio-libs/aiohttp/issues/3335
+          [vangheem]
+        
+        
+        4.2.10 (2018-10-07)
+        -------------------
+        
+        - Choice should be serialized as string
+          [bloodbare]
+        
+        - Add `IPasswordChecker` and `IPasswordHasher` utilities
+          [vangheem]
+        
+        - make `guillotina.auth.validators.hash_password` more generic
+          [vangheem]
+        
+        - add `guillotina.auth.validators.check_password`
+          [vangheem]
+        
+        - make sure to load dependency application commands
+          [vangheem]
+        
+        
+        4.2.9 (2018-10-04)
+        ------------------
+        
+        - Also accept filename in `@download` url like `@download/file/foobar.jpg`
+          [vangheem]
+        
+        - Fix `Access-Control-Allow-Credentials` header value to be `true` instead of `True`
+          [vangheem]
+        
+        
+        4.2.8 (2018-10-03)
+        ------------------
+        
+        - Be able to specify dependency addons with `dependencies` configuration param
+          [vangheem]
+        
+        
+        4.2.7 (2018-10-01)
+        ------------------
+        
+        - Be able to set `uid` on object creation
+          [vangheem]
+        
+        - Provide simple content api
+          [vangheem]
+        
+        - Fix inheritance going in reverse and affecting parent tasks
+          [vangheem]
+        
+        - Jupyter notebook compatibility
+          [vangheem]
+        
+        
+        4.2.6 (2018-09-28)
+        ------------------
+        
+        - Adding support for default value on ContextProperties
+          [bloodbare]
+        
+        
+        4.2.5 (2018-09-27)
+        ------------------
+        
+        - Automatically load dependent applications if defined in base application
+          app_settings object.
+          [vangheem]
+        
+        
+        4.2.4 (2018-09-27)
+        ------------------
+        
+        - Correctly handle issues when releasing connections back to the pool
+          [vangheem]
+        
+        
+        4.2.3 (2018-09-26)
+        ------------------
+        
+        - Added cookie support on auth.
+          [bloodbare]
+        
+        
+        4.2.2 (2018-09-26)
+        ------------------
+        
+        - Allow value serializers to be coroutines
+          [vangheem]
+        
+        
+        4.2.1 (2018-09-25)
+        ------------------
+        
+        - Adding logging and renew token endpoint
+          [bloodbare]
+        
+        
+        4.2.0 (2018-09-23)
+        ------------------
+        
+        - Add new events:
+            - IApplicationCleanupEvent
+            - IApplicationConfiguredEvent
+            - IApplicationInitializedEvent
+            - IDatabaseInitializedEvent
+            - ITraversalMissEvent
+            - ITraversalResourceMissEvent
+            - ITraversalRouteMissEvent
+            - ITraversalViewMissEvent
+        
+        - upgrade shipped asyncpg version
+          [vangheem]
+        
+        - Add events for application configuration, request traversal misses
+          and database itialization.
+          [vangheem]
+        
+        - Add `@resolveuid` endpoint
+          [vangheem]
+        
+        - Change `@ids` endpoint permission to `guillotina.Manage`
+          [vangheem]
+        
+        - Change `@items` endpoint permission to `guillotina.Manage`
+          [vangheem]
+        
+        - Add `guillotina.Manage` permission which only `guillotina.Managers` roles
+          have by default.
+          [vangheem]
+        
+        
+        4.1.12 (2018-09-20)
+        -------------------
+        
+        - Fix file handling to properly provide 404 responses when no value is set
+          [vangheem]
+        
+        - Move static guillotina assets into python package so they can be
+          referenced from python dotted paths with `guillotina:static/assets`
+          [vangheem]
+        
+        - Be able to configure behavior directly against a schema instead
+          of needing to define concret behavior
+          [vangheem]
+        
+        4.1.11 (2018-09-19)
+        -------------------
+        
+        - Fixing serialization bug
+          [bloodbare]
+        
+        
+        4.1.10 (2018-09-19)
+        -------------------
+        
+        - Fixing Bug on Serialize Schema
+          [bloodbare]
+        
+        - Adding static behaviors on REST serialize
+          [bloodbare]
+        
+        - Fix cookiecutter application template
+          [vangheem]
+        
+        
+        4.1.9 (2018-09-17)
+        ------------------
+        
+        - Adding annotation support on registry object
+          [bloodbare]
+        
+        - Fix IJSONToValue adapter for IPatchField
+          [masipcat]
+        
+        
+        4.1.8 (2018-09-14)
+        ------------------
+        
+        - Be able to override configuration values with `--override` parameter
+          [vangheem]
+        
+        
+        4.1.7 (2018-09-12)
+        ------------------
+        
+        - Provide more flexibility for traversal sub-routes
+          [vangheem]
+        
+        - Make sure ApplicationRoot knows about the loop it is used with
+          [vangheem]
+        
+        4.1.6 (2018-08-31)
+        ------------------
+        
+        - On PUT, completely delete existing existing behavior objects
+          [vangheem]
+        
+        ...
+        
+        You are seeing a truncated changelog.
+        
+        You can read the `changelog file <https://github.com/plone/guillotina/blob/master/CHANGELOG.rst>`_
+        for a complete list.
+        
+        
+Keywords: asyncio,REST,Framework,transactional
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Provides-Extra: docs
+Provides-Extra: test
