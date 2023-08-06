@@ -1,0 +1,30 @@
+{%- macro run_command(cmd) %}
+    {%- if cmd %}
+        {%- if debug %}
+            echo "##+ML## {{ cmd }}"
+        {%- endif %}
+        {{ cmd }}
+        {%- if debug %}
+            echo "###ML## {{ cmd }}"
+        {%-endif %}
+    {%- endif %}
+{%- endmacro %}
+
+{%- set requirements_txt = requirements_txt_path or 'requirements.txt' %}
+#!/bin/sh
+set -e
+alias errcho='>&2 echo'
+
+if [ -f  '{{ requirements_txt }}' ]
+then
+mkdir -p /logs
+echo "Install requirements from {{ requirements_txt }}, logging to /logs/pip_install.log"
+pip install -r {{ requirements_txt }}  -U -q --log /logs/pip_install.log || true
+echo "Requirements install done"
+else
+errcho "{{ requirements_txt }} requirements file not found"
+fi
+{{ run_command(command) }}
+{%- for command in (commands or []) %}
+    {{ run_command(command) }}
+{%- endfor %}
