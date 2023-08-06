@@ -1,0 +1,31 @@
+<script>
+  {% if cache_bust == "true" %}
+  var urlArgs = "bust=" + (new Date()).getTime();
+  {% else %}
+  var urlArgs = null;
+  {% endif %}
+  var assembl_locale = '{{locale}}';
+  var raven_url = '{{raven_url}}';
+  var activate_tour = {{activate_tour}};
+  var first_login_after_auto_subscribe_to_notifications = {% if first_login_after_auto_subscribe_to_notifications == true %}true{% else %}false{% endif %};
+</script>
+
+<script type="text/json" id="translations">{{ translations|safe }}</script>
+
+<script>
+  var script = document.getElementById("translations"),
+      json;
+  try {
+      json = JSON.parse(script.textContent);
+  } catch(e){
+      throw new Error("Invalid json");
+  }
+</script>
+
+<script type="text/javascript">var start_application = false;</script>
+
+<script type="text/javascript">
+  {% if analytics_url %}
+    var analyticsUrl = "{{ analytics_url }}";
+  {% endif %}
+</script>

@@ -1,0 +1,45 @@
+
+<% if (hasParentsOrChildrenOutOfScope) { %>
+  <% if (level > 1) { %>
+    <img src="/static/img/messagelist/messagelist-bar.png" class="link-img" />
+  <% } %>
+  <div class="message-conversation-block">
+    <a href="#" class="js_viewMessageFamilyConversation">{{ gettext('View conversation') }}</a>
+    <span class="collapsed-thread-information">
+      <span class="maxs">&#x2022;{# Unicode bullet #}</span>
+      <% if (numAncestorsOutOfContext + numDescendantsOutOfContext) { %>
+        <span data-toggle="tooltip" title="" data-original-title="<%= ctxMessageCountTooltip %>"><i class="icon icon-comment"></i> <%= (numAncestorsOutOfContext + numDescendantsOutOfContext) %></span>
+      <% } %>
+      <% if (numAuthorsOutOfContext) { %>
+        <span data-toggle="tooltip" title="" data-original-title="<%= ctxAuthorCountTooltip %>"><i class="icon icon-user"></i> <%= (numAuthorsOutOfContext) %></span>
+      <% } %>
+    </span>
+  </div>
+<% } %>
+
+<% if (level > 1) {
+    if (last_sibling_chain[level-1]) { %>
+            <img src="/static/img/messagelist/messagelist-link-last.png" class="link-img" />
+    <% } else { %>
+            <img src="/static/img/messagelist/messagelist-link.png" class="link-img" />
+    <% }
+} %>
+
+<% if (hasChildren) {
+    if (level > 1) { %>
+        <div class="message-family-arrow arrow">
+            <img src="/static/img/messagelist/messagelist-arrow-closed.png" class="link-img msg-img-closed" />
+            <img src="/static/img/messagelist/messagelist-arrow-open.png" class="link-img msg-img-open" />
+    <% } else { %>
+        <div class="message-family-arrow arrow level1">
+            <img src="/static/img/messagelist/messagelist-arrow-closed-l1.png" class="link-img msg-img-closed" />
+            <img src="/static/img/messagelist/messagelist-arrow-open-l1.png" class="link-img msg-img-open" />
+    <% }
+   } else { %>
+    <div class="message-family-arrow noarrow">
+<% } %>
+
+<div class="message" id="<%= id %>"></div>
+</div>
+<div class="messagelist-children"></div>
+

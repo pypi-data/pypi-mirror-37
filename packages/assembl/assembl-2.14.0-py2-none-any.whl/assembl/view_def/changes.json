@@ -1,0 +1,310 @@
+{
+    "_default": {
+        "id": false,
+        "type": false,
+        "@id": "self",
+        "@type": "&external_typename",
+        "_default": false
+    },
+    "Permission": {
+        "name": true
+    },
+    "Locale": {
+        "locale": true,
+        "rtl": true
+    },
+    "AgentProfile": {
+        "description": true,
+        "name": true,
+        "preferred_email": false
+    },
+    "User": {
+        "@extends": "AgentProfile",
+        "creation_date": true,
+        "last_login": true,
+        "login_failures": false,
+        "password": false,
+        "verified": true
+    },
+    "UserTemplate": {
+        "@extends": "User",
+        "discussion": true,
+        "for_role": true
+    },
+    "EmailAccount": false,
+    "WebLinkAccount": false,
+    "LoomioAccount": false,
+    "SocialAuthAccount": false,
+    "IdentityProvider": {
+        "name": true,
+        "provider_type": true,
+        "trust_emails": true
+    },
+    "ContentSource": {
+        "discussion_id": "discussion",
+        "name": true,
+        "creation_date": true,
+        "connection_error": "connection_error_as_text",
+        "error_description": true,
+        "error_backoff_until": true
+    },
+    "PostSource": {
+        "@extends": "ContentSource",
+        "last_import": true
+    },
+    "AbstractMailbox": {
+        "@extends": "PostSource"
+    },
+    "FeedPostSource": {
+        "@extends": "PostSource",
+        "url": true
+    },
+    "LoomioPostSource": {
+        "@extends": "FeedPostSource"
+    },
+    "FacebookGenericSource": {
+        "@extends": "PostSource",
+        "fb_source_id": true,
+        "url_path": true,
+        "creator_id": "&get_creator_uri"
+    },
+    "FacebookGroupSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookGroupSourceFromUser": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookPagePostsSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookPageFeedSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "FacebookSinglePostSource": {
+        "@extends": "FacebookGenericSource"
+    },
+    "AnnotatorSource": {
+        "@extends": "ContentSource"
+    },
+    "Content": {
+        "date": "creation_date",
+        "hidden": true,
+        "discussion": true,
+        "import_date": false,
+        "subject": "&get_subject:extended",
+        "body": "&get_body:extended",
+        "message_classifier": true,
+        "my_sentiment": ":default",
+        "extracts": [":id_only"]
+    },
+    "Post": {
+        "@extends": "Content",
+        "attachments": [":default"],
+        "publication_state": true,
+        "moderation_text": true,
+        "message_id": false,
+        "ancestry": false,
+        "parentId": "parent",
+        "idCreator": "creator"
+    },
+    "AssemblPost": {
+        "@extends": "Post"
+    },
+    "WidgetPost": {
+        "@extends": "AssemblPost",
+        "metadata_json": false
+    },
+    "IdeaProposalPost": {
+        "@extends": "WidgetPost",
+        "proposes_idea": true
+    },
+    "SynthesisPost": {
+        "@extends": "AssemblPost",
+        "publishes_synthesis": true
+    },
+    "ImportedPost": {
+        "@extends": "Post",
+        "source": true
+    },
+    "FeedPost": {
+        "@extends": "ImportedPost"
+    },
+    "LoomioFeedPost": {
+        "@extends": "FeedPost"
+    },
+    "Email": {
+        "@extends": "ImportedPost",
+        "recipients": true,
+        "sender": true,
+        "full_message": false,
+        "in_reply_to": false
+    },
+    "Webpage": {
+        "@extends": "Content",
+        "last_modified_date": true,
+        "url": true
+    },
+    "IMAPMailbox": {
+        "@extends": "AbstractMailbox",
+        "folder": true,
+        "host": true,
+        "port": true,
+        "username": false,
+        "use_ssl": true,
+        "password": false,
+        "last_imported_email_uid": false,
+        "subject_mangling_regex": false,
+        "subject_mangling_replacement": false
+    },
+    "MailingList": {
+        "@extends": "IMAPMailbox",
+        "post_email_address": true
+    },
+    "Discussion": {
+        "creation_date": true,
+        "slug": true,
+        "topic": true
+    },
+    "Idea": {
+        "original_uri": true,
+        "longTitle": "synthesis_title:extended",
+        "shortTitle": "title:extended",
+        "definition": "description:extended",
+        "creationDate": "creation_date",
+        "order": "&get_order_from_first_parent",
+        "discussion": false,
+        "hidden": true,
+        "parents": "parent_uris",
+        "subtype": "rdf_type",
+        "parentId": "&get_first_parent_uri",
+        "numChildIdea": "num_children",
+        "messages_in_parent": true,
+        "message_view_override": true,
+        "num_total_and_read_posts": true
+    },
+    "RootIdea": {
+        "@extends": "Idea",
+        "root": "'true",
+        "parentId": false,
+        "num_orphan_posts": true,
+        "num_synthesis_posts": true
+    },
+    "IdeaLink": {
+        "original_uri": true,
+        "target": true,
+        "source": true,
+        "subtype": "rdf_type",
+        "order": true
+    },
+    "IdeaMessageColumn": {
+        "idea": true,
+        "message_classifier": true,
+        "header": ":extended",
+        "synthesis_title": ":extended",
+        "title": ":extended",
+        "name": ":extended",
+        "color": true,
+        "previous_column": true
+    },
+    "IdeaGraphView": {
+        "creation_date": true,
+        "discussion": false
+    },
+    "ExplicitSubGraphView": {
+        "@extends": "IdeaGraphView"
+    },
+    "TableOfContents": {
+        "@extends": "IdeaGraphView"
+    },
+    "Synthesis": {
+        "@extends": "ExplicitSubGraphView",
+        "subject": ":extended",
+        "introduction": ":extended",
+        "conclusion": ":extended",
+        "is_next_synthesis": true,
+        "published_in_post": true,
+        "ideas": [":partial"],
+        "idea_links": [":partial"]
+    },
+    "Extract": {
+        "idIdea": "idea",
+        "idPost": "content",
+        "target": true,
+        "created": "creation_date",
+        "idCreator": "creator",
+        "important": true,
+        "owner": true,
+        "quote": "body",
+        "order": true,
+        "discussion": false,
+        "ranges": ["text_fragment_identifiers:partial"],
+        "text": "annotation_text"
+    },
+    "TextFragmentIdentifier": {
+        "end": "xpath_end",
+        "endOffset": "offset_end",
+        "extract_id": false,
+        "start": "xpath_start",
+        "startOffset": "offset_start"
+    }, 
+    "DiscussionPermission": {
+        "discussion": true,
+        "permission": "&permission_name",
+        "role": "&role_name"
+    },
+    "PartnerOrganization": {
+            "name": true,
+            "description": true,
+            "homepage": true,
+            "logo": true,
+            "is_initiator": true
+    },
+    "UserRole": {
+        "@private": "user",
+        "role": "&get_role_name"
+    },
+    "LocalUserRole": {
+        "@private": "user",
+        "discussion": true,
+        "role": "&get_role_name"
+    },
+    "Widget": {
+        "discussion": true,
+        "settings": "settings_json",
+        "state": "state_json",
+        "start_date": true,
+        "end_date": true,
+        "configured": true,
+        "activity_state": true,
+        "hide_notification": true,
+        "ui_endpoint": "&get_ui_endpoint",
+        "widget_settings_url": "&get_settings_url",
+        "widget_state_url": "&get_state_url"
+    },
+    "BaseIdeaWidget": {
+        "@extends": "Widget",
+        "ideas_url": "&get_ideas_url",
+        "messages_url": "&get_messages_url",
+        "base_idea": true
+    },
+    "IdeaCreatingWidget": {
+        "@extends": "BaseIdeaWidget",
+        "ideas_hiding_url": "&get_ideas_hiding_url",
+        "confirm_ideas_url": "&get_confirm_ideas_url",
+        "confirm_messages_url": "&get_confirm_messages_url"
+    },
+    "CreativitySessionWidget": {
+        "@extends": "IdeaCreatingWidget"
+    },
+    "InspirationWidget": {
+        "@extends": "IdeaCreatingWidget"
+    },
+    "MultiCriterionVotingWidget": {
+        "@extends": "BaseIdeaWidget",
+        "criteria_url": true,
+        "votespecs_url": true,
+        "votables_url": true,
+        "votable_ideas": ":id_only",
+        "vote_specifications": ":"
+    }
+}

@@ -1,0 +1,18 @@
+<div class="form-horizontal core-form">
+    <div class="control-group">
+        <div class="col-4-12 no-pad">
+            <label for="optionsCheckboxList" class="control-label">{{ gettext('Add a social account') }}</label>
+        </div>
+        <div class="col-8-12 no-pad controls">
+        <% for (var i in providers) {
+            var provider = providers[i]; %>
+        <form id="<%= provider.name %>" class="mts" method="post" action="<%= provider.add_social_account %>">
+         <button type="submit" class="<%= provider.type %>-bg mbs"><%= i18n.sprintf("{{gettext('Add a %s account')}}", provider.name) %></button>
+         <% for (var k in provider.extra) {
+         print("<input type='hidden' name='" + k + "' value='" + provider.extra[k] + "'/>");
+         } %>
+        </form>
+        <% } %>
+        </div>
+    </div>
+</div>

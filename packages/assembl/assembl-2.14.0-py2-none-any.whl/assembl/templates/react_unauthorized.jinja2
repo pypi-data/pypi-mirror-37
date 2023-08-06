@@ -1,0 +1,20 @@
+{% extends 'index_react.jinja2' %}
+
+{% block main_css %}
+<link type="text/css" rel="stylesheet" href="{{REACT_URL}}/css/errorPages.css" />
+{% endblock %}
+
+{% block body %}
+<body>
+    <div class="cover">
+        <h1>{{ gettext("Unauthorized <small>Error %(error_num)s</small>") | format(error_num='401') | safe }}
+        <p class="lead">{{ gettext("The requested resource requires proper permissions.") }}</p>
+        <p class="lead">{{ gettext("Please <a href='%(logout)s'>logout</a> and re-login as a permissible user.") | format(logout=get_route('logout')) |safe }}</p>
+    </div>
+    
+    <footer>
+        <p>{{ gettext("Technical Contact: <a href=mailto:%(admin_email)s>%(admin_email)s</a>") | format(admin_email=admin_email) | safe}}</p>
+    </footer>
+        
+</body>
+{% endblock %}
