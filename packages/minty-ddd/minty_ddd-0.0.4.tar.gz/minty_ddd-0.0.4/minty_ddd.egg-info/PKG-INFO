@@ -1,0 +1,91 @@
+Metadata-Version: 1.1
+Name: minty-ddd
+Version: 0.0.4
+Summary: Minty Command and Query based on DDD
+Home-page: https://gitlab.com/minty-python/minty-ddd
+Author: Michiel Ootjers
+Author-email: michiel@mintlab.nl
+License: EUPL license
+Description: .. _readme:
+        
+        Description
+        ============
+        
+        This "Command and Query" module allows a developer to generate an abstraction around
+        calling commands and queries in a domain model.
+        
+        Getting started
+        ---------------
+        
+        ::
+        
+          # In your calling module
+          from minty_ddd.ddd import (
+            CommandAndQuery,
+            DDDConfiguration
+          )
+        
+          # Configuration: Set a domain prefix, and add "tests.domain.brewing.service"
+          dddc = DDDConfiguration()
+          dddc.domainprefix = "tests.domain"
+          dddc.add_domain(domain="brewing")
+        
+          # Execute a command on the "brewing" domain
+          cqs = CommandAndQuery()
+          command = cqs.command(domain="brewing", command="BrewBeer")
+        
+          # Optionally, create a service factory, which gets propagated through
+          # the command and query objects
+          cqs = CommandAndQuery(service_factory=CustomObject())
+        
+          if command.execute(alcohol_percentage=4):
+            print("Executed succesfully")
+        
+          query = cqs.query(domain="brewing", query="ListBeers")
+          list_of_beers = query.execute()
+        
+          # Params can also be pre-set by the command or query function:
+          query = cqs.query(domain="brewing", query="ListBeers", params={"page": 1})
+        
+        More documentation
+        ------------------
+        
+        Please see the generated documentation via CI for more information about this
+        module and how to contribute in our online documentation. Open index.html
+        when you get there:
+        `Sphinx Docs <https://gitlab.com/minty-python/minty-ddd/-/jobs/artifacts/master/browse/tmp/docs?job=qa>`_
+        
+        
+        Contributing
+        ------------
+        
+        Please read `CONTRIBUTING.md <https://gitlab.com/minty-python/minty-ddd/blob/master/CONTRIBUTING.md>`_
+        for details on our code of conduct, and the process for submitting pull requests to us.
+        
+        Versioning
+        ----------
+        
+        We use `SemVer <https://semver.org/>`_ for versioning. For the versions
+        available, see the
+        `tags on this repository <https://gitlab.com/minty-python/minty-ddd/tags/>`_
+        
+        License
+        -------
+        
+        Copyright (c) 2018, Minty Team and all persons listed in
+        `CONTRIBUTORS <https://gitlab.com/minty-python/minty-ddd/blob/master/CONTRIBUTORS>`_
+        
+        This project is licensed under the EUPL, v1.2. See the
+        `EUPL-1.2.txt <https://gitlab.com/minty-python/minty-ddd/blob/master/LICENSE>`_
+        file for details.
+        
+        
+        
+Keywords: minty_ddd
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
