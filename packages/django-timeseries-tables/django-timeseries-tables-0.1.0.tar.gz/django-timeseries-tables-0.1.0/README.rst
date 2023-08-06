@@ -1,0 +1,36 @@
+==================
+django-timeseries-tables
+==================
+
+.. image:: https://travis-ci.org/androbwebb/django-timeseries-tables.svg?branch=master
+   :target: https://travis-ci.org/androbwebb/django-timeseries-tables
+.. image:: https://codecov.io/gh/androbwebb/django-timeseries-tables/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/androbwebb/django-timeseries-tables
+.. image:: https://img.shields.io/pypi/v/django-timeseries-tables.svg
+   :target: https://pypi.python.org/pypi/django-timeseries-tables
+
+Django model mixins and utilities.
+
+``django-timeseries-tables`` supports `Django`_ 1.8 to 2.1.
+
+.. _Django: http://www.djangoproject.com/
+
+This app is available on `PyPI`_.
+
+.. _PyPI: https://pypi.python.org/pypi/django-timeseries-tables/
+
+Getting Help
+============
+
+Documentation for django-timeseries-tables is available
+https://django-timeseries-tables.readthedocs.io/
+
+Contributing
+============
+
+Please file bugs and send pull requests to the `GitHub repository`_ and `issue
+tracker`_. See `CONTRIBUTING.rst`_ for details.
+
+.. _GitHub repository: https://github.com/androbwebb/django-timeseries-tables/
+.. _issue tracker: https://github.com/androbwebb/django-timeseries-tables/issues
+.. _CONTRIBUTING.rst: https://github.com/androbwebb/django-timeseries-tables/blob/master/CONTRIBUTING.rst
