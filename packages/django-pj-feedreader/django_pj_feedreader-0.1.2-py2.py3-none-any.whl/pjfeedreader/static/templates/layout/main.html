@@ -1,0 +1,33 @@
+<div>
+    <div class="container">
+	<div class="row" ng-repeat="rows in ctrl.slicedFeeds">
+	    <div class="col-md-4" ng-repeat="feed in rows">
+		<div class="panel panel-default">
+		    <div class="panel-heading">
+			<div class="pull-right">
+			    <i class="fa fa-refresh"
+			    ng-click="ctrl.fetchFeed(feed);"></i>
+			    <i class="fa fa-trash-o"
+			       ng-click="ctrl.deleteFeed(feed);"></i> 
+			</div>
+			<div class="panel-title">
+			    {{ feed.title }}
+			</div>
+		    </div>
+		    <div class="panel-body feed-body">
+			<ul>  
+			    <li ng-repeat="item in feed.items">
+			    <a href="{{ item.link }}">{{ item.title }}</a></li>
+			</ul> 
+			URL: <input ng-model="feed.url">
+		    </div>
+		</div> <!-- panel -->
+	    </div>
+	</div>
+    </div>
+</div>
+<a class="btn btn-fab btn-raised mdi-content-add
+	  btn-add-new-feed"
+   href="javascript:void(0)"
+   ng-dialog="/static/templates/feeds/new-feed.html"
+   ng-dialog-controller="NewFeedController as vm"></a>
