@@ -1,0 +1,31 @@
+#! /usr/bin/env python
+
+"""
+Dumps the :py:class:`dynamo_consistency.datatypes.DirectoryInfo`
+tree into ``<VarDirectory>/cache/<SITE>/<NAME>.pkl``.
+By default, it dumps the tree that would be read from the inventory.
+
+If the ``[NAME]`` argument is not given, defaults to ``inventory.pkl``
+or ``remote.pkl`` when using the ``--remote`` option.
+"""
+
+__usage__ = '%prog [options] [NAME]'
+
+from dynamo_consistency import opts
+from dynamo_consistency import args
+from dynamo_consistency.parser import pretty_exe
+
+if getattr(opts, 'REMOTE', None):
+    from dynamo_consistency import remotelister as lister
+else:
+    from dynamo_consistency import inventorylister as lister
+
+pretty_exe('consistency-dump-tree')
+
+if __name__ == '__main__':
+
+    lister.listing( # pylint: disable=unexpected-keyword-arg
+        opts.SITE_PATTERN,
+        cache=args[1] if len(args) > 1 else \
+            ('remote' if opts.REMOTE else 'inventory')
+    )
