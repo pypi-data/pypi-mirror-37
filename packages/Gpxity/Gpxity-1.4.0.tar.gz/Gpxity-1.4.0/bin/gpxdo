@@ -1,0 +1,1061 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2018 Wolfgang Rohdewald <wolfgang@rohdewald.de>
+# See LICENSE for details.
+
+# PYTHON_ARGCOMPLETE_OK
+# for command line argument completion, put this into your .bashrc:
+# eval "$(register-python-argcomplete gpxdo)"
+# or see https://argcomplete.readthedocs.io/en/latest/
+
+
+"""
+gpxdo is a command line tool making use of the Gpxity library.
+"""
+
+
+import argparse
+import os
+import sys
+import datetime
+from collections import defaultdict
+import logging
+import textwrap
+import geocoder
+
+try:
+    import argcomplete
+    # pylint: disable=unused-import
+    from argcomplete import ChoicesCompleter  # noqa
+except ImportError:
+    pass
+
+from gpxpy import gpx as mod_gpx
+GPX = mod_gpx.GPX
+GPXTrack = mod_gpx.GPXTrack
+GPXTrackSegment = mod_gpx.GPXTrackSegment
+
+# This uses not the installed copy but the development files
+_ = os.path.dirname(sys.path[0] or sys.path[1])
+if os.path.exists(os.path.join(_, 'gpxity', '__init__.py')):
+    sys.path.insert(0, _)
+# pylint: disable=wrong-import-position
+from gpxity import Track, Directory, Backend, BackendDiff, Locate
+from gpxity.util import uniq, collect_tracks, pairs
+
+def __last_month_day(date):
+    """Change to the last day of month"""
+    year, month, day = date.year, date.month, date.day
+    month1 = month + 1
+    if month1 == 13:
+        year += 1
+        month = 1
+    next_month_1 = datetime.date(year, month+1, day)
+    last_day = (next_month_1 - datetime.timedelta(days=1)).day
+    return date + datetime.timedelta(days=last_day - day)
+
+def valid_date_argument(arg_date_str, last: bool, return_raw: bool = True):
+    """custom argparse type for date as YYYY-MM-DD"""
+    try:
+        result = datetime.datetime.strptime(arg_date_str, "%Y-%m-%d")
+    except ValueError:
+        try:
+            result = datetime.datetime.strptime(arg_date_str, "%Y-%m")
+            if last:
+                result = __last_month_day(result)
+        except ValueError:
+            try:
+                result = datetime.datetime.strptime(arg_date_str, "%Y")
+                if last:
+                    result = datetime.datetime(year=result.year+1, month=1, day=1)
+                    result -= datetime.timedelta(days=1)
+            except ValueError as exc:
+                logging.error(exc)
+                msg = "Given Date ({0}) not valid! Expected format YYYY-MM-DD or YYYY-MM or YYYY".format(arg_date_str)
+                raise argparse.ArgumentTypeError(msg)
+    return arg_date_str if return_raw else result
+
+class LsField:
+    """Abstracts a column in the ls output."""
+    # pylint: disable=too-few-public-methods
+
+    separator = '  '  # separator between fields
+    max_display_width = 40  # where to break long strings into continuation lines
+
+    def __init__(self, is_visible, header, value_function, field_fmt=None, type_=None):
+        self.is_visible = is_visible
+        self.is_needed = is_visible
+        self.header = header
+        self.head_ident = header.lower().strip().replace(' ', '_')
+        if LsRow.find_by_head_ident(self.head_ident):
+            raise Exception('LsField already exists:{}'.format(self.head_ident))
+        self.value_function = value_function
+        self.field_fmt = field_fmt or '{}'
+        if type_ is None:
+            type_ = str
+        self.type_ = type_
+        self.x_position = 0
+        self.max_length = 0
+        LsRow.fields.append(self)
+
+    def is_summable(self):
+        """Returns True if this field is summable"""
+        return self.type_ in (int, float, datetime.timedelta)
+
+    def zero(self):
+        """Returns a zero value"""
+        if self.type_ is not None:
+            if self.type_ is datetime.datetime:
+                return datetime.datetime(year=1970, month=1, day=1)
+            return self.type_()
+        return ''
+
+    def value(self, track):
+        """Convert track data to a correct field value"""
+        result = self.value_function(track)
+        if result is None:
+            result = self.zero()
+        return result
+
+    def format_raw(self, value):
+        """Format value according to field rules"""
+        if value == self.zero():
+            return ''
+        if isinstance(value, str):
+            return ' '.join(x.strip() for x in value.splitlines()).strip()
+        if self.field_fmt == 'duration':
+            hours = value.seconds // 3600
+            minutes = (value.seconds - hours * 3600) // 60
+            hours += value.days * 24
+            return '{:3}:{:02}'.format(hours, minutes)
+        if self.field_fmt == 'warnings':
+            return LsField.separator.join(value)
+        return self.field_fmt.format(value)
+
+
+class LsRow(dict):
+    """Represents a row for gpxdo ls. The field order is determined
+    by the order in which the LsFields are defined."""
+
+    fields = list()
+
+    def __init__(self, track=None):
+        super(LsRow, self).__init__()
+        self.track = track
+        for field in self.needed_fields():
+            self[field.head_ident] = field.zero()
+        if track:
+            if any(x.head_ident.startswith('moving') for x in LsRow.needed_fields()):
+                bounds = track.gpx.get_moving_data()
+                track.moving_duration = datetime.timedelta(seconds=bounds.moving_time)
+                track.moving_distance = bounds.moving_distance / 1000.0
+
+            track.gpxdo_identifier = str(track)
+            if isinstance(track.backend, Directory):
+                if list(self.visible_headers()) == ['identifier']:
+                    track.gpxdo_identifier += '.gpx'
+            for field in self.needed_fields():
+                self[field.head_ident] = field.value(track)
+        self.continuations = list()
+
+    @classmethod
+    def visible_fields(cls):
+        """Yield all fields to be printed."""
+        return (x for x in cls.fields if x.is_visible)
+
+    @classmethod
+    def needed_fields(cls):
+        """Yield all fields needed for output or for computation."""
+        return (x for x in cls.fields if x.is_needed)
+
+    @classmethod
+    def visible_headers(cls):
+        """Yield all active header ident strings."""
+        return (x.head_ident for x in cls.visible_fields())
+
+    @classmethod
+    def find_by_head_ident(cls, head_ident):
+        """Return the field with head_ident."""
+        for _ in cls.fields:
+            if _.head_ident == head_ident:
+                return _
+        return None
+
+    @classmethod
+    def set_max_lengths(cls, rows):
+        """Set the maximum field widths."""
+        check_rows = [x for x in rows if isinstance(x, LsRow) and not isinstance(x, SeparatorRow)]
+        position = 0
+        for field in cls.visible_fields():
+            field.x_position = position
+            field.max_length = max((len(field.format_raw(x[field.head_ident])) for x in check_rows), default=0)
+            field.max_length = min(field.max_length, LsField.max_display_width)
+            position += field.max_length + len(LsField.separator)
+
+    def _break_long_fields(self):
+        """Break long fields into continuation lines."""
+        fields = LsRow.visible_fields()
+        for idx, field in enumerate(fields):
+            _ = field.format_raw(self[field.head_ident])
+            wrapped = textwrap.wrap(_, LsField.max_display_width)
+            if len(wrapped) > 1:
+                assert field.type_ == str
+                self[field.head_ident] = wrapped.pop(0)
+                self.continuations.extend([''] * (len(wrapped) - len(self.continuations)))
+                for cont_idx,  value in enumerate(wrapped):
+                    self.continuations[cont_idx] = self.continuations[cont_idx].ljust(field.x_position) + value
+
+    def print_row(self):
+        """Show this row"""
+        self._break_long_fields()
+        raw_fields = list()
+        for field in LsRow.visible_fields():
+            _ = field.format_raw(self[field.head_ident])
+            right = '>' if field.type_ in (int, float) else ''
+            raw_fields.append('{value:{right}{width}}'.format(right=right, width=field.max_length, value=_))
+        logging.error(LsField.separator.join(raw_fields))
+        for _ in self.continuations:
+            logging.error(_)
+
+
+class TotalRow(LsRow):
+    """A row with totals over tracks."""
+
+    def __init__(self, rows):
+        super(TotalRow, self).__init__()
+        for field in LsRow.needed_fields():
+            if field.is_summable():
+                for _ in rows:
+                    self[field.head_ident] += _[field.head_ident]
+            elif self[field.head_ident] == field.zero():
+                self[field.head_ident] = ''
+        for speed_ident, duration_ident, distance_ident in (
+                ('speed', 'duration', 'distance'), ('moving_speed', 'moving_duration', 'moving_distance')):
+            if speed_ident in self:
+                duration = self[duration_ident]
+                if duration:
+                    seconds = duration.days * 24 * 3600 + duration.seconds
+                    speed = self[distance_ident] / seconds * 3600 if seconds else 0
+                    self[speed_ident] = speed
+        self['identifier'] = 'TOTAL'
+
+
+class SubTotalRow(TotalRow):
+
+    """A row with a subtotal"""
+    def __init__(self, rows, mainsort, group_key):
+        super(SubTotalRow, self).__init__(rows)
+        self[mainsort] = group_key or ''
+        self['identifier'] = 'TOTAL {}'.format(group_key or '')
+
+
+class SegmentRow(LsRow):
+    """Shows a single track segment"""
+
+    def __init__(self, segment):
+        gpx_track = GPXTrack()
+        gpx_track.segments.append(segment)
+        gpx_data = GPX()
+        gpx_data.tracks.append(gpx_track)
+        seg_track = Track(gpx_data)
+        super(SegmentRow, self).__init__(seg_track)
+        self['title'] = ''
+        self['category'] = ''
+        self['keywords'] = ''
+        self['status'] = ''
+
+
+class FreeTextRow(LsRow):
+    """A line with unformatted text"""
+
+    def __init__(self, text):
+        super(FreeTextRow, self).__init__()
+        self.text = text
+
+    def print_row(self):
+        """Show the row."""
+        logging.error(self.text)
+
+class SeparatorRow(LsRow):
+    """A separator line for use before or after totals"""
+
+    def __init__(self, separator_char):
+        super(SeparatorRow, self).__init__()
+        self.separator_char = separator_char
+
+    def print_row(self):
+        """Show row."""
+        line = ''
+        for field in self.visible_fields():
+            line += self.separator_char * field.max_length + LsField.separator
+        logging.error(line)
+
+
+class HeaderRow(LsRow):
+    """The column headers"""
+
+    def __init__(self):
+        super(HeaderRow, self).__init__()
+        for field in LsRow.visible_fields():
+            self[field.head_ident] = field.header
+
+
+class Utility:
+    """this is where the work is done"""
+
+    def __init__(self):
+        # pylint: disable=too-many-branches,too-many-nested-blocks
+        self.exit_code = 0
+        self.options = None
+        self.subparsers = None
+        logging.basicConfig(format='%(message)s', stream=sys.stdout)
+        self.parser = self.create_parser()
+        try:
+            argcomplete.autocomplete(self.parser)
+        except NameError:
+            pass
+
+        if len(sys.argv) < 2:
+            return
+
+        self.apply_parser(self.parser)
+        if self.exit_code:
+            return
+        logging.getLogger().setLevel(self.options.loglevel.upper())
+        sources = []
+        self.source_tracks = []
+        self.similar_to = None
+        self.destination = None
+        try:
+            if hasattr(self.options, 'similar') and self.options.similar:
+                self.similar_to = Backend.instantiate(self.options.similar)
+            if self.options.source:
+                for _ in self.options.source:
+                    if _.endswith('/') and _ != '/':
+                        _ = _[:-1]
+                    sources.append(Backend.instantiate(_))
+                    # optimize the case where destination is also source
+                    if hasattr(self.options, 'destination') and _ == self.options.destination:
+                        self.destination = sources[-1]
+                        if self.options.func == self.merge and not self.options.remove:
+                            msg = 'CAUTION: merging something with itself does nothing. Did you forget --remove?'
+                            if len(self.options.source) == 1:
+                                self.exit_code = 2
+                                raise Exception(msg)
+                            else:
+                                logging.error(msg)
+
+                tracks = collect_tracks(sources)
+                for track in tracks:
+                    msg = self.match(track)
+                    if msg:
+                        logging.debug('%s: %s', track, msg)
+                    else:
+                        self.source_tracks.append(track)
+            if hasattr(self.options, 'destination') and self.destination is None:
+                self.destination = Backend.instantiate(self.options.destination)
+                if self.options.func not in (self.diff, self.merge):
+                    if isinstance(self.destination, Track):
+                        raise Exception('Destination must not be a single track:{}'.format(self.options.destination))
+                if not isinstance(self.destination, Track) and not self.options.copy:
+                    logging.debug('')
+                    logging.debug('collecting tracks from destination %s', self.destination)
+            if hasattr(self.options, 'id_from_backend') and self.options.id_from_backend:
+                self.source = Backend.instantiate(self.options.id_from_backend)
+
+            self.options.func()
+        except Exception as _: # pylint: disable=broad-except
+            self.error(_)
+
+    def error(self, msg, exit_code=None):
+        """Prints the error message.
+        Sets the process exit code.
+        With loglevel debug, re-raises the exception."""
+        logging.error(msg)
+        self.exit_code = exit_code or 1
+        if logging.getLogger().level == logging.DEBUG:
+            raise msg
+
+    def move(self):
+        """move gpx files.
+        We cannot just do merge() followed by remove() because
+        the source might have gotten new tracks meanwhile, and
+        they would disappear for good."""
+        for _ in self.source_tracks:
+            new_track = self.destination.add(_)
+            try:
+                new_track.id_in_backend = _.id_in_backend
+            except NotImplementedError:
+                pass
+            _.remove()
+            logging.info('moved %s to %s', _, self.destination)
+
+    def remove(self):
+        """remove tracks"""
+        for _ in self.source_tracks:
+            if self.options.dry_run:
+                logging.info('would remove %s', _)
+            else:
+                _.remove()
+                logging.info('removed %s', _)
+
+    def list_them(self):
+        """list tracks"""
+        # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+        def yield_track_group_keys(track, mainsort):
+            """Yields group key for track"""
+            if mainsort == 'category':
+                yield track.category
+            elif mainsort == 'keywords' and track.keywords:
+                for _ in track.keywords:
+                    yield _
+            elif mainsort == 'time' and track.time:
+                yield '{:4}-{:02}'.format(track.time.year, track.time.month)
+            elif mainsort == 'status':
+                yield 'public' if track.public else 'private'
+            else:
+                yield None
+
+        def yield_all_group_keys(mainsort):
+            """Yields all group keys for all tracks"""
+            seen = set()
+            for track in self.source_tracks:
+                for groupkey in yield_track_group_keys(track, mainsort):
+                    if groupkey not in seen:
+                        yield groupkey
+                        seen.add(groupkey)
+
+        list(LsField(*x) for x in (
+            (True, 'Identifier', lambda x: x.gpxdo_identifier),
+            (self.options.title, 'Title', lambda x: x.title if x.title else '', '{:.40}'),
+            (self.options.time, 'Time', lambda x: x.time, '{}', datetime.datetime),
+            (self.options.category, 'Category', lambda x: x.category),
+            (self.options.ids, 'Ids', lambda x: ','.join('{}/{}'.format(*y) for y in x.ids)),
+            (self.options.keywords, 'Keywords', lambda x: ','.join(y for y in x.keywords)),
+            (self.options.distance > 0, 'Distance', lambda x: x.distance(), '{:>8.3f}km', float),
+            (self.options.points, 'Points', lambda x: x.gpx.get_track_points_no(), '{:>6}', int),
+            (self.options.status, 'Status', lambda x: 'public' if x.public else 'private'),
+            (self.options.description, 'Description', lambda x: x.description),
+            (self.options.duration, 'Duration',
+             lambda x: x.last_time - x.time if x.time and x.last_time
+             else datetime.timedelta(), 'duration', datetime.timedelta),
+            (self.options.speed, 'Speed', lambda x: x.speed(), '{:>5.2f}km/h', float),
+            (self.options.moving_speed, 'Moving speed', lambda x: x.moving_speed(), '{:>5.2f}km/h', float),
+            (False, 'Moving duration', lambda x: x.moving_duration, '{}', datetime.timedelta),
+            (False, 'Moving distance', lambda x: x.moving_distance, '{}', float),
+            (self.options.similarity, 'Similarity', lambda x: x.similarity(self.similar_to), '{:>1.2f}', float),
+            (self.options.warnings, 'Warnings', lambda x: x.warnings(), 'warnings')))
+
+        if 'speed' in LsRow.visible_headers():
+            LsRow.find_by_head_ident('duration').is_needed = True
+            LsRow.find_by_head_ident('distance').is_needed = True
+        if 'moving_speed' in LsRow.visible_headers():
+            LsRow.find_by_head_ident('moving_duration').is_needed = True
+            LsRow.find_by_head_ident('moving_distance').is_needed = True
+        if self.options.segments:
+            LsField(False, 'track', lambda x: x).is_needed = True
+
+        if self.options.warnings:
+            LsRow.find_by_head_ident('time').is_needed = True
+            LsRow.find_by_head_ident('duration').is_needed = True
+
+        sort_fields = [LsRow.find_by_head_ident(x) for x in self.options.sort.split(',')]
+        for _ in sort_fields:
+            _.is_needed = True
+
+        mainsort = None
+        group_keys = [None]
+        if self.options.sort and self.options.total:
+            mainsort = self.options.sort.split(',')[0]
+            group_keys = sorted(set(yield_all_group_keys(mainsort)), key=lambda x: '' if x is None else x)
+
+        if self.options.locate:
+            locator = Locate(self.options.locate, self.source_tracks, provider=self.options.location_provider)
+            self.source_tracks = locator.found(max_away=self.options.max_away)
+
+        track_groups = defaultdict(list)
+        all_tracks = list()
+        for _ in self.source_tracks:
+            row = LsRow(_)
+            for group in yield_track_group_keys(_, mainsort):
+                track_groups[group].append(row)
+            all_tracks.append(row)
+        all_lines = list()
+        for group_key in group_keys:
+            group_tracks = track_groups[group_key][:]
+            group_lines = list()
+            if sort_fields and not self.options.locate:
+                group_tracks.sort(
+                    key=lambda x: tuple(x[y.head_ident] for y in sort_fields))
+            for line in group_tracks:
+                group_lines.append(line)
+                if self.options.segments:
+                    gpx = line['track'].gpx
+                    seg_lines = list()
+                    for track_idx, track in enumerate(gpx.tracks):
+                        for seg_idx, segment in enumerate(track.segments):
+                            segment_line = SegmentRow(segment)
+                            segment_line['identifier'] = '  Track/Segment {}/{}'.format(track_idx + 1, seg_idx + 1)
+                            seg_lines.append(segment_line)
+                    if len(seg_lines) > 1:
+                        group_lines.extend(seg_lines)
+
+            if self.options.total and mainsort in ('category', 'time', 'status'):
+                total_line = SubTotalRow(group_tracks, mainsort, group_key)
+                group_lines.append(total_line)
+                group_lines.append(SeparatorRow('-'))
+            all_lines.extend(group_lines)
+
+        if list(LsRow.visible_headers()) != ['identifier', ]:
+            all_lines.insert(0, HeaderRow())
+        if self.options.total:
+            all_lines.append(TotalRow(all_tracks))
+            if mainsort == 'keywords':
+                all_lines.append(SeparatorRow('='))
+                for group_key in group_keys:
+                    all_lines.append(SubTotalRow(track_groups[group_key], mainsort, group_key or 'No keyword'))
+
+        if self.options.warnings:
+            time_sorted = sorted(all_tracks, key=lambda x: x['time'])
+            for span1, span2 in pairs(time_sorted):
+                if span1['time'] and span1['duration'] and span2['time']:
+                    if span2['time'] < span1['time'] + span1['duration']:
+                        row = FreeTextRow('{} and {} have overlapping times'.format(
+                            span1['identifier'], span2['identifier']))
+                        all_lines.append(row)
+
+
+        LsRow.set_max_lengths(all_lines)
+
+        for line in all_lines:
+            line.print_row()
+
+    def fix(self):
+        """fix tracks"""
+        result_lines = []
+        for _ in self.source_tracks:
+            if self.options.title_from_id:
+                _.title = _.id_in_backend
+            if self.options.id_from_title:
+                _.id_in_backend = _.title
+            elif self.options.id_from_backend:
+                backend_id = str(self.source)
+                new_id = _.ids[backend_id]
+                _.id_in_backend = new_id
+            elif self.options.id_from_time:
+                if _.time:
+                    _.id_in_backend = str(_.time).replace(' ', '_')
+            result_lines.extend(_.fix(orux=self.options.orux, jumps=self.options.jumps))
+            if self.options.add_minutes:
+                _.adjust_time(datetime.timedelta(minutes=self.options.add_minutes))
+            if self.options.simplify:
+                point_count = _.gpx.get_track_points_no()
+                _.gpx.simplify(self.options.simplify)
+                if _.gpx.get_track_points_no() != point_count:
+                    logging.info('{}: reduced points from {} to {}'.format(_, point_count, _.gpx.get_track_points_no()))
+                    _.rewrite()
+            if self.options.split:
+                _.split()
+        for _ in result_lines:
+            logging.error(_)
+
+    def dump(self):
+        """Dump data."""
+        result_lines = []
+        for _ in self.source_tracks:
+            result_lines.append('------- {} -------'.format(_))
+            if self.options.points:
+                for p0, p1 in pairs(_.points()):
+                    result_lines.append(
+                        '{} -- {}: time={} distance={} speed={}'.format(
+                            p0, p1, p1.time - p0.time, p1.distance_3d(p0), p1.speed_between(p0)))
+
+        for _ in result_lines:
+            logging.error(_)
+
+
+    def keyword(self):
+        """add/remove a list of keywords"""
+        for _ in self.source_tracks:
+            old_kw = _.keywords
+            _.change_keywords(self.options.keywords, dry_run=self.options.dry_run)
+            logging.info('%s: %s --> %s', _, old_kw, _.keywords)
+
+    def title(self):
+        """Sets the title."""
+        for _ in self.source_tracks:
+            _.title = self.options.title
+            logging.info('set title %s for %s', self.options.title, _)
+
+    def description(self):
+        """Sets the description."""
+        for _ in self.source_tracks:
+            _.description = self.options.description
+            logging.info('set description %s for %s', self.options.description, _)
+
+    def category(self):
+        """Sets the category."""
+        for _ in self.source_tracks:
+            _.category = self.options.category
+            logging.info('set category %s for %s', self.options.category, _)
+
+    def set_public(self, value=True):
+        """Sets the status."""
+        for _ in self.source_tracks:
+            _.public = value
+            logging.info('set status %s for %s','public' if value else 'private', _)
+
+    def set_private(self):
+        """Sets the status."""
+        self.set_public(False)
+
+    def copy(self):
+        """Copy"""
+        msg = self.destination.merge(
+            self.source_tracks, dry_run=self.options.dry_run, copy=True)
+        self.destination.flush()
+        for _ in msg:
+            logging.info(_)
+
+    def merge(self):
+        """Merge"""
+        if isinstance(self.destination, Backend):
+            msg = self.destination.merge(
+                self.source_tracks, remove=self.options.remove, dry_run=self.options.dry_run, copy=self.options.copy,
+                partial_tracks=self.options.partial_tracks)
+        else:
+            msg = list()
+            for _ in self.source_tracks:
+                try:
+                    msg.extend(self.destination.merge(_, remove=self.options.remove, dry_run=self.options.dry_run, copy=self.options.copy,
+                    partial_tracks=self.options.partial_tracks))
+                except Track.CannotMerge as exc:
+                    msg.append(str(exc))
+        if not self.options.dry_run:
+            if isinstance(self.destination, Backend):
+                self.destination.flush()
+            else:
+                self.destination.backend.flush()
+        for _ in msg:
+            logging.info(_)
+
+    def diff(self):
+        """Compare"""
+        def show_exclusive(side):
+            """shows tracks appearing only on one side."""
+            backends = uniq(x.backend for x in side.exclusive)
+            for backend in backends:
+                logging.error('only in %s:', backend.url)
+                for _ in side.exclusive:
+                    if _.backend is backend:
+                        logging.error('    %s', _)
+                logging.error('')
+
+        differ = BackendDiff(self.source_tracks, self.destination)
+        show_exclusive(differ.left)
+        show_exclusive(differ.right)
+
+        backend_pairs = uniq((x.left.backend, x.right.backend) for x in differ.similar)
+
+        # pylint: disable=too-many-nested-blocks
+        for left, right in backend_pairs:
+            logging.error('Differences between %s and %s', left.url, right.url)
+            for pair in differ.similar:
+                if (pair.left.backend, pair.right.backend) == (left, right):
+                    _ = ''.join(x if x in pair.differences else ' ' for x in BackendDiff.diff_flags)
+                    logging.error('-%s  %s', _, pair.left)
+                    logging.error('+%s  %s', _, pair.right)
+                    for key, explain in pair.differences.items():
+                        if explain:
+                            _ = ''.join(x if x == key else ' ' for x in BackendDiff.diff_flags)
+                            for explain_line in explain:
+                                logging.error(' %s  %s', _, explain_line)
+                    logging.error('')
+
+    def match(self, track):
+        """Check against the selecting options. Does cheap check first."""
+        # pylint: disable=too-many-return-statements, too-many-branches
+        if self.options.first_date or self.options.last_date:
+            if track.time:
+                if self.options.first_date and track.time < self.options.first_date:
+                    return 'time {} is before {}'.format(track.time, self.options.first_date)
+                if self.options.last_date:
+                    if self.options.last_date.date() and track.time.date() > self.options.last_date.date():
+                        return 'time {} is after {}'.format(track.time, self.options.last_date)
+            else:
+                return 'has no time'
+        if self.options.min_distance and track.distance() < self.options.min_distance:
+            return 'distance {} is below {}'.format(track.distance(), self.options.min_distance)
+        if self.options.max_distance and track.distance() > self.options.max_distance:
+            return 'distance {} is above {}'.format(track.distance(), self.options.max_distance)
+        if self.options.min_speed and track.speed() < self.options.min_speed:
+            return 'Speed is below {}'.format(self.options.min_speed)
+        if self.options.max_speed and track.speed() > self.options.max_speed:
+            return 'Speed is above {}'.format(self.options.max_speed)
+        if self.options.min_points and track.gpx.get_track_points_no() < self.options.min_points:
+            return 'point count {} is below {}'.format(track.gpx.get_track_points_no(), self.options.min_points)
+        if self.options.max_points is not None and track.gpx.get_track_points_no() > self.options.max_points:
+            return 'point count {} is above {}'.format(track.gpx.get_track_points_no(), self.options.max_points)
+        if self.options.only_keywords and not self.options.only_keywords & set(track.keywords):
+            return 'keywords {} are not in {}'.format(','.join(self.options.only_keywords), ','.join(track.keywords))
+        if self.options.only_category and track.category not in self.options.only_category:
+            return '{} is different from {}'.format(','.join(self.options.only_category), ','.join(track.category))
+        if self.similar_to and track.similarity(self.similar_to) < 0.5:
+            return 'Similarity {:1.2f} with {} is too small'.format(
+                track.similarity(self.similar_to), self.similar_to.id_in_backend)
+        return None
+
+    @staticmethod
+    def build_range_parser():
+        """Returns a subparser for common range arguments"""
+        result = argparse.ArgumentParser(description='Optional arguments limiting track selection', add_help=False)
+        result.add_argument('--first-date', help='Limit tracks by date',
+                            type=lambda x: valid_date_argument(x, False), default=None)
+        result.add_argument('--last-date', help='Limit tracks by date',
+                            type=lambda x: valid_date_argument(x, True), default=None)
+        result.add_argument('--date', help='Limit tracks by specific date',
+                            type=lambda x: valid_date_argument(x, False), default=None)
+        result.add_argument('--min-points', help='Limit tracks by minimal number of points', type=int, default=None)
+        result.add_argument('--max-points', help='Limit tracks by maximal number of points', type=int, default=None)
+        result.add_argument('--min-distance', help='Limit tracks by minimal distance', type=int, default=None)
+        result.add_argument('--max-distance', help='Limit tracks by maximal distance', type=int, default=None)
+        result.add_argument('--min-speed', help='Limit tracks by minimal speed', type=int, default=None)
+        result.add_argument('--max-speed', help='Limit tracks by maximal speed', type=int, default=None)
+        result.add_argument('--only-keywords', help='Limit tracks by keywords', default=None)
+        result.add_argument('--only-category', help='Limit tracks by category', default=None, choices=Track.legal_categories)
+        result.add_argument('--similar', help='Limit tracks by similarity to track SIMILAR', default=None)
+        return result
+
+    @staticmethod
+    def build_common_parser():
+        """Returns a subparser for common arguments"""
+        result = argparse.ArgumentParser(add_help=False)
+        result.add_argument('--loglevel', help='set the loglevel', choices=('none','debug', 'info', 'warning', 'error'), default='none')
+        result.add_argument('--timeout', help="""
+            Timeout: Either one value in seconds or two comma separated values: The first one is the connection timeout,
+            the second one is the read timeout. Default is to wait forever.""", type=str, default=None)
+        return result
+
+    @staticmethod
+    def add_multi_source(parser, must_have=False):
+        """add --source for one or more tracks or backends"""
+        parser.add_argument('source', help='one ore more tracks or backends', nargs='+' if must_have else '*')
+
+    @staticmethod
+    def add_destination(parser):
+        """add --destination"""
+        parser.add_argument('destination', help='the destination backend')
+
+    help_epilog = """
+
+source and destination arguments may be single
+tracks or entire backend instances.
+Local files and directories are given as usual.
+Mail targets are given as mailer:my_mail@address.test
+
+For all other backends, the syntax is:
+
+backend:username  for all tracks in a backend
+
+or
+
+backend:username/track_id for one specific track in a backend
+
+Available backends are:
+
+  - mmt       MapMytracks
+  - gpsies    gpsies.com
+  - mailer    mails tracks
+
+The file $HOME/.config/Gpxity/auth.cfg
+defines the type of the backend, username and password. Example:
+
+[MMT:username]
+Password = whatever
+
+Dates are expected as YYYY-MM-DD, YYYY-MM or YYYY.
+
+"""
+
+    def define_attr_parser(self, cmd, helptext, func, arg_name=None, arg_help=None, choices=None):
+        """Common code for defining a command for attributes"""
+        result = self.subparsers.add_parser(cmd, help=helptext, parents=[self.common_parser, self.range_parser])
+        result.set_defaults(func=func)
+        if arg_name:
+            result.add_argument(arg_name, help=arg_help, choices=choices)
+        self.add_multi_source(result)
+        return result
+
+    def create_parser(self):
+        """into self.options"""
+        # pylint: disable=too-many-statements, too-many-branches
+        self.range_parser = self.build_range_parser()
+        self.common_parser = self.build_common_parser()
+        parser = argparse.ArgumentParser(
+            'gpxdo', formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=self.help_epilog)
+        self.subparsers = parser.add_subparsers()
+
+        ls_parser = self.subparsers.add_parser(
+            'ls', help='list tracks', parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        ls_parser.set_defaults(func=self.list_them)
+        ls_parser.add_argument('--sort',
+                               help="""sort by one ore more columns, separated by commas (no spaces allowed)""",
+                               choices = ('identifier', 'title', 'category', 'time', 'distance',
+                               'points', 'keywords', 'status', 'speed', 'moving-speed', 'duration', 'similarity'),
+                               default='identifier')
+        ls_parser.add_argument('--total',
+                               help="""Show a total line""",
+                               action='store_true', default=False)
+        ls_parser.add_argument('--segments', help='show track segments',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--long', help='show most useful info',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--all', help='show all available info',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--title', help='show the title',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--category', help='show the track type',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--ids', help='show the ids',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--time', help='show the time',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--distance', help='show the distance',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--points', help='show the number of points',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--status', help='show the status public/private',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--keywords', help='show the keywords',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--description', help='show the description',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--speed', help='show the average speed',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--moving-speed', help='show the average speed in motion',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--duration', help='show the entire duration',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--similarity', help='show the similarity',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--warnings', help='show warnings',
+                               action='store_true', default=False)
+        ls_parser.add_argument('--location-provider', help="data provider",
+            choices=geocoder.api.options.keys(), default='osm')
+        ls_parser.add_argument(
+            '--locate', action='append',
+            help="""the name of a place. --location can be repeated. Find tracks touching all locations, order by best match""")
+        ls_parser.add_argument(
+            '--max-away', type=float, default=100,
+            help="""to be used with --locate: show only tracks which are not more than MAX_AWAY kilometers farther away from given places.
+                The distance to all places is added to one value and the compared with MAX_AWAY.
+                Default is 100km.""")
+        self.add_multi_source(ls_parser)
+
+        cp_parser = self.subparsers.add_parser(
+            'cp', help="""
+            copy tracks. This can be much faster for remote backends because
+            tracks with the same points are not merged.""",
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        cp_parser.set_defaults(func=self.copy)
+        cp_parser.add_argument('--dry-run', help='only show what would change',
+                                  action='store_true', default=False)
+        self.add_multi_source(cp_parser)
+        self.add_destination(cp_parser)
+
+        merge_parser = self.subparsers.add_parser(
+            'merge', help="""
+            merge tracks: If their trackpoints are identical, add metadata like name,
+            description or keywords from source to destination""",
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        merge_parser.set_defaults(func=self.merge)
+        merge_parser.add_argument('--dry-run', help='only show what would change',
+                                  action='store_true', default=False)
+        merge_parser.add_argument('--remove', help='remove merged tracks',
+                                  action='store_true', default=False)
+        merge_parser.add_argument('--partial-tracks',
+                                   help='merges two tracks if one is part of the other',
+                                  action='store_true', default=False)
+        merge_parser.add_argument(
+            '--copy', help='If the target is a backend, do not look for similar track. '
+            'Just copy. This is much faster for remote backends.',
+            action='store_true', default=False)
+        self.add_multi_source(merge_parser)
+        self.add_destination(merge_parser)
+
+        mv_parser = self.subparsers.add_parser(
+            'mv', help='move sources to a destination backend',
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        mv_parser.set_defaults(func=self.move)
+        self.add_multi_source(mv_parser)
+        self.add_destination(mv_parser)
+
+        rm_parser = self.subparsers.add_parser(
+            'rm', help='remove tracks',
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        rm_parser.set_defaults(func=self.remove)
+        rm_parser.add_argument('--dry-run', help='only show what would be removed',
+                               action='store_true', default=False)
+        self.add_multi_source(rm_parser)
+
+        diff_parser = self.subparsers.add_parser(
+            'diff', help="""
+            compare tracks between source and destination""",
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        diff_parser.set_defaults(func=self.diff)
+        self.add_multi_source(diff_parser, must_have=True)
+        self.add_destination(diff_parser)
+
+        fix_parser = self.subparsers.add_parser(
+            'fix', help="""try to fix some GPX format bugs in tracks.
+                First BACKUP the tracks! This can destroy them!""",
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        fix_parser.set_defaults(func=self.fix)
+        fix_parser.add_argument(
+            '--orux',
+            help="""BACKUP your tracks first! This can destroy them!
+            Try to fix old oruxmaps bug where the date jumps back by one day""",
+            action='store_true', default=False)
+        fix_parser.add_argument(
+            '--jumps',
+            help="""BACKUP your tracks first! This can destroy them!
+            Whenever the time jumps back or more than 30 minutes into the future
+            or when the distance speed between two points exceed 5km,
+            split into two segments at that point""",
+            action='store_true', default=False)
+        fix_parser.add_argument('--title-from-id', help='use id for title',
+                                action='store_true', default=False)
+        fix_parser.add_argument('--id-from-title', help='use title for id, works only for Directory',
+                                action='store_true', default=False)
+        fix_parser.add_argument('--id-from-time', help='use time for id, works only for Directory',
+                                action='store_true', default=False)
+        fix_parser.add_argument('--id-from-backend', help='use last known id for a track in BACKEND')
+        fix_parser.add_argument(
+            '--simplify',
+            help='Reduce track points. The new track may move MAX meters away from the original',
+            metavar='MAX', type=int, default=None)
+        fix_parser.add_argument('--split', help='create a single Track for every track/segment',
+                                action='store_true', default=False)
+        fix_parser.add_argument('--add-minutes', help='Add minutes to all times', type=int, default=None)
+        self.add_multi_source(fix_parser)
+
+        keyword_parser = self.define_attr_parser(
+            'keywords', helptext="""add keywords. A keyword preceded with - will be removed. Examples: \n
+                keywords A,-B
+                keywords -- -A""",
+            func=self.keyword,
+            arg_name='keywords', arg_help='keywords separated by commas')
+        keyword_parser.add_argument('--dry-run', help='only show what would be done',
+                                    action='store_true', default=False)
+
+        dump_parser = self.subparsers.add_parser(
+            'dump', help="""Show specific GPX values""",
+            parents=[self.common_parser, self.range_parser],
+            epilog=self.help_epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        dump_parser.set_defaults(func=self.dump)
+        dump_parser.add_argument('--points', help='List detailled info about points',
+            action='store_true', default=False)
+        self.add_multi_source(dump_parser)
+
+        self.define_attr_parser(
+            'title', helptext='set the title', func=self.title,
+            arg_name='title', arg_help='the new title')
+
+        self.define_attr_parser(
+            'description', helptext='set the description', func=self.description,
+            arg_name='description', arg_help='the new description')
+
+        self.define_attr_parser(
+            'category', helptext='set the category', func=self.category,
+            arg_name='category', arg_help='the new category',
+            choices=Track.legal_categories)
+
+        self.define_attr_parser(
+            'public', helptext='set the status to public', func=self.set_public)
+        self.define_attr_parser(
+            'private', helptext='set the status to private', func=self.set_private)
+        return parser
+
+    def apply_parser(self, parser):
+        self.options = parser.parse_args()
+
+        if self.options.timeout is not None:
+            if ',' in self.options.timeout:
+                self.options.timeout = tuple(float(x) for x in self.options.timeout.split(','))
+            else:
+                self.options.timeout = float(self.options.timeout)
+
+        if self.options.func == self.list_them:
+            if self.options.long or self.options.all:
+                self.options.title = True
+                self.options.time = True
+                self.options.category = True
+                self.options.keywords = True
+                self.options.distance = True
+                self.options.status = True
+                if self.options.all:
+                    self.options.segments = True
+                    self.options.total = True
+                    self.options.warnings = True
+                    self.options.speed = True
+                    self.options.moving_speed = True
+                    self.options.duration = True
+                    self.options.description = True
+                    self.options.points = True
+                    self.options.moving_speed = True
+            if not self.options.source:
+                self.options.source = ['.']
+            if self.options.locate and self.options.sort != 'identifier':
+                logging.error('gpxdo: --location implies an order, do not use --sort')
+                self.exit_code = 2
+                return
+        elif self.options.func == self.merge:
+            if not self.options.source:
+                self.options.source = [self.options.destination]
+        elif self.options.func == self.fix:
+            exclusive = ('id_from_title', 'title_from_id', 'id_from_backend')
+            if sum([bool(getattr(self.options, x)) for x in exclusive]) > 1:
+                logging.error('gpxdo: only one out of {} is allowed'.format(', '.join(exclusive).replace('_', '-')))
+                self.exit_code = 2
+                return
+        if self.options.only_keywords:
+            self.options.only_keywords = set(x.strip() for x in self.options.only_keywords.split(','))
+        if self.options.only_category:
+            self.options.only_category = set(x.strip() for x in self.options.only_category.split(','))
+        if not hasattr(self.options, 'copy'):
+            self.options.copy = False
+        if self.options.date:
+            if self.options.first_date or self.options.last_date:
+                logging.error('gpxdo: error: cannot have --date with --first-date or --last-date')
+                self.exit_code = 2
+                return
+            self.options.first_date = valid_date_argument(self.options.date, last=False, return_raw=False)
+            self.options.last_date = valid_date_argument(self.options.date, last=True, return_raw=False)
+        else:
+            if self.options.first_date:
+                self.options.first_date = valid_date_argument(self.options.first_date, last=False, return_raw=False)
+            if self.options.last_date:
+                self.options.last_date = valid_date_argument(self.options.last_date, last=True, return_raw=False)
+        if hasattr(self.options, 'sort') and self.options.sort == 'moving-speed':
+            self.options.sort = 'moving_speed'
+        if hasattr(self.options, 'dry_run') and self.options.dry_run:
+            if self.options.loglevel != 'debug':
+                self.options.loglevel = 'info'
+        if self.options.loglevel == 'none':
+            self.options.loglevel = 'error'
+
+def parser_for_sphinx():
+    """Used by sphinx."""
+    return Utility().parser
+
+if __name__ == '__main__':
+    sys.exit(Utility().exit_code)
