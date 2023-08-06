@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% set active_page = "project" %}
+
+{% block containerclass %}container-fluid{% endblock %}
+
+{% block contents %}
+<div class="row">
+  <!-- Left panel -->
+  <div class="col-md-3">
+    <!-- Tab selector -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link" id="project-tab" data-toggle="tab" href="#project" role="tab" aria-controls="project" aria-selected="true">Project info</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" id="documents-tab" data-toggle="tab" href="#documents" role="tab" aria-controls="documents" aria-selected="false">Documents</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tags-tab" data-toggle="tab" href="#tags" role="tab" aria-controls="tags" aria-selected="false">Highlights</a>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+
+      <!-- Project info and metadata -->
+      <div class="tab-pane fade" id="project" role="tabpanel" aria-labelledby="project-tab">
+        <form id="project-metadata-form">
+          <div class="form-group">
+            <label for="project-name" class="col-sm-2 col-form-label">Name</label>
+            <input type="text" class="form-control" id="project-name" name="project-name" value="{{ project.name }}" />
+          </div>
+          <div class="form-group">
+            <label for="project-description" class="col-sm-2 col-form-label">Description</label>
+            <textarea class="form-control" id="project-description" name="project-description">{{ project.description }}</textarea>
+          </div>
+        </form>
+        <ul class="list-unstyled">
+          <li><a href="{{ reverse_url('export_codebook_csv', project.id) }}" target="_blank">Export codebook CSV</a></li>
+          <li><a href="{{ reverse_url('export_codebook_doc', project.id) }}" target="_blank">Export codebook DOC</a></li>
+        </ul>
+        <input type="checkbox" id="backlight" /> <label for="backlight">Backlight</label>
+      </div>
+
+      <!-- List of documents -->
+      <div class="tab-pane fade show active" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+        <ul class="list-group list-group-flush" id="documents-list">
+          <li class="list-group-item disabled">Loading...</li>
+          <li class="list-group-item list-group-item-primary"><a class="list-group-item-primary" href="javascript:createDocument()">Add a document</a></li>
+        </ul>
+      </div>
+
+      <!-- List of tags -->
+      <div class="tab-pane fade" id="tags" role="tabpanel" aria-labelledby="tags-tab">
+        <ul class="list-group list-group-flush" id="tags-list">
+          <li class="list-group-item disabled">Loading...</li>
+          <li class="list-group-item list-group-item-primary"><a class="list-group-item-primary" href="javascript:createTag()">Create a tag</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="col-md-9">
+
+    <div id="document-view" class="document-view">
+      <!--<a href="#" class="document-link badge badge-primary">???</a>-->
+
+      <div id="document-contents">
+        <p style="font-style: oblique; text-align: center;">Load a document on the left</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add document modal -->
+<div class="modal" id="document-add-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <form id="document-add-form" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add a document</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container">
+          {{ xsrf_form_html() }}
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <input type="text" class="form-control" id="document-add-name" name="document-add-name" placeholder="Name" />
+            </div>
+            <div class="col-md-6 form-group">
+              <input type="file" class="form-control-file" id="document-add-file" name="document-add-file" />
+            </div>
+          </div>
+          <textarea class="form-control" id="document-add-description" name="document-add-description" placeholder="Description"></textarea>
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="document-add-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Import</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change document modal -->
+<div class="modal" id="document-change-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <form id="document-change-form" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit document</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="document-change-id" />
+        <div class="container">
+          {{ xsrf_form_html() }}
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <input type="text" class="form-control" id="document-change-name" name="document-change-name" placeholder="Name" />
+            </div>
+          </div>
+          <textarea class="form-control" id="document-change-description" name="document-change-description" placeholder="Description"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save & Close</button>
+        <button type="button" id="document-change-delete" class="btn btn-danger" data-dismiss="modal">Delete document</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/change highlight modal -->
+<div class="modal" id="highlight-add-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <form id="highlight-add-form" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Highlight</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="highlight-add-id" />
+        <input type="hidden" id="highlight-add-start" />
+        <input type="hidden" id="highlight-add-end" />
+        <div class="container">
+          {{ xsrf_form_html() }}
+          <ul class="list-unstyled" id="highlight-add-tags">
+            <li>Loading...</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save & Close</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal" id="highlight-delete">Delete highlight</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add/change tag modal -->
+<div class="modal" id="tag-add-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <form id="tag-add-form" class="modal-content">
+      <div class="modal-header">
+        <h5 id="tag-add-label-new" class="modal-title">New tag</h5>
+        <h5 id="tag-add-label-change" class="modal-title" style="display: none;">Change tag</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tag-add-id" />
+        <div class="container">
+          {{ xsrf_form_html() }}
+          <input type="text" class="form-control" id="tag-add-path" name="tag-add-path" placeholder="name" />
+          <textarea class="form-control" id="tag-add-description" name="tag-add-description" placeholder="Description"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save & Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="tag-add-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal" id="tag-add-delete">Delete tag</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Avoid doing requests, this is 2018 and we are good at engineering -->
+<script type="text/javascript">
+  var project_id = {{ project.id }};
+  var last_event = {{ last_event }};
+  var documents = {{ documents }};
+  var tags = {{ tags }};
+</script>
+
+<!-- Should minify this but I hate NPM -->
+<script type="text/javascript" src="{{ static_url('js/taguette.js') }}"></script>
+
+<!-- "New highlight" button shown after selecting text -->
+<div id="hlinfo"><a href="javascript:createHighlight(current_selection);">[new highlight]</a></div>
+
+{% endblock %}
