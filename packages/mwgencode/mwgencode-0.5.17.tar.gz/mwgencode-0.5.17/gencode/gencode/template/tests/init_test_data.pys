@@ -1,0 +1,55 @@
+########################################
+# create by :cxh-pc
+# create time :2018-03-20 15:08:58.746101
+########################################
+from seeds.seed_utils import add_seed
+from datetime import datetime
+from app import db
+class User:
+    def __init__(self,uid,uname,systemuser,manageuser,manageuserid=None):
+        self.uid = uid
+        self.uname = uname
+        self.systemuser = systemuser
+        self.manageuser =manageuser
+        self.manageuserid=manageuserid
+
+    def to_json(self):
+        return {"uid":self.uid,
+                "uname":self.uname,
+                "systemuser":self.systemuser,
+                'manageuser':self.manageuser,
+                'manageuserid':self.manageuserid
+                }
+    def __repr__(self):
+        return "user(id:%s),username:%s,issystemuser:%s"%(self.uid,self.uname,self.systemuser)
+def init_test_data():
+    '''
+    初始化测试资料
+    :return:返回各种类型的用户，方便后期测试
+    '''
+    # current_app.logger.info('start init_test_data')
+    # 超级用户
+    dev = User('2222','dev',True,False)
+    # 管理者用户
+    manage = User('2000','manage',False,True)
+    # 管理者下的普通用户
+    user_mng1 = User('2001','user_mng1',False,False,'2000')
+    # 普通用户
+    user = User('2002','user',False,False)
+    # current_app.logger.info('init_test_data success')
+    return dev, manage, user_mng1, user
+    # from app.models import Appuser
+    # # 超级用户
+    # dev =  add_seed(db.session,Appuser,{'uid':'2222'},
+    #                   {'uid':'2222','uname':'dev','systemuser':True,'manageuser':False,'manageuserid':''})
+    # # 管理者用户
+    # manage =  add_seed(db.session,Appuser,{'uid':'2000'},
+    #                   {'uid':'2000','uname':'manage','systemuser':False,'manageuser':True,'manageuserid':''})
+    # # 管理者下的普通用户
+    # user_mng1 = add_seed(db.session,Appuser,{'uid':'2001'},
+    #                   {'uid':'2001','uname':'user_mng1','systemuser':False,'manageuser':False,'manageuserid':'2000'})
+    # # 普通用户
+    # user = add_seed(db.session,Appuser,{'uid':'2002'},
+    #                   {'uid':'2002','uname':'user','systemuser':False,'manageuser':False,'manageuserid':''})
+    # return dev, manage, user_mng1, user
+
