@@ -1,0 +1,34 @@
+|Documentation status| |PyPI version| |Landscape status|
+
+|PEP compatible|
+
+toolkit
+-------
+
+This is my NGS analysis toolkit: ``ngs_toolkit``.
+
+It contains most code I've been using in the last 2-3 years in various
+projects and hopefully is of interest.
+
+Head to the `documentation <http://ngs-toolkit.readthedocs.io/>`__ to
+see how to install and use the toolkit, and have a look at the catalogue
+of available functions.
+
+Install with:
+
+.. code:: bash
+
+    pip install ngs-toolkit
+
+You might need to add a ``--user`` flag to the above command.
+
+.. |Documentation status| image:: https://readthedocs.org/projects/ngs-toolkit/badge/?version=latest
+   :target: http://ngs-toolkit.readthedocs.io/en/latest/?badge=latest
+.. |PyPI version| image:: https://badge.fury.io/py/ngs-toolkit.svg
+   :target: https://badge.fury.io/py/ngs-toolkit
+.. |Landscape status| image:: https://landscape.io/github/afrendeiro/toolkit/master/landscape.png
+   :target: https://landscape.io/github/afrendeiro/toolkit/master
+.. |PEP compatible| image:: http://pepkit.github.io/img/PEP-compatible-green.svg
+   :target: http://pepkit.github.io
+
+
