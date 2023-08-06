@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dbus.decorators &mdash; Cohen3 0.8.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Cohen3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../write_a_backend.html">Write a backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/coherence.html">Cohen3 source tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributor_code_of_conduct.html">Contributor Covenant Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Cohen3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>dbus.decorators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dbus.decorators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Service-side D-Bus decorators.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (C) 2003, 2004, 2005, 2006 Red Hat Inc. &lt;http://www.redhat.com/&gt;</span>
+<span class="c1"># Copyright (C) 2003 David Zeuthen</span>
+<span class="c1"># Copyright (C) 2004 Rob Taylor</span>
+<span class="c1"># Copyright (C) 2005, 2006 Collabora Ltd. &lt;http://www.collabora.co.uk/&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person</span>
+<span class="c1"># obtaining a copy of this software and associated documentation</span>
+<span class="c1"># files (the &quot;Software&quot;), to deal in the Software without</span>
+<span class="c1"># restriction, including without limitation the rights to use, copy,</span>
+<span class="c1"># modify, merge, publish, distribute, sublicense, and/or sell copies</span>
+<span class="c1"># of the Software, and to permit persons to whom the Software is</span>
+<span class="c1"># furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be</span>
+<span class="c1"># included in all copies or substantial portions of the Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,</span>
+<span class="c1"># EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF</span>
+<span class="c1"># MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND</span>
+<span class="c1"># NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT</span>
+<span class="c1"># HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,</span>
+<span class="c1"># WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
+<span class="c1"># OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER</span>
+<span class="c1"># DEALINGS IN THE SOFTWARE.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;signal&#39;</span><span class="p">)</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s1">&#39;restructuredtext&#39;</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">dbus</span> <span class="k">import</span> <span class="n">validate_interface_name</span><span class="p">,</span> <span class="n">Signature</span><span class="p">,</span> <span class="n">validate_member_name</span>
+<span class="kn">from</span> <span class="nn">dbus.lowlevel</span> <span class="k">import</span> <span class="n">SignalMessage</span>
+<span class="kn">from</span> <span class="nn">dbus.exceptions</span> <span class="k">import</span> <span class="n">DBusException</span>
+<span class="kn">from</span> <span class="nn">dbus._compat</span> <span class="k">import</span> <span class="n">is_py2</span>
+
+
+<span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="n">dbus_interface</span><span class="p">,</span> <span class="n">in_signature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_signature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">async_callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">sender_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">destination_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">message_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">connection_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">byte_arrays</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">rel_path_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Factory for decorators used to mark methods of a `dbus.service.Object`</span>
+<span class="sd">    to be exported on the D-Bus.</span>
+
+<span class="sd">    The decorated method will be exported over D-Bus as the method of the</span>
+<span class="sd">    same name on the given D-Bus interface.</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">        `dbus_interface` : str</span>
+<span class="sd">            Name of a D-Bus interface</span>
+<span class="sd">        `in_signature` : str or None</span>
+<span class="sd">            If not None, the signature of the method parameters in the usual</span>
+<span class="sd">            D-Bus notation</span>
+<span class="sd">        `out_signature` : str or None</span>
+<span class="sd">            If not None, the signature of the return value in the usual</span>
+<span class="sd">            D-Bus notation</span>
+<span class="sd">        `async_callbacks` : tuple containing (str,str), or None</span>
+<span class="sd">            If None (default) the decorated method is expected to return</span>
+<span class="sd">            values matching the `out_signature` as usual, or raise</span>
+<span class="sd">            an exception on error. If not None, the following applies:</span>
+
+<span class="sd">            `async_callbacks` contains the names of two keyword arguments to</span>
+<span class="sd">            the decorated function, which will be used to provide a success</span>
+<span class="sd">            callback and an error callback (in that order).</span>
+
+<span class="sd">            When the decorated method is called via the D-Bus, its normal</span>
+<span class="sd">            return value will be ignored; instead, a pair of callbacks are</span>
+<span class="sd">            passed as keyword arguments, and the decorated method is</span>
+<span class="sd">            expected to arrange for one of them to be called.</span>
+
+<span class="sd">            On success the success callback must be called, passing the</span>
+<span class="sd">            results of this method as positional parameters in the format</span>
+<span class="sd">            given by the `out_signature`.</span>
+
+<span class="sd">            On error the decorated method may either raise an exception</span>
+<span class="sd">            before it returns, or arrange for the error callback to be</span>
+<span class="sd">            called with an Exception instance as parameter.</span>
+
+<span class="sd">        `sender_keyword` : str or None</span>
+<span class="sd">            If not None, contains the name of a keyword argument to the</span>
+<span class="sd">            decorated function, conventionally ``&#39;sender&#39;``. When the</span>
+<span class="sd">            method is called, the sender&#39;s unique name will be passed as</span>
+<span class="sd">            this keyword argument.</span>
+
+<span class="sd">        `path_keyword` : str or None</span>
+<span class="sd">            If not None (the default), the decorated method will receive</span>
+<span class="sd">            the destination object path as a keyword argument with this</span>
+<span class="sd">            name. Normally you already know the object path, but in the</span>
+<span class="sd">            case of &quot;fallback paths&quot; you&#39;ll usually want to use the object</span>
+<span class="sd">            path in the method&#39;s implementation.</span>
+
+<span class="sd">            For fallback objects, `rel_path_keyword` (new in 0.82.2) is</span>
+<span class="sd">            likely to be more useful.</span>
+
+<span class="sd">            :Since: 0.80.0?</span>
+
+<span class="sd">        `rel_path_keyword` : str or None</span>
+<span class="sd">            If not None (the default), the decorated method will receive</span>
+<span class="sd">            the destination object path, relative to the path at which the</span>
+<span class="sd">            object was exported, as a keyword argument with this</span>
+<span class="sd">            name. For non-fallback objects the relative path will always be</span>
+<span class="sd">            &#39;/&#39;.</span>
+
+<span class="sd">            :Since: 0.82.2</span>
+
+<span class="sd">        `destination_keyword` : str or None</span>
+<span class="sd">            If not None (the default), the decorated method will receive</span>
+<span class="sd">            the destination bus name as a keyword argument with this name.</span>
+<span class="sd">            Included for completeness - you shouldn&#39;t need this.</span>
+
+<span class="sd">            :Since: 0.80.0?</span>
+
+<span class="sd">        `message_keyword` : str or None</span>
+<span class="sd">            If not None (the default), the decorated method will receive</span>
+<span class="sd">            the `dbus.lowlevel.MethodCallMessage` as a keyword argument</span>
+<span class="sd">            with this name.</span>
+
+<span class="sd">            :Since: 0.80.0?</span>
+
+<span class="sd">        `connection_keyword` : str or None</span>
+<span class="sd">            If not None (the default), the decorated method will receive</span>
+<span class="sd">            the `dbus.connection.Connection` as a keyword argument</span>
+<span class="sd">            with this name. This is generally only useful for objects</span>
+<span class="sd">            that are available on more than one connection.</span>
+
+<span class="sd">            :Since: 0.82.0</span>
+
+<span class="sd">        `utf8_strings` : bool</span>
+<span class="sd">            If False (default), D-Bus strings are passed to the decorated</span>
+<span class="sd">            method as objects of class dbus.String, a unicode subclass.</span>
+
+<span class="sd">            If True, D-Bus strings are passed to the decorated method</span>
+<span class="sd">            as objects of class dbus.UTF8String, a str subclass guaranteed</span>
+<span class="sd">            to be encoded in UTF-8.</span>
+
+<span class="sd">            This option does not affect object-paths and signatures, which</span>
+<span class="sd">            are always 8-bit strings (str subclass) encoded in ASCII.</span>
+
+<span class="sd">            :Since: 0.80.0</span>
+
+<span class="sd">        `byte_arrays` : bool</span>
+<span class="sd">            If False (default), a byte array will be passed to the decorated</span>
+<span class="sd">            method as an `Array` (a list subclass) of `Byte` objects.</span>
+
+<span class="sd">            If True, a byte array will be passed to the decorated method as</span>
+<span class="sd">            a `ByteArray`, a str subclass. This is usually what you want,</span>
+<span class="sd">            but is switched off by default to keep dbus-python&#39;s API</span>
+<span class="sd">            consistent.</span>
+
+<span class="sd">            :Since: 0.80.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validate_interface_name</span><span class="p">(</span><span class="n">dbus_interface</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">inspect</span><span class="p">,</span> <span class="s1">&#39;Signature&#39;</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_ONLY</span><span class="p">,</span>
+                        <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">):</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">async_callbacks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">async_callbacks</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;async_callbacks must be a tuple of (keyword for return callback, keyword for error callback)&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">async_callbacks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;async_callbacks must be a tuple of (keyword for return callback, keyword for error callback)&#39;</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">async_callbacks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">async_callbacks</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">sender_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">sender_keyword</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel_path_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">rel_path_keyword</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path_keyword</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">destination_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">destination_keyword</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">message_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">message_keyword</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">connection_keyword</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">connection_keyword</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">in_signature</span><span class="p">:</span>
+            <span class="n">in_sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Signature</span><span class="p">(</span><span class="n">in_signature</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_sig</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input signature is longer than the number of arguments taken&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_sig</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input signature is shorter than the number of arguments taken&#39;</span><span class="p">)</span>
+
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_is_method</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_async_callbacks</span> <span class="o">=</span> <span class="n">async_callbacks</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_interface</span> <span class="o">=</span> <span class="n">dbus_interface</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_in_signature</span> <span class="o">=</span> <span class="n">in_signature</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_out_signature</span> <span class="o">=</span> <span class="n">out_signature</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_sender_keyword</span> <span class="o">=</span> <span class="n">sender_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_path_keyword</span> <span class="o">=</span> <span class="n">path_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_rel_path_keyword</span> <span class="o">=</span> <span class="n">rel_path_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_destination_keyword</span> <span class="o">=</span> <span class="n">destination_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_message_keyword</span> <span class="o">=</span> <span class="n">message_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_connection_keyword</span> <span class="o">=</span> <span class="n">connection_keyword</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_dbus_get_args_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">byte_arrays</span><span class="o">=</span><span class="n">byte_arrays</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_py2</span><span class="p">:</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">_dbus_get_args_options</span><span class="p">[</span><span class="s1">&#39;utf8_strings&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s1">&#39;utf8_strings&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;utf8_strings&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;unexpected keyword argument &#39;utf8_strings&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="k">return</span> <span class="n">decorator</span>
+
+
+<span class="k">def</span> <span class="nf">signal</span><span class="p">(</span><span class="n">dbus_interface</span><span class="p">,</span> <span class="n">signature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">rel_path_keyword</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Factory for decorators used to mark methods of a `dbus.service.Object`</span>
+<span class="sd">    to emit signals on the D-Bus.</span>
+
+<span class="sd">    Whenever the decorated method is called in Python, after the method</span>
+<span class="sd">    body is executed, a signal with the same name as the decorated method,</span>
+<span class="sd">    with the given D-Bus interface, will be emitted from this object.</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">        `dbus_interface` : str</span>
+<span class="sd">            The D-Bus interface whose signal is emitted</span>
+<span class="sd">        `signature` : str</span>
+<span class="sd">            The signature of the signal in the usual D-Bus notation</span>
+
+<span class="sd">        `path_keyword` : str or None</span>
+<span class="sd">            A keyword argument to the decorated method. If not None,</span>
+<span class="sd">            that argument will not be emitted as an argument of</span>
+<span class="sd">            the signal, and when the signal is emitted, it will appear</span>
+<span class="sd">            to come from the object path given by the keyword argument.</span>
+
+<span class="sd">            Note that when calling the decorated method, you must always</span>
+<span class="sd">            pass in the object path as a keyword argument, not as a</span>
+<span class="sd">            positional argument.</span>
+
+<span class="sd">            This keyword argument cannot be used on objects where</span>
+<span class="sd">            the class attribute ``SUPPORTS_MULTIPLE_OBJECT_PATHS`` is true.</span>
+
+<span class="sd">            :Deprecated: since 0.82.0. Use `rel_path_keyword` instead.</span>
+
+<span class="sd">        `rel_path_keyword` : str or None</span>
+<span class="sd">            A keyword argument to the decorated method. If not None,</span>
+<span class="sd">            that argument will not be emitted as an argument of</span>
+<span class="sd">            the signal.</span>
+
+<span class="sd">            When the signal is emitted, if the named keyword argument is given,</span>
+<span class="sd">            the signal will appear to come from the object path obtained by</span>
+<span class="sd">            appending the keyword argument to the object&#39;s object path.</span>
+<span class="sd">            This is useful to implement &quot;fallback objects&quot; (objects which</span>
+<span class="sd">            own an entire subtree of the object-path tree).</span>
+
+<span class="sd">            If the object is available at more than one object-path on the</span>
+<span class="sd">            same or different connections, the signal will be emitted at</span>
+<span class="sd">            an appropriate object-path on each connection - for instance,</span>
+<span class="sd">            if the object is exported at /abc on connection 1 and at</span>
+<span class="sd">            /def and /x/y/z on connection 2, and the keyword argument is</span>
+<span class="sd">            /foo, then signals will be emitted from /abc/foo and /def/foo</span>
+<span class="sd">            on connection 1, and /x/y/z/foo on connection 2.</span>
+
+<span class="sd">            :Since: 0.82.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validate_interface_name</span><span class="p">(</span><span class="n">dbus_interface</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">path_keyword</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+        <span class="n">warn</span><span class="p">(</span><span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s1">&#39;dbus.service.signal::path_keyword has been &#39;</span>
+                                <span class="s1">&#39;deprecated since dbus-python 0.82.0, and &#39;</span>
+                                <span class="s1">&#39;will not work on objects that support &#39;</span>
+                                <span class="s1">&#39;multiple object paths&#39;</span><span class="p">),</span>
+             <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel_path_keyword</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;dbus.service.signal::path_keyword and &#39;</span>
+                            <span class="s1">&#39;rel_path_keyword cannot both be used&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">member_name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">validate_member_name</span><span class="p">(</span><span class="n">member_name</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">emit_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+            <span class="n">abs_path</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">path_keyword</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTS_MULTIPLE_OBJECT_PATHS</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;path_keyword cannot be used on the &#39;</span>
+                                    <span class="s1">&#39;signals of an object that supports &#39;</span>
+                                    <span class="s1">&#39;multiple object paths&#39;</span><span class="p">)</span>
+                <span class="n">abs_path</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">path_keyword</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">abs_path</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dbus_object_path__</span> <span class="ow">and</span>
+                    <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dbus_object_path__</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">abs_path</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Path </span><span class="si">%r</span><span class="s1"> is not below </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">abs_path</span><span class="p">,</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">__dbus_object_path__</span><span class="p">)</span>
+
+            <span class="n">rel_path</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">rel_path_keyword</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rel_path</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">rel_path_keyword</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">abs_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># non-deprecated case</span>
+                    <span class="k">if</span> <span class="n">rel_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">rel_path</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+                        <span class="n">object_path</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># will be validated by SignalMessage ctor in a moment</span>
+                        <span class="n">object_path</span> <span class="o">=</span> <span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">rel_path</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">object_path</span> <span class="o">=</span> <span class="n">abs_path</span>
+
+                <span class="n">message</span> <span class="o">=</span> <span class="n">SignalMessage</span><span class="p">(</span><span class="n">object_path</span><span class="p">,</span>
+                                                       <span class="n">dbus_interface</span><span class="p">,</span>
+                                                       <span class="n">member_name</span><span class="p">)</span>
+                <span class="n">message</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+                <span class="n">location</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="c1"># end emit_signal</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">rel_path_keyword</span><span class="p">,</span> <span class="n">path_keyword</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">keyword</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">keyword</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;function has no argument &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">keyword</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">signature</span><span class="p">:</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Signature</span><span class="p">(</span><span class="n">signature</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;signal signature is longer than the number of arguments provided&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;signal signature is shorter than the number of arguments provided&#39;</span><span class="p">)</span>
+
+        <span class="n">emit_signal</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">emit_signal</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span>
+        <span class="n">emit_signal</span><span class="o">.</span><span class="n">_dbus_is_signal</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">emit_signal</span><span class="o">.</span><span class="n">_dbus_interface</span> <span class="o">=</span> <span class="n">dbus_interface</span>
+        <span class="n">emit_signal</span><span class="o">.</span><span class="n">_dbus_signature</span> <span class="o">=</span> <span class="n">signature</span>
+        <span class="n">emit_signal</span><span class="o">.</span><span class="n">_dbus_args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">return</span> <span class="n">emit_signal</span>
+
+    <span class="k">return</span> <span class="n">decorator</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Pol Canelles.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.8.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
