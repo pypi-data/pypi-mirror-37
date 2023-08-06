@@ -1,0 +1,84 @@
+Metadata-Version: 1.1
+Name: sanic_brogz
+Version: 0.1.3
+Summary: An extension which allows you to easily brotli compress or gzip your Sanic responses.
+Home-page: http://github.com/bitpartio/sanic_brogz
+Author: Michael Chisari
+Author-email: UNKNOWN
+License: MIT
+Description: sanic_brogz
+        ===========
+        
+        sanic_brogz is an extension which allows you to easily brotli compress
+        or gzip your Sanic responses. It is a fork of the
+        `sanic_compress <https://github.com/subyraman/sanic_compress>`__ package
+        which is a port of the
+        `Flask-Compress <https://github.com/libwilliam/flask-compress>`__
+        extension.
+        
+        Installation
+        ------------
+        
+        Install with ``pip``:
+        
+        ``pip install sanic_brogz``
+        
+        Usage
+        -----
+        
+        Usage is simple. Simply pass in the Sanic app object to the ``Compress``
+        class, and responses will be brotli compressed or gzipped.
+        
+        .. code:: python
+        
+           from sanic import Sanic
+           from sanic_brogz import Compress
+        
+           app = Sanic(__name__)
+           Compress(app)
+        
+        Options
+        -------
+        
+        Within the Sanic application config you can provide the following
+        settings to control the behavior of sanic_brogz. None of the settings
+        are required.
+        
+        ``COMPRESS_MIMETYPES``: Set the list of mimetypes to compress here. -
+        Default:
+        ``{'text/html','text/css','text/xml','application/json','application/javascript'}``
+        
+        ``COMPRESS_LEVEL``: Specifies the gzip compression level (1-9) or brotli
+        compression level (1-11). - Default: ``6``
+        
+        ``COMPRESS_MIN_SIZE``: Specifies the minimum size (in bytes) threshold
+        for compressing responses. - Default: ``500``
+        
+        A higher ``COMPRESS_LEVEL`` will result in a gzipped response that is
+        smaller, but the compression will take longer.
+        
+        Example of using custom configuration:
+        
+        .. code:: python
+        
+           from sanic import Sanic
+           from sanic_brogz import Compress
+        
+           app = Sanic(__name__)
+           app.config['COMPRESS_MIMETYPES'] = {'text/html', 'application/json'}
+           app.config['COMPRESS_LEVEL'] = 4
+           app.config['COMPRESS_MIN_SIZE'] = 300
+           Compress(app)
+        
+        Note about compressing static files:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Sanic is not at heart a file server. You should consider serving static
+        files with nginx or on a separate file server.
+        
+Keywords: sanic,gzip,brotli
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Internet :: WWW/HTTP :: Session
