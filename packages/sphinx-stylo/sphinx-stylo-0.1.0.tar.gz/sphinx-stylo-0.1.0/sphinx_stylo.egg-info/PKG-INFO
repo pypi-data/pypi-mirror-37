@@ -1,0 +1,69 @@
+Metadata-Version: 2.1
+Name: sphinx-stylo
+Version: 0.1.0
+Summary: Insert images into Sphinx documentation using inline code and stylo
+Home-page: https://github.com/alcarney/sphinx-stylo
+Author: Alex Carney
+Author-email: alcarneyme@gmail.com
+License: MIT
+Description: # Sphinx-Stylo
+        
+        **It is extremely early stages for this extension. It is not likely to be robust**
+        
+        Sphinx-Stylo is an extension to the [Sphinx](http://www.sphinx-doc.org/en/master/)
+        documentation tool that allows you to insert dynamically generated images created using
+        the [Stylo](https://alcarney.github.io/stylo) python library. Images can be defined
+        using the `.. stylo-image::` directive inline in your rst source files.
+        
+        ```rst
+        .. stylo-image::
+           :align: center
+           :img-width: 1920
+           :img-height: 1080
+           :display-width: 75%
+        
+           from stylo.color import FillColor
+           from stylo.shape import Circle
+           from stylo.image import SimpleImage
+        
+           color = FillColor("ffff00)
+           circle = Circle(fill=True)
+        
+           image = SimpleImage(circle, color)
+        ```
+        
+        Then when a sphinx build is run your code will be executed and an image with the
+        given dimensions will be inserted into the final HTML page. 
+        
+        If you want the code included alongside the inserted image then add the `:include-code:`
+        option to the list of options under the directive.
+        
+        You **must** store your image in a variable called `image` for it to be picked up by the
+        extension.
+        
+        ## Getting Started
+        
+        If you want to use this extension in your documentation then you first need to
+        install the extension using `pip`.
+        
+        ```sh
+        $ pip install sphinx-stylo
+        ```
+        
+        Then you need to add the extension to your `extensions = []` list in your project's `conf.py`
+        
+        ```py
+        extensions = [
+            ...
+            "sphinx_stylo"
+        ]
+        ```
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Documentation
+Classifier: Topic :: Documentation :: Sphinx
+Requires-Python: >=3.5
+Description-Content-Type: text/markdown
