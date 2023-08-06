@@ -1,0 +1,44 @@
+{% extends "bee_django_report/base.html" %}
+{% load bee_django_report_filter %}
+{% block content %}
+    {% include 'bee_django_report/logo.html' %}
+    {% include 'bee_django_report/nav.html' %}
+    <div><h4>{{ class_id|get_class_name }}</h4></div>
+
+    <div style="margin: 10px 0;">
+        <table class="table table-bordered">
+            <tr>
+                <th></th>
+                <th>学生</th>
+                <th>课件</th>
+                <th>直播要求</th>
+            </tr>
+            {% for data in data_list %}
+                <tr>
+                    <td>
+                        {{ forloop.counter }}
+                    </td>
+                    <td>
+                        {% include 'bee_django_report/include/user_list_search_field.html' %}
+                    </td>
+
+
+                    <td>
+                        {{ data.ucs_id|get_section_name|default:"" }}
+                    </td>
+                    <td>
+                        {% if data.section_has_videowork %}
+                            所学:{{ data.ucs_work_time }} / 要求:{{ data.section_video_length_req }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </td>
+
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}
+{% block scripts %}
+
+{% endblock %}
