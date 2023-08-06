@@ -1,0 +1,124 @@
+Metadata-Version: 2.1
+Name: zato-apitest
+Version: 1.12
+Summary: API Testing for Humans
+Home-page: https://zato.io/docs/test/apitest/index.html
+Author: Zato Source s.r.o.
+Author-email: info@zato.io
+License: GNU Lesser General Public License v3 (LGPLv3)
+Platform: OS Independent
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: Other Audience
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Communications
+Classifier: Topic :: Education :: Testing
+Classifier: Topic :: Internet
+Classifier: Topic :: Internet :: Proxy Servers
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Security
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: System :: Networking
+Classifier: Topic :: Utilities
+Requires-Dist: argparse (>=1.2.1)
+Requires-Dist: arrow (>=0.4.2)
+Requires-Dist: base32-crockford (>=0.2.0)
+Requires-Dist: behave (>=1.2.4)
+Requires-Dist: blist (>=1.3.6)
+Requires-Dist: bunch (>=1.0.1)
+Requires-Dist: cassandra-driver (>=2.1.1)
+Requires-Dist: click (>=6.7)
+Requires-Dist: configobj (>=5.0.5)
+Requires-Dist: coverage (>=3.7.1)
+Requires-Dist: datadiff (>=1.1.5)
+Requires-Dist: enum34 (>=1.0)
+Requires-Dist: flake8 (>=2.1.0)
+Requires-Dist: jsonpointer (>=1.3)
+Requires-Dist: lxml (>=3.3.5)
+Requires-Dist: mccabe (<0.7.0,>=0.6.0)
+Requires-Dist: mock (>=1.0.1)
+Requires-Dist: nose (>=1.3.3)
+Requires-Dist: parse (>=1.6.4)
+Requires-Dist: parse-type (>=0.3.4)
+Requires-Dist: pep8 (>=1.5.7)
+Requires-Dist: psycopg2 (>=2.5.3)
+Requires-Dist: pyflakes (>=2.0.0)
+Requires-Dist: python-dateutil (>=2.2)
+Requires-Dist: requests (>=2.3.0)
+Requires-Dist: requests-testadapter (>=0.3.0)
+Requires-Dist: six (>=1.6.1)
+Requires-Dist: sqlalchemy (>=0.9.7)
+Requires-Dist: twine
+Requires-Dist: wsgiref (>=0.1.2)
+Requires-Dist: pysandra-unit (>=0.4.1)
+Requires-Dist: zato-websocket-client
+Requires-Dist: zato-vault-client
+
+zato-apitest is a friendly command line tool for creating beautiful tests of HTTP-based REST, XML and SOAP APIs with as little
+hassle as possible.
+
+Tests are written in plain English, with no programming needed, and can be trivially easy extended in Python if need be.
+
+Note that zato-apitest is meant to test APIs only. It's doesn't simulate a browser nor any sort of user interactions. It's meant
+purely for machine-machine API testing.
+
+Originally part of `Zato <https://zato.io>`_ - open-source ESB, SOA, REST, APIs and cloud integrations in Python.
+
+In addition to HTTP Zato itself supports AMQP, ZeroMQ, WebSphere MQ, including JMS, Redis, FTP, OpenERP, SMTP, IMAP, SQL, Amazon S3,
+OpenStack Swift and more so it's guaranteed zato-apitest will grow support for more protocols and transport layers with time.
+
+Here's a sample test case::
+
+    Feature: Customer update
+
+    Scenario: SOAP customer update
+
+        Given address "http://example.com"
+        Given URL path "/xml/customer"
+        Given SOAP action "update:cust"
+        Given HTTP method "POST"
+        Given format "XML"
+        Given namespace prefix "cust" of "http://example.com/cust"
+        Given request "cust-update.xml"
+        Given XPath "//cust:name" in request is "Maria"
+        Given XPath "//cust:last-seen" in request is a random date before "2015-03-17" "default"
+
+        When the URL is invoked
+
+        Then XPath "//cust:action/cust:code" is an integer "0"
+        And XPath "//cust:action/cust:msg" is "Ok, updated"
+
+        And context is cleaned up
+
+    Scenario: REST customer update
+
+        Given address "http://example.com"
+        Given URL path "/json/customer"
+        Given query string "?id=123"
+        Given HTTP method "PUT"
+        Given format "JSON"
+        Given header "X-Node" "server-test-19"
+        Given request "cust-update.json"
+        Given JSON Pointer "/name" in request is "Maria"
+        Given JSON Pointer "/last-seen" in request is UTC now "default"
+
+        When the URL is invoked
+
+        Then JSON Pointer "/action/code" is an integer "0"
+        And JSON Pointer "/action/message" is "Ok, updated"
+        And status is "200"
+        And header "X-My-Header" is "Cool"
+
+More details, including plenty of usage examples, demos and screenshots, are `on zato.io <https://zato.io/docs/test/apitest/index.html>`_.
+
+
