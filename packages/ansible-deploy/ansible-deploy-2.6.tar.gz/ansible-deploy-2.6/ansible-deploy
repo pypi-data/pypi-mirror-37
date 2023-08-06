@@ -1,0 +1,56 @@
+#!/bin/bash
+DIR=~/.ansible/roles/deploy
+GIT_BASE=${GIT_BASE:-https://github.com/moshloop}
+inventory=
+ARGS=
+while getopts ":i:, :h, " opt; do
+  case $opt in
+    h)
+      echo "USAGE: ansible-deploy [any ansible-playbook arguments]"
+      exit
+      ;;
+    i)
+    inventory=$OPTARG
+      ;;
+    esac
+done
+
+if [[ "$inventory" == "" && -d inventory ]]; then
+  ARGS+=" -i inventory"
+  inventory="inventory"
+fi
+
+checkout_role() {
+  if [[ ! -e $DIR ]]; then
+    git clone $GIT_BASE/ansible-deploy.git $DIR
+  fi
+
+  desired_tag=$( ansible-inventory -i $inventory --list | jq -r '._meta.hostvars | values[] | .ansible_deploy_version' | head -n1)
+
+  pwd=$(pwd)
+  cd $DIR
+  current_tag=$(git describe --tags)
+
+  if [[ "$desired_tag" != "null" && "$desired_tag" != "$current_tag" ]]; then
+    echo "Checking out $desired_tag"
+    git fetch
+    git checkout $desired_tag
+  fi
+
+  cd $pwd
+}
+
+link_playbook() {
+  ln -s $DIR/deploy.yml .ansible-deploy.yml
+
+  function finish {
+    rm .ansible-deploy.yml
+  }
+  trap finish EXIT
+}
+
+checkout_role
+link_playbook
+
+ANSIBLE_HASH_BEHAVIOUR=merge
+ansible-playbook .ansible-deploy.yml $@ $ARGS
