@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestResponse>
+    <RuleName>{{rule_context.rule_name}}</RuleName>
+    <TaskName>{{rule_context.task_name}}</TaskName>
+    <RuleContext>
+        {% for name, value in rule_context.context.items() %}
+            <KeyName>{{ name }}</KeyName>
+        {% endfor %}
+    </RuleContext>
+    <TaskParameters>
+        {% for name, value in task_parameters.items() %}
+            <TaskParameter name="{{ name }}">{{ value }}</TaskParameter>
+        {% endfor %}
+    </TaskParameters>
+    <StepParameters>
+        {% for name, value in step_parameters.items() %}
+            <StepParameter name="{{ name }}">{{ value }}</StepParameter>
+        {% endfor %}
+    </StepParameters>
+    <RuleData>
+        {% for serial_number in data %}
+            <id>{{ serial_number }}</id>
+        {% endfor %}
+    </RuleData>
+</TestResponse>
