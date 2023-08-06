@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+from distutils.core import setup
+
+packages = \
+['s4', 's4.clients', 's4.commands']
+
+package_data = \
+{'': ['*']}
+
+install_requires = \
+['boto3>=1.7,<2.0',
+ 'clint>=0.5.1,<0.6.0',
+ 'filelock>=3.0,<4.0',
+ 'inotify-simple>=1.1,<2.0',
+ 'pathspec>=0.5.6,<0.6.0',
+ 'python-magic>=0.4.15,<0.5.0',
+ 'tabulate>=0.8.2,<0.9.0',
+ 'tqdm>=4.23,<5.0']
+
+entry_points = \
+{'console_scripts': ['s4 = s4.cli:entry_point']}
+
+setup_kwargs = {
+    'name': 's4',
+    'version': '0.3.0',
+    'description': 'Fast and cheap synchronisation of files using Amazon S3',
+    'long_description': '==============\nS4 = S3 Syncer\n==============\n\n|CircleCI| |CodeCov| |Black| |PyPi| |GPLv3|\n\nFast and cheap synchronisation of files using `Amazon\nS3 <https://aws.amazon.com/s3/>`__.\n\nS4 stands for "Simple Storage Solution (S3) Syncer".\n\nThe intention of this project is to be an open source alternative to\ntypical proprietary sync solutions like Dropbox. Because S4 interacts\nwith S3 directly, you can expect *very* fast upload and download speeds\nas well as *very* cheap costs (See `Amazon S3\nPricing <https://aws.amazon.com/s3/pricing/>`__ for an idea of how much\nthis would cost you). See `Why?`_ for further motivation for this project.\n\nYou can also take advantage of other cool features that S3 provides like\n`versioning <http://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html>`__.\nEverytime you sync a version of a new file, you will now have the\nability to easily rollback to any previous version.\n\n* Requirements_\n* Installation_\n* Setup_\n* Synchronising_\n* `Handling Conflicts`_\n* `Other Subcommands`_\n* `How S4 Works`_\n* `Ignoring Files`_\n* `Why?`_\n* Contributing_\n\nSee it in action here:\n\n|ASCIINEMA|\n\nRequirements\n------------\n\nS4 requires python 3.5+ to work\n\nInstallation\n------------\n\nThe easiest way to install S4 is through pip:\n\n::\n\n    $ pip install s4\n\nYou will need ``libmagic`` installed.\nThis is installed by default on most linux distributions but on MacOSX you need to install it with brew as follows:\n\n::\n\n    brew install libmagic\n\nSetup\n-----\n\nRun ``s4 add`` to add a new sync local folder and target S3 uri:\n\n::\n\n    $ s4 add\n    local folder: /home/username/myfolder1\n    s3 uri: s3://mybucket/folder1\n    AWS Access Key ID: AKIAJD53D9GCGKCD\n    AWS Secret Access Key:\n    region name: eu-west-2\n    Provide a name for this entry [myfolder1]:\n\nSynchronising\n-------------\n\nRun ``s4 sync`` in the project directory to synchronise the local\nfolders you specified with the folders in the bucket.\n\n::\n\n    $ s4 sync\n    Syncing myfolder1 [/home/username/myfolder1/ <=> s3://mybucket/folder1/]\n    Creating foobar.jpg (/home/username/myfolder1/ => s3://mybucket/folder1/)\n    Creating boarding-pass.pdf (/home/username/myfolder1/ => s3://mybucket/folder1/)\n    Flushing Index to Storage\n\nAll files will be automatically synced between the source and target\ndestinations where possible.\n\nYou may specify a specific folder to synchronise by the name you\nprovided during ``add``.\n\n::\n\n    $ s4 sync myfolder1\n\n\nIf you wish to synchronise your targets continuously, use the ``daemon`` command:\n\n::\n\n    $ s4 daemon myfolder1\n\nNOTE: This command is only supported on machines that can run INotify. This typically means\nLinux based operating systems.\n\n\nHandling Conflicts\n------------------\n\nIn the case where S4 cannot decide on a reasonable action by itself, it\nwill ask you to intervene:\n\n::\n\n    Syncing /home/username/myfolder1/ with s3://mybucket/folder1/\n\n    Conflict for "test.txt". Which version would you like to keep?\n       (1) /home/username/myfolder1/test.txt updated at 2017-01-23 12:26:24 (CREATED)\n       (2) s3://mybucket/folder1/test.txt updated at 2017-01-23 12:26:30 (CREATED)\n       (d) View difference (requires diff command)\n       (X) Skip this file\n\n    Choice (default=skip):\n\nIf you do not wish to fix the issue, you can simply skip the file for\nnow.\n\nOther Subcommands\n-----------------\n\nSome other subcommands that you could find useful:\n\n-  ``s4 targets`` - print existing targets\n-  ``s4 edit`` - edit the settings of a targets\n-  ``s4 rm`` - remove a target\n-  ``s4 ls`` - print tracked files and metadata of a target\n\nUse the ``--help`` parameter on each subcommand to get more details.\n\nHow S4 Works\n------------\n\nS4 keeps track of changes between files with a ``.index`` file at\nthe root of each folder you are syncing. This contains the keys of each\nfile being synchronised along with the timestamps found locally and\nremotely in JSON format.\n\nThis is compressed (currently using gzip) to save space and increase\nperformance when loading.\n\nIf you are curious, you can view the contents of an index file using the\n``s4 ls`` subcommand or you can view the file directly using a command\nlike ``zcat``.\n\n    NOTE: Deleting this file will result in that folder being treated as if\n    it was never synced before so make sure you *do not* delete it unless\n    you know what you are doing.\n\nAll information about your configuration (such as targets, your keys etc..) are\nstored in a JSON formatted file under ``~/.config/s4/sync.conf``.\n\nIgnoring Files\n--------------\n\nCreate a ``.syncignore`` file in the root of the directory being synced\nto list patterns of subdirectories and files you wish to ignore. The\n``.syncignore`` file uses the exact same pattern that you would expect\nin ``.gitignore``. Each line specifies a `GLOB\npattern <https://en.wikipedia.org/wiki/Glob_%28programming%29>`__ to\nignore during sync.\n\nNote that if you add a pattern which matches an item that was previously\nsynced, that item will be deleted from the target you are syncing with\nnext time you run S4.\n\nWhy?\n----\n\nThere are a number of open source S3 backup tools out there - but none of them really satisfied the\nrequirements that this project tries to solve.\n\nHere are is a list of open source solutions that I have tried in the past.\n\n* ``s3cmd``: Provides a sync function that works very well for backing up - but stops working correctly\n  as soon as there is second machine you want to sync to S3.\n\n* ``owncloud/nextcloud``: Requires you to setup a server to perform your syncing. In terms of costs on AWS,\n  this quickly becomes costly compared with just using S3. The speed of your uploads and downloads are also\n  heavily bottlenectked by the network and hardware performance of your ec2 instance.\n\n* ``seafile``: suffers from the same problem as owncloud/nextcloud.\n\n* ``duplicity``: great backup tool, but does not provide a sync solution of any kind.\n\nContributing\n------------\n\nPull requests are welcome! Make sure you pass all the tests, CircleCI will tell you if you don\'t ;)\n\n\n.. |CircleCI| image:: https://circleci.com/gh/MichaelAquilina/S4.svg?style=svg\n   :target: https://circleci.com/gh/MichaelAquilina/S4\n\n.. |PyPi| image:: https://badge.fury.io/py/s4.svg\n   :target: https://badge.fury.io/py/s4\n\n.. |CodeCov| image:: https://codecov.io/gh/MichaelAquilina/s4/branch/master/graph/badge.svg\n   :target: https://codecov.io/gh/MichaelAquilina/s4\n\n.. |GPLv3| image:: https://img.shields.io/badge/License-GPL%20v3-blue.svg\n   :target: https://www.gnu.org/licenses/gpl-3.0\n\n.. |ASCIINEMA| image:: https://asciinema.org/a/0GiXLN7YT4ki8qouedF0w8Wbk.png\n   :target: https://asciinema.org/a/0GiXLN7YT4ki8qouedF0w8Wbk?autoplay=1\n\n.. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg\n   :target: https://github.com/ambv/black\n',
+    'author': 'Michael Aquilina',
+    'author_email': 'michaelaquilina@gmail.com',
+    'url': 'https://github.com/MichaelAquilina/S4',
+    'packages': packages,
+    'package_data': package_data,
+    'install_requires': install_requires,
+    'entry_points': entry_points,
+    'python_requires': '>=3.5',
+}
+
+
+setup(**setup_kwargs)
