@@ -1,0 +1,1 @@
+Use class decorator to add foreign keys.
