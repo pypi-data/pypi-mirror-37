@@ -1,0 +1,30 @@
+---
+- name: 'Initialize additional_repos'
+  set_fact:
+    additional_repos: []
+
+- name: 'Build additional repos'
+  set_fact:
+    additional_repos: "{{ additional_repos + ['--repofrompath=' + item.name + ',' + item.url] }}"
+  with_items: "{{ repoclosure_additional_repos }}"
+
+- debug:
+    msg: "{{ additional_repos }}"
+
+- name: 'Run repoclosure'
+  command: >
+    repoclosure
+      -c {{ inventory_dir }}/{{ repoclosure_config }}
+      -t
+      -r {{ repoclosure_target_repo }}
+      {{ '--repofrompath=downloaded_rpms,./downloaded_rpms' if repoclosure_target_repo == 'downloaded_rpms' else '' }}
+      {{ additional_repos | join(' ') }}
+      {{ '-l ' if repoclosure_lookaside_repos else '' }}
+      {{ repoclosure_lookaside_repos | join(' -l ') }}
+  register: output
+  when: output is not defined
+  args:
+    chdir: "{{ inventory_dir }}"
+
+- debug:
+    msg: "{{ output.stdout_lines | join('\n') }}"
