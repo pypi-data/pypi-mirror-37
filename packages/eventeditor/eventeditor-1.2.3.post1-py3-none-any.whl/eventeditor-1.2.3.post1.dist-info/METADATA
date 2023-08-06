@@ -1,0 +1,64 @@
+Metadata-Version: 2.1
+Name: eventeditor
+Version: 1.2.3.post1
+Summary: Event editor for Breath of the Wild
+Home-page: https://github.com/leoetlino/event-editor
+Author: leoetlino
+Author-email: leo@leolam.fr
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: evfl (>=0.11.2)
+Requires-Dist: PyYAML (~=3.12)
+Requires-Dist: aamp (~=1.0)
+Requires-Dist: byml (~=2.0)
+Requires-Dist: wszst-yaz0 (~=1.1.0)
+
+## EventEditor for Breath of the Wild
+
+### Setup
+
+Install Python 3.6+ (**64 bit version**) and PyQt5, then run `pip install eventeditor`.
+
+### Auto completion
+
+In order to enable auto completion for actors, actions and queries, add:
+
+```ini
+[paths]
+rom_root=/path/to/game_rom
+```
+
+to EventEditor's configuration file, where `/path/to/game_rom` is a path such that
+`/path/to/game_rom/Pack/Bootup.pack/Actor/AIDef/AIDef_Game.product.sbyml` exists.
+An easy, recommended way to get the required file structure without extracting every archive
+is to use [botwfstools](https://github.com/leoetlino/botwfstools).
+
+The configuration file is stored:
+
+* On Linux or macOS: at `~/.config/eventeditor/eventeditor.ini`
+* On Windows: at `%APPDATA%/eventeditor/eventeditor.ini`
+
+### Known issues
+
+* Unlinking events while in fork/join will break graph generation most of the time. So using that option is not recommended when fork/join events are involved.
+
+### What needs to be done
+
+* Timeline files (reverse engineering)
+
+* Collect event info from EventInfo and have a metadata file for each event flow, so that:
+    * EventInfo can be automatically regenerated
+    * All copies of an event flow can be automatically updated
+
+* Node order shuffling to get less crossings. This used to be a dagre.js feature but it got removed...
+
+### License
+
+This software is licensed under the terms of the GNU General Public License, version 2 or later.
+
+
