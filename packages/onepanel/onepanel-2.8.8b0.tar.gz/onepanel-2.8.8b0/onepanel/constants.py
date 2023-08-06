@@ -1,0 +1,1 @@
+CLI_VERSION = '2.8.8b0'
