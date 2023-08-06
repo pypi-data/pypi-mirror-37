@@ -1,0 +1,28 @@
+   // Calls the Python function and
+   // converts the returned value into
+   // SPL Tuples and submits them.
+   // Returns if the Python function returns None.
+<%
+{
+  my $ituplearg = "";
+  if (defined $iport) {
+     $ituplearg = ", " . $iport->getCppTupleName();
+  }
+%>
+
+    PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
+
+    if (pyReturnVar == NULL) {
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
+    }
+
+    if (SplpyGeneral::isNone(pyReturnVar)) {
+         Py_DECREF(pyReturnVar);
+         <%=$no_tuples_action%>
+    } else {
+
+         pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
+
+         Py_DECREF(pyReturnVar);
+    }
+<%}%>
