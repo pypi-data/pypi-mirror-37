@@ -1,0 +1,41 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="zope"
+    >
+
+  <include package="zope.component" file="meta.zcml" />
+  <include package="zope.security" file="meta.zcml" />
+
+  <include package="zope.security" file="permissions.zcml" />
+
+  <class class=".permission.LocalPermission">
+    <factory
+        id="zope.app.security.Permission"
+        />
+    <implements
+        zcml:condition="installed zope.annotation"
+        interface="zope.annotation.interfaces.IAttributeAnnotatable"
+        />
+    <allow
+        interface="zope.security.interfaces.IPermission"
+        />
+    <require
+        permission="zope.Security"
+        set_schema="zope.security.interfaces.IPermission"
+        />
+  </class>
+
+  <subscriber
+      for="zope.security.interfaces.IPermission
+           zope.interface.interfaces.IRegistered"
+      handler=".permission.setIdOnActivation"
+      />
+
+  <subscriber
+      for="zope.security.interfaces.IPermission
+           zope.interface.interfaces.IUnregistered"
+      handler=".permission.unsetIdOnDeactivation"
+      />
+
+</configure>
