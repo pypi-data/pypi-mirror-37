@@ -1,0 +1,104 @@
+{
+    "CrossingTraffic-1": {
+        "authors": ["Sungwook Yoon"],
+        "date": "2011-04-23",
+        "description": "Crossing Traffic Robot Navigation (3x3)\n\n Author: Sungwook Yoon (sungwook.yoon [at] gmail.com)\n\n Modified for competition and translation purposes by Scott Sanner.\n\n In a grid, a robot (R) must get to a goal (G) and avoid obstacles (O)\n arriving randomly and moving left.  If an obstacle overlaps with the\n robot, the robot disappears and can no longer move around.  The robot\n can 'duck' underneath a car by deliberately moving right/east when\n a car is to the right of it (this can make the solution interesting...\n the robot should start at the left side of the screen then).  The robot\n receives -1 for every time step it has not reached the goal.  The goal\n state is absorbing with 0 reward.\n\n ****************\n *            R * \n *  <-O <-O <-O *\n *    <-O   <-O *\n * <-O    <-O   *\n *     <-O  <-O *\n *            G *\n ****************\n\n You can think of this as the RDDL version of Frogger:\n\n   http://en.wikipedia.org/wiki/Frogger",
+        "requirements": ["reward-deterministic", "constrained-state"]
+    },
+    "CrossingTraffic-10": {
+        "authors": ["Sungwook Yoon"],
+        "date": "2011-04-23",
+        "description": "Crossing Traffic Robot Navigation (7x7)\n\n Author: Sungwook Yoon (sungwook.yoon [at] gmail.com)\n\n Modified for competition and translation purposes by Scott Sanner.\n\n In a grid, a robot (R) must get to a goal (G) and avoid obstacles (O)\n arriving randomly and moving left.  If an obstacle overlaps with the\n robot, the robot disappears and can no longer move around.  The robot\n can 'duck' underneath a car by deliberately moving right/east when\n a car is to the right of it (this can make the solution interesting...\n the robot should start at the left side of the screen then).  The robot\n receives -1 for every time step it has not reached the goal.  The goal\n state is absorbing with 0 reward.\n\n ****************\n *            R * \n *  <-O <-O <-O *\n *    <-O   <-O *\n * <-O    <-O   *\n *     <-O  <-O *\n *            G *\n ****************\n\n You can think of this as the RDDL version of Frogger:\n\n   http://en.wikipedia.org/wiki/Frogger",
+        "requirements": ["reward-deterministic", "constrained-state"]
+    },
+    "GameOfLife-1": {
+        "authors": ["Scott Sanner"],
+        "date": "2011-04-20",
+        "description": "Game of Life Boolean MDP (3x3)\nA simple DBN to encode Conway's cellular automata 'game of life'\non a grid.  One gets a reward for generating patterns that keep\nthe most cells alive.",
+        "requirements": ["reward-deterministic"]
+    },
+    "GameOfLife-10": {
+        "authors": ["Scott Sanner"],
+        "date": "2011-04-20",
+        "description": "Game of Life Boolean MDP (10x3)\nA simple DBN to encode Conway's cellular automata 'game of life'\non a grid.  One gets a reward for generating patterns that keep\nthe most cells alive.",
+        "requirements": ["reward-deterministic"]
+    },
+    "HVAC-3": {
+        "authors": ["Scott Sanner", "Thiago Bueno"],
+        "date": "2018-09-05",
+        "description": "3-Room Temperature Control Simulation.\nHere we define space as object, which includes rooms, hallways, and outside of the building.\nOur objective is to save the cost of using HVAC system, while controlling the room temperature within a certain desired range.\nWe use HVAC system to control the temperature of each room, by turning the HVAC (heating) air on/off\nReward function is to calculate the cost to providing cooling/warming control.\nThere will also be thermal transfer both between each space, which will impact the room temperature\nThe amount of heat transferred depends on the temperature difference and the Thermal Resistance of the wall between the spaces\nWe assigns a penalty that will be applied if the room temperature goes beyond the desired temperature range.",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "HVAC-6": {
+        "authors": ["Scott Sanner", "Thiago Bueno"],
+        "date": "2018-09-05",
+        "description": "6-Room Temperature Control Simulation.\nHere we define space as object, which includes rooms, hallways, and outside of the building.\nOur objective is to save the cost of using HVAC system, while controlling the room temperature within a certain desired range.\nWe use HVAC system to control the temperature of each room, by turning the HVAC (heating) air on/off\nReward function is to calculate the cost to providing cooling/warming control.\nThere will also be thermal transfer both between each space, which will impact the room temperature\nThe amount of heat transferred depends on the temperature difference and the Thermal Resistance of the wall between the spaces\nWe assigns a penalty that will be applied if the room temperature goes beyond the desired temperature range.",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "HVAC-v1": {
+        "authors": ["Scott Sanner", "Thiago Bueno"],
+        "date": "2018-09-05",
+        "description": "6-Room Temperature Control Simulation.\nHere we define space as object, which includes rooms, hallways, and outside of the building.\nOur objective is to save the cost of using HVAC system, while controlling the room temperature within a certain desired range.\nWe use HVAC system to control the temperature of each room, by turning the HVAC (heating) air on/off\nReward function is to calculate the cost to providing cooling/warming control.\nThere will also be thermal transfer both between each space, which will impact the room temperature\nThe amount of heat transferred depends on the temperature difference and the Thermal Resistance of the wall between the spaces\nWe assigns a penalty that will be applied if the room temperature goes beyond the desired temperature range.",
+        "requirements": ["concurrent", "continuous", "cpf-deterministic", "reward-deterministic", "intermediate-nodes"]
+    },
+    "Mars_Rover": {
+        "authors": ["Scott Sanner"],
+        "date": "2018-09-05",
+        "description": "A simple mixed discrete continuous MDP for a single Mars Rover.\n A Rover must traverse a 2D region and take pictures within the\n bounding boxes of designated picture points denoted by nonfluents\n within time constraints (e.g., Martian daylight).  Note that this \n models continuous time explicitly since there is only one rover.\n\n The continuous state (x,y,t) consists of robot position (x,y) and time t.\n The discrete state consists of whether each picture-point has been taken. \n The action consists of movements (dx,dy) or the snapping of a picture\n without moving (state-action constraints enforce this exclusion).\n A reward is gained for snapping a picture within the bounding box\n of a picture point -- reward can only be obtained for a picture once.\n\n The goal here is to take as many high-value pictures (within their\n designated radii) as possible within the time constraints.\n\n I can provide a proper version of this domain using circles for \n picture-points and Euclidean distance for time updating on movement.\n\n Motivated by:\n\n   Bresina, J. L.; Dearden, R.; Meuleau, N.; Ramkrishnan, S.;\n   Smith, D. E.; and Washington, R. 2002. Planning under continuous\n   time and resource uncertainty: A challenge for AI. UAI 2002.",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "Navigation-v1": {
+        "authors": ["Scott Sanner", "Wu Ga"],
+        "date": "2018-09-05",
+        "description": "An agent has to move from a start position to a goal position\nas fast as it can while avoiding decelearion zones.",
+        "requirements": ["concurrent", "continuous", "cpf-deterministic", "reward-deterministic", "intermediate-nodes"]
+    },
+    "Navigation-v2": {
+        "authors": ["Scott Sanner", "Wu Ga", "Thiago Bueno"],
+        "date": "2018-09-05",
+        "description": "An agent has to move from a start position to a goal position\nas fast as it can while avoiding decelearion zones.",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes"]
+    },
+    "Navigation-v3": {
+        "authors": ["Thiago Bueno"],
+        "date": "2018-10-29",
+        "description": "An agent has to move from a start position to a goal position\nas fast as it can while avoiding decelearion zones.",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes"]
+    },
+    "Reservoir-8": {
+        "authors": ["Scott Sanner", "Wu Ga", "Buser", "Thiago Bueno"],
+        "date": "2018-02-22",
+        "description": "\n Reservoir Control: (8 reservoirs)\n\n The problem models the active maintenance of water levels in\n a Reservoir system with uncertain rainfall and nonlinear \n evaporation rates as a function of water level.  The objective\n is to maintain all reservoir levels within a desired safe range.\n\n The state of each reservoir is the water level (rlevel).  The \n actions are to set the outflows of each reservoir.  Rewards\n are summed per reservoir and optimal when the water level is\n within predefined upper and lower bounds.\n",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "Reservoir-10": {
+        "authors": ["Scott Sanner", "Wu Ga", "Buser", "Thiago Bueno"],
+        "date": "2018-02-22",
+        "description": "\n Reservoir Control: (10 reservoirs)\n\n The problem models the active maintenance of water levels in\n a Reservoir system with uncertain rainfall and nonlinear \n evaporation rates as a function of water level.  The objective\n is to maintain all reservoir levels within a desired safe range.\n\n The state of each reservoir is the water level (rlevel).  The \n actions are to set the outflows of each reservoir.  Rewards\n are summed per reservoir and optimal when the water level is\n within predefined upper and lower bounds.\n",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "Reservoir-20": {
+        "authors": ["Scott Sanner", "Wu Ga", "Buser", "Thiago Bueno"],
+        "date": "2018-02-22",
+        "description": "\n Reservoir Control: (20 reservoirs)\n\n The problem models the active maintenance of water levels in\n a Reservoir system with uncertain rainfall and nonlinear \n evaporation rates as a function of water level.  The objective\n is to maintain all reservoir levels within a desired safe range.\n\n The state of each reservoir is the water level (rlevel).  The \n actions are to set the outflows of each reservoir.  Rewards\n are summed per reservoir and optimal when the water level is\n within predefined upper and lower bounds.\n",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "Reservoir-30": {
+        "authors": ["Scott Sanner", "Wu Ga", "Buser", "Thiago Bueno"],
+        "date": "2018-02-22",
+        "description": "\n Reservoir Control: (30 reservoirs)\n\n The problem models the active maintenance of water levels in\n a Reservoir system with uncertain rainfall and nonlinear \n evaporation rates as a function of water level.  The objective\n is to maintain all reservoir levels within a desired safe range.\n\n The state of each reservoir is the water level (rlevel).  The \n actions are to set the outflows of each reservoir.  Rewards\n are summed per reservoir and optimal when the water level is\n within predefined upper and lower bounds.\n",
+        "requirements": ["concurrent", "continuous", "reward-deterministic", "intermediate-nodes", "constrained-state"]
+    },
+    "Sysadmin-1": {
+        "authors": ["Scott Sanner"],
+        "date": "2011-04-23",
+        "description": "SysAdmin Boolean MDP (10 computers)\nAn example RDDL description for the well-known SysAdmin problem\n(Guestrin, Koller, Parr, IJCAI-01).",
+        "requirements": ["reward-deterministic"]
+    },
+    "Sysadmin-10": {
+        "authors": ["Scott Sanner"],
+        "date": "2014-01-13",
+        "description": "SysAdmin Boolean MDP (50 computers)\nAn example RDDL description for the well-known SysAdmin problem\n(Guestrin, Koller, Parr, IJCAI-01).",
+        "requirements": ["reward-deterministic"]
+    }
+}
