@@ -1,0 +1,38 @@
+sudo: required
+language: python
+python:
+- '3.6'
+services:
+- docker
+addons:
+  apt:
+    packages:
+    - openjdk-8-jdk
+before_install:
+- curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.6.8.deb
+- sudo dpkg -i --force-confnew elasticsearch-5.6.8.deb
+- sudo service elasticsearch start
+install: pip install -r requirements.txt
+before_script:
+- sleep 10
+- curl -v http://localhost:9200/
+script: python -m unittest discover
+notifications:
+  slack:
+    secure: aHNsTacns/t+SVGrX9PeMup4L20Zs/xfHvbQXAt25vNvEv411bH5oydEOTMCoJxQqFENdh2ttrUPbhmcvn4VTvw3EVCb7QXHn2j1RWAWtF000QmdISYiRfd++m1RVhXkI+KqVn5+/xp3O9uKi9jfApXjg8uyewPNnHK1L21XuWi0/ZthoRD7YxX2y/PBD9GmoWNbbtEzIipZt41bcRS+QtynRP8Az9UtbccTU1jCEPHwaM5+3POrhfLuZM1K/0lyYqx4JUmb8MZI4RRgTXtGon49zPjNnnIG1ShgmfmYBBzWaD40VPfq6SVbBpzVcAnEaeQXtwI4E9utuSxkNm3axQ8kXtLwaH1360+RUUmthL4mLVzPSRu22FL7sl4YmpgvuNfzY9VRaHNoBfAZ596y7YVVPTUMCH41vzzeFEqR0O90lCeVjWKHCX3VeXacNtydEwYoxKVbEJBeUjuBjzn/N3iwPJ4BkjxdO4LgAovrDnTb32gc7hUP9cR1P6HlUwd61NRYSnnv5qpvlmIZTh+cUGPX55DjJZVor9Em5kaOlwO3qweIFm7WEYhzD4ncPaY6hENbgSM3p0XBx8B6IKndqczphc3NhLHjvObYya6SMZw2lZelvi3kc6mlxjiLatj2YXPRUGDqg9hjPaBdbMFI7dE6WNJivmnIvJiaCCBvgX0=
+deploy:
+  matrix:
+  - provider: script
+    script: "./docker_deploy.sh"
+    on:
+      tags: true
+      all_branches: true
+  - provider: pypi
+    user: usc_isi_i2_admin
+    server: https://upload.pypi.org/legacy/
+    distributions: sdist
+    on:
+      tags: true
+      all_branches: true
+  password:
+    secure: WTCjd8jUTqAha5uyghi9hmYYd6BqL417k61Bt2tWMa6zTwNTGHi32mBxGn1rFeEvmLi96RmHEHxZSnC6toCXp0F6plYgoNMUztMECDIhxcIUEx7KwShvNZmnnYUJJ2kaGOPdYNGB3iVYU2nRavCAKUmtAAeQbQNNOEul1qMTA1VttxCSuXTb5Sh5Ef+2JugTlsQf1mBCJaSwmZ5jQ9R2FDoJD5WcPzglSD6YJjCTitlrNbbG0uxieu4VPcpQG1C/bBf9je0EYSpGB1Pw4AAlwLQg+jKH5UY322isrqriCZffCGuvrjbVE1BVCXYWiJosd9dAzT2FekKBtLZwHi1nVXB6LqQF2zC3RYjiFsM3E4WjG+zk4VuNrt2lVvrkH+LfCiq0uibmXz/Ona17vJkXs6jn1e8VV+kxfou6rDCIybYEEZWXicK1VAmNt5WF5/1EUTqqUw8rZfc4FQWD7hjQh737TRlO87Kd8p4ng89LYPLYvDKveVRVxUqkNBGoOoC4CVMT5LnMpimbfcIQHGXAgEcwaq6K/hiTLAwT1To3PLJcjFvxV1f5o9rTXjaNOxOF1Qvskt31ml/82zIMCysuSyqlwKG4xBAxSMBcWpNyXOunJWT4ZTr9belgjtqP4yJhM+9RAlFHe6P0natCXMDxjIGH3oLO8baokI9ehfQWrvc=
