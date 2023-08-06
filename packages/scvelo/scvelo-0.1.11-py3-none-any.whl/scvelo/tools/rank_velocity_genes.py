@@ -1,0 +1,201 @@
+from .. import settings
+from .. import logging as logg
+
+from scipy.sparse import issparse
+import numpy as np
+
+
+def get_mean_var(X, ignore_zeros=False, perc=None):
+    data = X.data if issparse(X) else X
+    mask_nans = np.isnan(data) | np.isinf(data) | np.isneginf(data)
+
+    n_nonzeros = (X != 0).sum(0)
+    n_counts = n_nonzeros if ignore_zeros else X.shape[0]
+
+    if mask_nans.sum() > 0:
+        if issparse(X):
+            data[np.isnan(data) | np.isinf(data) | np.isneginf(data)] = 0
+            n_nans = n_nonzeros - (X != 0).sum(0)
+        else:
+            X[mask_nans] = 0
+            n_nans = mask_nans.sum(0)
+        n_counts -= n_nans
+
+    if perc is not None:
+        if isinstance(perc, int): perc = [perc, 100] if perc < 50 else [0, perc]
+        lb, ub = np.percentile(data, perc)
+        data = np.clip(data, lb, ub)
+
+    mean = (X.sum(0) / n_counts).A1 if issparse(X) else X.sum(0) / n_counts
+    mean_sq = (X.multiply(X).sum(0) / n_counts).A1 if issparse(X) else np.multiply(X, X).sum(0) / n_counts
+    var = (mean_sq - mean ** 2) * (X.shape[0] / (X.shape[0] - 1))
+
+    mean = np.nan_to_num(mean)
+    var = np.nan_to_num(var)
+    return mean, var
+
+
+def select_groups(adata, groups='all', key='louvain'):
+    """Get subset of groups in adata.obs[key].
+    """
+    if isinstance(groups, list) and isinstance(groups[0], int): groups = [str(n) for n in groups]
+    categories = adata.obs[key].cat.categories
+    groups_masks = np.array([categories[i] == adata.obs[key].values for i, name in enumerate(categories)])
+    if groups == 'all':
+        groups = categories.values
+    else:
+        groups_ids = [np.where(categories.values == name)[0][0] for name in groups]
+        groups_masks = groups_masks[groups_ids]
+        groups = categories[groups_ids].values
+    return groups, groups_masks
+
+
+def velocity_clusters(data, vkey='velocity', copy=False):
+    adata = data.copy() if copy else data
+
+    logg.info('computing velocity clusters', r=True)
+
+    if 'velocity_genes' in adata.var.keys():
+        _adata = adata[:, adata.var['velocity_genes']]
+
+    if 'unspliced' in adata.layers.keys():
+        n_counts = (adata.layers['unspliced'] > 0).sum(0)
+        n_counts = n_counts.A1 if issparse(adata.layers['unspliced']) else n_counts
+        min_counts = min(50, np.percentile(n_counts, 50)) if min_counts is None else min_counts
+        tmp_filter &= (n_counts > min_counts)
+
+    if 'r2' in adata.var.keys():
+        r2 = adata.var.velocity_r2
+        min_r2 = .1 if min_r2 is None else min_r2  # np.percentile(r2[r2 > 0], 50)
+        tmp_filter &= (r2 > min_r2)
+
+    if 'dispersions_norm' in adata.var.keys():
+        dispersions = adata.var.dispersions_norm
+        min_dispersion = 0 if min_dispersion is None else min_dispersion  # np.percentile(dispersions, 20)
+        tmp_filter &= (dispersions > min_dispersion)
+
+
+    from .. import AnnData
+    vdata = AnnData(adata.layers[vkey])
+    vdata.obs = adata.obs.copy()
+    vdata.var = adata.var.copy()
+
+    from ..preprocessing import pca, neighbors
+    from . import louvain
+    verbosity = settings.verbosity
+    settings.verbosity = 0
+    pca(vdata, n_comps=20)
+    neighbors(vdata, n_pcs=20)
+    louvain(vdata)
+
+    adata.obs['velocity_clusters'] = vdata.obs['louvain']
+
+    settings.verbosity = verbosity
+
+    logg.info('    finished', time=True, end=' ' if settings.verbosity > 2 else '\n')
+    logg.hint(
+        'added \n'
+        '    \'velocity_clusters\', clusters based on modularity on velocity field (adata.obs)')
+
+    return vdata.obs['louvain']
+
+
+def rank_velocity_genes(data, vkey='velocity', n_genes=10, groupby=None, min_counts=None, min_r2=None, min_dispersion=None, copy=False):
+    """Rank genes for characterizing groups according to unspliced/spliced correlation and differential expression.
+    Parameters
+    ----------
+    data : :class:`~anndata.AnnData`
+        Annotated data matrix.
+    vkey: `str` (default: `'velocity'`)
+        Key of velocities computed in `tl.velocity`
+    n_genes : `int`, optional (default: 100)
+        The number of genes that appear in the returned tables.
+    method : {'t-test', 't-test_overestim_var'} (default: 't-test_overestim_var')
+        If 't-test' uses t-test, if 't-test_overestim_var' overestimates variance of each group.
+
+    Returns
+    -------
+    Updates `adata` with the following fields.
+    names : structured `np.ndarray` (`.uns['rank_genes_groups']`)
+        Structured array to be indexed by group id storing the gene
+        names. Ordered according to scores.
+    scores : structured `np.ndarray` (`.uns['rank_genes_groups']`)
+        Structured array to be indexed by group id storing the score for each
+        gene for each group. Ordered according to scores.
+
+    """
+    adata = data.copy() if copy else data
+
+    if groupby is None:
+        velocity_clusters(adata)
+        groupby = 'velocity_clusters'
+
+    logg.info('ranking velocity genes', r=True)
+
+    tmp_filter = np.ones(adata.n_vars, dtype=bool)
+    if 'velocity_genes' in adata.var.keys():
+        tmp_filter &= adata.var['velocity_genes']
+
+    if 'unspliced' in adata.layers.keys():
+        n_counts = (adata.layers['unspliced'] > 0).sum(0)
+        n_counts = n_counts.A1 if issparse(adata.layers['unspliced']) else n_counts
+        min_counts = min(50, np.percentile(n_counts, 50)) if min_counts is None else min_counts
+        tmp_filter &= (n_counts > min_counts)
+
+    if 'r2' in adata.var.keys():
+        r2 = adata.var.velocity_r2
+        min_r2 = .1 if min_r2 is None else min_r2  # np.percentile(r2[r2 > 0], 50)
+        tmp_filter &= (r2 > min_r2)
+
+    if 'dispersions_norm' in adata.var.keys():
+        dispersions = adata.var.dispersions_norm
+        min_dispersion = 0 if min_dispersion is None else min_dispersion  # np.percentile(dispersions, 20)
+        tmp_filter &= (dispersions > min_dispersion)
+
+    X = adata[:, tmp_filter].layers[vkey]
+    groups, groups_masks = select_groups(adata[:, tmp_filter], key=groupby)
+
+    n_groups = groups_masks.shape[0]
+    sizes = groups_masks.sum(1)
+
+    mean, var = np.zeros((n_groups, X.shape[1])), np.zeros((n_groups, X.shape[1]))
+    for i, mask in enumerate(groups_masks): mean[i], var[i] = get_mean_var(X[mask])
+
+    # test each against the union of all other groups
+    rankings_gene_names, rankings_gene_scores, indices = [], [], []
+    for i in range(n_groups):
+        mask_rest = ~groups_masks[i]
+        mean_rest, var_rest = get_mean_var(X[mask_rest])
+        size_rest = sizes[i]  # else mask_rest.sum() if method == 't-test'
+
+        scores = (mean[i] - mean_rest) / np.sqrt(var[i] / sizes[i] + var_rest / size_rest)
+        scores = np.nan_to_num(scores)
+
+        # equivalent to but much faster than np.argsort(scores)[-10:]
+        if n_genes > X.shape[1]: n_genes = X.shape[1]
+        idx = np.argpartition(scores, -n_genes)[-n_genes:]
+        idx = idx[np.argsort(scores[idx])[::-1]]
+
+        rankings_gene_names.append(adata[:, tmp_filter].var_names[idx].values)
+        rankings_gene_scores.append(scores[idx])
+
+    rankings_gene_names = np.array([list(n) for n in rankings_gene_names])
+    rankings_gene_scores = np.array([list(n) for n in rankings_gene_scores])
+
+    all_names = rankings_gene_names.T.flatten()
+    all_scores = rankings_gene_scores.T.flatten()
+    vscore = np.zeros(adata.n_vars, dtype=np.int)
+    for i, name in enumerate(adata.var_names):
+        if name in all_names: vscore[i] = all_scores[np.where(name == all_names)[0][0]]
+    adata.var['velocity_score'] = vscore
+
+    key = 'rank_velocity_genes'
+    if key not in adata.uns.keys(): adata.uns[key] = {}
+    adata.uns[key] = {'groups': groups, 'names': rankings_gene_names, 'scores': rankings_gene_scores.round(0)}
+
+    logg.info('    finished', time=True, end=' ' if settings.verbosity > 2 else '\n')
+    logg.hint(
+        'added \n'
+        '    \'' + key + '\', sorted scores by group ids (adata.uns)')
+
+    return adata if copy else None
