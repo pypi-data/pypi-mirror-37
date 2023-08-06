@@ -1,0 +1,169 @@
+**PyConio**
+-----------
+
+PyConio is a module that provides useful functions to work with console
+I/O.
+
+All the **PyConio** functions have the same behaviour of conio.h. And
+best of all, is **Cross-Platform!**
+
+This module is under the GNU GPLv2 license. See LICENSE to more details.
+
+**Installing**
+--------------
+
+Execute this at your command prompt:
+
+.. code-block:: bash
+
+   pip3 install https://gitlab.com/konniskatt/pyconio/raw/master/dist/pyconio-1.0.1.tar.gz
+
+in administrator or sudo mode depending of your os.
+
+*From source:*
+
+Go to dist folder and there is a tarball file (pyconio_x.x.tar.gz):
+Extract the folder that is inside in the tarball (.tar.gz), and then
+execute:
+
+.. code-block:: bash
+
+   python3 setup.py install
+
+in **administrator** or **sudo** mode depending of your OS.
+
+Instalación (spanish)
+=====================
+
+Ejecuta esto en la consola:
+
+.. code-block:: bash
+
+   pip3 install https://gitlab.com/konniskatt/pyconio/raw/master/dist/pyconio-1.0.1.tar.gz
+
+en modo **administrador** o **sudo**, dependiendo de tu SO.
+
+*Desde fuente:*
+
+Ve a la carpeta dist y ahi hay un archivo tarball (pyconio_x.x.tar.gz):
+Extrae la carpeta que esta dentro del tarball (.tar.gz), y después
+ejecuta:
+
+.. code-block:: python
+
+   python3 setup.py install
+
+en modo administrador o sudo, dependiendo de tu sistema operativo.
+
+**Contributing**
+-----------------
+
+You can find PyConio in `GitLab`_, with contributing information.
+
+.. _GitLab: https://gitlab.com/konniskatt/pyconio/
+
+**Documentation**
+-----------------
+
+|colors|
+
+Coloring text
+=============
+
+.. code-block:: python
+
+   from pyconio import *
+   textcolor(Red)
+   print("This text is in red!")
+   textbackground(Green) # Fore color maintains
+   print("This is a red text with green background!")
+
+
+   from pyconio import *
+   textcolor(Red)
+   textbackground(Green)
+   print("spam")
+   reversevideo()
+   # Now fore is green and background is Red
+   normvideo()
+   # Resets console to defaults
+
+Note: When the program finishes, it reset colors.
+Controlling cursor
+position
+
+.. code-block:: python
+
+   from pyconio import *
+   gotoxy(5, 5)
+   print("The cursor is now on x:5 and y:5")
+
+Read keyboard
+=============
+
+.. code-block:: python
+
+   from pyconio import *
+   c = getch()
+   print("You pressed: %s" % c)
+
+**getch():** Reads a key from keyboard and returns the pressed key.
+
+**getche():** Reads a key from keyboard, returns the pressed key and
+echoes it.
+
+**getchar():** Reads one character from keyboard and returns the pressed
+key, but waits until user press enter.
+
+**kbhit():** Detects if a key was pressed, and returns True if was a key
+pressed.
+
+Micellaneous functions
+======================
+
+**Setting a title to console:**
+
+
+.. code-block:: python
+
+   from pyconio import *
+   title("eggs")
+
+**Pause program execution:**
+
+
+.. code-block:: python
+
+   from pyconio import *
+   pause()
+   # Output: Press any key to continue . . .
+   # You can print your own message
+   pause("The program is paused")
+   # Output: This program is paused
+
+**Hiding cursor and showing cursor:**
+
+
+.. code-block:: python
+
+   from pyconio import *
+   hidecur() # The cursor is now hidden
+   showcur() # Now the cursor is not hidden
+
+**Cleaning screen:**
+
+
+.. code-block:: python
+
+   from pyconio import *
+   clrscr()
+
+Examples
+========
+
+A *(very)* simple game using PyConio
+|game|
+
+.. |colors| image:: https://raw.githubusercontent.com/konniskatt/konniskatt.github.io/master/pyconio_colors.png
+
+.. |game| image:: https://raw.githubusercontent.com/konniskatt/konniskatt.github.io/master/pyconio_demo.png
