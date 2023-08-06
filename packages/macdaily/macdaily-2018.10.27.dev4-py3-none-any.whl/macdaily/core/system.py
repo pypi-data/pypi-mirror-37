@@ -1,0 +1,38 @@
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+
+from macdaily.cls.command import Command
+from macdaily.util.const import bold, flash, red, red_bg, reset
+from macdaily.util.misc import print_text
+
+
+class SystemCommand(Command):
+
+    @property
+    def mode(self):
+        return 'system'
+
+    @property
+    def name(self):
+        return 'macOS Software Update'
+
+    @property
+    def desc(self):
+        return ('system software', 'system software')
+
+    def _check_exec(self):
+        self.__exec_path = shutil.which('softwareupdate')
+        flag = (self.__exec_path is None)
+        if flag:
+            print('macdaily-update: {}{}system{}: command not found'.format(red_bg, flash, reset), file=sys.stderr)
+            text = ('macdaily-update: {}system{}: '
+                    "you may add `softwareupdate' to PATH through the following command -- "
+                    """`{}echo 'export PATH="/usr/sbin:$PATH"' >> ~/.bash_profile{}'""".format(red, reset, bold, reset))
+            print_text(text, self._file, redirect=self._qflag)
+        return flag
+
+    def _loc_exec(self):
+        self._exec = {self.__exec_path}
+        del self.__exec_path
