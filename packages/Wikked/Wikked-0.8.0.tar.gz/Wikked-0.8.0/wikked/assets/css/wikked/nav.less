@@ -1,0 +1,251 @@
+
+// Navigation menu
+@wiki-menu-width: 12em;
+@wiki-menu-width-ext: 36em;
+@wiki-shortcut-height: 3.6em;
+@wiki-shortcut-width: 4.1em;
+
+.wrapper {
+    transition: padding 200ms ease-in-out 0s;
+    padding-top: 3.6em;
+    padding-left: 0;
+}
+
+.wiki-menu-a {
+    color: @color-gray-light;
+    display: block;
+    text-decoration: none;
+    line-height: 1.5em;
+    white-space: nowrap;
+}
+.wiki-menu-a-hover {
+    background: @link-hover-color;
+    text-decoration: none;
+}
+
+#wiki-menu-shortcut {
+    &:hover {
+        color: @color-gray-light;
+        text-shadow: #EEE 0 0 1em;
+    }
+}
+
+#wiki-menu-header {
+    height: @wiki-shortcut-height;
+    padding: 0 1.5em 0 @wiki-shortcut-width;
+    text-align: right;
+    color: @color-gray-medium;
+    cursor: pointer;
+
+    i {
+        line-height: @wiki-shortcut-height;
+        display: none;
+    }
+    i:hover {
+        color: @color-gray-light;
+        text-shadow: #EEE 0 0 1em;
+    }
+}
+
+#wiki-menu {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: -@wiki-menu-width;
+    width: @wiki-menu-width;
+    border: none;
+    z-index: 10;
+    overflow-y: auto;
+    color: @color-gray-light;
+    background-color: @color-gray-dark;
+    transition: left 200ms ease-in-out 0s,
+                width 200ms ease-in-out 0s,
+                box-shadow 200ms,
+                !important;
+    a {
+        padding: 0.5em 1em;
+        .wiki-menu-a();
+    }
+    a:link, a:visited, a:active {
+        .wiki-menu-a();
+    }
+    a:hover, a:focus {
+        .wiki-menu-a-hover();
+    }
+
+    ul {
+        border-top: 1px solid @color-gray-medium;
+    }
+
+    input[type="text"], textarea {
+        color: #333;
+    }
+}
+
+#wiki-menu-shortcut {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    padding: 1.3em 1.5em;
+    line-height: 1em;
+    font-weight: bold;
+    color: @body-bg;
+    background: fade(@color-gray-dark, 90%);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#app.wiki-menu-active {
+    #wiki-menu {
+        left: 0 !important;
+    }
+}
+#app.wiki-menu-inactive {
+    #wiki-menu {
+        left: -@wiki-menu-width !important;
+    }
+}
+#app.wiki-menu-locked.wiki-menu-active .wrapper {
+    padding-left: @wiki-menu-width !important;
+}
+#app.wiki-menu-locked.wiki-menu-inactive .wrapper {
+    padding-left: 0 !important;
+}
+
+#wiki-menu.wiki-menu-ext {
+    width: @wiki-menu-width-ext !important;
+    box-shadow: 4px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+@media screen and (min-width: 48em) {
+    // Menu can be locked only on big enough screens.
+    #wiki-menu-header i {
+        display: block;
+    }
+}
+// If somehow we end up with a small screen where the lock icon is hidden,
+// but we still have the menu locked, then show the lock icon anyway.
+@media screen and (max-width: 48em) {
+    #app.wiki-menu-locked #wiki-menu-header i {
+        display: block;
+    }
+}
+// For big enough screens, we don't need to reserve some room at the top
+// for the menu shortcut.
+@media screen and (min-width: 64em) {
+    .wrapper {
+        padding-top: 1.3em;
+    }
+}
+
+
+// Search
+.search-result-hover {
+    background: @color-gray-light;
+}
+
+b.match {
+    color: @color-green-dark;
+    background: @color-green;
+    padding: 0.05em 0.15em;
+}
+
+form#search {
+    width: 100%;
+    padding: 0.2em 1em;
+
+    button {
+        background: none;
+        padding: 0.5em;
+        &:hover { color: @link-hover-color; }
+    }
+}
+
+ul#search-preview {
+    position: absolute;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    top: auto;
+    left: 1em;
+    z-index: 12;
+    visibility: visible;
+    background: #FFF;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.3);
+
+    li {
+        border-bottom: 1px solid @color-gray-light;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+    a {
+        margin: 0;
+        padding: 0.5em;
+        display: inline-block;
+        width: 100%;
+        color: @color-gray-dark;
+
+        &:link, &:active, &:visited {
+            color: @color-gray-dark;
+        }
+        &:hover, &:focus {
+            color: @color-gray-dark;
+            .search-result-hover();
+        }
+    }
+}
+
+ul.search-results {
+    list-style: none;
+}
+
+.wiki-search-underlayer {
+    background: #CCC;
+    transition: background 0.5s;
+}
+
+// Footer
+.footer-wrapper {
+    margin: 0 auto;
+    padding: 0 1.5em;
+}
+footer {
+    color: @color-gray-dark;
+    border-top: 1px solid @color-gray-light;
+    padding: 1.5em 0;
+    font-size: 75%;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    text-align: center;
+
+    a {
+        text-decoration: none;
+        color: @color-gray-dark;
+        &:link { color: @color-gray-dark; }
+        &:visited { color: @color-gray-dark; }
+        &:hover { color: @color-green-dark; text-decoration: none; }
+        &:active { color: @color-gray-dark; }
+    }
+    ul {
+        list-type: none;
+    }
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0 0.5em;
+    }
+    li:before {
+        content: '\2014';
+        font-weight: 700;
+        font-size: 100%;
+        margin-right: 1em;
+    }
+    li:first-child:before {
+        content: none;
+    }
+}
+

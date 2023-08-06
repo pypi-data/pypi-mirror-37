@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+{% block nav %}{% include 'special-nav.html' %}{% endblock %}
+{% block content %}
+<article>
+    <header>
+        <h1>{{title}}</h1>
+    </header>
+    <section>
+        {%block message %}{% endblock%}
+        {%if pages%}
+        <ul>
+        {%for p in pages%}
+            <li><a href="{{get_read_url(p.url)}}{{url_suffix}}">{{p.title}}</a></li>
+        {%endfor%}
+        </ul>
+        {%else%}
+        {%block empty%}{%endblock%}
+        {%endif%}
+        {% if refresh %}
+        <div class="wiki-pagelist-refresh">
+            <form action="{{refresh.url}}" method="POST" class="pure-form">
+                <input type="hidden" name="list_name" value="{{refresh.list_name}}" />
+                <input type="hidden" name="postback" value="{{refresh.postback}}" />
+                <button name="do-refresh" type="submit" class="pure-button pure-button-warning"><i class="fas fa-refresh"></i> Force Refresh</button>
+            </form>
+        </div>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}

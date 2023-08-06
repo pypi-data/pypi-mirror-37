@@ -1,0 +1,177 @@
+@wikked-icon-font: "Font Awesome 5 Free";
+@wikked-external-link-icon: @fa-var-external-link-alt;
+//@wikked-external-link-icon: @fa-var-external-link-square-alt;
+@wikked-anchor-icon: @fa-var-paragraph;
+
+
+// Article
+article {
+    //background-image: url(http://basehold.it/i/30);
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 1em;
+}
+.special article {
+    max-width: 100%;
+    width: 100%;
+}
+
+article {
+    a {
+        text-decoration: none;
+        color: @color-blue;
+        &:link { color: @color-blue; }
+        &:visited { color: @color-blue; }
+        &:hover { color: @color-blue; text-decoration: underline; }
+        &:active { color: @color-blue; }
+    }
+    a.wiki-link.missing,
+    a.wiki-meta-link.missing {
+        color: @color-orange;
+        &:hover { color: @color-orange; text-decoration: underline; }
+    }
+
+    table {
+        display: block;
+        margin-top: 0;
+        margin-bottom: 1.5em;
+
+        th, td { padding: 0.5em 1em; border: 1px solid @color-gray-medium; }
+        th { font-weight: bold; }
+        th, tr:nth-child(2n) { background: darken(@color-gray-light, 5%); }
+    }
+}
+article.wiki-page {
+    a[href] {
+        &::after {
+            font-family: @wikked-icon-font;
+            font-size: 0.6em;
+            font-weight: 900;
+            vertical-align: middle;
+            content: ' @{wikked-external-link-icon}';
+        }
+    }
+    a.wiki-link,
+    a.wiki-meta-link {
+        &::after { content: none; }
+    }
+
+    h1>a.wiki-header-link::after,
+    h2>a.wiki-header-link::after,
+    h3>a.wiki-header-link::after,
+    h4>a.wiki-header-link::after,
+    h5>a.wiki-header-link::after,
+    h6>a.wiki-header-link::after {
+        font-family: @wikked-icon-font;
+        font-size: 0.8em;
+        font-weight: 900;
+        content: ' @{wikked-anchor-icon}';
+        visibility: hidden;
+    }
+    h1:hover>a.wiki-header-link::after,
+    h2:hover>a.wiki-header-link::after,
+    h3:hover>a.wiki-header-link::after,
+    h4:hover>a.wiki-header-link::after,
+    h5:hover>a.wiki-header-link::after,
+    h6:hover>a.wiki-header-link::after {
+        visibility: visible;
+    }
+}
+
+// Page title decorators
+.decorator {
+    text-transform: uppercase;
+    font-family: @font-family-sans-serif;
+    font-weight: 200;
+    font-size: 150%;
+    margin-top: -0.5em;
+    margin-bottom: 1.5em;
+    letter-spacing: 0.1em;
+    color: @color-green-dark;
+
+    small {
+        font-size: 60%;
+        text-transform: none;
+        letter-spacing: 0.03em;
+    }
+
+    .rev_id {
+        font-family: @font-family-monospace;
+    }
+}
+.decorator-sm {
+    font-size: 0.5em;
+}
+
+// Page info
+section.info {
+    margin: 1.5em 0 0 0;
+    padding: 1.5em 0;
+    border-top: 1px solid @color-gray-light;
+
+    .info-categories {
+        color: @color-gray-dark;
+        font-weight: 300;
+        text-transform: uppercase;
+    }
+}
+
+// Page editing
+form#page-edit {
+}
+
+.editing-input, .editing-preview {
+    margin-bottom: 0.5em;
+}
+
+#editing-input-area {
+    min-height: 10em;
+    width: 100%;
+    font-family: @font-family-monospace;
+    margin-bottom: 0;
+    border: 1px solid @color-gray-medium;
+    border-radius: 0;
+    border-width: 1px 1px 0 1px;
+}
+
+#editing-input-grip {
+    height: 12px;
+    border: 1px solid @color-gray-medium;
+    border-width: 0 1px 1px 1px;
+    cursor: ns-resize;
+}
+
+/*#wmd-preview-wrapper {
+    border: 1px solid @color-gray-light;
+
+    #wmd-preview {
+        margin: 1em;
+        background: none;
+    }
+}*/
+
+@media screen and (min-width: 48em) {
+    article {
+        padding: 0 2em;
+    }
+}
+
+// Wiki history
+.wiki-history-entry-collapser {
+    font-size: 90%;
+}
+
+.wiki-history-pagination {
+    padding: 1em;
+}
+.wiki-history-pagination div:last-child {
+    text-align: right;
+}
+
+// Page history
+pre.raw {
+    font-size: 90%;
+    color: @code-color;
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+}
+

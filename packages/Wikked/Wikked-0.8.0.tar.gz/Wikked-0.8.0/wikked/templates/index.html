@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{%if page_title%}{{page_title}} &ndash; {%endif%}Wikked</title>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="/static/css/wikked.css" />
+        {%if stylesheet%}<link rel="stylesheet" type="text/css" href="{{stylesheet}}" />{%endif%}
+        {% block head %}{% endblock %}
+    </head>
+    <body>
+        <div id="app" class="{%if nav.locked%}wiki-menu-active wiki-menu-locked{%endif%}">
+            <div class="nav-wrapper">
+                {% block nav %}{% include 'nav.html' %}{% endblock %}
+            </div>
+            <div class="wrapper{%if is_special_page%} special{%endif%}">
+                {% block content %}{% endblock %}
+            </div>
+            <div class="footer-wrapper">
+                {% block footer %}{% include 'footer.html' %}{% endblock %}
+            </div>
+        </div>
+        {% block scripts %}
+        {% if not no_js %}
+        <script src="/static/js/wikked.app.js"></script>
+        {% endif %}
+        {% endblock %}
+    </body>
+</html>

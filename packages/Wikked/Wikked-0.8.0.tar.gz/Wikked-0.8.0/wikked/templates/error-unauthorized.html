@@ -1,0 +1,20 @@
+{% extends 'index.html' %}
+{% block content %}
+<article>
+    <header>
+        <h1>{{error|default("User Permission Error")}}</h1>
+    </header>
+    <section>
+        {%if error_details%}
+        <p>{{error_details}}</p>
+        {%else%}
+        <p>You don't have permission for this.</p>
+        {%endif%}
+        {%if auth.is_logged_in%}
+        <p>User <a href="{{auth.url_profile}}">{{auth.username}}</a> is not authorized for this. Please <a href="/login">log into a different account</a> to have access to it.</p>
+        {%else%}
+        <p>Please <a href="/login">log into an account</a> that has access to it.</p>
+        {%endif%}
+    </section>
+</article>
+{% endblock %}
