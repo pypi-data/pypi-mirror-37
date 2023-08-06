@@ -1,0 +1,8 @@
+add_test(make_test_directory "mkdir" "-p" "-v" "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir/test_dir")
+set_tests_properties(make_test_directory PROPERTIES  ENVIRONMENT "EXAMPLE_ENV_A=Successfully set example environment variable A;EXAMPLE_ENV_B=Successfully set example environment variable B" RUN_SERIAL "ON" WORKING_DIRECTORY "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir")
+add_test(list_directories "ls" "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir")
+set_tests_properties(list_directories PROPERTIES  ENVIRONMENT "EXAMPLE_ENV_A=Successfully set example environment variable A;EXAMPLE_ENV_B=Successfully set example environment variable B" RUN_SERIAL "ON" WORKING_DIRECTORY "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir")
+add_test(print_hostname "hostname")
+set_tests_properties(print_hostname PROPERTIES  ENVIRONMENT "EXAMPLE_ENV_A=Successfully set example environment variable A;EXAMPLE_ENV_B=Successfully set example environment variable B" RUN_SERIAL "ON" WORKING_DIRECTORY "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir")
+add_test(check_environment "/opt/conda/3/envs/py27-builder/bin/python" "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/check_env.py")
+set_tests_properties(check_environment PROPERTIES  ENVIRONMENT "EXAMPLE_ENV_A=Successfully set example environment variable A;EXAMPLE_ENV_B=Successfully set example environment variable B" RUN_SERIAL "ON" WORKING_DIRECTORY "/Users/jrmadsen/devel/c++/pyctest-master/examples/Basic/work_dir")
