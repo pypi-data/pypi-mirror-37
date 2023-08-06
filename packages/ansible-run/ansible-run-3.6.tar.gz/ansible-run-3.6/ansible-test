@@ -1,0 +1,194 @@
+#!/bin/bash
+# shellcheck disable=SC2086,SC1117
+
+if [[ "$1" == "--help" ]]; then
+    echo USAGE: [OPTIONS] ansible-test PLAYBOOK [TAGS]
+    echo  OPTIONS:
+    echo "  - image: The testing container to use, e.g. ubuntu1804,centos7,ubuntu1604,debian9 (default = centos7)"
+    echo "  - cleanup: whether to remove the Docker container (default = true)"
+    echo "  - container_id: the docker --name to set for the container (default = timestamp)"
+    echo "  - test_idempotence: whether to test playbooks idempotence (default = false)"
+    echo "  - image: The testing container to use (default = moshloop/docker-centos7-ansible)"
+    exit 0
+fi
+
+
+function finish {
+  # Remove the Docker container (if configured).
+  if [[ "$cleanup" == "true" && "$container_id" != "" ]]; then
+    printf "Removing Docker container...\n"
+    docker rm -f "$container_id"
+  fi
+}
+
+trap finish EXIT
+# catch CTRL+C at a high-level, otherwise it is processed per subcommand
+# requiring multiple CTRL+C to exit the script
+trap "CTRL+C caught, Exiting; exit 1" SIGINT SIGTERM
+
+
+red="\033[38;5;196m"
+neutral='\033[0m'
+white='\033[97m'
+green="\033[38;5;46m"
+ok=${green}"✔"${neutral}
+fail=${red}"✖"${neutral}
+timestamp=$(date +%s)
+image=${image:-"moshloop/docker-centos7-ansible"}
+entrypoint=""
+playbook=${playbook:-$1}
+tags=${2:-""}
+if [ "$tags" == "" ]; then
+  tags=all
+fi
+cleanup=${cleanup:-"true"}
+timestamp=$(date +"%Y%m%dT%H%M%S")
+test_idempotence=${test_idempotence:-"false"}
+docker_image=$(grep  DOCKER_IMAGE /etc/os-release  | cut -d= -f2)
+test_results=""
+
+if [[ "$image" != *"/"* ]]; then
+  image="moshloop/docker-$image-ansible"
+fi
+
+if [[ "$image" == "moshloop/docker-ubuntu1804-ansible" ]]; then
+  entrypoint="/lib/systemd/systemd"
+fi
+
+
+install_dependencies() {
+  requirements=$(dirname "$PWD/$playbook")"/requirements.yml"
+  if [ -e "$requirements" ]; then
+    log "Installing dependencies from: " "$requirements"
+    $EXEC ansible-galaxy install -rc  $PWD/tests/requirements.yml
+  fi
+}
+
+open_debug_shell() {
+  # docker exec sometimes messes up the terminal dimensions so we need to record and pass them through
+  width=$(stty size | cut -d" " -f2)
+  height=$(stty size | cut -d" " -f1)
+  tty_opts=$(stty -g)
+  ARGS=" -e tty_width=$width -e tty_height=$height -e tty_opts=$tty_opts -e cid=$container_id"
+  echo "Opening debug shell"
+  docker exec  $ARGS -it $container_id  bash -c "cd $PWD; bash"
+  exit 0
+}
+
+get_args() {
+  ARGS="--privileged -w $PWD -v $PWD:$PWD"
+  # passthrough AWS variables
+  for ARG in $(compgen -e); do
+      if [[ "$ARG" == "AWS_"* && "$ARG" == "ANSIBLE_"*  ]]; then
+          ARGS+=" -e $ARG=${!ARG}"
+      fi
+  done
+  if [[ -e ~/.aws ]]; then
+      ARGS+=" -v $HOME/.aws:/root/.aws"
+  fi
+
+  if [[ -e ~/.ansible ]]; then
+      ARGS+=" -v $HOME/.ansible:/root/.ansible"
+  fi
+
+  if [[ -e /work ]]; then
+      ARGS+=" -v /work:/work "
+  fi
+
+  ARGS+=" --volume ssh:/ssh --env SSH_AUTH_SOCK=/ssh/auth/sock"
+
+  if [[ -e /var/run/docker.sock ]];  then
+      ARGS+=" -v /var/run/docker.sock:/var/run/docker.sock"
+      ARGS+=" -v /var/run/docker.sock:/tmp/var/run/docker.sock"
+      ARGS+=" -e DOCKER_HOST=unix:///tmp/var/run/docker.sock"
+  fi
+
+  echo $ARGS
+}
+
+log() {
+  printf ${green}"$1${neutral} "$2"\n"
+}
+
+fail() {
+  test_results="$test_results \t $1 $fail"
+}
+
+pass() {
+  test_results="$test_results \t $1 $ok"
+}
+
+check_result() {
+  if [[ "$2" == "0" ]]; then
+    pass $1
+  else
+    fail $1
+  fi
+}
+
+test_playbook() {
+  playbook=$1
+  test_results="$test_results \n${white}Playbook: $playbook ${neutral}\n"
+  log "Testing syntax" "$PWD/$playbook"
+  $PLAYBOOK $PWD/$playbook --syntax-check
+  check_result "syntax" $?
+  log "Testing playbook" "$PWD/$playbook"
+  $PLAYBOOK $PWD/$playbook -t $tags
+  if [[ -e ${playbook%.*}.rb ]]; then
+    $EXEC inspec exec $PWD/${playbook%.*}.rb  --reporter=cli junit:$PWD/junit.xml
+    check_result "inspec" $?
+  fi
+
+  if [[ -e ${playbook%.*}.bats ]]; then
+    $EXEC bats $PWD/${playbook%.*}.bats
+    check_result "bats" $?
+  fi
+
+  if [[ -e ${playbook%.*}.goss.yml ]]; then
+    $EXEC goss -g $PWD/${playbook%.*}.goss.yml v
+    check_result "goss" $?
+  fi
+
+  if [[ "$test_idempotence" == "true" ]]; then
+    log "Running idempotence test"
+    idempotence=$(mktemp)
+    $PLAYBOOK $PWD/$playbook | tee -a $idempotence
+    tail $idempotence | grep -q 'changed=0.*failed=0'
+    check_result "idempotence" $?
+    rm "$idempotence"
+  fi
+
+}
+
+if [[ "$docker_image" == "ansible-test" ]]; then
+  log "Already running inside an ansible-test image"
+  EXEC="env "
+else
+  container_id=${container_id:-$timestamp}
+  log "Starting $image in the background:" "$container_id"
+  docker run --detach --name $container_id $(get_args) $image $entrypoint
+  EXEC="docker exec --tty $container_id env TERM=xterm "
+fi
+
+PLAYBOOK="$EXEC ANSIBLE_FORCE_COLOR=1 ANSIBLE_RETRY_FILES_ENABLED=false ansible-playbook "
+
+install_dependencies
+
+printf "\n"
+
+results=
+if [[ "$1" == "" ]]; then
+  for playbook in $(find ./test -type f -name "*.yml"); do
+   test_playbook "$playbook"
+  done
+else
+  test_playbook "$playbook"
+fi
+
+printf ${green}"***************\n TEST RESULTS \n***************\n"${neutral}
+echo -e "$test_results"
+
+if [[ "$test_results" == *"$fail"* ]]; then
+    printf ${red}"Some tests failed \n"${neutral}
+    exit 1
+fi
