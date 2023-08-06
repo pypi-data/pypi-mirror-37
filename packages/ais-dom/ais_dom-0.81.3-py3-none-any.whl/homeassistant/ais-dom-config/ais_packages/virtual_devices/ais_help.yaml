@@ -1,0 +1,137 @@
+sensor:
+  - platform: template
+    sensors:
+      ais_connect_iot_device_info:
+        value_template: "a) podłącz urządzenie do prądu\n
+                        b) uruchom 'Skanuj w poszukiwaniu nowych urządzeń'\n
+                        c) wybierz sieć wifi, jeśli podłączasz urządzenie do zabezpieczonej sieci to podaj też hasło\n
+                        d) podaj nazwę dla nowego urządzenia i uruchom 'Dołącz nowe urządzenie'"
+  - platform: ais_android_cmd
+    command: getprop net.hostname
+    name: local_host_name
+    scan_interval: 360
+  - platform: command_line
+    command: python3 -c "import socket; print((([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+              if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
+              s.getsockname()[0], s.close()) for s in
+              [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
+              + ['no IP found'])[0])"
+    name: internal_ip_address
+    scan_interval: 360
+  - platform: ais_long_text
+    name: ais_rss_help_text
+    package: homeassistant.components.ais_cloud
+    method: get_rss_help_text
+  - platform: rest
+    name: ais_android_wifi_current_network_info
+    resource: http://localhost:8122/command
+    method: POST
+    payload: '{ "WifiConnectionInfo" : true }'
+    verify_ssl: false
+    headers:
+      User-Agent: AIS dom
+      Content-Type: application/json
+weblink:
+  entities:
+    - name: http_url
+      url: http://ais-dom.local:8180
+    - name: https_url
+      url: https://ais-dom.local:8123
+    - name: klucz_ssh
+      url: /local/id_rsa_ais
+      icon: mdi:console-line
+    - name: ftp_url
+      url: ftp://ais-dom.local:1024
+      icon: mdi:play-network
+    - name: cloud
+      url: https://powiedz.co/ords/f?p=1000:101
+      icon: mdi:open-in-new
+    - name: upgrade_log
+      url: /local/upgrade_log.txt
+      icon: mdi:file-document
+    - name: https_localhost_cert
+      url: /local/rootCA.pem
+      icon: mdi:verified
+
+input_text:
+  ais_android_wifi_password:
+    name: "Podaj hasło do Wifi:"
+    mode: password
+    initial: ""
+    icon: mdi:textbox-password
+  ais_iot_device_wifi_password:
+    name: "Podaj hasło do Wifi:"
+    mode: password
+    initial: ""
+    icon: mdi:textbox-password
+  ais_iot_device_name:
+    name: "Podaj nazwę dla nowego urządzenia:"
+    initial: ""
+input_select:
+  ais_rss_help_topic:
+    name: 'Strona:'
+    options:
+      - "-"
+      - "1. Pierwsze kroki"
+      - "2. Co nowego"
+      - "3. Komendy głosowe"
+      - "4. Sterowanie pilotem"
+      - "5. Serwisy audio"
+      - "6. Automatyka domowa"
+      - "7. Zdalny dostęp"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  ais_android_wifi_network:
+    name: 'Wybierz sieć Wifi:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:wifi
+  ais_iot_devices_in_network:
+    name: 'Wykryte nowe urządzenia:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:home-plus
+input_boolean:
+  ais_android_wifi_changes_notify:
+    name: Powiadamiaj o zmianach Wifi
+    initial: off
+    icon: mdi:voice
+
+group:
+  Internet Status:
+    name: Ustawienia sieci
+    control: hidden
+    entities:
+      - sensor.local_host_name
+      - sensor.external_ip_address
+      - sensor.internal_ip_address
+      - sensor.ais_android_wifi_current_network_info
+      - script.ais_scan_android_wifi_network
+      - input_select.ais_android_wifi_network
+      - input_text.ais_android_wifi_password
+      - script.ais_connect_android_wifi_network
+      - input_boolean.ais_android_wifi_changes_notify
+  AIS add IOT device:
+    name: Dodawanie nowych urządzeń
+    control: hidden
+    entities:
+      - sensor.ais_connect_iot_device_info
+      - script.ais_scan_iot_devices_in_network
+      - input_select.ais_iot_devices_in_network
+      - input_select.ais_android_wifi_network
+      - input_text.ais_iot_device_wifi_password
+      - input_text.ais_iot_device_name
+      - script.ais_connect_iot_device_to_network
+  AIS Configurator:
+    name: Konfiguracja
+    entities:
+      - configurator.ais_dom_host
+  ais_rss_help:
+    control: hidden
+    name: Strony pomocy
+    entities:
+      - input_select.ais_rss_help_topic
+      - sensor.ais_rss_help_text
+
