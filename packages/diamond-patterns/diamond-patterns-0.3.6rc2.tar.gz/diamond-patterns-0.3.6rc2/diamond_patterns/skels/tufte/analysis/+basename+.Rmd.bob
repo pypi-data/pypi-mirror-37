@@ -1,0 +1,83 @@
+---
+title: "{{{ title }}}"
+author: "{{{ author.name }}}"
+date: "Today"
+license: "Apache 2.0"
+documentclass: article
+biblio-style: apalike
+link-citations: yes
+self-contained: false
+output:
+  bookdown::pdf_book:
+    toc: no
+#    keep_tex: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = TRUE)
+
+library(ggplot2)
+library(lubridate)
+library(RColorBrewer)
+
+set.seed(1620)
+
+source("fte_theme.R")
+```
+
+`r if (knitr:::is_html_output()) '<a href="{{{ basename }}}.pdf">Available as PDF</a>'`
+
+# Introduction
+
+<div align="center" style="font-size: 20pt">
+<p>Working Paper.</p>
+</div>
+
+# Background
+
+# Methods
+
+```{r importing}
+df = data.frame(timestamp=c(1, 2, 3, 4, 5, 6), identity=c(2, 1, 2, 2, 1, 2), spent=c(1, 15, 2, 3, 20, 1))
+```
+
+## Date Range
+
+```{r date-range, fig.height=3.5, fig.align="center", fig.cap="This plot breaks down the creation of memes over time by network."}
+ggplot(data=df, aes(x=identity)) +
+    geom_histogram() +
+    ggtitle("Number of observations") +
+    ylab("# times observed") +
+    xlab("id being observed") +
+    fte_theme() +
+    theme(legend.position="top") +
+    geom_hline(yintercept=0, size=0.2, color="black")
+```
+
+## Scoring
+
+```{r preview, echo=FALSE}
+# During development, it is useful to double-check the data.
+# This report is typically rendered with the following setting as FALSE, which skips the debugging step.
+
+if (F) {
+    dim(df)
+    head(df, 1)
+    str(df)
+    summary(df$timestamp)
+}
+```
+
+# Results
+
+## Test for differences
+
+```{r t-test, include=FALSE}
+t_result = t.test(x = df[which(df[["identity"]]==1),'spent'],
+       y = df[which(df[["identity"]]==2),'spent'])
+```
+
+$t(`r floor(unname(t_result$parameter))`) = `r unname(t_result$statistic)` (p<0.001)$
+
+# Conclusion
