@@ -1,0 +1,24 @@
+#!/bin/bash
+# for server deploy of git repo - customize to suit
+# include in repo - needs a post-receive hook to call
+# see docs directory for example
+# checkout is current directory
+# runs as user git
+
+declare -A branch
+branch["dev"]="/usr/local" 
+branch["tests"]="/usr/local" 
+
+if [[ "${branch[$1]}" ]]; then
+    target=${branch[$1]}
+    
+    echo "Copying executable and package files"
+    cp sqlchaind sqlchain-api sqlchain-config sqlchain-electrum $target/bin/
+    cp -r sqlchain/* $target/lib/python2.7/dist-packages/sqlchain/
+    cp -r etc $target/share/sqlchain/
+    cp -r tests /home/chris/
+    
+else
+    echo "Branch "$1" has no target - not deployed."
+fi
+
