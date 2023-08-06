@@ -1,0 +1,1 @@
+PamlPy is a Computer Algebra System / an assistive mathematics library.
