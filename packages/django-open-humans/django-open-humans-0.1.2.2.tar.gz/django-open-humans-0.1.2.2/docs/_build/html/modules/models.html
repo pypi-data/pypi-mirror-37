@@ -1,0 +1,224 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Models &#8212; Django-Openhumans  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Views" href="views.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-openhumans.models">
+<span id="models"></span><h1>Models<a class="headerlink" href="#module-openhumans.models" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="openhumans.models.OpenHumansMember">
+<em class="property">class </em><code class="descclassname">openhumans.models.</code><code class="descname">OpenHumansMember</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data storage, auth, etc. related to an Open Humans member account.</p>
+<dl class="exception">
+<dt id="openhumans.models.OpenHumansMember.DoesNotExist">
+<em class="property">exception </em><code class="descname">DoesNotExist</code><a class="headerlink" href="#openhumans.models.OpenHumansMember.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="openhumans.models.OpenHumansMember.MultipleObjectsReturned">
+<em class="property">exception </em><code class="descname">MultipleObjectsReturned</code><a class="headerlink" href="#openhumans.models.OpenHumansMember.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="openhumans.models.OpenHumansMember.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>oh_id</em>, <em>data</em>, <em>user=None</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Open Humans member, and corresponding User, if not provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>oh_id</strong> – This field is the Open Humans project member ID.</li>
+<li><strong>data</strong> – This field contain data related to access token and
+refresh token.</li>
+<li><strong>user</strong> – This field’s default value is None.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openhumans.models.OpenHumansMember.delete_single_file">
+<code class="descname">delete_single_file</code><span class="sig-paren">(</span><em>file_id=None</em>, <em>file_basename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.delete_single_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes a file. Specify file_id or file_basename but not both.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_id</strong> – This field is the file id of the file to be deleted.</li>
+<li><strong>file_basename</strong> – This field is the file basename of the file to
+be deleted. It’s default value is None.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openhumans.models.OpenHumansMember.get_access_token">
+<code class="descname">get_access_token</code><span class="sig-paren">(</span><em>client_id='OPENHUMANS_CLIENT_ID'</em>, <em>client_secret='OPENHUMANS_CLIENT_SECRET'</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.get_access_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return access token. Refresh first if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client_id</strong> – This field is the client_id of the project. Project
+info can be found at
+<a class="reference external" href="https://www.openhumans.org/direct-sharing/projects/manage/">https://www.openhumans.org/direct-sharing/projects/manage/</a></li>
+<li><strong>client_secret</strong> – This field is the client secret of the project.
+Project info can be found at
+<a class="reference external" href="https://www.openhumans.org/direct-sharing/projects/manage/">https://www.openhumans.org/direct-sharing/projects/manage/</a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openhumans.models.OpenHumansMember.list_files">
+<code class="descname">list_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.list_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>List files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="openhumans.models.OpenHumansMember.message">
+<code class="descname">message</code><span class="sig-paren">(</span><em>subject</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send messages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>subject</strong> – This field is the subject of the message.</li>
+<li><strong>message</strong> – This field is the message which is to be send.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="openhumans.models.OpenHumansMember.upload">
+<code class="descname">upload</code><span class="sig-paren">(</span><em>stream</em>, <em>filename</em>, <em>metadata</em>, <em>file_identifier=None</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.OpenHumansMember.upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload file to Open Humans.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="openhumans.models.make_unique_username">
+<code class="descclassname">openhumans.models.</code><code class="descname">make_unique_username</code><span class="sig-paren">(</span><em>base</em><span class="sig-paren">)</span><a class="headerlink" href="#openhumans.models.make_unique_username" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure a unique username. Probably this never actually gets used.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Django-Openhumans</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="views.html">Views</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="views.html" title="previous chapter">Views</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Tarannum Khan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/modules/models.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
