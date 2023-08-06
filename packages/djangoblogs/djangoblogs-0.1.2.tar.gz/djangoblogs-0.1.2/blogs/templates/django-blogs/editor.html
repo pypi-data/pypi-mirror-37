@@ -1,0 +1,77 @@
+{% extends 'django-blogs/base.html' %}
+
+{% load static %}
+
+{% block dropdown_options %}
+<div class="dropdown-divider"></div>
+<button onclick="saveData()" class="dropdown-item">Save</button>
+{% if blog.is_published %}
+    <a class="dropdown-item disabled" href="{% url 'blogs:publish' blog.uuid %}">Published</a>
+    {% else %}
+    <a class="dropdown-item" href="{% url 'blogs:publish' blog.uuid %}">Publish</a>
+{% endif %}
+<a class="dropdown-item text-danger-50" href="{% url 'blogs:delete' blog.uuid %}">Delete</a>
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/css/medium-editor.min.css" type="text/css" media="screen" charset="utf-8">
+<link rel="stylesheet" href="{% static 'css/beagle-theme.min.css' %}" type="text/css" media="screen">
+<style>
+    .editable {
+        outline: none;
+    }
+    .editable p{
+        font-size: 1.25rem;
+    }
+</style>
+
+{% csrf_token %}
+
+<div class="mt-5">
+    <div class="row mb-5">
+        <div class="col">
+            <h1 class="editable" id="heading">{{ blog.heading | safe}}</h1>
+        </div>
+    </div>
+    <div id="content" class="editable medium-editor-element" data-placeholder="Type content">{{ blog.content | safe }}</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="//cdn.jsdelivr.net/npm/medium-editor@latest/dist/js/medium-editor.min.js"></script>
+<script>
+    var typing;
+    var editor = new MediumEditor('.editable', {
+        buttonLabels: 'fontawesome',
+        toolbar: {
+            buttons: ['bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'html']
+        },
+        autolink: true,
+    });
+
+    editor.subscribe('editableInput', function (event, editable) {
+        clearTimeout(typing); //
+        typing = setTimeout(saveData, 2000) // try to save data when user stops for 2 second
+    });
+
+
+    var saveData = function(){
+        var csrftoken = $('[name=csrfmiddlewaretoken').val();
+        var subtitle = $('#content').find('p').first().text();
+        var content = {
+            'heading': $('#heading').html(),
+            'content': $('#content').html(),
+        }        
+        
+        $.ajax({
+            url: "{% url 'blogs:edit' blog.uuid%}",
+            method: "post",
+            data: content,
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+    }
+</script>
+{% endblock %}
