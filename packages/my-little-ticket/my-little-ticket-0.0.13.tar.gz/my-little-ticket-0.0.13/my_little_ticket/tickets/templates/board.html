@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load humanize %}
+{% load fontawesome %}
+{% block page_title %}{{ tickets_count }} Tickets - {{ board.name }}{% endblock %}
+{% block title %}{{ board.name }}{% endblock %}
+{% block favicon %}/static/favicon-{{ tickets_status }}.ico{% endblock %}
+{% block bootstrap4_extra_head %}
+    {{ block.super }}
+    <meta http-equiv="refresh" content="600">
+{% endblock %}
+
+
+{% block content %}
+    {% for group, tickets in groups %}
+        <h3 id="group-{{ group | lower | escape }}">
+            <a class="anchor-link" href="#group-{{ group | lower | escape }}">
+                <i class="fas fa-paperclip fa-xs anchor-ico"></i>
+            </a>
+            {{ group }}
+        </h3>
+    <table class="table table-hover table-sm">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Priority</th>
+            <th>Assignee</th>
+            <th>Summary</th>
+            <th>Status</th>
+            <th>Score</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for ticket in tickets %}
+            <tr data-toggle="tooltip" data-placement="bottom" title="Created: {{ ticket.created_on|naturaltime }} Modified: {{ ticket.modified_on|naturaltime }} {% for k,v in ticket.info.items %}{{ k|title }}: {{ v }}{% endfor %}">
+                <td><a href="{{ ticket.link }}">{{ ticket.external_id }}</a></td>
+                <td>{% if ticket.priority %}<span class="badge badge-pill badge-primary">{{ ticket.priority }}</span>{% endif %}</td>
+                <td>{% if ticket.assignee %}{{ ticket.assignee|urlize }}{%  endif %}</td>
+                <td>
+                    <a href="{{ ticket.link }}">{{ ticket.summary }}</a><br/>
+                    {% for tag in ticket.tags.all %}
+                        <span class="badge badge-pill badge-info">{{ tag }}</span>
+                    {% endfor %}
+                </td>
+                <td><span class="badge badge-pill badge-secondary">{{ ticket.status }}</span></td>
+                <td>
+
+                    <span class="badge badge-pill badge-{{ ticket.strategy_status }}">
+                        {% if ticket.strategy_status == "danger" %}
+                            {% fontawesome_icon "frown" %}
+                        {% elif ticket.strategy_status == "warning"%}
+                            {% fontawesome_icon "meh" %}
+                        {% else %}
+                            {% fontawesome_icon "smile" %}
+                        {% endif %}
+                        {# Hidden because people ask questions #}
+                        <span class="text-{{ ticket.strategy_status }}">{{ ticket.strategy_score|floatformat:"0" }}</span>
+                    </span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+    <div class="card">
+        <h3 class="card-header">{{ board.name }}</h3>
+        <div class="card-body">
+            {{ board.description|urlize }}<br/>
+            {{ board.link|urlize }}<br/>
+            Strategy <strong>{{ board.strategy.name }}</strong>:
+            {{ board.strategy.description|safe }}
+        </div>
+        <div class="card-footer">
+            Sources:
+            <ul>
+                {% for source in board.sources.all %}
+                    <li><a href="{{ source.safe_link }}">{{ source }}</a> ({{ source.modified_on|naturaltime }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+{% block bootstrap4_after_content %}
+    {{ block.super}}
+    <script type="text/javascript">
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+    </script>
+{% endblock %}
