@@ -1,0 +1,38 @@
+{% extends 'django-blogs/base.html' %}
+
+{% block dropdown_options %}
+{% if post.author == user.username %}
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{% url 'blogs:edit' post.uuid %}">Edit</a>
+    <a class="dropdown-item text-danger" href="{% url 'blogs:delete' post.uuid %}" style="opacity: 0.7">Delete</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .content p{
+        font-size: 1.25rem;
+    }
+</style>
+
+<div class="mt-5">
+    <div class="row">
+        <div class="col">
+            <h1>{{ post.heading | safe }}</h1>
+        </div>
+    </div>
+    <div class="row mb-5">
+        <div class="col">
+            <div class="row">
+                <div class="col-12 col-md-2">
+                    <i class="far fa-calendar-alt"></i> {{ post.published_on | date:"DATE_FORMAT" }}
+                </div>
+                <div class="col-12 col-md-3">
+                    <i class="fa fa-user"></i></i> {{post.author}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content">{{ post.content | safe }}</div>
+</div>
+{% endblock %}
