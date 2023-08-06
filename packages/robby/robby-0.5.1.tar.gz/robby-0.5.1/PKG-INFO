@@ -1,0 +1,95 @@
+Metadata-Version: 1.1
+Name: robby
+Version: 0.5.1
+Summary: Robby
+Home-page: https://github.com/smn/robby
+Author: Simon de Haan
+Author-email: simon@praekeltfoundation.org
+License: BSD
+Description: Robby
+        =====
+        
+        Probabilities as a Service
+        
+        .. image:: https://img.shields.io/travis/smn/robby.svg
+                :target: https://travis-ci.org/smn/robby
+        
+        .. image:: https://img.shields.io/pypi/v/robby.svg
+                :target: https://pypi.python.org/pypi/robby
+        
+        .. image:: https://coveralls.io/repos/smn/robby/badge.png?branch=develop
+            :target: https://coveralls.io/r/smn/robby?branch=develop
+            :alt: Code Coverage
+        
+        .. image:: https://readthedocs.org/projects/robby/badge/?version=latest
+            :target: https://robby.readthedocs.org
+            :alt: Robby Documentation
+        
+        Available as a docker container with ``docker pull sdehaan/robby``.
+        The docker container allow the for the following environment variables:
+        
+        * REDIS_HOST, defaults to ``127.0.0.1``
+        * REDIS_PORT, defaults to ``6379``
+        * REDIS_DB, defaults to ``1``
+        * ROBBY_PORT, defaults to ``8080``
+        * ROBBY_PREFIX, the prefix for Redis keys, defaults to ``robby``
+        * ROBBY_STEMMING_LANGUAGE, defaults to ``english``
+        * ROBBY_TOKENIZER, the python callable to use for tokenizing. Defaults to ``robby.utils.english_tokenizer``, ``robby.utils.dumb_tokenizer`` is also available.
+        
+        Or ``pip install robby`` and run directly::
+        
+            robby \
+                --redis-uri redis://127.0.0.1:6379/1 \
+                --interface 0.0.0.0 \
+                --port 8080 \
+                --prefix robby \
+                --stemming \
+                --stemming-language=english \
+                --tokenizer=robby.utils.english_tokenizer \
+                --debug
+        
+        API
+        ---
+        
+        To train it::
+        
+            $ curl -d 'training sample' http://localhost:8080/train/bucket-name/category
+        
+        To untrain it::
+        
+            $ curl -d 'training sample' http://localhost:8080/untrain/bucket-name/category
+        
+        To train it in batches::
+        
+            $ curl -d '[{"category": "category", "content": "training sample"}]' http://localhost:8080/batch/train/bucket-name
+        
+        To classify::
+        
+            $ curl -d 'sample message' http://localhost:8080/classify/bucket-name
+            {
+                "category": "category"
+            }
+        
+        To get scoring::
+        
+            $ curl -d 'sample message' http://localhost:8080/score/bucket-name
+            {
+                "category": 0.01
+            }
+        
+        To get clear the db::
+        
+            $ curl -X DELETE http://localhost:8080/flush/bucket-name
+        
+Keywords: robby
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: ISC License (ISCL)
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
