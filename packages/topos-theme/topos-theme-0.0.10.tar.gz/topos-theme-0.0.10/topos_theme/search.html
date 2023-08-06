@@ -1,0 +1,34 @@
+{%- extends "page.html" %}
+
+{% block extra_head %}
+<script src="{{ pathto('_static/jquery.js', 1) }}" type="application/javascript"></script>
+<script src="{{ pathto('_static/underscore.js', 1) }}" type="application/javascript"></script>
+<script src="{{ pathto('_static/doctools.js', 1) }}" type="application/javascript"></script>
+<script src="{{ pathto('_static/searchtools.js', 1) }}" type="application/javascript"></script>
+<script type="application/javascript">
+    window.onload = function() {
+        console.log("Hello, search here!")
+        Search.loadIndex("{{ pathto('searchindex.js', 1) }}")
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+    <h2>Search</h2>
+
+    {% if search_performed %}
+        <p>Searching...</p>
+    {% endif %}
+
+{% endblock %}
+<noscript>
+  <div id="fallback" class="admonition warning">
+    <p class="last">
+      Please activate JavaScript to enable the search functionality.
+    </p>
+  </div>
+</noscript>
+
+{% block extra_footer %}
+    <script type="text/javascript" id="searchindexloader"></script>
+{% endblock %}
