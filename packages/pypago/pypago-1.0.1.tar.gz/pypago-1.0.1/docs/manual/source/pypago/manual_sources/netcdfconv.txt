@@ -1,0 +1,63 @@
+
+Converting :file:`.pygo` files into |netcdf| files
+==================================================
+
+Functions have been written in order to convert the output files of
+the :py:func:`pypago.pypago.loaddata_CNRM` into |netcdf| files.
+These functions are defined in the :py:mod:`pypago.pypago_tonc` library.
+
+The function :py:func:`pypago.pypago_tonc.sections_tonc` extracts the section
+longitude/latitude endpoints issued from the
+:py:mod:`pypago.pypago_guis.gui_sections_edition` program.
+
+.. code-block:: python
+
+   import pypago_tonc
+   pypago_tonc.sections_tonc('sections.pygo', section_names=None)
+
+The :samp:`section` argument is the name of the section, the
+coordinates of which are being extracted. If set to :samp:`None`, all
+the sections will be extracted.
+
+The function :py:func:`pypago.pypago_tonc.gridsec_tonc` extracts the section
+variables obtained though the :py:func:`pypago.pypago.loaddata_{XXX}` programs
+(:samp:`vecv`, :samp:`vecs`, :samp:`vect`, area of the grid cells, etc)
+and stored them into a |netcdf| file. Note that one file is saved for
+each section. This function is called as follows:
+
+.. code-block:: python
+
+   import pypago_tonc
+   pypago_tonc.gridsec_tonc('data.pygo', section_names=None, varname=None)
+
+The :samp:`section` and :samp:`varname` optional arguments define the
+section of which variables will be extracted (if set to :samp:`None`,
+all the sections will be extracted), while the :py:data:`varname`
+is the name of the variable to extract (namely :py:data:`vecv`,
+:py:data:`vecs` or :py:data:`vect`). Note that the name of the |netcdf| file is
+the same as the name of the :samp:`inputfile`, except that the section
+name is added at the end of the file.
+
+The :py:func:`pypago.pypago_tonc.gridvol_tonc` function does the same thing,
+except that it is for the variables extracted within a closed domain:
+
+.. code-block:: python
+
+   import pypago_tonc
+   pypago_tonc.gridvol_tonc('data.pygo', domain=None, varname=None)
+
+where :samp:`varname` is the name of the variable to extract (either
+:samp:`temperature` or :samp:`salinity`).
+
+The conversion of sections indices (computed with the
+:py:func:`pypago.pypago.indices_MODEL`) and domain indices (computed with the
+:py:func:`pypago.pypago.volumes_MODEL`) are converted into |netcdf| files
+using the
+:py:func:`pypago.pypago_tonc.secind_tonc` and
+:py:func:`pypago.pypago_tonc.volind_tonc` functions, respectively.
+
+.. code-block:: python
+
+   import pypago_tonc
+   pypago_tonc.secind_tonc('indices.pygo', section=None)
+   pypago_tonc.volind_tonc('volumes.pygo', domain=None)

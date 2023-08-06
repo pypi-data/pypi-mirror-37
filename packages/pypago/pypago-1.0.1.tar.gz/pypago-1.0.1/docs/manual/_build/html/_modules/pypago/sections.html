@@ -1,0 +1,619 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.sections &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.sections</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Module for the manipulation of section endpoints and gridded section &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pypago.toolsec</span> <span class="k">as</span> <span class="nn">toolsec</span>
+<span class="kn">from</span> <span class="nn">sample_param</span> <span class="k">import</span> <span class="n">ee</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">param</span> <span class="k">import</span> <span class="n">ee</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">pypago.disp</span> <span class="k">import</span> <span class="n">PypagoErrors</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+
+<div class="viewcode-block" id="Section"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.Section">[docs]</a><span class="k">class</span> <span class="nc">Section</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Section endpoint object. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">dire</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param str name: Name of the section</span>
+<span class="sd">        :param numpy.array lon: Section endpoints longitudes</span>
+<span class="sd">        :param numpy.array lat: Section endpoints latitudes</span>
+<span class="sd">        :param numpy.array dire: Section segments directions</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dire</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dire</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Redefinition of the string function &quot;&quot;&quot;</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;Section </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    -lon: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">lon</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    -lat: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">lat</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    -dire: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">dire</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+    
+<span class="c1">#    @property</span>
+<span class="c1">#    def name(self):</span>
+<span class="c1">#        &quot;&quot;&quot; Section name &quot;&quot;&quot;</span>
+<span class="c1">#        return self.__name</span>
+<span class="c1">#    </span>
+<span class="c1">#    @property</span>
+<span class="c1">#    def lon(self):</span>
+<span class="c1">#        &quot;&quot;&quot; Section endpoints longitude &quot;&quot;&quot;</span>
+<span class="c1">#        return self.__lon</span>
+<span class="c1">#    </span>
+<span class="c1">#    @property</span>
+<span class="c1">#    def lat(self):</span>
+<span class="c1">#        &quot;&quot;&quot; Section endpoints latitude &quot;&quot;&quot;</span>
+<span class="c1">#        return self.__lat</span>
+<span class="c1">#    </span>
+<span class="c1">#    @property</span>
+<span class="c1">#    def dire(self):</span>
+<span class="c1">#        &quot;&quot;&quot; Section segments direction &quot;&quot;&quot;</span>
+<span class="c1">#        return self.__dire</span>
+<span class="c1">#</span>
+<span class="c1">#    @name.setter</span>
+<span class="c1">#    def name(self, name):</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        name setter</span>
+<span class="c1">#        :param str name: Section name</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        self.__name = np.array(name)</span>
+<span class="c1">#    </span>
+<span class="c1">#    @lon.setter</span>
+<span class="c1">#    def lon(self, lon):</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        lon setter</span>
+<span class="c1">#        :param str lon: Section lon</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        self.__lon = np.array(lon)</span>
+<span class="c1">#    </span>
+<span class="c1">#    @lat.setter</span>
+<span class="c1">#    def lat(self, lat):</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        lat setter</span>
+<span class="c1">#        :param str lat: Section lat</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        self.__lat = np.array(lat)</span>
+<span class="c1">#    </span>
+<span class="c1">#    @dire.setter</span>
+<span class="c1">#    def dire(self, dire):</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        dire setter</span>
+<span class="c1">#        :param str dire: Section dire</span>
+<span class="c1">#        &#39;&#39;&#39;</span>
+<span class="c1">#        self.__dire = np.array(dire)</span>
+
+
+
+<div class="viewcode-block" id="GridSection"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.GridSection">[docs]</a><span class="k">class</span> <span class="nc">GridSection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Gridded section object &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param pypago.grid.Grid grid: Model grid</span>
+<span class="sd">        :param list section: List of :py:class:`pypago.sections.Section` objects</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelname</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">j</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dire</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lengthvect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areavect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depthvect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lvect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">section</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">jmin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">jmax</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">imin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">imax</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">nlon</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modelname</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">modelname</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initsection</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># It the initsection worked (name is not None) then we</span>
+                <span class="c1"># finalise the section</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_finalisesection</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;The grid and section arguments must BOTH be&#39;</span>
+            <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;None or not None. This is not &#39;</span>
+            <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;the case.&#39;</span>
+            <span class="k">raise</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Redefinition of the str function &quot;&quot;&quot;</span>
+        
+        <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;Gridded section, </span><span class="si">%s</span><span class="s1"> model:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">modelname</span>
+        
+        <span class="n">attrnames</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">extract_attrlist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">extract_str</span><span class="p">(</span><span class="n">attrnames</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+<div class="viewcode-block" id="GridSection._initsection"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.GridSection._initsection">[docs]</a>    <span class="k">def</span> <span class="nf">_initsection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function which allows to initialise the model sections from the</span>
+<span class="sd">        sections&#39; endpoints, the model longitude and latitudes.</span>
+<span class="sd">        The index of the sections which are out of the domain</span>
+<span class="sd">        (should not be further processed)</span>
+<span class="sd">        are stored in a list. If the section is in the domain, the i,j</span>
+<span class="sd">        indexes of its</span>
+<span class="sd">        endpoints and the directions of the segments are stored in a</span>
+<span class="sd">        |pypago| object.</span>
+
+<span class="sd">        :param list sections: list of |pypago| objects</span>
+<span class="sd">           that contains the sections&#39; endpoints</span>
+<span class="sd">        :param numpy.array lont: longitude of the model subdomain</span>
+<span class="sd">        :param numpy.array latt: latitude of the model subdomain</span>
+<span class="sd">        :return: a list (`index_badsec`) that contains the indexes of</span>
+<span class="sd">           the bad sections and a list (`goodsec`) that contains</span>
+<span class="sd">           the |pypago| objects of the good sections, containing the section</span>
+<span class="sd">           endpoints locations in the model grid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># We try to use the locingrid function.</span>
+        <span class="c1"># If failed, we append the index of the section to the bad section index list</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">vecj</span><span class="p">,</span> <span class="n">veci</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">locingrid</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
+                                             <span class="n">section</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+                                             <span class="n">grid</span><span class="o">.</span><span class="n">lont</span><span class="p">,</span>
+                                             <span class="n">grid</span><span class="o">.</span><span class="n">latt</span><span class="p">)</span>
+            <span class="n">dire</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">dire</span>
+
+            <span class="k">if</span> <span class="n">veci</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">veci</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">veci</span> <span class="o">=</span> <span class="n">veci</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">vecj</span> <span class="o">=</span> <span class="n">vecj</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">dire</span> <span class="o">=</span> <span class="n">dire</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">veci</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">j</span> <span class="o">=</span> <span class="n">vecj</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dire</span> <span class="o">=</span> <span class="n">dire</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="GridSection._finalisesection"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.GridSection._finalisesection">[docs]</a>    <span class="k">def</span> <span class="nf">_finalisesection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function that performs the computation of section staircases.</span>
+<span class="sd">        The `sections` arguments are the good sections which have been</span>
+<span class="sd">        returned by the :py:func:`pypago.sec.initsections`.</span>
+<span class="sd">        It creates a list of |pypago| objects, each containing the sections&#39;</span>
+<span class="sd">        properties (`areavect`, `veci`, `vecj`, `depthvect`, `lvect`, etc)</span>
+
+<span class="sd">        :param list sections: list of the good sections, obtained by the</span>
+<span class="sd">            :py:func:`pypago.sec.initsections` function</span>
+
+<span class="sd">        :param pago_obj grid: Pago</span>
+<span class="sd">            object that contains all the model attributes (area, depthvect,</span>
+<span class="sd">            scale factor, etc...)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="p">[</span><span class="n">vecj</span><span class="p">,</span> <span class="n">veci</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">secingrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="p">[</span><span class="n">faces</span><span class="p">,</span> <span class="n">newveci</span><span class="p">,</span> <span class="n">newvecj</span><span class="p">,</span> <span class="n">orientation</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">facesinsec</span><span class="p">(</span><span class="n">veci</span><span class="p">,</span> <span class="n">vecj</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">dire</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="n">newveci</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="n">newvecj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="n">orientation</span>
+
+        <span class="n">nl1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">newveci</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">)):</span>
+                <span class="p">[</span><span class="n">vecj</span><span class="p">,</span> <span class="n">veci</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">secingrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">[</span><span class="n">l</span><span class="p">])</span>
+
+                <span class="p">[</span><span class="n">faces</span><span class="p">,</span> <span class="n">newveci</span><span class="p">,</span> <span class="n">newvecj</span><span class="p">,</span> <span class="n">orientation</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">facesinsec</span><span class="p">(</span><span class="n">veci</span><span class="p">,</span> <span class="n">vecj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dire</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                
+                <span class="p">[</span><span class="n">finalfaces</span><span class="p">,</span> <span class="n">finalveci</span><span class="p">,</span> <span class="n">finalvecj</span><span class="p">,</span> <span class="n">finalorient</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="n">toolsec</span><span class="o">.</span><span class="n">consec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">,</span> <span class="n">newveci</span><span class="p">,</span> <span class="n">newvecj</span><span class="p">,</span> <span class="n">faces</span><span class="p">,</span>
+                                       <span class="n">orientation</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="n">finalveci</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="n">finalvecj</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">finalfaces</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="n">finalorient</span>
+                <span class="n">nl2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">newveci</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
+
+        <span class="c1"># in case section is closed</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+
+            <span class="p">[</span><span class="n">finalfaces</span><span class="p">,</span> <span class="n">finalveci</span><span class="p">,</span> <span class="n">finalvecj</span><span class="p">,</span> <span class="n">finalorient</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">toolsec</span><span class="o">.</span><span class="n">consec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">:],</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="o">-</span><span class="n">nl2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[:</span><span class="n">nl1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[:</span><span class="n">nl1</span><span class="p">],</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:</span><span class="n">nl1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">[:</span><span class="n">nl1</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">nl1</span><span class="p">:</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">finalveci</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">nl1</span><span class="p">:</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">finalvecj</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">nl1</span><span class="p">:</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">finalfaces</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">nl1</span><span class="p">:</span><span class="o">-</span><span class="n">nl2</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">finalorient</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lengthvect</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">lengthinsec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+                                              <span class="n">grid</span><span class="o">.</span><span class="n">dyw</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">dxn</span><span class="p">)</span>
+
+        <span class="c1">#if &#39;e3t_ps&#39; in grid.__dict__.keys():</span>
+        <span class="c1">#self.depthvect = _depthinsec_e3tps(self.veci, self.vecj,</span>
+        <span class="c1">#self.faces, grid)</span>
+        <span class="c1">#self.areavect = self.depthvect*np.tile(np.transpose(self.lengthvect[:, np.newaxis]), (grid.areaW.shape[0], 1))</span>
+        <span class="c1">#else:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areavect</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">areainsec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+                                          <span class="n">grid</span><span class="o">.</span><span class="n">areaw</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">arean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depthvect</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">areainsec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+                                           <span class="n">grid</span><span class="o">.</span><span class="n">dzw</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">dzn</span><span class="p">)</span>
+
+        <span class="n">nl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">[</span><span class="n">vecj</span><span class="p">,</span> <span class="n">veci</span><span class="p">]</span> <span class="o">=</span> <span class="n">toolsec</span><span class="o">.</span><span class="n">nodouble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[:</span><span class="n">nl</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[:</span><span class="n">nl</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lvect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">veci</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lvect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lvect</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lvect</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span>
+                                   <span class="n">toolsec</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">latt</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]],</span> <span class="n">grid</span><span class="o">.</span><span class="n">lont</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]],</span>
+                                                    <span class="n">grid</span><span class="o">.</span><span class="n">latt</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">grid</span><span class="o">.</span><span class="n">lont</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">ee</span><span class="p">))</span>
+
+        <span class="n">nz</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">areaw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="c1">#self.vect = np.nan + np.ones((1, nz, len(self.veci)))</span>
+        <span class="c1">#self.vecs = np.nan + np.ones((1, nz, len(self.veci)))</span>
+        <span class="c1">#self.vecv = np.nan + np.ones((1, nz, len(self.veci)))</span>
+
+<div class="viewcode-block" id="GridSection.plotsecfaces"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.GridSection.plotsecfaces">[docs]</a>    <span class="k">def</span> <span class="nf">plotsecfaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Draws a gridded section as &#39;staircase&#39;,</span>
+<span class="sd">        with grid points as the x and y coordinates.</span>
+
+<span class="sd">        Should be plotted on a map background that shows</span>
+<span class="sd">        the `mask` variables. Must be used to check whether</span>
+<span class="sd">        the all the dots associated with one section are on the same side</span>
+<span class="sd">        of the line</span>
+
+<span class="sd">        :param matplotlib.axes.Axes axes: The</span>
+<span class="sd">           :py:class:`matplotlib axes &lt;matplotlib:matplotlib.axes.Axes&gt;` instance</span>
+<span class="sd">           where to draw the lines</span>
+
+<span class="sd">        :param dict kwargs: Additional arguments to the plot function</span>
+<span class="sd">        :return: The color of the line</span>
+<span class="sd">        :rtype: list|str|unicode</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="n">lw</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">cpt</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">indl</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">)):</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cpt</span><span class="p">:</span>
+                    <span class="n">lll</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">col</span> <span class="o">=</span> <span class="n">lll</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+                    <span class="n">cpt</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lll</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">75</span><span class="p">,</span>
+                                 <span class="n">lw</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">25</span><span class="p">,</span>
+                                 <span class="n">lw</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cpt</span><span class="p">:</span>
+                    <span class="n">lll</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">col</span> <span class="o">=</span> <span class="n">lll</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+                    <span class="n">cpt</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lll</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">],</span>
+                                    <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">25</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">],</span>
+                                 <span class="n">lw</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">indl</span><span class="p">]</span><span class="o">-.</span><span class="mi">75</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">indl</span><span class="p">],</span>
+                                 <span class="n">lw</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
+        
+        <span class="n">axes</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">veci</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vecj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">)</span> 
+
+        <span class="k">return</span> <span class="n">col</span></div></div>
+
+
+<div class="viewcode-block" id="extract_grid_sections"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.extract_grid_sections">[docs]</a><span class="k">def</span> <span class="nf">extract_grid_sections</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">sectionslist</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Extract a list of GridSection objects from a grid</span>
+<span class="sd">    object (containing coordinates and scale factors) and</span>
+<span class="sd">    a list of section endpoints.</span>
+
+<span class="sd">    :param pypago.grid.Grid grid: Input</span>
+<span class="sd">     grid containing the coordinates, mask and scale factors.</span>
+
+<span class="sd">    :param list sectionslist: List of pypago.sections.Section</span>
+<span class="sd">     objects, containing section endpoints definitions.</span>
+
+<span class="sd">    :return: A tuple containing the section in the model world</span>
+<span class="sd">     (pypago.sections.GridSection objects) and the indexes of</span>
+<span class="sd">     the discarded sections (i.e. sections out of the domain)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># if the input is a section, converion into a list</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sectionslist</span><span class="p">,</span> <span class="n">Section</span><span class="p">):</span>
+        <span class="n">sectionslist</span> <span class="o">=</span> <span class="p">[</span><span class="n">sectionslist</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">sectionslist</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;The sectionslist argument must either be a single or a list of &#39;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;pypago.sections.Section objects. This program will &#39;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;be stopped.&#39;</span>
+        <span class="k">raise</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+
+    <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">badsection</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">secind</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sectionslist</span><span class="p">)):</span>
+        <span class="n">gridsec</span> <span class="o">=</span> <span class="n">GridSection</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">sectionslist</span><span class="p">[</span><span class="n">secind</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">gridsec</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gridsec</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">badsection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">secind</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">badsection</span></div>
+
+<div class="viewcode-block" id="correct_gridsec"><a class="viewcode-back" href="../../pypago/generated/pypago.sections.html#pypago.sections.correct_gridsec">[docs]</a><span class="k">def</span> <span class="nf">correct_gridsec</span><span class="p">(</span><span class="n">gridsec</span><span class="p">,</span> <span class="n">secname</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that allows to correct section staircases.</span>
+<span class="sd">    Especially useful in order to correct sections&#39; junctions. It extracts</span>
+<span class="sd">    the section variables (`veci`, `vecj`, etc) along</span>
+<span class="sd">    the length coordinates, from `offset` to `end` or from</span>
+<span class="sd">    `start` to `offset`, depending on the value of `position` argument.</span>
+
+<span class="sd">    :param list sec: section list that contains the |pypago|</span>
+<span class="sd">       objects, containing the veci, vecj, vect, ... obtained</span>
+<span class="sd">       from the :py:func:`pypago.pypago_sec.finalisesections`</span>
+
+<span class="sd">    :param type secname: section points to correct</span>
+
+<span class="sd">    :param int offset: number of points to remove</span>
+
+<span class="sd">    :param str position: {&#39;start&#39;,&#39;end&#39;}</span>
+<span class="sd">       whether we remove the first (position=&#39;start&#39;)</span>
+<span class="sd">       or last (position=&#39;end&#39;) points.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">    </span>
+<span class="sd">        The input list is modified</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nw</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">gridsec</span><span class="p">,</span> <span class="n">secname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">position</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span><span class="p">:</span>
+
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">veci</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">vecj</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">faces</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">orient</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">depthvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">depthvect</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lvect</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lengthvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lengthvect</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">veci</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">veci</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">vecj</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">vecj</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">orient</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="p">[:,</span> <span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">depthvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">depthvect</span><span class="p">[:,</span> <span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lvect</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lengthvect</span> <span class="o">=</span> <span class="n">gridsec</span><span class="p">[</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">lengthvect</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">gridsec</span></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

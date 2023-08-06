@@ -1,0 +1,13 @@
+\section{loaddata\_MODEL}
+
+The loaddata functions are used to read the data on the sections computed by the \verb+pypago.sections_MODEL+ program. There is one function for each of the models: IPSL, CCSM, CNRM, GFDL and NEMO. The data are read using the \verb+netCDF4.MFDataset+ function. As a consequence, there is the possibility to read multiple files at the same time, which prevents using loops.\\
+
+Contrary to the matlab counterpart of the loaddata functions, the masking is slightly different. If the variable \verb+areavect+ is masked, the current velocity \verb+vecv+ is masked where the \verb+areavect+ is also masked. If the \verb+areavect+ vector is not masked (for instance, if the scaling factors for the partial steps are not masked, or if partial steps are not used), the velocity array is masked when it is equal, greater or lower than a certain value. For instance, for the NEMO model, the velocity is masked where it is equal to 0. However, if the data are stored with insufficient precision, the current speed is 0 on wet points. As a consequence, the masking is not performed properly. \\
+
+In the loaddata programs, the precision of the file is assessed: if the precision is good enough, the \verb+areavect+ is masked afterward, where the current velocity is masked. If the precision is unsufficient, a warning message shows up, the masking of the velocity is performed but not the masking of the \verb+areavect+ variable. Note that in addition to conservation issue (volume or heat), unsufficient precision will lead to errors on some of the indices. Especially, the correction of the velocity from the net flow:
+
+\begin{verbatim}
+vecv_nonet=vecv-1e6*indint.netmt[-1]/np.sum(areavect)
+\end{verbatim}
+
+is wrong because the sum of the denominator is performed on \emph{all} the points of the section (wet and dry points).

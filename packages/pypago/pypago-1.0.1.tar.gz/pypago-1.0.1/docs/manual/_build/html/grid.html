@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Grid &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="_static/pago.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sections" href="sections.html" />
+    <link rel="prev" title="Models" href="models.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sections.html" title="Sections"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models"
+             accesskey="P">previous</a> |</li>
+   <li><a href="index.html">Home</a>|&nbsp;</li>
+   <li><a href="models.html">Models</a>|&nbsp;</li>
+   <li><a href="#">Grid</a>|&nbsp;</li>
+   <li><a href="sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="output.html">Output</a>|&nbsp;</li>
+   <li><a href="mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="faq.html">FAQ</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="download.html">download</a></li>
+<li>The PAGO website is <a href="overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="grid">
+<h1>Grid<a class="headerlink" href="#grid" title="Permalink to this headline">¶</a></h1>
+<p>Gridded ocean data often come in a global scale, while regional investigations
+only need part of the grid.
+In order to lighten the memory requirements, in PAGO function
+<code class="xref py py-func docutils literal notranslate"><span class="pre">sections_MODEL()</span></code>, a subset of the grid is defined (using variables lonw,
+lone, lats and latn as grid indices of the corners of the subset) and used to
+load all data.
+If the analysis is carried in the North Atlantic, the program proposes limits
+for the grid subset, appropriate for the default sections.
+Indeed, section end-points and corners must locate within the limits of the
+grid subset.
+The user can also manually define the limits of the grid subset.
+Once the grid subset is defined, all grid and data information is cropped over
+the region of interest.
+Because of interpolation of tracers from the center of the grid cells to the
+faces, the grid subset is limited in latitude (1 &lt; lats,latn &lt; nlat), and we
+assume periodicity in longitude when needed.
+The latter is also assumed when lonw &gt; lone, which is allowed by the program
+(see figure below).</p>
+<p>The grid subset can be saved into <code class="file docutils literal notranslate"><span class="pre">.mat</span></code> file and used again when
+defining new sections.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/fig10.jpg"><img alt="alternate fig10.jpg" src="_images/fig10.jpg" style="width: 90%;" /></a>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sections.html" title="Sections"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Models"
+             >previous</a> |</li>
+   <li><a href="index.html">Home</a>|&nbsp;</li>
+   <li><a href="models.html">Models</a>|&nbsp;</li>
+   <li><a href="#">Grid</a>|&nbsp;</li>
+   <li><a href="sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="output.html">Output</a>|&nbsp;</li>
+   <li><a href="mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="faq.html">FAQ</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,246 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.disp &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.disp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module that handles output of errors and log messages</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">linecache</span>
+
+
+<div class="viewcode-block" id="PypagoErrors"><a class="viewcode-back" href="../../pypago/generated/pypago.disp.html#pypago.disp.PypagoErrors">[docs]</a><span class="k">class</span> <span class="nc">PypagoErrors</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is made to handle errors/warnings in |pypago|</span>
+
+<span class="sd">    :param str message: Message to print in the error (value of the exception)</span>
+
+<span class="sd">    :param str type: A string to indicate what kind of errors is raised</span>
+<span class="sd">        (should be &#39;Warning&#39; or &#39;Error&#39;).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation of the Exception class</span>
+
+<span class="sd">        :param str message: Message to print in the error (value of the</span>
+<span class="sd">           exception)</span>
+<span class="sd">        :param str type: A string to indicate what kind of errors is raised</span>
+<span class="sd">           (should be &#39;Warning&#39; or &#39;Error&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialisation as suggested by PyLint</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PypagoErrors</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">@@@@@@@@@@@@@@@@@@ PypagoErrors @@@@@@@@@@@@@@@@@@</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_str</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Function that redefines the __str__ function &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+<div class="viewcode-block" id="PypagoErrors._make_str"><a class="viewcode-back" href="../../pypago/generated/pypago.disp.html#pypago.disp.PypagoErrors._make_str">[docs]</a>    <span class="k">def</span> <span class="nf">_make_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function which handles the creation of an error/warning message</span>
+<span class="sd">        containing the name of the exception, of the :file:`.py` file,</span>
+<span class="sd">        the line number and the line content that raised the exception/warning.</span>
+
+<span class="sd">        Inspired from `Apogentus answer</span>
+<span class="sd">        &lt;http://stackoverflow.com/questions/14519177/python-exception-handling-line-number&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># sys.exc_info() returns info on the exception that is handled</span>
+        <span class="c1"># tb is the traceback, in which we are interested</span>
+        <span class="c1"># if no exception are provided, then arg returns a tuple of None</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="n">filename</span> <span class="o">=</span> <span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span>
+            <span class="n">strout</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># f is the frame associated with the traceback</span>
+            <span class="n">tb_frame</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">tb_frame</span>
+
+            <span class="c1"># this is the line number where the exception has been raised</span>
+            <span class="n">lineno</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">tb_lineno</span>
+
+            <span class="c1"># this is the filename</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">tb_frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_filename</span>
+
+            <span class="c1"># allows to recover the line responsible for the warning</span>
+            <span class="n">linecache</span><span class="o">.</span><span class="n">checkcache</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">linecache</span><span class="o">.</span><span class="n">getline</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">tb_frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">)</span>
+            <span class="n">strout</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">  (in </span><span class="si">{}</span><span class="s1">, line </span><span class="si">{}</span><span class="s1">: &quot;</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                                         <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span>
+                                                         <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">strout</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

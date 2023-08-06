@@ -1,0 +1,585 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.grid &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.grid</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&#39;&#39;&#39; Class that handles grid scale factors for a model configuration &#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pypago.disp</span>
+<span class="kn">import</span> <span class="nn">pypago.coords</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<div class="viewcode-block" id="Grid"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid">[docs]</a><span class="k">class</span> <span class="nc">Grid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Class that handles grid extraction on a specific domain</span>
+
+<span class="sd">    :param int jmin: Index of the southernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int jmax: Index of the northernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int imin: Index of the westernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int imax: Index of the easternnmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param :py:class:`pypago.coords.Coords` coord: Coordinate object </span>
+<span class="sd">     associated with the grid file (longitude, latitude, mask of the </span>
+<span class="sd">     entire domain, used in the file extraction)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> 
+                 <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39; Initialisation of the grid class &#39;&#39;&#39;</span>
+        
+        <span class="c1"># here are the coords and scale factors</span>
+        <span class="c1"># extracted on the domain grid.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lont</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bathy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyte</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areaw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arean</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelname</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">coord</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Either jmin, jmax, imin or imax &#39;</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;is None.&#39;</span>
+                    <span class="k">raise</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+            <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="o">.</span><span class="n">shape</span>
+        
+            <span class="c1"># Checking that the jmin/jmax/imin/imin are within the bounds</span>
+            <span class="c1"># if not, correct their values</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">imin</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">imin</span><span class="o">&gt;</span><span class="n">nlon</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The imin argument must be &#39;</span> <span class="o">+</span> \
+                    <span class="s1">&#39;between </span><span class="si">%d</span><span class="s1"> and </span><span class="si">%d</span><span class="s1">. Currently, </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nlon</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">imin</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;imin has been set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+                <span class="n">imin</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">imax</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">imax</span><span class="o">&gt;</span><span class="n">nlon</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span> 
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The imax argument must be &#39;</span> <span class="o">+</span> \
+                    <span class="s1">&#39;between </span><span class="si">%d</span><span class="s1"> and </span><span class="si">%d</span><span class="s1">. Currently, </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nlon</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">imax</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;imax has been set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nlon</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">imax</span> <span class="o">=</span> <span class="n">nlon</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">jmin</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">jmin</span><span class="o">&gt;</span><span class="n">nlat</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The jmin argument must be &#39;</span> <span class="o">+</span> \
+                    <span class="s1">&#39;between </span><span class="si">%d</span><span class="s1"> and </span><span class="si">%d</span><span class="s1">. Currently, </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nlat</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">jmin</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;jmin has been set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">jmin</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">jmax</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">jmax</span><span class="o">&gt;</span><span class="n">nlat</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The jmax argument must be &#39;</span> <span class="o">+</span> \
+                    <span class="s1">&#39;between </span><span class="si">%d</span><span class="s1"> and </span><span class="si">%d</span><span class="s1">. Currently, </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nlat</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">jmax</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;jmax has been set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">nlat</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">jmax</span> <span class="o">=</span> <span class="n">nlat</span><span class="o">-</span><span class="mi">2</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">jmax</span><span class="o">&lt;</span><span class="n">jmin</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Currently, jmax&lt;jmin. &quot;</span> <span class="o">+</span> \
+                      <span class="s2">&quot;The variables have been switched&quot;</span><span class="p">)</span>
+                <span class="n">jmax</span><span class="p">,</span> <span class="n">jmin</span> <span class="o">=</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">filename</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modelname</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">modelname</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="n">nlon</span>
+           
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span> <span class="o">=</span> <span class="n">jmin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span> <span class="o">=</span> <span class="n">jmax</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">=</span> <span class="n">imin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">=</span> <span class="n">imax</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">extract_all_var</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Grid.plot_dom"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.plot_dom">[docs]</a>    <span class="k">def</span> <span class="nf">plot_dom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Draws the domain defined by the jmax, jmin,</span>
+<span class="sd">        imin, and imax attributes.</span>
+
+<span class="sd">        :param matplotlib.axes.Axes ax: Axis on which to draw</span>
+<span class="sd">         the figure. If None, draws on current axis.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">:</span>
+            <span class="n">lontp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">]</span>
+            <span class="n">lattp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lontp</span><span class="p">,</span> <span class="n">lattp</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lontp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">]</span>
+            <span class="n">lattp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lontp</span><span class="p">,</span> <span class="n">lattp</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            
+            <span class="n">lontp</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">lattp</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lontp</span><span class="p">,</span> <span class="n">lattp</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;Model grid for the </span><span class="si">%s</span><span class="s1"> model:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">modelname</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - mesh file: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - jmin: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - jmax: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - imin: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">imin</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - imax: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - nlat: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - nlon: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;    - nz: </span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+<div class="viewcode-block" id="Grid.compute_areas"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.compute_areas">[docs]</a>    <span class="k">def</span> <span class="nf">compute_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the cell area at the northern and</span>
+<span class="sd">        western faces, and the volume and surface</span>
+<span class="sd">        of the T grid cells.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areaw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dyw</span><span class="p">,</span> <span class="p">(</span><span class="n">nz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzn</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dxn</span><span class="p">,</span> <span class="p">(</span><span class="n">nz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">areaw</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">areaw</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areaw</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">areaw</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">arean</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">arean</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arean</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arean</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span> <span class="p">(</span><span class="n">nz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Grid.extract_2d_var"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.extract_2d_var">[docs]</a>    <span class="k">def</span> <span class="nf">extract_2d_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varin</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extraction of a 2D variable on the subdomain defined</span>
+<span class="sd">        by the four domain limits. It provides the possibility</span>
+<span class="sd">        to read a variable &quot;discontinuously&quot;</span>
+<span class="sd">        (if `imin` &gt; `imax`).</span>
+
+<span class="sd">        :param numpy.array varin: Input 2D variable</span>
+<span class="sd">        :return: The input array extracted on the specified subdomain</span>
+<span class="sd">        :rtype: numpy.array</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">:</span>
+            <span class="n">out1</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:]</span>
+            <span class="n">out2</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">varout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">out1</span><span class="p">,</span> <span class="n">out2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">varout</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">varout</span></div>
+
+<div class="viewcode-block" id="Grid.extract_3d_var"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.extract_3d_var">[docs]</a>    <span class="k">def</span> <span class="nf">extract_3d_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">varin</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extraction of a 2D variable on the subdomain defined</span>
+<span class="sd">        by the four domain limits. It provides the possibility</span>
+<span class="sd">        to read a variable &quot;discontinuously&quot;</span>
+<span class="sd">        (if `imin` &gt; `imax`).</span>
+
+<span class="sd">        :param numpy.array varin: Input 3D variable</span>
+<span class="sd">        :return: The input array extracted on the specified subdomain</span>
+<span class="sd">        :rtype: numpy.array</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">:</span>
+            <span class="n">out1</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:]</span>
+            <span class="n">out2</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">varout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">out1</span><span class="p">,</span> <span class="n">out2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">varout</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">varout</span></div>
+
+<div class="viewcode-block" id="Grid.create_3d_vert_scalefact"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.create_3d_vert_scalefact">[docs]</a>    <span class="k">def</span> <span class="nf">create_3d_vert_scalefact</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If the vertical scale factor dzt is 1D, </span>
+<span class="sd">        it reconstructs a 3D variable by repeating</span>
+<span class="sd">        the 1D variable along the lon and lat dimensions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxt</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dzt</span><span class="p">,</span> <span class="p">[</span><span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Grid.extract_all_var"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.extract_all_var">[docs]</a>    <span class="k">def</span> <span class="nf">extract_all_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts all the variables (coordinates,</span>
+<span class="sd">        scale factors, etc) on the sub-domain </span>
+<span class="sd">        defined by the jmin, jmax, imin and imax variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of lont on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lont</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of latt on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">latt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of bathy on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bathy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">bathy</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of mask on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of dxt on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dxt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of dyt on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dyt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dyt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of dxn on the domain&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dxn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dxn</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coord</span><span class="o">.</span><span class="n">dyw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If the model contains the dyw variable (HYCO, OFAM, MICO models for instance)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extraction of dyw on the domain&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_2d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dyw</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If the model does not contain the dyw variable, we reconstruct it from the </span>
+            <span class="c1"># dye variable</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reconstruction of the dyw variable from dye&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">:],</span> 
+                                              <span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">]),</span>
+                                              <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>   <span class="c1"># self.imax &lt; self.imin</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">:],</span> 
+                                              <span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="p">]),</span> 
+                                              <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dyw</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">dye</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span></div>
+
+<div class="viewcode-block" id="Grid.plot_mask"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.Grid.plot_mask">[docs]</a>    <span class="k">def</span> <span class="nf">plot_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39; Contours the mask attribute &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cs</span></div></div>
+
+<div class="viewcode-block" id="CommonGrid"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.CommonGrid">[docs]</a><span class="k">class</span> <span class="nc">CommonGrid</span><span class="p">(</span><span class="n">Grid</span><span class="p">):</span>
+
+    <span class="sd">&#39;&#39;&#39; Grid class associated with all models but GFDL &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39; Initialisation of the common grid class &#39;&#39;&#39;</span>
+
+        <span class="c1"># initialisation of the attributes to None</span>
+        <span class="c1"># using the mother initialisation</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CommonGrid</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span>
+                                         <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coord</span><span class="o">.</span><span class="n">dzt</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dzt</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dzw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dzn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dzn</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if dzt is 1D, we create 3D scale factors</span>
+            <span class="c1"># from 1D scale factors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_3d_vert_scalefact</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_areas</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GfdlGrid"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.GfdlGrid">[docs]</a><span class="k">class</span> <span class="nc">GfdlGrid</span><span class="p">(</span><span class="n">Grid</span><span class="p">):</span>
+
+    <span class="sd">&#39;&#39;&#39; GFDL grid class &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39; Initialisation of the GFDL grid class &#39;&#39;&#39;</span>
+
+        <span class="c1"># initialisation of the attributes to None</span>
+        <span class="c1"># using the mother initialisation</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GfdlGrid</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span>
+                                       <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzc</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var_gfdl</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_areas</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GfdlGrid.extract_3d_var_gfdl"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.GfdlGrid.extract_3d_var_gfdl">[docs]</a>    <span class="k">def</span> <span class="nf">extract_3d_var_gfdl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the vertical scale factors for the </span>
+<span class="sd">        GFDL model. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">coord</span><span class="o">.</span><span class="n">dzt</span><span class="o">.</span><span class="n">ndims</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span>
+
+                <span class="n">dzc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coord</span><span class="o">.</span><span class="n">dzc</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:],</span>
+                                      <span class="n">coord</span><span class="o">.</span><span class="n">dzc</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">2</span><span class="p">]),</span>
+                                      <span class="n">axis</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> 
+                                 <span class="n">dzc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">temp</span> <span class="o">!=</span> <span class="n">temp</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> 
+                                 <span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">temp</span> <span class="o">!=</span> <span class="n">temp</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dzt</span><span class="p">)</span> 
+
+            <span class="k">else</span><span class="p">:</span>   <span class="c1"># imin &lt; imax </span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">dzc</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">dzc</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dzc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">coord</span><span class="o">.</span><span class="n">dzc</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">imin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span>
+                                          <span class="n">coord</span><span class="o">.</span><span class="n">dzc</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">dzc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">temp</span> <span class="o">!=</span> <span class="n">temp</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:],</span> 
+                                 <span class="n">dzc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">temp</span> <span class="o">!=</span> <span class="n">temp</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">dzt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_3d_var</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">dzt</span><span class="p">)</span> 
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if dzt is 1D, we create 3D scale factors</span>
+            <span class="c1"># from 1D scale factors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_3d_vert_scalefact</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="create_grid"><a class="viewcode-back" href="../../pypago/generated/pypago.grid.html#pypago.grid.create_grid">[docs]</a><span class="k">def</span> <span class="nf">create_grid</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">jmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">imax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Returns a Grid instance associated with the input coord argument. If it</span>
+<span class="sd">    is a `pypago.coord.GfdlCoords` object, then it returns a </span>
+<span class="sd">    :py:class:`pypago.grid.GfdlGrid` object. Else, it returns a </span>
+<span class="sd">    :py:class:`pypago.grid.CommonGrid` object.</span>
+<span class="sd">    </span>
+<span class="sd">    :param int jmin: Index of the southernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int jmax: Index of the northernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int imin: Index of the westernmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param int imax: Index of the easternnmost point of the subdomain</span>
+<span class="sd">    </span>
+<span class="sd">    :param :py:class:`pypago.coords.Coords` coord: Coordinate object </span>
+<span class="sd">     associated with the grid file (longitude, latitude, mask of the </span>
+<span class="sd">     entire domain, used in the file extraction)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">imin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The imin argument is None. Set to 0&#39;</span><span class="p">)</span>
+        <span class="n">imin</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">imax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The imax argument is None. Set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">imax</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">jmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">jmin</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The jmin argument is None. Set to 1&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">jmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The jmax argument is None. Set to </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">jmax</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">lont</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">pypago</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">GfdlCoords</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GfdlGrid</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CommonGrid</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="p">,</span> <span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="p">)</span></div>
+
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

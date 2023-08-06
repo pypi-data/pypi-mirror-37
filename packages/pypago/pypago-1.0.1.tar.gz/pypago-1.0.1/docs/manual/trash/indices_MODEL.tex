@@ -1,0 +1,24 @@
+\section{indices\_MODEL and indices\_MODEL}
+
+In this function, the transport indices are computed. Contrary to the matlab program, the only indices that are not included in the full diagnosis are those in density coordinates. The heat and mass transport in level intervals, the barotropic and baroclinic components of heat and mass transports are now computed by default. The interval levels, defined in the \verb+__param__.py+ file, are computed using the \verb+pago.determine_levels+.\\
+
+This function is called as follows:
+\begin{verbatim}
+data=pypago.indices_MODEL(structfile)
+\end{verbatim}
+
+The output data is a dictionary that contains two variables, the \verb+MODEL_time+ variable (which is a numpy array), and a list named \verb+MODEL_indices+, which contains, for each section, the transport indices. This transport is computed for any time step.\\
+
+In order to plot the indices:
+
+\begin{verbatim}
+import pylab as plt
+indices=data['MODEL_indices']
+
+indar7=pypago.findsecname(indices,'ar7') # find the index of the ar7 section
+inddso=pypago.findsecname(indices,'dso') # find the index of the dso section
+plt.plot(indices[indar7].netmt) # plot the net mass transport of the ar7 section
+plt.plot(indices[inddso].netmt) # plot the net mass transport of the dso section
+plt.show()
+\end{verbatim}
+

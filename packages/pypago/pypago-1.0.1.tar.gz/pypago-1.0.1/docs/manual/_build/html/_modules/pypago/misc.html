@@ -1,0 +1,298 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.misc &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.misc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module that contains miscellaneous functions (functions to determine the</span>
+<span class="sd">indexes of a section or area within a list) and the class that allows to define</span>
+<span class="sd">|matlab|-like structures</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">pypago.disp</span> <span class="k">import</span> <span class="n">PypagoErrors</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="extract_mask"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.extract_mask">[docs]</a><span class="k">def</span> <span class="nf">extract_mask</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; True where missing data (masked or NaN) &quot;&quot;&quot;</span>
+
+    <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="make_percentile_cmap"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.make_percentile_cmap">[docs]</a><span class="k">def</span> <span class="nf">make_percentile_cmap</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">perc</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns colormaps limits using percentiles. The</span>
+<span class="sd">    minimum color value. </span>
+
+<span class="sd">    :param array numpy.array: Input array</span>
+
+<span class="sd">    :param float perc : Percentile (in percentage)</span>
+
+<span class="sd">    :returns: A tuple containing the lower and upper colorbar limits</span>
+<span class="sd">     associated with the array percentiles.</span>
+<span class="sd">     </span>
+<span class="sd">    :rtype: tuple</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># converts from ND to 1D</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+    <span class="c1"># mask data where missing and extracts only unmasked</span>
+    <span class="c1"># data</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">array</span><span class="o">!=</span><span class="n">array</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">==</span><span class="kc">False</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># computes the percentiles</span>
+        <span class="n">cmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">perc</span><span class="p">)</span>
+        <span class="n">cmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="n">perc</span><span class="p">)</span>
+
+        <span class="c1"># rounds the percentiles (unnecessary???)</span>
+        <span class="c1">#cmin = unit_round(cmin, &quot;floor&quot;)</span>
+        <span class="c1">#cmax = unit_round(cmax, &quot;ceil&quot;)</span>
+    
+    <span class="k">return</span> <span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span></div>
+
+<div class="viewcode-block" id="extract_str"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.extract_str">[docs]</a><span class="k">def</span> <span class="nf">extract_str</span><span class="p">(</span><span class="n">attrnames</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract a string which will be used in the __str__ method.</span>
+<span class="sd">    The string list the attributes and display either their shape</span>
+<span class="sd">    (for numpy arrays) or their values</span>
+
+<span class="sd">    :param list attrnames: List of attributes to displau.</span>
+<span class="sd">    :param object dataclass: Input object</span>
+<span class="sd">    :return: A string</span>
+<span class="sd">    :rtype: str</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrnames</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dataclass</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;  -</span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s1">&#39;  -</span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="extract_attrlist"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.extract_attrlist">[docs]</a><span class="k">def</span> <span class="nf">extract_attrlist</span><span class="p">(</span><span class="n">dataclass</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the names of the oject attributes which are not instance</span>
+<span class="sd">    method and which do not start by a _ character</span>
+
+<span class="sd">    :param object dataclass: Input object</span>
+<span class="sd">    :return: A list of strings</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">attrnames</span> <span class="o">=</span> <span class="p">([</span><span class="n">attr</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">dataclass</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">])</span>
+    <span class="n">attrnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">attr</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrnames</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">ismethod</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">dataclass</span><span class="p">,</span> <span class="n">attr</span><span class="p">)))]</span>
+    <span class="k">return</span> <span class="n">attrnames</span></div>
+
+
+<div class="viewcode-block" id="finddomnum"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.finddomnum">[docs]</a><span class="k">def</span> <span class="nf">finddomnum</span><span class="p">(</span><span class="n">model_areas</span><span class="p">,</span> <span class="n">areaplotname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the index of a domain in a list of domains</span>
+
+<span class="sd">    :param list model_areas: list of the Pago areas where to find the area</span>
+<span class="sd">    :param str areaplotname: name of the area</span>
+<span class="sd">    :return: index of the area within the list</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">inddom</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_areas</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">model_areas</span><span class="p">[</span><span class="n">inddom</span><span class="p">]</span><span class="o">.</span><span class="n">areaname</span> <span class="o">==</span> <span class="n">areaplotname</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inddom</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;Domain </span><span class="si">{0}</span><span class="s1"> does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">areaplotname</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">error</span></div>
+
+
+<div class="viewcode-block" id="findsecnum"><a class="viewcode-back" href="../../pypago/generated/pypago.misc.html#pypago.misc.findsecnum">[docs]</a><span class="k">def</span> <span class="nf">findsecnum</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">secplotname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the index of a section in a list of sections</span>
+
+<span class="sd">    :param list model_sections: list of the Pago sections where to find the</span>
+<span class="sd">       section</span>
+<span class="sd">    :param str secplotname: name of the section</span>
+<span class="sd">    :return: index of the section within the list</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    :raise error: if `secplotname` not found in `MODEL_sections`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">indsec</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_sections</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">model_sections</span><span class="p">[</span><span class="n">indsec</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">secplotname</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">indsec</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;Section </span><span class="si">{0}</span><span class="s1"> does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">secplotname</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">error</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

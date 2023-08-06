@@ -1,0 +1,688 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.data &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.data</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot; Module for the reading of data &quot;&quot;&quot;</span>
+    
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">param</span> <span class="k">import</span> <span class="n">dictvname</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dictvname</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sample_param</span> <span class="k">import</span> <span class="n">dictvname</span>
+    <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dictvname</span><span class="p">)</span>
+
+<div class="viewcode-block" id="loadtime"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loadtime">[docs]</a><span class="k">def</span> <span class="nf">loadtime</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Load the time variable (using the :py:func:`pypago.pyio.read_time` </span>
+<span class="sd">    function) and add it to the model sections attributes (time attribute)</span>
+
+<span class="sd">    :param list model_sections: List of model sections</span>
+<span class="sd">    :param str filename: NetCDF filename</span>
+<span class="sd">    :return: List of model sections with the time attribute added</span>
+<span class="sd">    :rtype: list</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">outname</span> <span class="o">=</span> <span class="n">dictvname</span><span class="p">[</span><span class="s1">&#39;time_varname&#39;</span><span class="p">]</span>   <span class="c1"># output name of the time variable</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">read_time</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">time_varname</span><span class="p">)</span>    <span class="c1"># reads the time from the netcdf file</span>
+
+    <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">model_sections</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">)):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>   <span class="c1"># if the &#39;time&#39; attribute does not exist, it is added to data structure file</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">),</span> <span class="n">time</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>    <span class="c1"># else, it is concatenated to the existing one</span>
+
+    <span class="k">return</span> <span class="n">model_sections</span></div>
+
+
+<div class="viewcode-block" id="loaddata_sec_T"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loaddata_sec_T">[docs]</a><span class="k">def</span> <span class="nf">loaddata_sec_T</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dictvarname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the model output from model T-grid points and interpolates </span>
+<span class="sd">    them on section west and north faces. The extracted data are added to </span>
+<span class="sd">    the input file::</span>
+
+<span class="sd">        import pypago.data</span>
+
+<span class="sd">        filenameT = &#39;g88_2000_00_gridT.nc&#39;</span>
+<span class="sd">        dictvarname = {&#39;vect&#39;:&#39;votemper, &#39;vecs&#39;:vosaline&#39;}</span>
+<span class="sd">        pypago.data.loaddata_sec_T(&#39;data.pygo&#39;, filenameT, dictvarname)</span>
+<span class="sd">        </span>
+<span class="sd">    :param str structfile: The name of the .pygo file </span>
+<span class="sd">     where the list of :py:class:`pypago.sections.Gridsection` objects</span>
+<span class="sd">     are stored.</span>
+
+<span class="sd">    .. versionchanged:: 20120515</span>
+
+<span class="sd">    JD PAGO WHOI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#   extraction of sub-grid corners and of the total number of longitudinal points</span>
+    <span class="n">nlon</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nlon</span> 
+    <span class="n">jmin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmin</span>
+    <span class="n">jmax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmax</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imin</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imax</span>
+    <span class="n">nzlev</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+    <span class="c1"># count the total number of time steps in the file, over which to loop</span>
+    <span class="n">ntime</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">count_dim</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">time_varname</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">timestep</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntime</span><span class="p">):</span>
+
+        <span class="c1"># loop over the list of variables to extract (on T points)</span>
+        <span class="k">for</span> <span class="n">outname</span><span class="p">,</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">dictvarname</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+
+            <span class="k">if</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">):</span>
+    
+                <span class="c1"># extraction of file precision</span>
+                <span class="n">fileprec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_dtype</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+
+                <span class="c1"># extraction of the temperature on T points, but considering one more point left and top</span>
+                <span class="c1"># to interpolate on W and E faces.</span>
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">tempc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tempc</span><span class="p">)</span>
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">tempc</span><span class="p">),</span> <span class="n">tempc</span><span class="p">)</span>
+                <span class="c1"># interpolation on N/W faces.</span>
+                <span class="n">tempn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">tempw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># extraction on the real T domain</span>
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+
+                <span class="c1"># function that modifies the MODEL_sections list</span>
+                <span class="n">_extract_sections</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">tempn</span><span class="p">,</span> <span class="n">tempw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_sections</span></div>
+
+
+<div class="viewcode-block" id="loaddata_sec_UV"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loaddata_sec_UV">[docs]</a><span class="k">def</span> <span class="nf">loaddata_sec_UV</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">filename_u</span><span class="p">,</span> <span class="n">filename_v</span><span class="p">,</span> <span class="n">dictvarname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    Extracts the model output, interpolates if needed on west and north faces,</span>
+<span class="sd">    and saves only the data along preselected sections and areas in structfile.</span>
+
+<span class="sd">    .. warning::</span>
+
+<span class="sd">       FOR NEMO MODEL ONLY</span>
+
+<span class="sd">    :param str file_location: is where the model output can be</span>
+<span class="sd">       found (full path), which name is</span>
+<span class="sd">       :file:`{file_prefix}{SALT|TEMP|UVEL|VVEL}.{file_suffix}.nc`</span>
+
+<span class="sd">    :param bool loadarea: the `loadarea` option determines whether to load</span>
+<span class="sd">       the temperature and salinity on the volumes computed</span>
+<span class="sd">       using the :py:func:`pypago.grid.areas_MODEL` function</span>
+
+<span class="sd">    .. versionchanged:: 20120515</span>
+
+<span class="sd">       JD PAGO WHOI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#model_sections = pypago.pyio.load(structfile)</span>
+
+    <span class="c1"># extraction of sub-domain indexes.</span>
+    <span class="n">nlon</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nlon</span> 
+    <span class="n">jmin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmin</span>
+    <span class="n">jmax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmax</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imin</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imax</span>
+    <span class="n">nzlev</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+    <span class="c1"># time steps in the file over which to loop</span>
+    <span class="n">ntime</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">count_dim</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">time_varname</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">timestep</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntime</span><span class="p">):</span>
+
+        <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;time step = &#39;</span><span class="p">,</span> <span class="n">timestep</span><span class="p">)</span>
+
+        <span class="c1"># loop over the variables which will be extracted</span>
+        <span class="k">for</span> <span class="n">outname</span><span class="p">,</span> <span class="p">(</span><span class="n">varname_u</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">dictvarname</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+
+            <span class="k">if</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename_v</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">):</span>
+    
+                <span class="n">fileprec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_dtype</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">)</span>
+                
+                <span class="c1"># originally in centimeters/s &gt;&gt; convert to meters/s</span>
+                <span class="n">uvelw</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imax</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+        
+                <span class="c1"># originally in centimeters/s &gt;&gt; convert to meters/s</span>
+                <span class="n">vveln</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename_v</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+
+
+                <span class="c1"># function that modifies the MODEL_sections list</span>
+                <span class="n">_extract_sections</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">vveln</span><span class="p">,</span> <span class="n">uvelw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> or </span><span class="si">%s</span><span class="s2"> variable does not exist!!!&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">varname_u</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_sections</span></div>
+
+
+<div class="viewcode-block" id="_extract_sections"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data._extract_sections">[docs]</a><span class="k">def</span> <span class="nf">_extract_sections</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">tempn</span><span class="p">,</span> <span class="n">tempw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Extracts T, S, U and V along all the sections contained in</span>
+<span class="sd">    the `model_sections` list, which is then updated.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">model_sections</span><span class="p">:</span>
+
+        <span class="n">nzlev</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+        <span class="n">veci</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">veci</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">vecj</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">vecj</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">faces</span>
+        <span class="n">orient</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">orient</span>
+
+        <span class="n">vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">veci</span><span class="p">)))</span>
+
+        <span class="n">nl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">veci</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nl</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">faces</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempn</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]]</span>
+            <span class="k">elif</span> <span class="n">faces</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempw</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">use_orient</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">l</span><span class="p">]</span> <span class="o">*=</span> <span class="n">secint</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+
+        <span class="c1"># mask data where areavect is NaN</span>
+        <span class="c1"># first, need to broadcast arrays for them to have the same</span>
+        <span class="c1"># same size.</span>
+        <span class="n">areavect</span><span class="p">,</span> <span class="n">vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="p">,</span> <span class="n">vect</span><span class="p">)</span>
+        <span class="n">vect</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">areavect</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1">#if len(indnan[0] &gt; 0):</span>
+        <span class="c1">#    i, j = np.nonzero(np.isnan(areavect))</span>
+        <span class="c1">#    vect[:, i, j] = np.nan</span>
+        <span class="c1">#else:</span>
+        <span class="c1">#    if filepres == np.float32:</span>
+        <span class="c1">#        #print &#39;Masking vecv where vecv==0&#39;</span>
+        <span class="c1">#        #vecv[vecv == 0] = np.nan</span>
+        <span class="c1">#        #areavect[np.isnan(vecv[0, :, :])] = np.nan</span>
+        <span class="c1">#        #secint.areavect = areavect</span>
+        <span class="c1">#    else:</span>
+        <span class="c1">#        #print r&#39;data precision is unsufficient: vecv will be inappropriately masked.&#39;</span>
+        <span class="c1">#        #print r&#39;expected errors on indices calculations!&#39;</span>
+        <span class="c1">#        #vecv[vecv == 0] = np.nan</span>
+        
+        <span class="c1"># vect[np.ma.getmaskarray(vect)] = np.nan</span>
+
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">)):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">vect</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">),</span> <span class="n">vect</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="_trans_to_vel"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data._trans_to_vel">[docs]</a><span class="k">def</span> <span class="nf">_trans_to_vel</span><span class="p">(</span><span class="n">model_sections</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the transport arrays (in kg/s) into</span>
+<span class="sd">    velocity arrays by diving the transport across each cell</span>
+<span class="sd">    by the surface of the grid cell</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">model_sections</span><span class="p">:</span>
+        <span class="n">secint</span><span class="o">.</span><span class="n">vecv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">vecv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">/</span><span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="o">*</span><span class="mf">1e-3</span></div>
+
+
+<div class="viewcode-block" id="loaddata_area_T"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loaddata_area_T">[docs]</a><span class="k">def</span> <span class="nf">loaddata_area_T</span><span class="p">(</span><span class="n">model_areas</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dictvarname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the model output from model T-grid points and interpolates </span>
+<span class="sd">    them on section west and north faces. The extracted data are added to </span>
+<span class="sd">    the input file::</span>
+
+<span class="sd">        import pypago.data</span>
+
+<span class="sd">        filenameT = &#39;g88_2000_00_gridT.nc&#39;</span>
+<span class="sd">        dictvarname = {&#39;vect&#39;:&#39;votemper, &#39;vecs&#39;:vosaline&#39;}</span>
+<span class="sd">        pypago.data.loaddata_sec_T(&#39;data.pygo&#39;, filenameT, dictvarname)</span>
+<span class="sd">        </span>
+<span class="sd">    :param str structfile: The name of the .pygo file </span>
+<span class="sd">     where the list of :py:class:`pypago.sections.Gridsection` objects</span>
+<span class="sd">     are stored.</span>
+
+<span class="sd">    .. versionchanged:: 20120515</span>
+
+<span class="sd">       JD PAGO WHOI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nlon</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nlon</span> 
+    <span class="n">jmin</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmin</span>
+    <span class="n">jmax</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmax</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imin</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imax</span>
+    <span class="n">nzlev</span> <span class="o">=</span> <span class="n">model_areas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+    <span class="n">ntime</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">count_dim</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">time_varname</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">timestep</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntime</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">outname</span><span class="p">,</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">dictvarname</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+
+            <span class="k">if</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">):</span>
+    
+                <span class="n">fileprec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_dtype</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+                <span class="n">vardim</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">count_ndim</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+    
+                <span class="k">if</span> <span class="n">vardim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">tempc</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span>
+                                                    <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                    <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+                    <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="k">elif</span> <span class="n">vardim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">tempc</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span>
+                                                    <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                    <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+                    <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;The number of dimensions within the variable is not &#39;</span>
+                    <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;right. Vardim = </span><span class="si">%d</span><span class="s1"> instead of 3 or 4.&#39;</span> <span class="o">%</span><span class="n">vardim</span>
+                    <span class="k">raise</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">tempc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tempc</span><span class="p">)</span>
+                <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">tempc</span><span class="p">),</span> <span class="n">tempc</span><span class="p">)</span>
+
+                <span class="n">_extract_areas</span><span class="p">(</span><span class="n">model_areas</span><span class="p">,</span> <span class="n">tempc</span><span class="p">,</span> <span class="n">outname</span><span class="p">)</span>
+
+                <span class="c1"># function that modifies the MODEL_sections list</span>
+                <span class="c1">#_extract_sections(model_sections, tempn, tempw, outname, use_orient=False)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> variable does not exist!!!&quot;</span> <span class="o">%</span><span class="n">varname</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_areas</span></div>
+
+
+<div class="viewcode-block" id="_extract_areas"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data._extract_areas">[docs]</a><span class="k">def</span> <span class="nf">_extract_areas</span><span class="p">(</span><span class="n">model_areas</span><span class="p">,</span> <span class="n">tempc</span><span class="p">,</span> <span class="n">outname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts grid T variable on all the areas contained in</span>
+<span class="sd">    the `MODEL_areas` list, which is then updated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    
+    <span class="c1"># loop over all the areas</span>
+    <span class="k">for</span> <span class="n">areaint</span> <span class="ow">in</span> <span class="n">model_areas</span><span class="p">:</span>
+
+        <span class="c1"># set to NaN all the missing values of the variable</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">extract_mask</span><span class="p">(</span><span class="n">tempc</span><span class="p">)</span>
+        <span class="n">tempc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># extract the data on the area indexes</span>
+        <span class="k">if</span> <span class="n">tempc</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">areaint</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">areaint</span><span class="o">.</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:,</span> <span class="n">areaint</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">areaint</span><span class="o">.</span><span class="n">j</span><span class="p">]</span>
+            
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">areaint</span><span class="p">,</span> <span class="n">outname</span><span class="p">)):</span>
+            <span class="c1"># if outname is not an attribute, we add it </span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">areaint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">tempc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if outname is already an attribute, we update it </span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">areaint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">areaint</span><span class="p">,</span> <span class="n">outname</span><span class="p">),</span> <span class="n">tempc</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="loaddata_sec_UV_ROMS"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loaddata_sec_UV_ROMS">[docs]</a><span class="k">def</span> <span class="nf">loaddata_sec_UV_ROMS</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">filename_u</span><span class="p">,</span> <span class="n">filename_v</span><span class="p">,</span> <span class="n">dictvarname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    Extracts the model output, interpolates if needed on west and north faces,</span>
+<span class="sd">    and saves only the data along preselected sections and areas in structfile.</span>
+
+<span class="sd">    .. warning::</span>
+
+<span class="sd">       FOR ROMS MODEL ONLY</span>
+
+<span class="sd">    :param str file_location: is where the model output can be</span>
+<span class="sd">       found (full path), which name is</span>
+<span class="sd">       :file:`{file_prefix}{SALT|TEMP|UVEL|VVEL}.{file_suffix}.nc`</span>
+
+<span class="sd">    :param bool loadarea: the `loadarea` option determines whether to load</span>
+<span class="sd">       the temperature and salinity on the volumes computed</span>
+<span class="sd">       using the :py:func:`pypago.grid.areas_MODEL` function</span>
+
+<span class="sd">    .. versionchanged:: 20120515</span>
+
+<span class="sd">       JD PAGO WHOI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># extraction of sub-domain indexes.</span>
+    <span class="n">nlon</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nlon</span> 
+    <span class="n">jmin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmin</span>
+    <span class="n">jmax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmax</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imin</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imax</span>
+    <span class="n">nzlev</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+    <span class="c1"># time steps in the file over which to loop</span>
+    <span class="n">ntime</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">count_dim</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">time_varname</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">timestep</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntime</span><span class="p">):</span>
+
+        <span class="nb">print</span> <span class="s2">&quot;Time step </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">timestep</span><span class="p">,</span> <span class="n">ntime</span><span class="p">)</span>
+
+        <span class="c1"># loop over the variables which will be extracted</span>
+        <span class="k">for</span> <span class="n">outname</span><span class="p">,</span> <span class="p">(</span><span class="n">varname_u</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">dictvarname</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+
+            <span class="k">if</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename_v</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">):</span>
+    
+                <span class="n">fileprec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_dtype</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">)</span>
+                
+                <span class="c1"># originally in centimeters/s &gt;&gt; convert to meters/s</span>
+                <span class="n">uvelw</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename_u</span><span class="p">,</span> <span class="n">varname_u</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+        
+                <span class="c1"># originally in centimeters/s &gt;&gt; convert to meters/s</span>
+                <span class="c1"># note that V variables are stored on southern faces -&gt; needs to shift one cell up</span>
+                <span class="n">vveln</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename_v</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">,</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">jmin</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imin</span><span class="p">],</span>
+                                                <span class="p">[</span><span class="n">timestep</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nzlev</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">jmax</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+
+
+                <span class="c1"># function that modifies the MODEL_sections list</span>
+                <span class="n">_extract_sections</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">vveln</span><span class="p">,</span> <span class="n">uvelw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> or </span><span class="si">%s</span><span class="s2"> variable does not exist!!!&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">varname_u</span><span class="p">,</span> <span class="n">varname_v</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========================================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_sections</span></div>
+
+
+<div class="viewcode-block" id="loaddata_sec_T_space"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data.loaddata_sec_T_space">[docs]</a><span class="k">def</span> <span class="nf">loaddata_sec_T_space</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dictvarname</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the model output from model T-grid points and interpolates </span>
+<span class="sd">    them on section west and north faces. The extracted data are added to </span>
+<span class="sd">    the input file::</span>
+
+<span class="sd">        import pypago.data</span>
+
+<span class="sd">        filenameT = &#39;g88_2000_00_gridT.nc&#39;</span>
+<span class="sd">        dictvarname = {&#39;vect&#39;:&#39;votemper, &#39;vecs&#39;:vosaline&#39;}</span>
+<span class="sd">        pypago.data.loaddata_sec_T(&#39;data.pygo&#39;, filenameT, dictvarname)</span>
+<span class="sd">        </span>
+<span class="sd">    :param str structfile: The name of the .pygo file </span>
+<span class="sd">     where the list of :py:class:`pypago.sections.Gridsection` objects</span>
+<span class="sd">     are stored.</span>
+
+<span class="sd">    .. versionchanged:: 20120515</span>
+
+<span class="sd">    JD PAGO WHOI</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#   extraction of sub-grid corners and of the total number of longitudinal points</span>
+    <span class="n">nlon</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nlon</span> 
+    <span class="n">jmin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmin</span>
+    <span class="n">jmax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">jmax</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imin</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imax</span>
+    <span class="n">nzlev</span> <span class="o">=</span> <span class="n">model_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+    <span class="c1"># loop over the list of variables to extract (on T points)</span>
+    <span class="k">for</span> <span class="n">outname</span><span class="p">,</span> <span class="n">varname</span> <span class="ow">in</span> <span class="n">dictvarname</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
+
+        <span class="k">if</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">check_ncvar_exist</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">):</span>
+
+            <span class="c1"># extraction of file precision</span>
+            <span class="n">fileprec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_dtype</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+
+            <span class="c1"># extraction of the temperature on T points, but considering one more point left and top</span>
+            <span class="c1"># to interpolate on W and E faces.</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">readnc_wrap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="n">jmin</span><span class="p">,</span> <span class="n">imin</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                            <span class="p">[</span><span class="n">jmax</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">imax</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">nlon</span><span class="p">)</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">tempc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tempc</span><span class="p">)</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">tempc</span><span class="p">),</span> <span class="n">tempc</span><span class="p">)</span>
+            <span class="c1"># interpolation on N/W faces.</span>
+            <span class="n">tempn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">tempc</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">tempc</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">tempw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">tempc</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tempc</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">tempc</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">tempn</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">tempw</span><span class="p">)</span>
+
+            <span class="c1"># extraction on the real T domain</span>
+            <span class="n">tempc</span> <span class="o">=</span> <span class="n">tempc</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+
+            <span class="c1"># function that modifies the MODEL_sections list</span>
+            <span class="n">_extract_sections_space</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">tempn</span><span class="p">,</span> <span class="n">tempw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_sections</span></div>
+
+
+
+<div class="viewcode-block" id="_extract_sections_space"><a class="viewcode-back" href="../../pypago/generated/pypago.data.html#pypago.data._extract_sections_space">[docs]</a><span class="k">def</span> <span class="nf">_extract_sections_space</span><span class="p">(</span><span class="n">model_sections</span><span class="p">,</span> <span class="n">tempn</span><span class="p">,</span> <span class="n">tempw</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">use_orient</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Extracts T, S, U and V along all the sections contained in</span>
+<span class="sd">    the `model_sections` list, which is then updated.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">model_sections</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">nzlev</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+
+        <span class="n">veci</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">veci</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">vecj</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">vecj</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">faces</span>
+        <span class="n">orient</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">orient</span>
+
+        <span class="n">vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">veci</span><span class="p">)))</span>
+
+        <span class="n">nl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">veci</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nl</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">faces</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempn</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]]</span>
+            <span class="k">elif</span> <span class="n">faces</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempw</span><span class="p">[</span><span class="n">vecj</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">veci</span><span class="p">[</span><span class="n">l</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">use_orient</span><span class="p">:</span>
+                <span class="n">vect</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">*=</span> <span class="n">secint</span><span class="o">.</span><span class="n">orient</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+
+        <span class="c1"># mask data where areavect is NaN</span>
+        <span class="c1"># first, need to broadcast arrays for them to have the same</span>
+        <span class="c1"># same size.</span>
+        <span class="c1">#areavect, vect = np.broadcast_arrays(secint.areavect, vect)</span>
+        <span class="n">vect</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1">#if len(indnan[0] &gt; 0):</span>
+        <span class="c1">#    i, j = np.nonzero(np.isnan(areavect))</span>
+        <span class="c1">#    vect[:, i, j] = np.nan</span>
+        <span class="c1">#else:</span>
+        <span class="c1">#    if filepres == np.float32:</span>
+        <span class="c1">#        #print &#39;Masking vecv where vecv==0&#39;</span>
+        <span class="c1">#        #vecv[vecv == 0] = np.nan</span>
+        <span class="c1">#        #areavect[np.isnan(vecv[0, :, :])] = np.nan</span>
+        <span class="c1">#        #secint.areavect = areavect</span>
+        <span class="c1">#    else:</span>
+        <span class="c1">#        #print r&#39;data precision is unsufficient: vecv will be inappropriately masked.&#39;</span>
+        <span class="c1">#        #print r&#39;expected errors on indices calculations!&#39;</span>
+        <span class="c1">#        #vecv[vecv == 0] = np.nan</span>
+        
+        <span class="c1"># vect[np.ma.getmaskarray(vect)] = np.nan</span>
+
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">vect</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

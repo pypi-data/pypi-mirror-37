@@ -1,0 +1,719 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.nc &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.nc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module that contains various functions dedicated to the \</span>
+<span class="sd">conversion of |pypago| outputs into NetCDF files` \</span>
+<span class="sd">to :file:`.nc` files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">netCDF4</span> <span class="k">import</span> <span class="n">Dataset</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+<span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.disp</span>
+<span class="kn">from</span> <span class="nn">netcdftime</span> <span class="k">import</span> <span class="n">utime</span>
+
+<div class="viewcode-block" id="gridsec_tonc"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc.gridsec_tonc">[docs]</a><span class="k">def</span> <span class="nf">gridsec_tonc</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">section_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;days since 1900-01-01 00:00:00&#39;</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="s1">&#39;gregorian&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conversion of tracer and velocities along the</span>
+<span class="sd">    sections into |netcdf|. There will</span>
+<span class="sd">    be one file per section, in which the</span>
+<span class="sd">    variables will be saved. The absolute path of</span>
+<span class="sd">    the output files will be the same</span>
+<span class="sd">    as for the input file name, except that</span>
+<span class="sd">    the :file:`.pygo` will be replaced by</span>
+<span class="sd">    :file:`_sec_{SECTIONNAME}.nc`</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">     :py:func:`pypago.loaddata.loaddata` function (must contain</span>
+<span class="sd">     a dictionary with the `MODEL_sections` and `MODEL_time` keys)</span>
+
+<span class="sd">    :param list section_names: Default is None.</span>
+<span class="sd">     If set, the list of the sections&#39; names    from which to extract the data</span>
+
+<span class="sd">    :param list varname: Default is None. If None, all the variables (`vect`,</span>
+<span class="sd">     `vecs` and `vecv` are extracted.  If set, the list of the variables</span>
+<span class="sd">     names to extract</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">modelsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Conversion of the </span><span class="si">%s</span><span class="s1"> file into netcdf&#39;</span> <span class="o">%</span> <span class="n">finname</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;==============================================&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">section_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of ALL the sections&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">modelsec</span><span class="p">:</span>
+            <span class="n">_write_gridsec_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Conversion of section_names into list</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">section_names</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">)):</span>
+            <span class="n">section_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">section_names</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of the section list </span><span class="si">%s</span><span class="s1">&#39;</span>
+                                <span class="o">%</span> <span class="n">section_names</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secnames</span> <span class="ow">in</span> <span class="n">section_names</span><span class="p">:</span>
+            <span class="n">indice_sec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">modelsec</span><span class="p">,</span> <span class="n">secnames</span><span class="p">)</span>
+            <span class="n">secint</span> <span class="o">=</span> <span class="n">modelsec</span><span class="p">[</span><span class="n">indice_sec</span><span class="p">]</span>
+            <span class="n">_write_gridsec_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gridvol_tonc"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc.gridvol_tonc">[docs]</a><span class="k">def</span> <span class="nf">gridvol_tonc</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">domain_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;days since 1900-01-01 00:00:00&#39;</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="s1">&#39;gregorian&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conversion of tracer fields within a domain into |netcdf|.</span>
+<span class="sd">    There will be one file per domain, in which the variables will be saved.</span>
+<span class="sd">    The absolute path of the output files will be the same</span>
+<span class="sd">    as for the input file name, except that the :file:`.pygo`</span>
+<span class="sd">    will be replaced by</span>
+<span class="sd">    :file:`_dom_{DOMAINNAME}.nc`</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">        :py:func:`pypago.loaddata.loaddata` function (must contain</span>
+<span class="sd">        a dictionary with the `MODEL_areas` and `MODEL_time` keys)</span>
+
+<span class="sd">    :param list domain_names: Default is None. If set, the list of the domains&#39;</span>
+<span class="sd">        names from which to extract the data</span>
+
+<span class="sd">    :param list varname: Default is None. If None, all the variables</span>
+<span class="sd">        (`temperature`, `salinity`) are extracted.</span>
+<span class="sd">        If set, the list of the variables names to extract</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">modeldom</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+    <span class="c1">#modeldom = data[&#39;MODEL_areas&#39;]</span>
+    <span class="c1">#modeltime = data[&#39;MODEL_time&#39;]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Conversion of the </span><span class="si">%s</span><span class="s1"> file into netcdf&#39;</span> <span class="o">%</span> <span class="n">finname</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;==============================================&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">domain_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of ALL the domains&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">domint</span> <span class="ow">in</span> <span class="n">modeldom</span><span class="p">:</span>
+            <span class="n">_write_gridvol_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">domint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;domain </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">domint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="c1"># Conversion of domain_names into list</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">domain_names</span><span class="p">,</span> <span class="s1">&#39;list&#39;</span><span class="p">)):</span>
+            <span class="n">domain_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">domain_names</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of the domain list </span><span class="si">%s</span><span class="s1">&#39;</span>
+                                <span class="o">%</span> <span class="n">domain_names</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">domnames</span> <span class="ow">in</span> <span class="n">domain_names</span><span class="p">:</span>
+
+            <span class="n">indice_dom</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">finddomnum</span><span class="p">(</span><span class="n">modeldom</span><span class="p">,</span> <span class="n">domnames</span><span class="p">)</span>
+            <span class="n">domint</span> <span class="o">=</span> <span class="n">modeldom</span><span class="p">[</span><span class="n">indice_dom</span><span class="p">]</span>
+            <span class="n">_write_gridvol_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">domint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;domain </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">domint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="secind_tonc"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc.secind_tonc">[docs]</a><span class="k">def</span> <span class="nf">secind_tonc</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">section_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conversion of section indices (issued from</span>
+<span class="sd">    :py:func:`pypago.pypago.indices_MODEL` function) in |netcdf|.</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:func:`pypago.pypago.indices_MODEL` function</span>
+
+<span class="sd">    :param str section: Default is None. If set, the section to extract</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+    <span class="n">sectionind</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MODEL_indices&#39;</span><span class="p">]</span>
+    <span class="n">modeltime</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MODEL_time&#39;</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Conversion of the </span><span class="si">%s</span><span class="s1"> file into netcdf&#39;</span> <span class="o">%</span>
+                            <span class="n">finname</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;==========================================&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">section_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of ALL the sections&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">sectionind</span><span class="p">:</span>
+            <span class="n">_write_secind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">secint</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of the section list </span><span class="si">%s</span><span class="s1">&#39;</span>
+                                <span class="o">%</span> <span class="n">section_names</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secnames</span> <span class="ow">in</span> <span class="n">section_names</span><span class="p">:</span>
+
+            <span class="n">indice_section</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">sectionind</span><span class="p">,</span> <span class="n">secnames</span><span class="p">)</span>
+            <span class="n">secint</span> <span class="o">=</span> <span class="n">sectionind</span><span class="p">[</span><span class="n">indice_section</span><span class="p">]</span>
+            <span class="n">_write_secind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">secint</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sections_tonc"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc.sections_tonc">[docs]</a><span class="k">def</span> <span class="nf">sections_tonc</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">section_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extraction of sections&#39; endpoints into |netcdf| files</span>
+
+<span class="sd">    :param str finname: filename containing the list of sections&#39; endpoints</span>
+<span class="sd">       (output of the :py:mod:`pypago.guis.gui_sections_edition`)</span>
+
+<span class="sd">    :param list section_names: Default is None. If set, the list of sections&#39;</span>
+<span class="sd">       names from which to extract the endpoints</span>
+
+<span class="sd">    Convert all sections of :file:`sections_NA_Nico.pygo` to individual</span>
+<span class="sd">    |netcdf| files:</span>
+<span class="sd">    &gt;&gt;&gt; _sections_tonc(&#39;sections_NA_Nico.pygo&#39;)</span>
+
+<span class="sd">    Convert only ``ar7`` section</span>
+<span class="sd">    &gt;&gt;&gt; _sections_tonc(&#39;sections_NA_Nico.pygo&#39;, section_names=[&#39;ar7&#39;])</span>
+
+<span class="sd">    What append if missing file ?</span>
+<span class="sd">    &gt;&gt;&gt; _sections_tonc(&#39;badfile&#39;)</span>
+
+<span class="sd">    What append if missing section name in the file ?</span>
+<span class="sd">    &gt;&gt;&gt; _sections_tonc(&#39;sections_NA_Nico.pygo&#39;, section_names=[&#39;badsection&#39;])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pagosections</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;filename </span><span class="si">{0}</span><span class="s1"> not found&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">error</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Conversion of the </span><span class="si">%s</span><span class="s1"> file into netcdf&#39;</span> <span class="o">%</span> <span class="n">finname</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;==============================================&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">section_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of ALL the sections&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secint</span> <span class="ow">in</span> <span class="n">pagosections</span><span class="p">:</span>
+            <span class="n">_write_sections_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of the section list </span><span class="si">%s</span><span class="s1">&#39;</span>
+                                <span class="o">%</span> <span class="n">section_names</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">secnames</span> <span class="ow">in</span> <span class="n">section_names</span><span class="p">:</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">indice_sec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">pagosections</span><span class="p">,</span> <span class="n">secnames</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;Can not produce NetCDF file&#39;</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">error</span>
+
+            <span class="n">secint</span> <span class="o">=</span> <span class="n">pagosections</span><span class="p">[</span><span class="n">indice_sec</span><span class="p">]</span>
+            <span class="n">_write_sections_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;section </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="_volind_tonc"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._volind_tonc">[docs]</a><span class="k">def</span> <span class="nf">_volind_tonc</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">domain_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conversion of volume indices (issued from</span>
+<span class="sd">    :py:func:`pypago.pypago.volumes_MODEL` function) in |netcdf|.</span>
+
+<span class="sd">    :param str finname: output of</span>
+<span class="sd">       the :py:func:`pypago.pypago.volumes_MODEL` function</span>
+
+<span class="sd">    :param str domain: Default is None. If set, the domain to extract</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">finname</span><span class="p">)</span>
+    <span class="n">volumeind</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MODEL_volumes&#39;</span><span class="p">]</span>
+    <span class="n">modeltime</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;MODEL_time&#39;</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Conversion of the </span><span class="si">%s</span><span class="s1"> file into netcdf&#39;</span>
+                            <span class="o">%</span> <span class="n">finname</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;==========================================&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">domain_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of ALL the domains&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">domint</span> <span class="ow">in</span> <span class="n">volumeind</span><span class="p">:</span>
+            <span class="n">_write_volind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">domint</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;domain </span><span class="si">%s</span><span class="s1">: done&#39;</span> <span class="o">%</span> <span class="n">domint</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Processing of the domain list </span><span class="si">%s</span><span class="s1">&#39;</span>
+                                <span class="o">%</span> <span class="n">domain_names</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">domnames</span> <span class="ow">in</span> <span class="n">domain_names</span><span class="p">:</span>
+            <span class="n">indice_dom</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">finddomnum</span><span class="p">(</span><span class="n">volumeind</span><span class="p">,</span> <span class="n">domnames</span><span class="p">)</span>
+            <span class="n">domint</span> <span class="o">=</span> <span class="n">volumeind</span><span class="p">[</span><span class="n">indice_dom</span><span class="p">]</span>
+            <span class="n">_write_volind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">domint</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="_write_gridsec_netcdf"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._write_gridsec_netcdf">[docs]</a><span class="k">def</span> <span class="nf">_write_gridsec_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that handles the writing of individual |netcdf| section files</span>
+<span class="sd">    (called by :py:func:`pypago.tonc.gridsec_tonc` function)</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:func:`pypago.pypago.sections_MODEL` function</span>
+<span class="sd">    :param float modeltime: time vector contained on the file</span>
+<span class="sd">    :param pypago.sections.GridSection secint: |pypago| object that contains the</span>
+<span class="sd">       index elements</span>
+<span class="sd">    :param str varname: variable name to save in the file (&#39;vecv&#39;, &#39;vect&#39; or</span>
+<span class="sd">       &#39;vecv&#39;. If None, all are saved)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">timename</span> <span class="o">=</span> <span class="n">dictvname</span><span class="p">[</span><span class="s1">&#39;time_varname&#39;</span><span class="p">]</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">nz</span><span class="p">,</span> <span class="n">nl</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">areavect</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">nlvect</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">secint</span><span class="o">.</span><span class="n">lvect</span><span class="p">)</span>
+
+    <span class="n">foutname</span> <span class="o">=</span> <span class="n">finname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pygo&#39;</span><span class="p">,</span> <span class="s1">&#39;_sec_&#39;</span><span class="o">+</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;.nc&#39;</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">foutname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">nz</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="n">nl</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;lvect&#39;</span><span class="p">,</span> <span class="n">nlvect</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># If time exists in the section attribute:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">secint</span><span class="p">,</span> <span class="n">timename</span><span class="p">):</span>
+        <span class="c1"># create time variable</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="p">))</span>
+
+        <span class="c1"># recover time variable</span>
+        <span class="n">modeltime</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">time</span>
+
+        <span class="c1"># if the variable is not made of numbers: conversion into</span>
+        <span class="c1"># numerical time</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">modeltime</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="nb">float</span><span class="p">))):</span>
+            <span class="n">cdftime</span> <span class="o">=</span> <span class="n">utime</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="n">modeltime</span> <span class="o">=</span> <span class="n">cdftime</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">modeltime</span><span class="p">)</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">]</span><span class="o">.</span><span class="n">calendar</span> <span class="o">=</span> <span class="n">calendar</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">]</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">modeltime</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;areavect&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;areavect&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">areavect</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;depthvect&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;depthvect&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">depthvect</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;veci&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;veci&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">veci</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;vecj&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;vecj&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">vecj</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;orient&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;orient&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">orient</span>
+
+    <span class="n">facesout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">secint</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">facesout</span><span class="p">[</span><span class="n">secint</span><span class="o">.</span><span class="n">faces</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">facesout</span><span class="p">[</span><span class="n">secint</span><span class="o">.</span><span class="n">faces</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;faces&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;faces&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">facesout</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;faces&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;1 for N, 2 for W&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">varname</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">varname</span> <span class="o">=</span> <span class="p">[</span><span class="n">varname</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">varname</span><span class="p">:</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,))</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_write_gridvol_netcdf"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._write_gridvol_netcdf">[docs]</a><span class="k">def</span> <span class="nf">_write_gridvol_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">domint</span><span class="p">,</span> <span class="n">varname</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that handles the writing of individual |netcdf| volume files</span>
+<span class="sd">    (called by :py:func:`pypago.tonc.gridvol_tonc` function)</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:func:`pypago.pypago.sections_MODEL` function</span>
+<span class="sd">    :param float modeltime: time vector contained on the file</span>
+<span class="sd">    :param pypago.areas.Areas domint: |pypago| object that contains the</span>
+<span class="sd">       index elements</span>
+<span class="sd">    :param str varname: variable to save in the file (&#39;salinity&#39; or</span>
+<span class="sd">       &#39;temperature&#39;). If None, both are saved</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">timename</span> <span class="o">=</span> <span class="n">dictvname</span><span class="p">[</span><span class="s1">&#39;time_varname&#39;</span><span class="p">]</span>
+
+    <span class="n">nz</span><span class="p">,</span> <span class="n">npoints</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">volume</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">foutname</span> <span class="o">=</span> <span class="n">finname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pygo&#39;</span><span class="p">,</span> <span class="s1">&#39;_dom_&#39;</span> <span class="o">+</span> <span class="n">domint</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.nc&#39;</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">foutname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">nz</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="n">npoints</span><span class="p">)</span>
+
+    <span class="c1"># If time exists in the section attribute:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">domint</span><span class="p">,</span> <span class="n">timename</span><span class="p">):</span>
+        <span class="c1"># create time variable</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="p">))</span>
+
+        <span class="c1"># recover time variable</span>
+        <span class="n">modeltime</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">time</span>
+
+        <span class="c1"># if the variable is not made of numbers: conversion into</span>
+        <span class="c1"># numerical time</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">modeltime</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">long</span><span class="p">,</span> <span class="nb">float</span><span class="p">))):</span>
+            <span class="n">cdftime</span> <span class="o">=</span> <span class="n">utime</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span>
+            <span class="n">modeltime</span> <span class="o">=</span> <span class="n">cdftime</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">modeltime</span><span class="p">)</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">]</span><span class="o">.</span><span class="n">calendar</span> <span class="o">=</span> <span class="n">calendar</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">]</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timename</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">modeltime</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;indi&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;indj&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;volume&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;surface&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;points&#39;</span><span class="p">,</span> <span class="p">))</span>
+    
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;indi&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">i</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;indj&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">j</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;volume&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">volume</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">surface</span>
+   
+    <span class="c1"># If the domain has been defined from sections, </span>
+    <span class="c1"># creation of section dimension and variables</span>
+    <span class="k">if</span> <span class="n">domint</span><span class="o">.</span><span class="n">secnames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nsec</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">domint</span><span class="o">.</span><span class="n">secnames</span><span class="p">)</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;section&#39;</span><span class="p">,</span> <span class="n">nsec</span><span class="p">)</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;sectionsign&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;section&#39;</span><span class="p">,</span> <span class="p">))</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;sectionsign&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">signs</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;sectionsign&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sections</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">domint</span><span class="o">.</span><span class="n">secnames</span><span class="p">)</span>
+
+    <span class="c1"># barrier.n --- modified 2015-08-13</span>
+    <span class="c1"># this variable is not written in the file, since its</span>
+    <span class="c1"># dimensions are (lat, lon). To keep it, we must add</span>
+    <span class="c1"># these two dimensions in the file</span>
+    <span class="c1"># fout.variables[&#39;mask&#39;][:] = domint.mask</span>
+    <span class="c1"># fout.createVariable(&#39;mask&#39;, &#39;i&#39;, (&#39;points&#39;, ))</span>
+
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">varname</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">varname</span> <span class="o">=</span> <span class="p">[</span><span class="n">varname</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">varname</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">))</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+        <span class="k">elif</span><span class="p">(</span><span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">timename</span><span class="p">,</span> <span class="s1">&#39;points&#39;</span><span class="p">))</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Not implemented !&#39;</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_write_secind_netcdf"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._write_secind_netcdf">[docs]</a><span class="k">def</span> <span class="nf">_write_secind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">secint</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that handles the writing of individual |netcdf| index files</span>
+<span class="sd">    (called by :py:func:`pypago.tonc.secind_tonc` function)</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:func:`pypago.pypago.indices_MODEL` function</span>
+<span class="sd">    :param float modeltime: time vector contained on the file</span>
+<span class="sd">    :param pypago.sections.GridSection secint: |pypago| object that contains the</span>
+<span class="sd">       volume elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">nl</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">bpmt_vec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">foutname</span> <span class="o">=</span> <span class="n">finname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pygo&#39;</span><span class="p">,</span> <span class="s1">&#39;_sec_&#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.nc&#39;</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">foutname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="n">nl</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modeltime</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;lindex&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">,))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;lindex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nl</span><span class="p">)</span>
+
+    <span class="c1"># barrier.n -- modified 2015-08-07</span>
+    <span class="c1"># instead of using exceptions, we check for</span>
+    <span class="c1"># the variable type and the variable dimension</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">secint</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                        <span class="n">secint</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># for the _vec variables</span>
+                <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">))</span>
+                <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">))</span>
+                <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="_write_sections_netcdf"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._write_sections_netcdf">[docs]</a><span class="k">def</span> <span class="nf">_write_sections_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">secint</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that handles the writing of individual section endpoints files</span>
+<span class="sd">    (called by :py:func:`pypago.tonc.sections_tonc` function)</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:mod:`pypago.guis.ihm_editions_sections` module</span>
+<span class="sd">    :param pypago.sections.Section secint: |pypago| object that contains the</span>
+<span class="sd">       section element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">lon</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">lat</span>
+    <span class="n">dire</span> <span class="o">=</span> <span class="n">secint</span><span class="o">.</span><span class="n">dir</span>
+
+    <span class="n">dire</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dire</span><span class="p">)</span>
+    <span class="n">dirout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">dire</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">dirout</span><span class="p">[</span><span class="n">dire</span> <span class="o">==</span> <span class="s1">&#39;NE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dirout</span><span class="p">[</span><span class="n">dire</span> <span class="o">==</span> <span class="s1">&#39;NW&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">dirout</span><span class="p">[</span><span class="n">dire</span> <span class="o">==</span> <span class="s1">&#39;SE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">dirout</span><span class="p">[</span><span class="n">dire</span> <span class="o">==</span> <span class="s1">&#39;SW&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="n">npoint</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+    <span class="n">nseg</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirout</span><span class="p">)</span>
+
+    <span class="n">foutname</span> <span class="o">=</span> <span class="n">finname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pygo&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;.nc&#39;</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">foutname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;npoint&#39;</span><span class="p">,</span> <span class="n">npoint</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;nseg&#39;</span><span class="p">,</span> <span class="n">nseg</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;npoint&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;npoint&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;nseg&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">lon</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">lat</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">dirout</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;dir&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;1 for NE, 2 for NW, 3 </span><span class="se">\</span>
+<span class="s1">    for SE and 4 for SW&#39;</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_write_volind_netcdf"><a class="viewcode-back" href="../../pypago/generated/pypago.nc.html#pypago.nc._write_volind_netcdf">[docs]</a><span class="k">def</span> <span class="nf">_write_volind_netcdf</span><span class="p">(</span><span class="n">finname</span><span class="p">,</span> <span class="n">modeltime</span><span class="p">,</span> <span class="n">domint</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that handles the writing of individual |netcdf| volume files</span>
+<span class="sd">    (called by :py:func:`pypago.tonc.volind_tonc` function)</span>
+
+<span class="sd">    :param str finname: output of the</span>
+<span class="sd">       :py:func:`pypago.pypago.volumes_MODEL` function</span>
+<span class="sd">    :param float modeltime: time vector contained on the file</span>
+<span class="sd">    :param pypago.areas.Areas domint: |pypago| object that contains</span>
+<span class="sd">        the volume index elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">domint</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="n">foutname</span> <span class="o">=</span> <span class="n">finname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pygo&#39;</span><span class="p">,</span> <span class="s1">&#39;_dom_&#39;</span><span class="o">+</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;.nc&#39;</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">foutname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modeltime</span>
+
+    <span class="c1"># barrier.n -- modified 2015-08-07</span>
+    <span class="c1"># instead of using exceptions, we check for</span>
+    <span class="c1"># the variable type and the variable dimension</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                        <span class="n">domint</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,))</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="n">fout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>

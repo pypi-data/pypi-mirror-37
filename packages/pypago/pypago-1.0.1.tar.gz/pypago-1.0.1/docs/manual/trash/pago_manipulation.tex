@@ -1,0 +1,76 @@
+\section{Manipulation of PyPago variables}
+
+\subsection{PyPago objects}
+
+In order to stay as close as possible to Matlab, most of outputs are stored as PyPago objects, which are very close to Matlab structures. Assume that \verb+data+ is a PyPago object containing the endpoints of the \verb+42n+ section:
+
+\begin{verbatim}
+>print data.name,data.lon,data.lat,data.dir
+42n [-53 -49 -29  -9] [47 42 43 52] [u'NE' u'NW' u'NW']
+>data.name='newsec'
+>print data.name
+newsec
+\end{verbatim}
+
+To obtain a list of the variables contained in the PyPago objects:
+
+\begin{verbatim}
+>print data[0].__dict__.keys()
+['lat', 'lon', 'name', 'dir']
+\end{verbatim}
+
+\subsection{Reading a file}
+
+To read a \verb+.pygo+ file:
+
+\begin{verbatim}
+import pypago
+data=pypago.load('cnrm_atl_sections.pygo')
+\end{verbatim}
+
+Depending on the program which generated the file, \verb+data+ is either a list of PyPago objects or a dictionary as summarized in table 1.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{ccc}
+Program & Format & Dict contains \\
+\hline
+ihm\_editions\_sections.py & List & ---\\
+ihm\_grid\_model.py & Dict & MODEL\_time, MODEL\_grid, MODEL\_sections\\
+areas\_MODEL.py & Dict & MODEL\_time, MODEL\_grid, MODEL\_sections, MODEL\_areas\\
+loaddata.py & Dict & MODEL\_time, MODEL\_sections (MODEL\_areas)\\
+indices\_MODEL.py & Dict & MODEL\_indices, MODEL\_time\\
+volumes\_MODEL.py & Dict & MODEL\_volumes, MODEL\_time\\
+\end{tabular}
+\caption{Description of the variables stored in the files.}
+\label{table1}
+\end{table}
+
+The variables within the dictionaries are:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{cc}
+Variable & Format \\
+\hline
+MODEL\_time & numpy array\\
+MODEL\_grid & PyPago object\\
+MODEL\_sections & List of PyPago object\\
+MODEL\_areas & List of PyPago object\\
+MODEL\_indices & List of PyPago object\\
+MODEL\_volumes & List of PyPago object\\
+\end{tabular}
+\caption{Description of the variables stored in the dictionnaries of the output files}
+\label{table2}
+\end{table}
+
+
+\subsection{Saving a file}
+
+In order to save a \verb+.pygo+ file that has been edited:
+
+\begin{verbatim}
+pypago.save(data,'new_pygo_file.pygo')
+\end{verbatim}
+
+Please note that the \verb+data+ array must be in the right format (cf. table \ref{table1}).

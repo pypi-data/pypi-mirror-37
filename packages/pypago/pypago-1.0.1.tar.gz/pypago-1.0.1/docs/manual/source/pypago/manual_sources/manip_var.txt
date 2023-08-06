@@ -1,0 +1,101 @@
+
+Manipulation of |pypago| variables
+==================================
+
+In this section are provided some insights on the manipulation of
+|pypago| outputs.
+
+Variables
+---------
+
+|pypago| variables are either Python dictionaries (:py:obj:`dict`, section 5.5 of
+https://docs.python.org/2/tutorial/datastructures.html)
+or |pypago|
+objects, which are very close to the |matlab| structures. In
+:numref:`t_tableprog` are summarised the format of the output files of
+the programs described in the above.
+
+.. _t_tableprog:
+
+.. csv-table:: Description of the variables stored in the files
+   :header: "Program", "Format", "Dict. contains"
+
+   :py:mod:`pypago.pypago_guis.gui_sections_edition`, List
+   :py:mod:`pypago.pypago_guis.gui_grid_model`, Dict, "MODEL_time, MODEL_grid, MODEL_sections"
+   :py:func:`pypago.pypago_grid.areas_MODEL`, Dict, "MODEL_time, MODEL_grid, MODEL_sections, MODEL_areas"
+   :py:func:`pypago.pypago.loaddata_XXX`, Dict, "MODEL_time, MODEL_sections (MODEL_areas)"
+   :py:func:`pypago.pypago.indices_MODEL`, Dict, "MODEL_indices, MODEL_time"
+   :py:func:`pypago.pypago.volumes_MODEL`,Dict, "MODEL_volumes, MODEL_time"
+
+The variables that are contained in the dictionaries are described in
+table :numref:`t_dicdes`
+
+.. _t_dicdes:
+
+.. csv-table:: Description of the variables stored in the dictionaries of the output files
+   :header: Variable, Format
+
+   MODEL_time , numpy array
+   MODEL_grid , |pypago| object
+   MODEL_sections , List of |pypago| objects
+   MODEL_areas , List of |pypago| objects
+   MODEL_indices , List of |pypago| objects
+   MODEL_volumes , List of |pypago| objects
+
+Reading a |pypago| file
+-----------------------
+
+To read a |pypago| file, the command :py:func:`pypago.pypago_io.load` can be used this way:
+
+.. code-block:: python
+
+   import pypago_io
+   data = pypago_io.load('data.pygo')
+
+Depending on the program which generated the file, :samp:`data` is either a
+list of |pypago| objects or a dictionary as summarized in
+:numref:`t_tableprog`.
+
+Saving a file
+-------------
+
+To save a variable in a |pypago| file, the command :py:func:`pypago.pypago_io.save` can by this like this:
+
+.. code-block:: python
+
+   pypago_io.save(data,'new_pygo_file.pygo')
+
+Please note that if the new file is intended to be given as argument
+in |pypago| programs, it must have the format described in tables
+:numref:`t_tableprog` and :numref:`t_dicdes`.
+
+Finding a section or a domain in a list
+---------------------------------------
+
+As discussed in the above, sections and domains data are stored in
+lists. If the user wants to extract data from a specific section, the
+command is:
+
+.. code-block:: python
+
+   import pypago_io
+   import pypago_misc
+   data = pypago_io.load('data.pygo')
+   sections = data['MODEL_sections']
+   indsec = pypago_misc.findsecnum(sections, 'lab')
+   print sections[indsec].vect
+
+This also works for the :py:data:`MODEL_indices` list.
+
+It is quite the same thing for data extraction on a specific domain:
+
+.. code-block:: python
+
+   import pypago_io
+   import pypago_misc
+   data = pypago_io.load('data.pygo')
+   areas = data['MODEL_areas']
+   indsec = pypago_misc.finddomnum(areas, spg)
+   print sections[indsec].temperature
+
+This also works for the :py:data:`MODEL_volumes` list.

@@ -1,0 +1,57 @@
+\section{areas\_MODEL}
+
+The function \verb+pypago.areas_MODEL+ is aimed at defining volumes, whose
+boundaries are the sections that have been computed using the
+\verb+pypago.sections_MODEL+ function. This function takes as an argument a
+structure file that contains the sections, \verb+MODEL_sections+:
+\begin{verbatim}
+pypago.areas_MODEL('init_sections.pygo')
+\end{verbatim}
+
+As a first step, the program asks the names of the sections that close the domain and their orientations (``in'' if the transport is oriented toward the domain, ``out'' if the transport is oriented out of the domain). The program then generates a .png file that contains i) the land points in black ii) the wet points in gray iii) the initialisation of the domain mask in white. For instance, if a domain is defined in the northern Labrador Sea. This domain is closed by the \verb+hud+, \verb+hud+ and \verb+ar7+ sections, which all are oriented toward the domain:
+
+\begin{verbatim}
+define an area? (0 or 1) 1
+give names of the sections (separate the names by a space) hud baf ar7
+give orientation of the sections 
+(in: directed toward the basin/out directed out of the area) in in in
+name of the area? test
+\end{verbatim}
+
+The resulting .png file is presented in figure \ref{fig:areas_model_1}.\\
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{mask_init_test.png}
+\caption{PNG file created by the areas\_MODEL function (mask\_init\_test.png).}
+\label{fig:areas_model_1}
+\end{figure}
+
+Then, a message is prompted by the terminal:
+\begin{verbatim}
+Edit the mask_init_test.png file using gimp, paint or any other software. 
+Fill in white the area enclosed in your boundaries.  
+Save the new png file as mask_init_test_bis.png.
+\end{verbatim}
+
+To complete the creation of the domain, an image manipulation image must be called in. In this step, the user must manually complete the mask by filling in white the inside of the domain. The user must also carefully check that no pixel has been missed. In our example, the resulting .png file is presented in figure \ref{fig:areas_model_2}.\\
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{mask_init_test_bis.png}
+\caption{PNG file created using Gimp (mask\_init\_test\_bis.png).}
+\label{fig:areas_model_2}
+\end{figure}
+
+Then, a figure shows up that contains the mask of the area domain in
+white, and the section faces (obtained by the \verb+pypago.plotsecfaces+
+function). This figure permits the user to check that the domain is
+well defined. The program then asks wether a new domain must be
+generated, and if so the previous steps are repeated. As for the
+\verb+pypago.sections_MODEL+, the model areas are stored in a list.\\
+
+Finally, a dictionary is created, whose attributes are the \verb+MODEL_grid+
+and \verb+MODEL_time+ and list of \verb+MODEL_sections+ of the input
+file, plus the list containing all the areas that have been defined
+(variable \verb+MODEL_areas+). This dictionary can then be stored in a file.
+

@@ -1,0 +1,279 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pypago.areas &#8212; PAGO 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/pago.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+
+  </head><body>
+
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/pago_background.jpg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><div class="left-bar-other">
+<h3>
+Recent updates
+</h3>
+
+<!-- 
+TODO 
+- 20150724
+
+  URL https://sourcesup.renater.fr/pago is anonymously accessible
+
+  it will replace http://www.whoi.edu/science/PO/pago/
+
+- 20150612
+
+  PAGO project is hosted on sourcesup
+
+  .. warning::
+
+     For developers only
+-->
+
+<ul>
+<li>PAGO_v0 available to <a href="../../download.html">download</a></li>
+<li>The PAGO website is <a href="../../overview.html">online</a></li>
+</ul>
+<p>
+See older events in  <a href="../../release_notes.html">release notes</a></li>
+</div>
+<!--
+.. TODO
+
+   pago website URL has to be modified when effectively transfert on
+   sourcesup project webpages. Now here only valide where _build has
+   been produced
+--><div class="left-bar-other">
+<h3>
+Related Links
+</h3>
+<ul>
+<li> <a href="http://www.univ-brest.fr/">University of Brest, France</a></li>
+<li> <a href="http://wwz.ifremer.fr/">Ifremer, France</a></li>
+<li> <a href="http://cmip-pcmdi.llnl.gov/cmip5/">CMIP5 Project</a></li>
+<li> <a href="http://www.whoi.edu/">Woods Hole Oceanographic Institution</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pypago.areas</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This function allows to extract spatial domains, by giving its section</span>
+<span class="sd">boundaries.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+    
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="k">import</span> <span class="n">ListedColormap</span>
+<span class="kn">import</span> <span class="nn">pypago.plot</span>
+<span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+<span class="kn">from</span> <span class="nn">pypago.disp</span> <span class="k">import</span> <span class="n">PypagoErrors</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.misc</span> <span class="k">as</span> <span class="nn">misc</span>
+
+<div class="viewcode-block" id="Areas"><a class="viewcode-back" href="../../pypago/generated/pypago.areas.html#pypago.areas.Areas">[docs]</a><span class="k">class</span> <span class="nc">Areas</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Domain area class &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">secnames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">j</span> <span class="o">=</span> <span class="n">j</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">volume</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">surface</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">secnames</span> <span class="o">=</span> <span class="n">secnames</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signs</span> <span class="o">=</span> <span class="n">signs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">jmin</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">jmin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jmax</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">jmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imin</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">imin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imax</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">imax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">nlon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelname</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">modelname</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="s1">&#39;Domain area, </span><span class="si">%s</span><span class="s1"> model:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">modelname</span>
+        
+        <span class="n">attrnames</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">extract_attrlist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">+=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">extract_str</span><span class="p">(</span><span class="n">attrnames</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+
+<div class="viewcode-block" id="Areas.finalplot"><a class="viewcode-back" href="../../pypago/generated/pypago.areas.html#pypago.areas.Areas.finalplot">[docs]</a>    <span class="k">def</span> <span class="nf">finalplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">gridsec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draws the areas mask. </span>
+<span class="sd">        It draws the model mask and the model sections,</span>
+<span class="sd">        and it fills the mask of the area</span>
+
+<span class="sd">        :param pypago.grid.Grid grid: |pypago| object that contains the model grid</span>
+<span class="sd">        :param pypago.sections.GridSection gridsec: |pypago| object that contains the model</span>
+<span class="sd">           sections</span>
+<span class="sd">        :param numpy.array mask: mask of the area</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_dom_mask</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">gridsec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="extract_dom_from_pol"><a class="viewcode-back" href="../../pypago/generated/pypago.areas.html#pypago.areas.extract_dom_from_pol">[docs]</a><span class="k">def</span> <span class="nf">extract_dom_from_pol</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">lonpol</span><span class="p">,</span> <span class="n">latpol</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the i, j indexes of the grid domain</span>
+<span class="sd">    by provinding the longitudes and latitudes of</span>
+<span class="sd">    a polygon. </span>
+
+<span class="sd">    :param pypago.grid.Grid grid: Input grid</span>
+<span class="sd">    :param numpy.array lonpol: Polygon longitude</span>
+<span class="sd">    :param numpy.array lonpol: Polygon latitude</span>
+
+<span class="sd">    :return: A tuple containing the i, j indexes</span>
+<span class="sd">     of the domain point within the domain.</span>
+
+<span class="sd">    :rtype: tuple</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">matplotlib.path</span> <span class="k">import</span> <span class="n">Path</span>
+
+    <span class="c1"># convert list inputs into arrays</span>
+    <span class="n">lonpol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lonpol</span><span class="p">)</span>
+    <span class="n">latpol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">latpol</span><span class="p">)</span>
+
+    <span class="c1"># add cyclic values (if not)</span>
+    <span class="k">if</span> <span class="n">lonpol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">lonpol</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">lonpol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lonpol</span><span class="p">,</span> <span class="n">lonpol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">if</span> <span class="n">latpol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">latpol</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">latpol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">latpol</span><span class="p">,</span> <span class="n">latpol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lonpol</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">latpol</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;The lonpol and latpol must have the same length.</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;Currently:</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39; -len(lonpol) = </span><span class="si">%3d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">lonpol</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39; -len(latpol) = </span><span class="si">%3d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">latpol</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;This program will be stopped.&#39;</span>
+        <span class="k">raise</span> <span class="n">PypagoErrors</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    
+    <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">latt</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># creation the input of the path.Path command:</span>
+    <span class="c1"># [(x1, y1), (x2, y2), (x3, y3)]</span>
+    <span class="n">path_input</span> <span class="o">=</span> <span class="p">[(</span><span class="n">lontemp</span><span class="p">,</span> <span class="n">lattemp</span><span class="p">)</span> <span class="k">for</span> <span class="n">lontemp</span><span class="p">,</span> <span class="n">lattemp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">lonpol</span><span class="p">,</span> <span class="n">latpol</span><span class="p">)]</span>
+    <span class="n">pathobj</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path_input</span><span class="p">)</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pathobj</span><span class="o">.</span><span class="n">contains_point</span><span class="p">((</span><span class="n">lontemp</span><span class="p">,</span> <span class="n">lattemp</span><span class="p">))</span> <span class="k">for</span> <span class="n">lontemp</span><span class="p">,</span><span class="n">lattemp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">lont</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">latt</span><span class="p">))])</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="p">))</span>
+
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+   <li><a href="../../index.html">Home</a>|&nbsp;</li>
+   <li><a href="../../models.html">Models</a>|&nbsp;</li>
+   <li><a href="../../grid.html">Grid</a>|&nbsp;</li>
+   <li><a href="../../sections.html">Sections</a>|&nbsp;</li>
+   <li><a href="../../areas.html">Areas</a>|&nbsp; </li>
+   <li><a href="../../output.html">Output</a>|&nbsp;</li>
+   <li><a href="../../mapago.html">MAPAGO</a>|&nbsp;</li>
+   <li><a href="../../pypago.html">PyPAGO</a>|&nbsp;</li>
+   <li><a href="../../contact.html">Contact</a>|&nbsp;</li>
+   <li><a href="../../howtocite.html">How to cite</a>|&nbsp;</li>
+   <li><a href="../../desdevelopers.html">Developers</a>|&nbsp;</li>
+   <li><a href="../../faq.html">FAQ</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, CNRS.
+      Last updated on 20181023.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.
+    </div>
+  </body>
+</html>
