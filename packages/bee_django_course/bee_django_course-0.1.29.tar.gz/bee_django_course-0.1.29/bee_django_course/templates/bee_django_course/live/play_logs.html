@@ -1,0 +1,29 @@
+{% extends "bee_django_course/base.html" %}
+{% load bee_django_course_filter %}
+{% load bootstrap3 %}
+{% block content %}
+    <form method="post" action="">
+        {% csrf_token %}
+        {{ form}}
+        {{ form.date.errors }}
+        {{ form.video_id.errors }}
+
+        {{ form.date }}
+        {{ form.video_id }}
+        <div style="margin: 10px auto;"><input type="submit" value="提交" class="btn btn-success"/></div>
+    </form>
+    <h4>播放记录</h4>
+    <form method="post">
+        {% csrf_token %}
+
+        {% bootstrap_form form %}
+        {% bootstrap_button '查询' %}
+    </form>
+
+    共{{ total|default:0 }}条
+    <table>
+        <tr>
+            <td>{{ play_log }}</td>
+        </tr>
+    </table>
+{% endblock %}

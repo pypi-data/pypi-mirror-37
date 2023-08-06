@@ -1,0 +1,29 @@
+{% verbatim %}
+
+<script type="text/x-template" id="question-answer-template">
+    <div class="question_view_div">
+        <div> <b>{{ question.question }}</b>
+
+        </div>
+        <div id="question">
+            <div v-for="option in question.options" :key="option.id">
+                <div v-if="question.question_type==1">
+                    <input type="radio" :value="option.id" v-model="answers" @change="submit_answer"
+                           :disabled="question.disabled">&nbsp;&nbsp;{{option.option}}
+                </div>
+                <div v-if="question.question_type==2">
+                    <input type="checkbox" :value="option.id" v-model="answers" :disabled="question.disabled"
+                           @change="submit_answer">&nbsp;&nbsp;{{option.option}}
+                </div>
+            </div>
+
+        </div>
+        <div>
+            <div style="color: green" v-if="question.result == 'correct' ">{{ question.tip_correct }}</div>
+            <div style="color: red" v-if="question.result == 'wrong' ">{{ question.tip_wrong }}</div>
+        </div>
+    </div>
+
+</script>
+
+{% endverbatim %}
