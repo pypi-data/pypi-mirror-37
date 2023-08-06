@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--suppress ALL -->
+<html ng-app=testarium>
+<head>
+	<title>{{ t.name }} | Testarium</title>
+    <script>var testarium_web = true; </script>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="static/fonts/stylesheet.css" rel="stylesheet" type="text/css"/>
+	<link href="static/styles/font-awesome.css" rel="stylesheet" type="text/css"/>
+	<link href="static/styles/main.css" rel="stylesheet" type="text/css"/>
+	<link href="static/styles/d3.linegraph.css" rel="stylesheet" type="text/css"/>
+	<link href="static/styles/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
+
+	<script type="text/javascript" src="static/scripts/jquery.min.js"></script>
+	<script type="text/javascript" src="static/scripts/jquery.mousewheel.min.js"></script>
+	<script type="text/javascript" src="static/scripts/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="static/scripts/jsrender.min.js"></script>
+	<script type="text/javascript" src="static/scripts/d3.v3.min.js"></script>
+	<script type="text/javascript" src="static/scripts/d3.linegraph.js"></script>
+
+	<script type="text/javascript" src="static/scripts/wavesurfer.min.js"></script>
+	<script type="text/javascript" src="static/scripts/wavesurfer.regions.js"></script>
+	<script type="text/javascript" src="static/scripts/wavesurfer.spectrogram.js"></script>
+
+	<script type="text/javascript" src="static/scripts/main.js"></script>
+</head>
+
+<body>
+
+	<div id=body-back>
+		<div class=title>{{ t.name }}</div>
+	</div>
+
+	<div id=control>
+		<div class='button info'>{{ t.name[0] }}</div>
+		<div class='button commits fa-th'></div>
+		<div class='button plot-btn fa-line-chart'></div>
+		<div class='button tips-btn fa-lightbulb-o' id="tips-btn"></div>
+	</div>
+
+{% raw %}
+	<!-- Template for Commit Table -->
+	<script id="commitsTableTemplate" type="text/x-jsrender">
+		<table>
+			<tbody>
+				{{for result}}
+
+					{{props :}}
+					{{if key=="name"}}
+					    <tr data-commit-name="{{:prop}}" class='commit-name'>
+					{{/if}}
+					{{if key=="config"}}
+						{{setvar "path" prop /}}
+					{{/if}}
+					{{if key=="desc"}}
+						{{setvar "path_desc" prop /}}
+					{{/if}}
+					{{/props}}
+
+					{{props :}}
+					{{if key!="config" && key!="desc"}}
+						{{if key=="name" }}
+							<td><a target="_blank" href="{{:~getvarfile('path')}}" target=blank>{{:prop}}</a></td>
+						{{else key=="score" }}
+							<td><a target="_blank" href="{{:~getvarfile('path_desc')}}" target=blank>{{:prop}}</a></td>
+						{{else key=="comment" }}
+						    <td><div contenteditable="true" onkeyup="saveComment(event)">{{:prop}}</div></td>
+						{{else}}
+
+							{{if ~checkfile(prop) }}
+								<td><a class='fa fa-file-o' href="{{:~cleanfile(prop)}}" target=blank></a></td>
+							{{else ~checkgraph(prop) }}
+								<td data-url="{{:~cleangraph(prop)}}" onclick='return loadPlot(event, this)'><div class='fa fa-line-chart'></div></td>
+							{{else ~checkimage(prop) }}
+								<td data-url="{{:~cleanimage(prop)}}" onclick='return loadImage(event, this)'><div class='fa fa-image'></div></td>
+							{{else}}
+								<td>{{:prop}}</td>
+							{{/if}}
+
+						{{/if}}
+					{{/if}}
+					{{/props}}
+
+				</tr>
+				{{/for}}
+			</tbody>
+		</table>
+	</script>
+
+	<!-- Template for Commits Div -->
+	<script id="commitsDivTemplate" type="text/x-jsrender">
+		<div class='commit-table window' id={{>id}}>
+
+			<div class=header>
+				<span>&nbsp;{{>active_branch}}</span>
+				<input placeholder=filter></input>
+			</div>
+
+			<div class=body>
+			</div> <!-- body -->
+
+			<div class=footer>
+				<table>
+					<thead><tr>
+						{{props header}}
+						{{if prop!="config" && prop!="desc"}}
+							<th>{{:prop}}</th>
+						{{/if}}
+						{{/props}}
+						<th class='close-button'>x</th>
+					</tr></thead>
+				</table>
+			</div>
+
+		</div>
+	</script>
+
+	<!-- Template for Plot -->
+	<script id="plotTemplate" type="text/x-jsrender">
+		<div class='plot window' id={{>id}}>
+			<div class=header><span class='name'>plot</span><a class=close-button>x</a><a class=change-plot-button>∿</a></div>
+			<div class=canvas></div>
+		</div>
+	</script>
+
+	<!-- Template for Waveform -->
+	<script id="waveformTemplate" type="text/x-jsrender">
+		<div class='waveform window' id={{>id}}>
+			<div class=header><span class='name'>waveform</span><a class=close-button>x</a></div>
+			<div class=canvas></div>
+		</div>
+	</script>
+
+	<!-- Template for Picture -->
+	<script id="imageTemplate" type="text/x-jsrender">
+		<div class='image window' id={{>id}}>
+			<div class=header><span class='name'>image</span><a class=close-button>x</a></div>
+			<div class=canvas></div>
+		</div>
+	</script>
+
+    <!-- Template for Branch select -->
+	<script id="branchesTemplate" type="text/x-jsrender">
+		<div class='branches window' id={{>id}}>
+		    <div class=header><span class='name'> new branch table</span><a class=close-button>x</a></div>
+		    <div class='body'>
+			    {{props result}} <div class='item'>{{>prop}}</div> {{/props}}
+			</div>
+		</div>
+	</script>
+
+	<!-- Template for Info -->
+	<div class='info window' id="info">
+		<h1>info</h1>
+		<pre></pre>
+	</div>
+
+	<!-- Template for Tips -->
+	<div class='tips window' id="tips" style="display: none;">
+
+		<div class='header'><span class='name'>tips</span><a class='close-button' onclick="$('#tips').hide()">x</a></div>
+		<div class='body'>
+
+            <div class="inline-block"><img src="static/images/tips/help1.jpg"></div>
+            <br/>
+            <div class="inline-block"><img src="static/images/tips/help3.jpg"></div>
+            <br/>
+            <div class="inline-block"><img src="static/images/tips/help2.jpg"></div>
+            <br/>
+            <div class="inline-block"><img src="static/images/tips/help4.jpg"></div>
+            <br/>
+            <div class="inline-block"><img src="static/images/tips/learningrates.jpeg"></div>
+			<br/>
+			<a href="https://www.jeremyjordan.me/nn-learning-rate/">More about learning rate</a>
+        </div>
+	</div>
+{% endraw %}
+
+</body>
+</html>
