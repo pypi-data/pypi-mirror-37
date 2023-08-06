@@ -1,0 +1,24 @@
+messages:
+  # 'error' should be unique and vendor agnostic. Currently we are using the JUNOS syslog message name as the canonical name.
+  # This may change if we are able to find a more well defined naming system.
+  - error: INTERFACE_UP
+    tag: LINEPROTO-5-UPDOWN
+    values:
+      interface: (\w+[\.\-\d\/\w]+)
+      description: (.*)
+    line: 'Line protocol on Interface {interface} ({description}), changed state to up'
+    model: openconfig-interfaces
+    mapping:
+      variables: {}
+      static:
+        interfaces//interface//{interface}//state//oper_status: UP
+  - error: INTERFACE_UP
+    tag: LINEPROTO-5-UPDOWN
+    values:
+      interface: (\w+[\.\-\d\/\w]+)
+    line: 'Line protocol on Interface {interface}, changed state to up'
+    model: openconfig-interfaces
+    mapping:
+      variables: {}
+      static:
+        interfaces//interface//{interface}//state//oper_status: UP
