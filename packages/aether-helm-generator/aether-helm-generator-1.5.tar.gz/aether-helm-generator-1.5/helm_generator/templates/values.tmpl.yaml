@@ -1,0 +1,50 @@
+environment: {{arg_opts['environment']}}
+domain: {{arg_opts['domain']}}
+provider:
+  {{arg_opts['cloud_platform']}}: true
+app:
+  storage:
+    backend: {{arg_opts['storage_backend']}}
+    {% if arg_opts['storage_backend']  == 's3' or 'gcp' %}
+    bucket: {{arg_opts['storage_bucket_name']}}
+    {% endif %}
+  db:
+    name: {{arg_opts['pg_name']}}
+    host: {{arg_opts['database_host']}}
+    port: 5432
+    user: {{arg_opts['pg_name']}}
+    readonly_user: ro_{{arg_opts['pg_name']}}
+ingress:
+  hosts:
+    {% if arg_opts['application'] == 'gather' %}
+    - {{ arg_opts['domain'] }}
+    {% else %}
+    - {{arg_opts['application']}}.{{ arg_opts['domain'] }}
+    {% endif %}
+  {% if arg_opts['cert_manager'] %}
+  ssl:
+    letsencrypt: true
+    cert_secret: {{ arg_opts['cert_secret'] }}
+  {% endif %}
+  annotations:
+  {% if arg_opts['alb'] %}
+    alb.ingress.kubernetes.io/security-groups: {{ arg_opts['sg_id'] }}
+    alb.ingress.kubernetes.io/certificate-arn: {{ arg_opts['acm'] }}
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
+  {% elif arg_opts['nginx_ingress'] %}
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "75M"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/tls-acme: "true"
+    {% if arg_opts['cert_manager'] %}
+    certmanager.k8s.io/issuer: letsencrypt
+    {% endif %}
+  {% endif %}
+{% if arg_opts['application'] == 'gather' %}
+aether_modules: {{ arg_opts['am'] }}
+{% endif %}
+{% for module in arg_opts['aether_modules'] %}
+{{module}}_url: https://{{module}}.{{arg_opts['domain']}}
+{% endfor %}
