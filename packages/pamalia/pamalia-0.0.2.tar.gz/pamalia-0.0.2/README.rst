@@ -1,0 +1,31 @@
+pamalia
+=======
+
+TODO
+----
+
+-  parallel evaluation with joblib (``n_jobs``)
+
+-  implement genetic algorithm to find pipelines
+
+-  copy parameters from tpot
+
+-  add rules to prevent stupid things (PolynomialFeatures with many
+   columns)
+
+-  distribute genetic algorithms with dask
+
+-  test joblib distributed backend with dask (nothing to do, just test)
+
+-  fine-grained distribution with dask computation graph:
+
+   -  trivial for prediction
+
+   -  for fit, each step returns a cross-validated estimate and a fitted
+      model. The fitted model is not used before the final step.
+
+-  it is possible to implement cross-validation with a factor 2
+   improvement when the cross-val and the training folds match
+
+-  handle timeouts: https://github.com/dask/distributed/issues/391,
+   https://github.com/dask/dask/issues/1183
