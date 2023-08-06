@@ -1,0 +1,5 @@
+__author__ = 'Artur Maciag'
+__email__ = 'maciag.artur@gmail.com'
+__version__ = '0.0.2'
+__url__ = 'https://github.com/p1c2u/django-remote-debug'
+__license__ = 'MIT'
