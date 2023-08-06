@@ -1,0 +1,581 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coherence.tube_service &mdash; Cohen3 0.8.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Cohen3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../write_a_backend.html">Write a backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/coherence.html">Cohen3 source tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributor_code_of_conduct.html">Contributor Covenant Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Cohen3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>coherence.tube_service</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coherence.tube_service</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under the MIT license</span>
+<span class="c1"># http://opensource.org/licenses/mit-license.php</span>
+
+<span class="c1"># Copyright 2009 - Frank Scholz &lt;coherence@beebits.net&gt;</span>
+
+<span class="sd">&quot;&quot;&quot; TUBE service classes</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">urllib.error</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+<span class="kn">import</span> <span class="nn">urllib.request</span>
+
+<span class="kn">import</span> <span class="nn">dbus</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="k">import</span> <span class="n">etree</span>
+<span class="kn">from</span> <span class="nn">twisted.internet</span> <span class="k">import</span> <span class="n">defer</span>
+<span class="kn">from</span> <span class="nn">twisted.python.util</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">twisted.web</span> <span class="k">import</span> <span class="n">resource</span>
+<span class="kn">from</span> <span class="nn">twisted.python</span> <span class="k">import</span> <span class="n">failure</span>
+
+<span class="kn">from</span> <span class="nn">coherence</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">DIDLLite</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">action</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">service</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">variable</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core.soap_service</span> <span class="k">import</span> <span class="n">UPnPPublisher</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core.utils</span> <span class="k">import</span> <span class="n">ReverseProxyUriResource</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.devices.media_server</span> <span class="k">import</span> <span class="n">RootDeviceXML</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.devices.basics</span> <span class="k">import</span> <span class="n">DeviceHttpRoot</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core.soap_service</span> <span class="k">import</span> <span class="n">errorCode</span>
+<span class="kn">from</span> <span class="nn">.upnp.core</span> <span class="k">import</span> <span class="n">xml_constants</span>
+
+
+<div class="viewcode-block" id="MirabeauProxy"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.MirabeauProxy">[docs]</a><span class="k">class</span> <span class="nc">MirabeauProxy</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">,</span> <span class="n">log</span><span class="o">.</span><span class="n">LogAble</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;mirabeau&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">LogAble</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isLeaf</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="MirabeauProxy.getChildWithDefault"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.MirabeauProxy.getChildWithDefault">[docs]</a>    <span class="k">def</span> <span class="nf">getChildWithDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;MiraBeau getChildWithDefault </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                  <span class="n">path</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">uri</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote_plus</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;MiraBeau  uri </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">uri</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ReverseProxyUriResource</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TubeServiceControl"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeServiceControl">[docs]</a><span class="k">class</span> <span class="nc">TubeServiceControl</span><span class="p">(</span><span class="n">UPnPPublisher</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;mirabeau&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">):</span>
+        <span class="n">UPnPPublisher</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service</span> <span class="o">=</span> <span class="n">server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">get_variables</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">get_actions</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TubeServiceControl.get_action_results"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeServiceControl.get_action_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_action_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; check for out arguments</span>
+<span class="sd">            if yes: check if there are related ones to StateVariables with</span>
+<span class="sd">                non A_ARG_TYPE_ prefix</span>
+<span class="sd">                if yes: check if there is a call plugin method for this action</span>
+<span class="sd">                    if yes: update StateVariable values with call result</span>
+<span class="sd">                    if no:  get StateVariable values and</span>
+<span class="sd">                        add them to result dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;get_action_results </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="c1"># print &#39;get_action_results&#39;, action, instance</span>
+        <span class="n">notify</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">get_out_arguments</span><span class="p">():</span>
+            <span class="c1"># print &#39;get_state_variable_contents&#39;, argument.name</span>
+            <span class="k">if</span> <span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">11</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;A_ARG_TYPE_&#39;</span><span class="p">:</span>
+                <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">instance</span><span class="p">][</span>
+                    <span class="n">argument</span><span class="o">.</span><span class="n">get_state_variable</span><span class="p">()]</span>
+                <span class="n">variable</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+                <span class="c1"># print(&#39;update state variable contents&#39;,</span>
+                <span class="c1">#       variable.name, variable.value, variable.send_events)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">send_events</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">and</span>
+                        <span class="n">variable</span><span class="o">.</span><span class="n">moderated</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">):</span>
+                    <span class="n">notify</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">propagate_notification</span><span class="p">(</span><span class="n">notify</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;action_results unsorted </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="n">ordered_result</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">get_out_arguments</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;XXXBrowse&#39;</span> <span class="ow">and</span> <span class="n">argument</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Result&#39;</span><span class="p">:</span>
+                <span class="n">didl</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">DIDLElement</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span>
+                    <span class="n">result</span><span class="p">[</span><span class="s1">&#39;Result&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+                <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">didl</span><span class="o">.</span><span class="n">getItems</span><span class="p">():</span>
+                    <span class="n">new_res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resources</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="p">:</span>
+                        <span class="n">remote_protocol</span><span class="p">,</span> <span class="n">remote_network</span><span class="p">,</span> \
+                            <span class="n">remote_content_format</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> \
+                            <span class="n">res</span><span class="o">.</span><span class="n">protocolInfo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">remote_protocol</span> <span class="o">==</span> <span class="s1">&#39;http-get&#39;</span> <span class="ow">and</span> \
+                                <span class="n">remote_network</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+                            <span class="n">quoted_url</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;modifying&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                            <span class="n">res</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlunsplit</span><span class="p">(</span>
+                                <span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">external_address</span><span class="p">,</span>
+                                 <span class="s1">&#39;mirabeau&#39;</span><span class="p">,</span>
+                                 <span class="n">quoted_url</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&gt;&quot;</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                            <span class="n">new_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                            <span class="n">changed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">res</span> <span class="o">=</span> <span class="n">new_res</span>
+                <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+                    <span class="n">didl</span><span class="o">.</span><span class="n">rebuild</span><span class="p">()</span>
+                    <span class="n">ordered_result</span><span class="p">[</span><span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="n">didl</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span>  <span class="c1"># .replace(&#39;&lt;ns0:&#39;,&#39;&lt;&#39;)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ordered_result</span><span class="p">[</span><span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span>
+                        <span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ordered_result</span><span class="p">[</span><span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                    <span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;action_results sorted </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ordered_result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ordered_result</span></div>
+
+<div class="viewcode-block" id="TubeServiceControl.soap__generic"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeServiceControl.soap__generic">[docs]</a>    <span class="k">def</span> <span class="nf">soap__generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; generic UPnP service control method,</span>
+<span class="sd">            which will be used if no soap_ACTIONNAME method</span>
+<span class="sd">            in the server service control class can be found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">[</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;soap_methodName&#39;</span><span class="p">]]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">401</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;InstanceID&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;soap__generic </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;soap_methodName&#39;</span><span class="p">]</span>
+
+        <span class="n">in_arguments</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get_in_arguments</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">arg_name</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">arg_name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;X_&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">al</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">in_arguments</span> <span class="k">if</span> <span class="n">arg_name</span> <span class="o">==</span> <span class="n">a</span><span class="o">.</span><span class="n">get_name</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">al</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">in_arguments</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">al</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s1">&#39;argument </span><span class="si">%s</span><span class="s1"> not valid for action </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">arg_name</span><span class="p">,</span>
+                              <span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">402</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_arguments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s1">&#39;argument </span><span class="si">%s</span><span class="s1"> missing for action </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                          <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">in_arguments</span><span class="p">],</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">402</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">got_error</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;dbus error during call processing&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">x</span>
+
+        <span class="c1"># call plugin method for this action</span>
+        <span class="c1"># print &#39;callit args&#39;, args</span>
+        <span class="c1"># print &#39;callit kwargs&#39;, kwargs</span>
+        <span class="c1"># print &#39;callit action&#39;, action</span>
+        <span class="c1"># print &#39;callit dbus action&#39;, self.service.service.action</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">call_action</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                         <span class="n">dbus</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span>
+                                                         <span class="n">signature</span><span class="o">=</span><span class="s1">&#39;ss&#39;</span><span class="p">),</span>
+                                         <span class="n">reply_handler</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">,</span>
+                                         <span class="n">error_handler</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">,</span>
+                                         <span class="n">utf8_strings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_action_results</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">got_error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span></div></div>
+
+
+<div class="viewcode-block" id="TubeServiceProxy"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeServiceProxy">[docs]</a><span class="k">class</span> <span class="nc">TubeServiceProxy</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">ServiceServer</span><span class="p">,</span> <span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;mirabeau&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tube_service</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service</span> <span class="o">=</span> <span class="n">tube_service</span>
+        <span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">ServiceServer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">control</span> <span class="o">=</span> <span class="n">TubeServiceControl</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">putChild</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scpd_url</span><span class="p">,</span> <span class="n">service</span><span class="o">.</span><span class="n">scpdXML</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">control</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">putChild</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">control_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">control</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">web_resource</span><span class="o">.</span><span class="n">putChild</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TubeServiceProxy.init_var_and_actions"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeServiceProxy.init_var_and_actions">[docs]</a>    <span class="k">def</span> <span class="nf">init_var_and_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; retrieve all actions and create the Action</span>
+<span class="sd">            classes for our (proxy) server</span>
+
+<span class="sd">            retrieve all variables and create the StateVariable</span>
+<span class="sd">            classes for our (proxy) server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="o">.</span><span class="n">get_scpd_xml</span><span class="p">()</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">xml_constants</span><span class="o">.</span><span class="n">UPNP_SERVICE_NS</span>
+
+        <span class="k">for</span> <span class="n">action_node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//{</span><span class="si">%s</span><span class="s1">}action&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">action_node</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}name&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+            <span class="n">arguments</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">action_node</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//{</span><span class="si">%s</span><span class="s1">}argument&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">):</span>
+                <span class="n">arg_name</span> <span class="o">=</span> <span class="n">argument</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}name&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+                <span class="n">arg_direction</span> <span class="o">=</span> <span class="n">argument</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}direction&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+                <span class="n">arg_state_var</span> <span class="o">=</span> <span class="n">argument</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span>
+                    <span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}relatedStateVariable&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+                <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">Argument</span><span class="p">(</span><span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_direction</span><span class="p">,</span>
+                                                 <span class="n">arg_state_var</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_actions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">Action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">var_node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//{</span><span class="si">%s</span><span class="s1">}stateVariable&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">):</span>
+            <span class="n">send_events</span> <span class="o">=</span> <span class="n">var_node</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sendEvents&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">var_node</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}name&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+            <span class="n">data_type</span> <span class="o">=</span> <span class="n">var_node</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}dataType&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="sd">&quot;&quot;&quot; we need to ignore this, as there we don&#39;t get there our</span>
+<span class="sd">                {urn:schemas-beebits-net:service-1-0}X_withVendorDefines</span>
+<span class="sd">                attibute there</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">allowed</span> <span class="ow">in</span> <span class="n">var_node</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//{</span><span class="si">%s</span><span class="s1">}allowedValue&#39;</span> <span class="o">%</span> <span class="n">ns</span><span class="p">):</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">allowed</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instance</span><span class="p">)[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">variable</span><span class="o">.</span><span class="n">StateVariable</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="n">name</span><span class="p">,</span>
+                    <span class="s1">&#39;n/a&#39;</span><span class="p">,</span>
+                    <span class="n">instance</span><span class="p">,</span>
+                    <span class="n">send_events</span><span class="p">,</span>
+                    <span class="n">data_type</span><span class="p">,</span>
+                    <span class="n">values</span><span class="p">)</span>
+            <span class="sd">&quot;&quot;&quot; we need to do this here, as there we don&#39;t get there our</span>
+<span class="sd">                {urn:schemas-beebits-net:service-1-0}X_withVendorDefines</span>
+<span class="sd">                attibute there</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instance</span><span class="p">)[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">has_vendor_values</span> <span class="o">=</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="TubeDeviceProxy"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeDeviceProxy">[docs]</a><span class="k">class</span> <span class="nc">TubeDeviceProxy</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">LogAble</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dbus&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coherence</span><span class="p">,</span> <span class="n">tube_device</span><span class="p">,</span> <span class="n">external_address</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">LogAble</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">tube_device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span> <span class="o">=</span> <span class="n">coherence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">external_address</span> <span class="o">=</span> <span class="n">external_address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_id</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tube&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">friendly_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_friendly_name</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_friendly_device_type</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">get_device_type_version</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_services</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_devices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">icons</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;uuid: </span><span class="si">%s</span><span class="s2">, name: </span><span class="si">%r</span><span class="s2">, device type: </span><span class="si">%r</span><span class="s2">, version: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">friendly_name</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot; create the http entrypoint &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">web_resource</span> <span class="o">=</span> <span class="n">DeviceHttpRoot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">add_web_resource</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">)[</span><span class="mi">5</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">web_resource</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot; create the Service proxy(s) &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">services</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Proxying service </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span>
+            <span class="n">new_service</span> <span class="o">=</span> <span class="n">TubeServiceProxy</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_service</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot; create a device description xml file(s) &quot;&quot;&quot;</span>
+
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+        <span class="k">while</span> <span class="n">version</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">web_resource</span><span class="o">.</span><span class="n">putChild</span><span class="p">(</span>
+                <span class="s1">&#39;description-</span><span class="si">%d</span><span class="s1">.xml&#39;</span> <span class="o">%</span> <span class="n">version</span><span class="p">,</span>
+                <span class="n">RootDeviceXML</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">urlbase</span><span class="p">,</span>
+                    <span class="n">device_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span>
+                    <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+                    <span class="n">friendly_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">friendly_name</span><span class="p">,</span>
+                    <span class="c1"># model_description=&#39;Coherence UPnP %s&#39; % self.device_type,</span>
+                    <span class="c1"># model_name=&#39;Coherence UPnP %s&#39; % self.device_type,</span>
+                    <span class="n">services</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="p">,</span>
+                    <span class="n">devices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_devices</span><span class="p">,</span>
+                    <span class="n">icons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">icons</span><span class="p">))</span>
+            <span class="n">version</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="sd">&quot;&quot;&quot; and register with SSDP server &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TubeDeviceProxy.register"><a class="viewcode-back" href="../../source/modules.html#coherence.tube_service.TubeDeviceProxy.register">[docs]</a>    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">ssdp_server</span>
+        <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">)</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">hostname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> register&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">)</span>
+        <span class="c1"># we need to do this after the children</span>
+        <span class="c1"># are there, since we send notifies</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">::upnp:rootdevice&#39;</span> <span class="o">%</span> <span class="n">uuid</span><span class="p">,</span>
+                   <span class="s1">&#39;upnp:rootdevice&#39;</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="n">uuid</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">+</span>
+                   <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;description-</span><span class="si">%d</span><span class="s1">.xml&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                   <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">)</span>
+
+        <span class="n">s</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                   <span class="n">uuid</span><span class="p">,</span>
+                   <span class="n">uuid</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="n">uuid</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">+</span>
+                   <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;description-</span><span class="si">%d</span><span class="s1">.xml&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                   <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">)</span>
+
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+        <span class="k">while</span> <span class="n">version</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+                <span class="n">silent</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">silent</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">::urn:schemas-upnp-org:device:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                           <span class="n">uuid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span> <span class="n">version</span><span class="p">),</span>
+                       <span class="s1">&#39;urn:schemas-upnp-org:device:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">device_type</span><span class="p">,</span> <span class="n">version</span><span class="p">),</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="n">uuid</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">+</span>
+                       <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="s1">&#39;description-</span><span class="si">%d</span><span class="s1">.xml&#39;</span> <span class="o">%</span> <span class="n">version</span><span class="p">,</span>
+                       <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span>
+                       <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">)</span>
+            <span class="n">version</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="p">:</span>
+            <span class="n">device_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+            <span class="n">service_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s1">&#39;version&#39;</span><span class="p">):</span>
+                <span class="n">service_version</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">version</span>
+            <span class="n">silent</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">while</span> <span class="n">service_version</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">namespace</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">namespace</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">namespace</span> <span class="o">=</span> <span class="s1">&#39;schemas-upnp-org&#39;</span>
+
+                <span class="n">device_description_tmpl</span> <span class="o">=</span> <span class="s1">&#39;description-</span><span class="si">%d</span><span class="s1">.xml&#39;</span> <span class="o">%</span> <span class="n">device_version</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s1">&#39;device_description_tmpl&#39;</span><span class="p">):</span>
+                    <span class="n">device_description_tmpl</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">device_description_tmpl</span>
+
+                <span class="n">s</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;local&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">::urn:</span><span class="si">%s</span><span class="s1">:service:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                               <span class="n">uuid</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">service</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">service_version</span><span class="p">),</span>
+                           <span class="s1">&#39;urn:</span><span class="si">%s</span><span class="s1">:service:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                               <span class="n">namespace</span><span class="p">,</span> <span class="n">service</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">service_version</span><span class="p">),</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="n">uuid</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">+</span>
+                           <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">device_description_tmpl</span><span class="p">,</span>
+                           <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span>
+                           <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">)</span>
+
+                <span class="n">silent</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">service_version</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">device_version</span> <span class="o">-=</span> <span class="mi">1</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Pol Canelles.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.8.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1070 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coherence.backends.dvbd_storage &mdash; Cohen3 0.8.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Cohen3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../write_a_backend.html">Write a backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coherence.html">Cohen3 source tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributor_code_of_conduct.html">Contributor Covenant Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Cohen3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coherence.backends.dvbd_storage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coherence.backends.dvbd_storage</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under the MIT license</span>
+<span class="c1"># http://opensource.org/licenses/mit-license.php</span>
+
+<span class="c1"># Copyright 2008, Frank Scholz &lt;coherence@beebits.net&gt;</span>
+
+<span class="kn">import</span> <span class="nn">urllib.error</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+<span class="kn">import</span> <span class="nn">urllib.request</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span> <span class="nn">dbus</span>
+<span class="kn">import</span> <span class="nn">dbus.service</span>
+<span class="kn">from</span> <span class="nn">twisted.internet</span> <span class="k">import</span> <span class="n">defer</span>
+<span class="kn">from</span> <span class="nn">twisted.python</span> <span class="k">import</span> <span class="n">failure</span><span class="p">,</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">twisted.python.filepath</span> <span class="k">import</span> <span class="n">FilePath</span>
+
+<span class="kn">import</span> <span class="nn">coherence.extern.louie</span> <span class="k">as</span> <span class="nn">louie</span>
+<span class="kn">from</span> <span class="nn">coherence.backend</span> <span class="k">import</span> <span class="n">BackendItem</span><span class="p">,</span> <span class="n">BackendStore</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">DIDLLite</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core.soap_service</span> <span class="k">import</span> <span class="n">errorCode</span>
+
+<span class="n">ROOT_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">RECORDINGS_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">CHANNELS_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">CHANNEL_GROUPS_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">BASE_CHANNEL_GROUP_ID</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="n">BUS_NAME</span> <span class="o">=</span> <span class="s1">&#39;org.gnome.DVB&#39;</span>
+<span class="n">RECORDINGSSTORE_OBJECT_PATH</span> <span class="o">=</span> <span class="s1">&#39;/org/gnome/DVB/RecordingsStore&#39;</span>
+<span class="n">MANAGER_OBJECT_PATH</span> <span class="o">=</span> <span class="s1">&#39;/org/gnome/DVB/Manager&#39;</span>
+
+
+<div class="viewcode-block" id="Container"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dvbd_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">container_class</span><span class="o">=</span><span class="n">DIDLLite</span><span class="o">.</span><span class="n">Container</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;directory&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item</span> <span class="o">=</span> <span class="n">container_class</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">children_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children_callback</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_url</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Container.add_child"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.add_child">[docs]</a>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">child</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Container.get_children"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;container.get_children </span><span class="si">{start}</span><span class="s1"> </span><span class="si">{end}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Container.remove_children"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.remove_children">[docs]</a>    <span class="k">def</span> <span class="nf">remove_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Container.get_child_count"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span>
+
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.get_item"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span></div>
+
+<div class="viewcode-block" id="Container.get_name"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="Container.get_id"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Container.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div></div>
+
+
+<div class="viewcode-block" id="Channel"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel">[docs]</a><span class="k">class</span> <span class="nc">Channel</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dvbd_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span>
+                 <span class="n">mimetype</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;channel.</span><span class="si">{id}</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_id</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream_url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mimetype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Channel.get_children"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Channel.get_child_count"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Channel.get_item"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Channel get_item </span><span class="si">{self.id}</span><span class="s1"> @ </span><span class="si">{self.parent_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">VideoBroadcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream_url</span><span class="p">,</span>
+                                <span class="n">f</span><span class="s1">&#39;rtsp-rtp-udp:*:</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Channel.get_id"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Channel.get_name"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Channel.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div></div>
+
+
+<div class="viewcode-block" id="Recording"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording">[docs]</a><span class="k">class</span> <span class="nc">Recording</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dvbd_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span>
+                 <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+                 <span class="n">date</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span>
+                 <span class="n">mimetype</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="s1">&#39;recording.</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">real_id</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="c1"># make sure path is an absolute local path (and not an URL)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;file://&#39;</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">7</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">FilePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mimetype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">date</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">getsize</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Recording.get_children"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Recording.get_child_count"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Recording.get_item"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Recording get_item </span><span class="si">{self.id}</span><span class="s1"> @ </span><span class="si">{self.parent_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># create item</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">VideoBroadcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+        <span class="c1"># add http resource</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;http-get:*:</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="c1"># add internal resource</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span>
+            <span class="s1">&#39;file://&#39;</span> <span class="o">+</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_path</span><span class="p">()),</span>
+            <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.store.server.coherence.hostname}</span><span class="s1">:&#39;</span>
+            <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Recording.get_id"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Recording.get_name"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
+
+<div class="viewcode-block" id="Recording.get_url"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></div>
+
+<div class="viewcode-block" id="Recording.get_path"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.Recording.get_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">path</span></div></div>
+
+
+<div class="viewcode-block" id="DVBDStore"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore">[docs]</a><span class="k">class</span> <span class="nc">DVBDStore</span><span class="p">(</span><span class="n">BackendStore</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; this is a backend to the DVB Daemon</span>
+<span class="sd">        http://www.k-d-w.org/node/42</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">implements</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MediaServer&#39;</span><span class="p">]</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dvbd_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">server</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_dbus&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;yes&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;this backend needs use_dbus enabled in the configuration&#39;</span><span class="p">)</span>
+
+        <span class="n">BackendStore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;TV&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_groups</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;enable_destroy&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upnp_DestroyObject</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_upnp_DestroyObject</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bus</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">SessionBus</span><span class="p">()</span>
+        <span class="n">dvb_daemon_recordingsStore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span>
+            <span class="n">BUS_NAME</span><span class="p">,</span> <span class="n">RECORDINGSSTORE_OBJECT_PATH</span><span class="p">)</span>
+        <span class="n">dvb_daemon_manager</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">BUS_NAME</span><span class="p">,</span> <span class="n">MANAGER_OBJECT_PATH</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">dvb_daemon_recordingsStore</span><span class="p">,</span>
+                                              <span class="s1">&#39;org.gnome.DVB.RecordingsStore&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">dvb_daemon_manager</span><span class="p">,</span>
+                                                <span class="s1">&#39;org.gnome.DVB.Manager&#39;</span><span class="p">)</span>
+
+        <span class="n">dvb_daemon_recordingsStore</span><span class="o">.</span><span class="n">connect_to_signal</span><span class="p">(</span>
+            <span class="s1">&#39;Changed&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recording_changed</span><span class="p">,</span>
+            <span class="n">dbus_interface</span><span class="o">=</span><span class="s1">&#39;org.gnome.DVB.RecordingsStore&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Recordings&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNELS_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">CHANNELS_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Channels&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNEL_GROUPS_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">CHANNEL_GROUPS_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span>
+                      <span class="s1">&#39;Channel Groups&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNELS_CONTAINER_ID</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNEL_GROUPS_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">query_finished</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;Coherence.UPnP.Backend.init_completed&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">query_failed</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;Coherence.UPnP.Backend.init_failed&#39;</span><span class="p">,</span>
+                       <span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="c1"># get_device_groups is called after get_channel_groups,</span>
+        <span class="c1"># because we need channel groups first</span>
+        <span class="n">channel_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_channel_groups</span><span class="p">()</span>
+        <span class="n">channel_d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_device_groups</span><span class="p">)</span>
+        <span class="n">channel_d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">query_failed</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">([</span><span class="n">channel_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recordings</span><span class="p">()])</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">query_finished</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">query_failed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;DVBDStore&#39;</span>
+
+<div class="viewcode-block" id="DVBDStore.get_by_id"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_by_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;looking for id </span><span class="si">{id}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">type</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;recording&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span>
+                        <span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="DVBDStore.recording_changed"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.recording_changed">[docs]</a>    <span class="k">def</span> <span class="nf">recording_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">remove_children</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">handle_result</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="n">f</span><span class="s1">&#39;recording changed, handle_result: &#39;</span>
+                <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.containers[RECORDINGS_CONTAINER_ID].update_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">update_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="ow">and</span>
+                    <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">,</span> <span class="s1">&#39;content_directory_server&#39;</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;update_id&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">content_directory_server</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span>
+                        <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;SystemUpdateID&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">update_id</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;ContainerUpdateIDs new value: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">content_directory_server</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ContainerUpdateIDs&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_recordings</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">handle_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_recording_details"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_recording_details">[docs]</a>    <span class="k">def</span> <span class="nf">get_recording_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET RECORDING DETAILS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_details</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GOT RECORDING DETAILS </span><span class="si">{data}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">rid</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">location</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Recording &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rid</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">rid</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
+                    <span class="s1">&#39;duration&#39;</span><span class="p">:</span> <span class="n">length</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_details</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_interface</span><span class="o">.</span><span class="n">GetAllInformations</span><span class="p">(</span>
+            <span class="nb">id</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_recordings"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_recordings">[docs]</a>    <span class="k">def</span> <span class="nf">get_recordings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET RECORDINGS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_query_result</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GOT RECORDINGS: </span><span class="si">{ids}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="n">rd</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                <span class="n">rd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_recording_details</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+
+            <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">rd</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dl</span>
+
+        <span class="k">def</span> <span class="nf">process_details</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+            <span class="c1"># print(&#39;process_details&#39;, results)</span>
+            <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">recording</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                <span class="c1"># print(result, recording[&#39;name&#39;])</span>
+                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="c1"># print(&#39;add&#39;, recording[&#39;id&#39;], recording[&#39;name&#39;],</span>
+                    <span class="c1">#       recording[&#39;path&#39;], recording[&#39;date&#39;],</span>
+                    <span class="c1">#       recording[&#39;duration&#39;])</span>
+                    <span class="n">video_item</span> <span class="o">=</span> <span class="n">Recording</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                           <span class="n">recording</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                           <span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">,</span>
+                                           <span class="n">recording</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">],</span>
+                                           <span class="n">recording</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                                           <span class="n">recording</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                           <span class="n">recording</span><span class="p">[</span><span class="s1">&#39;duration&#39;</span><span class="p">],</span>
+                                           <span class="s1">&#39;video/mpegts&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">RECORDINGS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+                        <span class="n">video_item</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_query_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_details</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_interface</span><span class="o">.</span><span class="n">GetRecordings</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_channel_details"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_channel_details">[docs]</a>    <span class="k">def</span> <span class="nf">get_channel_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GET CHANNEL DETAILS </span><span class="si">{id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+            <span class="n">channelList_interface</span><span class="o">.</span><span class="n">GetChannelName</span><span class="p">(</span>
+                <span class="nb">id</span><span class="p">,</span>
+                <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="k">def</span> <span class="nf">get_network</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+            <span class="n">channelList_interface</span><span class="o">.</span><span class="n">GetChannelNetwork</span><span class="p">(</span>
+                <span class="nb">id</span><span class="p">,</span> <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+            <span class="n">channelList_interface</span><span class="o">.</span><span class="n">GetChannelURL</span><span class="p">(</span>
+                <span class="nb">id</span><span class="p">,</span> <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="k">def</span> <span class="nf">process_details</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GOT DETAILS </span><span class="si">{id:d}</span><span class="s1">: </span><span class="si">{r}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">network</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">),</span>
+                    <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">network</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">url</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">([</span><span class="n">get_name</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">get_network</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">get_url</span><span class="p">(</span><span class="nb">id</span><span class="p">)])</span>
+        <span class="n">dl</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_details</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>
+        <span class="n">dl</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dl</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_channelgroup_members"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_channelgroup_members">[docs]</a>    <span class="k">def</span> <span class="nf">get_channelgroup_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_items</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET ALL CHANNEL GROUP MEMBERS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_getChannelsOfGroup</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">group_id</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">channel_id</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                <span class="n">channel_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">channel_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">channel_id</span> <span class="ow">in</span> <span class="n">channel_items</span><span class="p">:</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">channel_items</span><span class="p">[</span><span class="n">channel_id</span><span class="p">]</span>
+                    <span class="n">container_id</span> <span class="o">=</span> <span class="n">BASE_CHANNEL_GROUP_ID</span> <span class="o">+</span> <span class="n">group_id</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">container_id</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_members</span><span class="p">(</span><span class="n">channelList_interface</span><span class="p">,</span> <span class="n">group_id</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GET CHANNEL GROUP MEMBERS </span><span class="si">{group_id:d}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_getChannelsOfGroup</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+            <span class="n">channelList_interface</span><span class="o">.</span><span class="n">GetChannelsOfGroup</span><span class="p">(</span>
+                <span class="n">group_id</span><span class="p">,</span>
+                <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="n">ml</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">group_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_groups</span><span class="p">:</span>
+            <span class="n">ml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_members</span><span class="p">(</span><span class="n">channelList_interface</span><span class="p">,</span> <span class="n">group_id</span><span class="p">))</span>
+        <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">ml</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dl</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_tv_channels"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_tv_channels">[docs]</a>    <span class="k">def</span> <span class="nf">get_tv_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET TV CHANNELS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_getChannels_result</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GetChannels: </span><span class="si">{channels}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="n">cl</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">channel_id</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">:</span>
+                <span class="n">cl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_channel_details</span><span class="p">(</span>
+                        <span class="n">channelList_interface</span><span class="p">,</span> <span class="n">channel_id</span><span class="p">))</span>
+            <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dl</span>
+
+        <span class="k">def</span> <span class="nf">process_details</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GOT DEVICE GROUP DETAILS </span><span class="si">{results}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                <span class="c1"># print channel</span>
+                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">channel</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                    <span class="c1"># print &#39;add&#39;, name, channel[&#39;url&#39;]</span>
+                    <span class="n">video_item</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                         <span class="n">channel</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                         <span class="n">CHANNELS_CONTAINER_ID</span><span class="p">,</span>
+                                         <span class="n">name</span><span class="p">,</span>
+                                         <span class="n">channel</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span>
+                                         <span class="n">channel</span><span class="p">[</span><span class="s1">&#39;network&#39;</span><span class="p">],</span>
+                                         <span class="s1">&#39;video/mpegts&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNELS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+                        <span class="n">video_item</span><span class="p">)</span>
+                    <span class="n">channels</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">channel</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">video_item</span>
+            <span class="k">return</span> <span class="n">channels</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_getChannels_result</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_details</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_channelgroup_members</span><span class="p">,</span> <span class="n">channelList_interface</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="n">channelList_interface</span><span class="o">.</span><span class="n">GetTVChannels</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_deviceGroup_details"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_deviceGroup_details">[docs]</a>    <span class="k">def</span> <span class="nf">get_deviceGroup_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">devicegroup_interface</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET DEVICE GROUP DETAILS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_getChannelList_result</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GetChannelList: </span><span class="si">{result}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">dvbd_channelList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">BUS_NAME</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="n">channelList_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+                <span class="n">dvbd_channelList</span><span class="p">,</span> <span class="s1">&#39;org.gnome.DVB.ChannelList&#39;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tv_channels</span><span class="p">(</span><span class="n">channelList_interface</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_getChannelList_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="n">devicegroup_interface</span><span class="o">.</span><span class="n">GetChannelList</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_device_groups"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_device_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_device_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET DEVICE GROUPS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_query_result</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GetRegisteredDeviceGroups: </span><span class="si">{ids}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">gl</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">group_object_path</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                <span class="n">dvbd_devicegroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">BUS_NAME</span><span class="p">,</span>
+                                                       <span class="n">group_object_path</span><span class="p">)</span>
+                <span class="n">devicegroup_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+                    <span class="n">dvbd_devicegroup</span><span class="p">,</span> <span class="s1">&#39;org.gnome.DVB.DeviceGroup&#39;</span><span class="p">)</span>
+                <span class="n">gl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_deviceGroup_details</span><span class="p">(</span><span class="n">devicegroup_interface</span><span class="p">))</span>
+
+            <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">gl</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dl</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_query_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager_interface</span><span class="o">.</span><span class="n">GetRegisteredDeviceGroups</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.get_channel_groups"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.get_channel_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_channel_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET CHANNEL GROUPS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_GetChannelGroups_result</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GOT CHANNEL GROUPS </span><span class="si">{data}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">channel_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>  <span class="c1"># id, name</span>
+                <span class="n">container_id</span> <span class="o">=</span> <span class="n">BASE_CHANNEL_GROUP_ID</span> <span class="o">+</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">group_item</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="n">container_id</span><span class="p">,</span>
+                                       <span class="n">CHANNEL_GROUPS_CONTAINER_ID</span><span class="p">,</span>
+                                       <span class="n">group</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">container_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_item</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">CHANNEL_GROUPS_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+                    <span class="n">group_item</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_GetChannelGroups_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager_interface</span><span class="o">.</span><span class="n">GetChannelGroups</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDStore.upnp_init"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.upnp_init">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">connection_manager_server</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;SourceProtocolInfo&#39;</span><span class="p">,</span>
+                <span class="p">[</span><span class="s1">&#39;http-get:*:video/mpegts:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/mpegts:*&#39;</span><span class="p">,</span>
+                 <span class="p">],</span>
+                <span class="s1">&#39;rtsp-rtp-udp:*:video/mpegts:*&#39;</span><span class="p">,</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DVBDStore.hidden_upnp_DestroyObject"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDStore.hidden_upnp_DestroyObject">[docs]</a>    <span class="k">def</span> <span class="nf">hidden_upnp_DestroyObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ObjectID</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ObjectID&#39;</span><span class="p">]</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">ObjectID</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">701</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">handle_success</span><span class="p">(</span><span class="n">deleted</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;deleted&#39;</span><span class="p">,</span> <span class="n">deleted</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;ObjectID&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">deleted</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">715</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">failure</span><span class="o">.</span><span class="n">Failure</span><span class="p">(</span><span class="n">errorCode</span><span class="p">(</span><span class="mi">701</span><span class="p">))</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_interface</span><span class="o">.</span><span class="n">Delete</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">real_id</span><span class="p">),</span>
+                                    <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                                    <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">handle_success</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span></div></div>
+
+
+<div class="viewcode-block" id="DVBDScheduledRecording"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording">[docs]</a><span class="k">class</span> <span class="nc">DVBDScheduledRecording</span><span class="p">(</span><span class="n">BackendStore</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;dvbd_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">server</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_dbus&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;yes&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;this backend needs use_dbus enabled in the configuration&#39;</span><span class="p">)</span>
+
+        <span class="n">BackendStore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_update_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bus</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">SessionBus</span><span class="p">()</span>
+        <span class="c1"># We have one ScheduleRecording service for each device group</span>
+        <span class="c1"># TODO use one ScheduledRecording for each device group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_group_interface</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">dvbd_recorder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_group_interface</span><span class="o">.</span><span class="n">GetRecorder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">BUS_NAME</span><span class="p">,</span> <span class="n">dvbd_recorder</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;DVBDScheduledRecording&#39;</span>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.get_timer_details"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.get_timer_details">[docs]</a>    <span class="k">def</span> <span class="nf">get_timer_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;GET TIMER DETAILS </span><span class="si">{tid:d}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">get_infos</span><span class="p">(</span><span class="n">t_id</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Callback</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">GetAllInformations</span><span class="p">(</span>
+                <span class="n">t_id</span><span class="p">,</span>
+                <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="k">def</span> <span class="nf">get_start_time</span><span class="p">(</span><span class="n">t_id</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Callback</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">GetStartTime</span><span class="p">(</span>
+                <span class="n">t_id</span><span class="p">,</span> <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">d</span>
+
+        <span class="k">def</span> <span class="nf">process_details</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+            <span class="n">t_id</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">channel_name</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">start_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">)</span>
+            <span class="c1"># TODO return what we actually need</span>
+            <span class="c1"># FIXME we properly want the channel id here rather than the name</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">t_id</span><span class="p">,</span> <span class="s1">&#39;duration&#39;</span><span class="p">:</span> <span class="n">duration</span><span class="p">,</span>
+                    <span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="n">channel_name</span><span class="p">,</span>
+                    <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="n">start_datetime</span><span class="p">}</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">get_infos</span><span class="p">(</span><span class="n">tid</span><span class="p">),</span>
+             <span class="n">get_start_time</span><span class="p">(</span><span class="n">tid</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_details</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.get_timers"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.get_timers">[docs]</a>    <span class="k">def</span> <span class="nf">get_timers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;GET TIMERS&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_GetTimers_results</span><span class="p">(</span><span class="n">timer_ids</span><span class="p">):</span>
+            <span class="n">tl</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">tid</span> <span class="ow">in</span> <span class="n">timer_ids</span><span class="p">:</span>
+                <span class="n">tl</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_timer_details</span><span class="p">(</span><span class="n">tid</span><span class="p">))</span>
+            <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">tl</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dl</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_GetTimers_results</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">GetTimers</span><span class="p">(</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.add_timer"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.add_timer">[docs]</a>    <span class="k">def</span> <span class="nf">add_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_id</span><span class="p">,</span> <span class="n">start_datetime</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;ADD TIMER&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_AddTimer_result</span><span class="p">(</span><span class="n">timer_id</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_update_id</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">timer_id</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_AddTimer_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">AddTimer</span><span class="p">(</span>
+            <span class="n">channel_id</span><span class="p">,</span> <span class="n">start_datetime</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+            <span class="n">start_datetime</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+            <span class="n">start_datetime</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+            <span class="n">start_datetime</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+            <span class="n">start_datetime</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.delete_timer"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.delete_timer">[docs]</a>    <span class="k">def</span> <span class="nf">delete_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;DELETE TIMER </span><span class="si">{tid:d}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_DeleteTimer_result</span><span class="p">(</span><span class="n">success</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                <span class="c1"># TODO: return 704</span>
+                <span class="k">return</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_update_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_DeleteTimer_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">DeleteTimer</span><span class="p">(</span>
+            <span class="n">tid</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_GetPropertyList"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_GetPropertyList">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_GetPropertyList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_GetAllowedValues"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_GetAllowedValues">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_GetAllowedValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_GetStateUpdateID"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_GetStateUpdateID">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_GetStateUpdateID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_update_id</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_BrowseRecordSchedules"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_BrowseRecordSchedules">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_BrowseRecordSchedules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">schedules</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># ChannelID, StartDateTime, Duration</span>
+        <span class="n">sched</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upnp_GetRecordSchedule</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sched</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_BrowseRecordTasks"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_BrowseRecordTasks">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_BrowseRecordTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rec_sched_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;RecordScheduleID&#39;</span><span class="p">])</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># ScheduleID, ChannelID, StartDateTime, Duration</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upnp_GetRecordTask</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">task</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_CreateRecordSchedule"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_CreateRecordSchedule">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_CreateRecordSchedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">schedule</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;RecordScheduleParts&#39;</span><span class="p">]</span>
+        <span class="n">channel_id</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">getChannelID</span><span class="p">()</span>
+        <span class="c1"># returns a python datetime object</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">getStartDateTime</span><span class="p">()</span>
+        <span class="c1"># duration in minutes</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">getDuration</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_timer</span><span class="p">(</span><span class="n">channel_id</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_DeleteRecordSchedule"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_DeleteRecordSchedule">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_DeleteRecordSchedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rec_sched_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;RecordScheduleID&#39;</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;ERROR: </span><span class="si">{error}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">process_IsTimerActive_result</span><span class="p">(</span><span class="n">is_active</span><span class="p">,</span> <span class="n">rec_sched_id</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_active</span><span class="p">:</span>
+                <span class="c1"># TODO: Return 705</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_timer</span><span class="p">(</span><span class="n">rec_sched_id</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">process_IsTimerActive_result</span><span class="p">,</span> <span class="n">rec_sched_id</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recorder_interface</span><span class="o">.</span><span class="n">IsTimerActive</span><span class="p">(</span>
+            <span class="n">rec_sched_id</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_GetRecordSchedule"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_GetRecordSchedule">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_GetRecordSchedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rec_sched_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;RecordScheduleID&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_timer_details</span><span class="p">(</span><span class="n">rec_sched_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DVBDScheduledRecording.upnp_GetRecordTask"><a class="viewcode-back" href="../../../source/backends/dvbd.html#coherence.backends.dvbd_storage.DVBDScheduledRecording.upnp_GetRecordTask">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_GetRecordTask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rec_task_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;RecordTaskID&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_timer_details</span><span class="p">(</span><span class="n">rec_task_id</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Pol Canelles.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.8.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

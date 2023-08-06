@@ -1,0 +1,1098 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coherence.backends.tracker_storage &mdash; Cohen3 0.8.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Cohen3
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command-Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../write_a_backend.html">Write a backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coherence.html">Cohen3 source tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributor_code_of_conduct.html">Contributor Covenant Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Cohen3</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coherence.backends.tracker_storage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coherence.backends.tracker_storage</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Licensed under the MIT license</span>
+<span class="c1"># http://opensource.org/licenses/mit-license.php</span>
+
+<span class="c1"># Copyright 2008, Frank Scholz &lt;coherence@beebits.net&gt;</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">import</span> <span class="nn">dbus</span>
+<span class="kn">import</span> <span class="nn">dbus.service</span>
+<span class="kn">from</span> <span class="nn">twisted.internet</span> <span class="k">import</span> <span class="n">defer</span>
+<span class="kn">from</span> <span class="nn">twisted.python</span> <span class="k">import</span> <span class="n">util</span>
+
+<span class="kn">import</span> <span class="nn">coherence.extern.louie</span> <span class="k">as</span> <span class="nn">louie</span>
+<span class="kn">from</span> <span class="nn">coherence.backend</span> <span class="k">import</span> <span class="n">BackendItem</span><span class="p">,</span> <span class="n">BackendStore</span>
+<span class="kn">from</span> <span class="nn">coherence.upnp.core</span> <span class="k">import</span> <span class="n">DIDLLite</span>
+
+<span class="n">ROOT_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">AUDIO_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">AUDIO_ALL_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">101</span>
+<span class="n">AUDIO_ARTIST_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">102</span>
+<span class="n">AUDIO_ALBUM_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">103</span>
+<span class="n">AUDIO_PLAYLIST_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">104</span>
+<span class="n">AUDIO_GENRE_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">105</span>
+
+<span class="n">VIDEO_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">VIDEO_ALL_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">201</span>
+
+<span class="n">IMAGE_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">IMAGE_ALL_CONTAINER_ID</span> <span class="o">=</span> <span class="mi">301</span>
+
+<span class="n">BUS_NAME</span> <span class="o">=</span> <span class="s1">&#39;org.freedesktop.Tracker&#39;</span>
+<span class="n">OBJECT_PATH</span> <span class="o">=</span> <span class="s1">&#39;/org/freedesktop/tracker&#39;</span>
+
+<span class="n">tracks_query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">&lt;rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:Property name=&quot;Audio:Title&quot; /&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdf:String&gt;*&lt;/rdf:String&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">video_query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">&lt;rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:Property name=&quot;File:Name&quot; /&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdf:String&gt;*&lt;/rdf:String&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">image_query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">&lt;rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdfq:Property name=&quot;File:Name&quot; /&gt;</span><span class="se">\</span>
+<span class="s1">&lt;rdf:String&gt;*&lt;/rdf:String&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:equals&gt;</span><span class="se">\</span>
+<span class="s1">&lt;/rdfq:Condition&gt;</span><span class="se">\</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+
+<div class="viewcode-block" id="Container"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">container_class</span><span class="o">=</span><span class="n">DIDLLite</span><span class="o">.</span><span class="n">Container</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;directory&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item</span> <span class="o">=</span> <span class="n">container_class</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">children_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children_callback</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># self.get_child_count()</span>
+
+        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_url</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Container.add_child"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.add_child">[docs]</a>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">child</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Container.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;container.get_children </span><span class="si">{start}</span><span class="s1"> </span><span class="si">{end}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Container.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">childCount</span>
+
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span></div>
+
+<div class="viewcode-block" id="Container.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="Container.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Container.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div></div>
+
+
+<div class="viewcode-block" id="Artist"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist">[docs]</a><span class="k">class</span> <span class="nc">Artist</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;artist.{int(id):d}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Artist.add_child"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.add_child">[docs]</a>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">child</span></div>
+
+<div class="viewcode-block" id="Artist.sort_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.sort_children">[docs]</a>    <span class="k">def</span> <span class="nf">sort_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">childs_key_sort</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span><span class="p">,</span>
+                                          <span class="n">key</span><span class="o">=</span><span class="n">childs_key_sort</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span></div>
+
+<div class="viewcode-block" id="Artist.get_artist_all_tracks"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_artist_all_tracks">[docs]</a>    <span class="k">def</span> <span class="nf">get_artist_all_tracks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">request_count</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">album</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_children</span><span class="p">():</span>
+            <span class="n">children</span> <span class="o">+=</span> <span class="n">album</span><span class="o">.</span><span class="n">get_children</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">request_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">request_count</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Artist.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_children</span><span class="p">():</span>
+            <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Artist.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Artist.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">):</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">MusicArtist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Artist.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Artist.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Artist.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div></div>
+
+
+<div class="viewcode-block" id="Album"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album">[docs]</a><span class="k">class</span> <span class="nc">Album</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">artist</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;album.{int(id):d}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artist</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">artist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cover</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Album.add_child"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.add_child">[docs]</a>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">child</span></div>
+
+<div class="viewcode-block" id="Album.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span><span class="p">:</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">childs_key_sort</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">track_nr</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span> <span class="o">=</span> \
+                <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">childs_key_sort</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_children</span><span class="p">:</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">children</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Album.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Album.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">):</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">MusicAlbum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">childCount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_child_count</span><span class="p">()</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">artist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">artist</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">albumArtURI</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cover</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Album.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Album.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="Album.get_cover"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Album.get_cover">[docs]</a>    <span class="k">def</span> <span class="nf">get_cover</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cover</span></div></div>
+
+
+<div class="viewcode-block" id="Track"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track">[docs]</a><span class="k">class</span> <span class="nc">Track</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span>
+                 <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+                 <span class="n">artist</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span> <span class="n">genre</span><span class="p">,</span>
+                 <span class="n">duration</span><span class="p">,</span>
+                 <span class="n">track_number</span><span class="p">,</span>
+                 <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="s1">&#39;song.</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">3600</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">-</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">3600</span>
+        <span class="n">minutes</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">-</span> <span class="n">minutes</span> <span class="o">*</span> <span class="mi">60</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{hours:d}</span><span class="s1">:</span><span class="si">{minutes:02d}</span><span class="s1">:</span><span class="si">{seconds:02d}</span><span class="s1">&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artist</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">artist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">album</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">album</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genre</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">genre</span><span class="p">)</span>
+        <span class="n">track_number</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">track_number</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">track_number</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">track_number</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track_nr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">track_number</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cover</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mimetype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Track.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Track.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Track.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Track get_item </span><span class="si">{self.id}</span><span class="s1"> @ </span><span class="si">{self.parent_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># create item</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">MusicTrack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">album</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">album</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">artist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">artist</span>
+        <span class="c1"># item.date =</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">genre</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">genre</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">originalTrackNumber</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">track_nr</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">albumArtURI</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cover</span>
+
+        <span class="c1"># add http resource</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;http-get:*:</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="c1"># if self.store.server.coherence.config.get(</span>
+        <span class="c1">#        &#39;transcoding&#39;, &#39;no&#39;) == &#39;yes&#39;:</span>
+        <span class="c1">#     if self.mimetype in (&#39;audio/mpeg&#39;,</span>
+        <span class="c1">#                          &#39;application/ogg&#39;,&#39;audio/ogg&#39;,</span>
+        <span class="c1">#                          &#39;audio/x-m4a&#39;,</span>
+        <span class="c1">#                          &#39;application/x-flac&#39;):</span>
+        <span class="c1">#         dlna_pn = &#39;DLNA.ORG_PN=LPCM&#39;</span>
+        <span class="c1">#         dlna_tags = DIDLLite.simple_dlna_tags[:]</span>
+        <span class="c1">#         dlna_tags[1] = &#39;DLNA.ORG_CI=1&#39;</span>
+        <span class="c1">#         #dlna_tags[2] = &#39;DLNA.ORG_OP=00&#39;</span>
+        <span class="c1">#         new_res = DIDLLite.Resource(self.url+&#39;?transcoded=lpcm&#39;,</span>
+        <span class="c1">#             &#39;http-get:*:%s:%s&#39; % (</span>
+        <span class="c1">#                &#39;audio/L16;rate=44100;channels=2&#39;, &#39;;&#39;.join(</span>
+        <span class="c1">#                    [dlna_pn]+dlna_tags)))</span>
+        <span class="c1">#         new_res.size = None</span>
+        <span class="c1">#         if self.duration &gt; 0:</span>
+        <span class="c1">#             new_res.duration = str(self.duration)</span>
+        <span class="c1">#         item.res.append(new_res)</span>
+        <span class="c1">#</span>
+        <span class="c1">#         if self.mimetype != &#39;audio/mpeg&#39;:</span>
+        <span class="c1">#             new_res = DIDLLite.Resource(</span>
+        <span class="c1">#                 self.url+&#39;?transcoded=mp3&#39;,</span>
+        <span class="c1">#                 f&#39;http-get:*:{&quot;audio/mpeg&quot;}:*&#39;)</span>
+        <span class="c1">#             new_res.size = None</span>
+        <span class="c1">#             if self.duration &gt; 0:</span>
+        <span class="c1">#                 new_res.duration = str(self.duration)</span>
+        <span class="c1">#             item.res.append(new_res)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Track.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Track.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
+
+<div class="viewcode-block" id="Track.get_url"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></div>
+
+<div class="viewcode-block" id="Track.get_path"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Track.get_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span></div></div>
+
+
+<div class="viewcode-block" id="Video"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video">[docs]</a><span class="k">class</span> <span class="nc">Video</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span>
+                 <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+                 <span class="n">duration</span><span class="p">,</span>
+                 <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;video.{int(id):d}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">3600</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">-</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">3600</span>
+        <span class="n">minutes</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">-</span> <span class="n">minutes</span> <span class="o">*</span> <span class="mi">60</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{hours:d}</span><span class="s1">:</span><span class="si">{minutes:02d}</span><span class="s1">:</span><span class="si">{seconds:02d}</span><span class="s1">&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cover</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mimetype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Video.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Video.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Video.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Video get_item </span><span class="si">{self.id}</span><span class="s1"> @ </span><span class="si">{self.parent_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># create item</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">VideoItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+        <span class="c1"># item.date =</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">albumArtURI</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cover</span>
+
+        <span class="c1"># add http resource</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;http-get:*:</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Video.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Video.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
+
+<div class="viewcode-block" id="Video.get_url"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></div>
+
+<div class="viewcode-block" id="Video.get_path"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Video.get_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span></div></div>
+
+
+<div class="viewcode-block" id="Image"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image">[docs]</a><span class="k">class</span> <span class="nc">Image</span><span class="p">(</span><span class="n">BackendItem</span><span class="p">):</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span>
+                 <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span>
+                 <span class="n">date</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
+                 <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">):</span>
+        <span class="n">BackendItem</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;image.{int(id):d}&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">album</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">album</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mimetype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mimetype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">urlbase</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Image.get_children"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_children">[docs]</a>    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Image.get_child_count"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_child_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_child_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Image.get_item"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Image get_item </span><span class="si">{self.id}</span><span class="s1"> @ </span><span class="si">{self.parent_id}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># create item</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">ImageItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span>
+        <span class="c1"># item.date =</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+        <span class="c1"># add http resource</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">DIDLLite</span><span class="o">.</span><span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;http-get:*:</span><span class="si">{self.mimetype}</span><span class="s1">:*&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Image.get_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span></div>
+
+<div class="viewcode-block" id="Image.get_name"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span></div>
+
+<div class="viewcode-block" id="Image.get_url"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></div>
+
+<div class="viewcode-block" id="Image.get_path"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.Image.get_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span></div></div>
+
+
+<div class="viewcode-block" id="TrackerStore"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore">[docs]</a><span class="k">class</span> <span class="nc">TrackerStore</span><span class="p">(</span><span class="n">BackendStore</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; this is a backend to Meta Tracker</span>
+<span class="sd">        http://www.gnome.org/projects/tracker/index.html</span>
+
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">implements</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MediaServer&#39;</span><span class="p">]</span>
+    <span class="n">logCategory</span> <span class="o">=</span> <span class="s1">&#39;tracker_store&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">server</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_dbus&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;yes&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;this backend needs use_dbus enabled in the configuration&#39;</span><span class="p">)</span>
+        <span class="n">BackendStore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;Tracker&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">songs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">albums</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">artists</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">playlists</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genres</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">videos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bus</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">SessionBus</span><span class="p">()</span>
+        <span class="n">tracker_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">BUS_NAME</span><span class="p">,</span> <span class="n">OBJECT_PATH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracker_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+            <span class="n">tracker_object</span><span class="p">,</span> <span class="s1">&#39;org.freedesktop.Tracker&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+            <span class="n">tracker_object</span><span class="p">,</span> <span class="s1">&#39;org.freedesktop.Tracker.Search&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+            <span class="n">tracker_object</span><span class="p">,</span> <span class="s1">&#39;org.freedesktop.Tracker.Keywords&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata_interface</span> <span class="o">=</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span>
+            <span class="n">tracker_object</span><span class="p">,</span> <span class="s1">&#39;org.freedesktop.Tracker.Metadata&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">queries_finished</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;Coherence.UPnP.Backend.init_completed&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                       <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">queries_failed</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;Coherence.UPnP.Backend.init_failed&#39;</span><span class="p">,</span>
+                       <span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="n">services</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;service&#39;</span><span class="p">,</span> <span class="s1">&#39;Music,Videos,Images&#39;</span><span class="p">)</span>
+        <span class="n">services</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">services</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+
+        <span class="n">ml</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;music&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tracks</span><span class="p">,</span>
+                   <span class="s1">&#39;videos&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_videos</span><span class="p">,</span>
+                   <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_images</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="n">services</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">service</span><span class="p">]())</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Wrong Tracker service definition - </span><span class="si">{service}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ml</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dl</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">DeferredList</span><span class="p">(</span><span class="n">ml</span><span class="p">)</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">queries_finished</span><span class="p">)</span>
+            <span class="n">dl</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+                    <span class="s1">&#39;Coherence.UPnP.Backend.init_failed&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;Connection to Tracker service(s) failed!&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">louie</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+                <span class="s1">&#39;Coherence.UPnP.Backend.init_failed&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;No Tracker service defined!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;TrackerStore&#39;</span>
+
+<div class="viewcode-block" id="TrackerStore.get_by_id"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore.get_by_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;looking for id </span><span class="si">{id}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;artist_all_tracks_&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">type</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="nb">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;song&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;album&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span>
+                        <span class="nb">id</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;artist&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span>
+                        <span class="nb">id</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;video&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;image&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="TrackerStore.get_videos"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore.get_videos">[docs]</a>    <span class="k">def</span> <span class="nf">get_videos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">parse_videos_query_result</span><span class="p">(</span><span class="n">resultlist</span><span class="p">):</span>
+            <span class="n">videos</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="n">resultlist</span><span class="p">:</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span> <span class="o">=</span> <span class="n">video</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mimetype</span> <span class="o">==</span> <span class="s1">&#39;video/x-theora+ogg&#39;</span><span class="p">:</span>
+                    <span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;video/ogg&#39;</span>
+                <span class="n">video_item</span> <span class="o">=</span> <span class="n">Video</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">videos</span><span class="p">,</span> <span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">,</span>
+                                   <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span>
+                                   <span class="n">duration</span><span class="p">,</span>
+                                   <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">videos</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">videos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">video_item</span><span class="p">)</span>
+
+            <span class="n">videos</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">videos</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="o">-</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="k">for</span> <span class="n">video_item</span> <span class="ow">in</span> <span class="n">videos</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">video_item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">VIDEO_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Video&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">,</span> <span class="n">VIDEO_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;All Videos&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">VIDEO_ALL_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Video:Title&#39;</span><span class="p">,</span> <span class="s1">&#39;Video:Duration&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;File:Size&#39;</span><span class="p">,</span> <span class="s1">&#39;File:Mime&#39;</span><span class="p">]</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">parse_videos_query_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_interface</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_id</span><span class="p">,</span> <span class="s1">&#39;Videos&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="n">video_query</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="TrackerStore.get_images"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore.get_images">[docs]</a>    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">parse_images_query_result</span><span class="p">(</span><span class="n">resultlist</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;images&#39;</span><span class="p">,</span> <span class="n">resultlist</span><span class="p">)</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">resultlist</span><span class="p">:</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span> \
+                    <span class="n">date</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> \
+                    <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span> <span class="o">=</span> <span class="n">image</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="n">image_item</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">,</span>
+                    <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span>
+                    <span class="n">date</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
+                    <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_item</span><span class="p">)</span>
+
+            <span class="n">images</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">images</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="o">-</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="k">for</span> <span class="n">image_item</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">image_item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">IMAGE_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Images&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">,</span> <span class="n">IMAGE_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;All Images&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">IMAGE_ALL_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Image:Title&#39;</span><span class="p">,</span> <span class="s1">&#39;Image:Album&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Image:Date&#39;</span><span class="p">,</span> <span class="s1">&#39;Image:Width&#39;</span><span class="p">,</span> <span class="s1">&#39;Image:Height&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;File:Size&#39;</span><span class="p">,</span> <span class="s1">&#39;File:Mime&#39;</span><span class="p">]</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">parse_images_query_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_interface</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_id</span><span class="p">,</span> <span class="s1">&#39;Images&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="n">image_query</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="TrackerStore.get_tracks"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore.get_tracks">[docs]</a>    <span class="k">def</span> <span class="nf">get_tracks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">error</span>
+
+        <span class="k">def</span> <span class="nf">parse_tracks_query_result</span><span class="p">(</span><span class="n">resultlist</span><span class="p">):</span>
+            <span class="n">albums</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">artists</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">tracks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">resultlist</span><span class="p">:</span>
+                <span class="n">file</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">artist</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span> <span class="n">genre</span><span class="p">,</span> \
+                    <span class="n">duration</span><span class="p">,</span> <span class="n">album_track_count</span><span class="p">,</span> \
+                    <span class="n">track_number</span><span class="p">,</span> <span class="n">codec</span><span class="p">,</span> \
+                    <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span> <span class="o">=</span> <span class="n">track</span>
+                <span class="k">if</span> <span class="n">mimetype</span> <span class="o">==</span> <span class="s1">&#39;video/x-vorbis+ogg&#39;</span><span class="p">:</span>
+                    <span class="n">mimetype</span> <span class="o">=</span> <span class="s1">&#39;audio/ogg&#39;</span>
+                <span class="n">track_item</span> <span class="o">=</span> <span class="n">Track</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">songs</span><span class="p">,</span> <span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">,</span>
+                    <span class="n">file</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">artist</span><span class="p">,</span> <span class="n">album</span><span class="p">,</span> <span class="n">genre</span><span class="p">,</span>
+                    <span class="n">duration</span><span class="p">,</span>
+                    <span class="n">track_number</span><span class="p">,</span>
+                    <span class="n">size</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">songs</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track_item</span><span class="p">)</span>
+
+            <span class="n">tracks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">tracks</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">())</span> <span class="o">-</span>
+                                         <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">y</span><span class="o">.</span><span class="n">get_name</span><span class="p">()))</span>
+            <span class="k">for</span> <span class="n">track_item</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">track_item</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">album_item</span> <span class="o">=</span> <span class="n">albums</span><span class="p">[</span><span class="n">track_item</span><span class="o">.</span><span class="n">album</span><span class="p">]</span>
+                    <span class="n">album_item</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">track_item</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">album_item</span> <span class="o">=</span> <span class="n">Album</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">albums</span><span class="p">,</span> <span class="n">track_item</span><span class="o">.</span><span class="n">album</span><span class="p">,</span>
+                                       <span class="n">track_item</span><span class="o">.</span><span class="n">artist</span><span class="p">)</span>
+                    <span class="n">albums</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">track_item</span><span class="o">.</span><span class="n">album</span><span class="p">)]</span> <span class="o">=</span> <span class="n">album_item</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">albums</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">album_item</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">track_item</span><span class="p">)</span>
+
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">artist_item</span> <span class="o">=</span> <span class="n">artists</span><span class="p">[</span><span class="n">track_item</span><span class="o">.</span><span class="n">artist</span><span class="p">]</span>
+                        <span class="n">artist_item</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">album_item</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">artist_item</span> <span class="o">=</span> <span class="n">Artist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">artists</span><span class="p">,</span>
+                                             <span class="n">track_item</span><span class="o">.</span><span class="n">artist</span><span class="p">)</span>
+                        <span class="n">artists</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">track_item</span><span class="o">.</span><span class="n">artist</span><span class="p">)]</span> <span class="o">=</span> <span class="n">artist_item</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">artists</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">artist_item</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">album_item</span><span class="p">)</span>
+
+            <span class="n">sorted_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">albums</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">sorted_keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+                    <span class="n">albums</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">sorted_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">artists</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">sorted_keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+                    <span class="n">artists</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span> <span class="n">ROOT_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Audio&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">ROOT_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">,</span> <span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;All Tracks&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">,</span> <span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Albums&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">,</span> <span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Artists&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_PLAYLIST_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_PLAYLIST_CONTAINER_ID</span><span class="p">,</span> <span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span>
+                      <span class="s1">&#39;Playlists&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">container_class</span><span class="o">=</span><span class="n">DIDLLite</span><span class="o">.</span><span class="n">PlaylistContainer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_PLAYLIST_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_GENRE_CONTAINER_ID</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">Container</span><span class="p">(</span><span class="n">AUDIO_GENRE_CONTAINER_ID</span><span class="p">,</span> <span class="n">AUDIO_CONTAINER_ID</span><span class="p">,</span> <span class="s1">&#39;Genres&#39;</span><span class="p">,</span>
+                      <span class="n">store</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">children_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_CONTAINER_ID</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">containers</span><span class="p">[</span><span class="n">AUDIO_GENRE_CONTAINER_ID</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wmc_mapping</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span><span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">AUDIO_ALL_CONTAINER_ID</span><span class="p">),</span>  <span class="c1"># all tracks</span>
+             <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">AUDIO_GENRE_CONTAINER_ID</span><span class="p">),</span>
+             <span class="c1"># all genres</span>
+             <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">AUDIO_ARTIST_CONTAINER_ID</span><span class="p">),</span>
+             <span class="c1"># all artists</span>
+             <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">AUDIO_ALBUM_CONTAINER_ID</span><span class="p">),</span>
+             <span class="c1"># all albums</span>
+             <span class="s1">&#39;13&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">AUDIO_PLAYLIST_CONTAINER_ID</span><span class="p">),</span>
+             <span class="c1"># all playlists</span>
+             <span class="p">})</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Audio:Title&#39;</span><span class="p">,</span> <span class="s1">&#39;Audio:Artist&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Audio:Album&#39;</span><span class="p">,</span> <span class="s1">&#39;Audio:Genre&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Audio:Duration&#39;</span><span class="p">,</span> <span class="s1">&#39;Audio:AlbumTrackCount&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Audio:TrackNo&#39;</span><span class="p">,</span> <span class="s1">&#39;Audio:Codec&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;File:Size&#39;</span><span class="p">,</span> <span class="s1">&#39;File:Mime&#39;</span><span class="p">]</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defer</span><span class="o">.</span><span class="n">Deferred</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addCallback</span><span class="p">(</span><span class="n">parse_tracks_query_result</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">addErrback</span><span class="p">(</span><span class="n">handle_error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_interface</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_id</span><span class="p">,</span> <span class="s1">&#39;Music&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="n">tracks_query</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">reply_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">error_handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">errback</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="TrackerStore.upnp_init"><a class="viewcode-back" href="../../../source/backends/tracker.html#coherence.backends.tracker_storage.TrackerStore.upnp_init">[docs]</a>    <span class="k">def</span> <span class="nf">upnp_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">connection_manager_server</span><span class="o">.</span><span class="n">set_variable</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="s1">&#39;SourceProtocolInfo&#39;</span><span class="p">,</span>
+                <span class="p">[</span><span class="s1">&#39;http-get:*:audio/mpeg:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:audio/mpeg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:application/ogg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;internal:</span><span class="si">%s</span><span class="s1">:application/ogg:*&#39;</span> <span class="o">%</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">coherence</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:audio/ogg:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:audio/ogg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:video/ogg:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/ogg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:video/mpeg:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/mpeg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:video/x-msvideo:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/x-msvideo:*&#39;</span><span class="p">,</span>  <span class="c1"># noqa</span>
+                 <span class="s1">&#39;http-get:*:video/avi:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/avi:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:video/mp4:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/mp4:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:video/quicktime:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:video/quicktime:*&#39;</span><span class="p">,</span>  <span class="c1"># noqa</span>
+                 <span class="s1">&#39;http-get:*:image/jpg:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:image/jpg:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:image/png:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:image/png:*&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;http-get:*:image/gif:*&#39;</span><span class="p">,</span>
+                 <span class="n">f</span><span class="s1">&#39;internal:</span><span class="si">{self.server.coherence.hostname}</span><span class="s1">:image/gif:*&#39;</span><span class="p">,</span>
+                 <span class="p">])</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Pol Canelles.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.8.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
