@@ -1,0 +1,76 @@
+Metadata-Version: 2.1
+Name: mod_ngarn
+Version: 2.2
+Summary: Simple async worker
+Home-page: https://github.com/Proteus-tech/mod-ngarn
+License: UNKNOWN
+Author: Tle Ekkul
+Author-email: e.aryuth@gmail.com
+Requires-Python: ~=3.6
+Description-Content-Type: text/markdown
+Classifier: License :: OSI Approved :: MIT License
+Requires-Dist: asyncpg==0.17.0
+Requires-Dist: tormor==1.1
+Requires-Dist: Click==7.0
+Requires-Dist: coverage==4.5.1; extra == "test"
+Requires-Dist: pyre-check==0.0.16; extra == "test"
+Requires-Dist: pytest==3.6.3; extra == "test"
+Requires-Dist: pytest-asyncio==0.9.0; extra == "test"
+Requires-Dist: pytest-cov==2.5.1; extra == "test"
+Requires-Dist: pytest-icdiff==0.0.3; extra == "test"
+Requires-Dist: freezegun==0.3.11; extra == "test"
+Provides-Extra: .none
+Provides-Extra: test
+
+# mod-ngarn
+ModNgarn – Simple job workers
+
+## Usage
+```
+Usage: mod-ngarn [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  run
+```
+
+## Installation
+```
+pip install mod-ngarn
+```
+
+- Include mod-ngarn schema to SCHEMA_PATH
+```
+SCHEMA_PATH=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/mod-ngarn/Schema
+```
+- Run migrate
+```
+tormor -d $PGDBNAME include $(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/mod-ngarn/Schema/migrations.txt
+```
+For more information, please check out [Tormor documentation](https://github.com/Proteus-tech/tormor)
+
+
+## Dev
+### Required
+- pipenv (https://github.com/pypa/pipenv)
+- running PostgreSQL (`psql` should work)
+- python 3.7
+
+#### Setup
+```
+pipenv install --python 3.7
+pipenv shell
+```
+
+#### Runtests
+```
+./runtests.sh
+```
+
+#### Publish to PyPi
+```
+flit publish
+```
+
