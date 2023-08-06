@@ -1,0 +1,143 @@
+{% extends "bee_django_crm/base.html" %}
+{% load bee_django_crm_filter %}
+{% load static %}
+{% block content %}
+    <div class="hidden-print">
+        {% include 'bee_django_crm/logo.html' %}
+        {% include 'bee_django_crm/nav.html' %}
+        {% include 'bee_django_crm/messages.html' %}
+    </div>
+    <h4>合同详情</h4>
+    <table class="table">
+        <tr>
+            <td class="col-sm-3">合同</td>
+            <td>{{ preuser_fee.preuser_contract.contract.name }}</td>
+        </tr>
+        <tr>
+            <td>合同时长</td>
+            <td>{{ preuser_fee.preuser_contract.contract.duration }}
+                * {{ preuser_fee.preuser_contract.contract.period }} 天
+            </td>
+        </tr>
+        <tr>
+            <td>合同金额</td>
+            <td>
+                {{ preuser_fee.preuser_contract.contract.price }}
+            </td>
+        </tr>
+        <tr>
+            <td>应交金额</td>
+            <td>
+                {{ preuser_fee.preuser_contract.price }}
+            </td>
+        </tr>
+        <tr>
+            <td>开课日期</td>
+            <td>
+                {{ preuser_fee.preuser_contract.study_at|default:"" }}
+            </td>
+        </tr>
+        <tr>
+            <td>结课日期</td>
+            <td>
+                {{ preuser_fee.preuser_contract.finish_at|default:"" }}
+            </td>
+        </tr>
+        <tr>
+            <td>备注</td>
+            <td>
+                {{ preuser_fee.preuser_contract.info|default:"" }}
+            </td>
+        </tr>
+    </table>
+    <h4>缴费详情</h4>
+    {% if not preuser_fee.is_checked %}
+        {#        <a href="{% url 'bee_django_crm:preuser_fee_update' preuser_fee.id %}">修改</a>#}
+    {% endif %}
+
+    <table class="table">
+        <tr>
+            <td class="col-sm-3">缴费人</td>
+            <td>{{ preuser_fee.preuser.name }}</td>
+        </tr>
+
+        <tr>
+            <td>支付方式</td>
+            <td>
+                {{ preuser_fee.get_pay_status }}
+            </td>
+        </tr>
+
+        <tr>
+            <td>实际缴费金额</td>
+            <td>
+                {{ preuser_fee.price }}
+            </td>
+        </tr>
+        <tr>
+            <td>缴费日期</td>
+            <td>
+                {{ preuser_fee.paid_at|local_datetime|date:"Y-m-d" }}
+            </td>
+        </tr>
+
+        <tr>
+            <td>备注</td>
+            <td>
+                {{ preuser_fee.info|default:"" }}
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                {% if not preuser_fee.is_checked %}
+                    {% if perms.bee_django_crm.can_check_crm_preuser_fee %}
+                        <a href="#" id="check_{{ preuser_fee.id }}"
+                           data-confirm="{% url "bee_django_crm:preuser_fee_update_check" preuser_fee.id %}"
+                           onclick="click_check(this)">审核</a>
+                    {% endif %}
+                {% else %}
+                    {% if preuser_fee.checked_by %}
+                        由【{{ preuser_fee.checked_by|get_checked_user_name }}】
+                    {% endif %}
+                    于【{{ preuser_fee.checked_at|local_datetime|date:"Y-m-d H:i:s" }}】审核
+
+                    {% if preuser_fee.after_checked_at %}
+                        ，【{{ preuser_fee.after_checked_at|local_datetime|date:"Y-m-d H:i:s" }}】完成后续操作
+                    {% else %}
+                        <span class="hidden-print">{{ preuser_fee|get_after_check_url:request.user|safe }}</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr class="hidden-print">
+            <td colspan="2">
+                <button class="hidden-print btn btn-default" onclick="click_print()">打印</button>
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+
+        });
+        function click_check(_this) {
+            if (!confirm('确认要执行这个操作？')) {
+                return false;
+            }
+            var url = $(_this).attr('data-confirm');
+            $.post(url).done(function (data) {
+                alert('审核成功!');
+
+                location.href = data.url;
+            });
+        }
+        function click_print() {
+            window.print();
+        }
+    </script>
+{% endblock %}

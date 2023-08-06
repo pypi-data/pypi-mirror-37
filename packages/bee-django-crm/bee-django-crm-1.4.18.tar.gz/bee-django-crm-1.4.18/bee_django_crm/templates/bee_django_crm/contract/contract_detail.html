@@ -1,0 +1,38 @@
+{% extends "bee_django_crm/base.html" %}
+{% load bee_django_crm_filter %}
+{% load static %}
+{% block content %}
+    {% include 'bee_django_crm/logo.html' %}
+    {% include 'bee_django_crm/nav.html' %}
+    {% include 'bee_django_crm/messages.html' %}
+    <a href="{% url 'bee_django_crm:contract_update' contract.id %}">修改协议</a>
+    <h4>合同详情</h4>
+
+    <table class="table">
+        <tr>
+            <td>合同名称</td>
+            <td>{{ contract.name }}</td>
+        </tr>
+
+        <tr>
+            <td>合同时长</td>
+            <td>{{ contract.duration }} * {{ contract.period }} 天</td>
+        </tr>
+        <tr>
+            <td>合同金额</td>
+            <td>
+                {{ contract.price }}
+            </td>
+        </tr>
+    </table>
+    <hr>
+    {{ contract.agreement|default:""|safe }}
+
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+
+    </script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "bee_django_crm/base.html" %}
+{% load bee_django_crm_filter %}
+
+{% block content %}
+    {% include 'bee_django_crm/logo.html' %}
+    {% include 'bee_django_crm/nav.html' %}
+    {% include 'bee_django_crm/messages.html' %}
+    <div class="text-center"><h3>
+        缴费管理
+    </h3>
+    </div>
+    {% if preuser_id == '0' %}
+        {% include 'bee_django_crm/preuser/preuser_fee_search.html' %}
+    {% endif %}
+    <div>共{{ paginator.count }}条 共{{ total_price }}元</div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th></th>
+            <th>学号</th>
+            <th>缴费人</th>
+            <th>合同名称</th>
+            <th>付款类型</th>
+            <th>应交金额</th>
+            <th>实际缴费金额</th>
+            <th>缴费时间</th>
+            <th></th>
+            <th></th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for fee in fee_list %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    {% if fee.preuser.get_user_username %}
+                        <a href="{{ fee.preuser.userprofile.user.get_user_search_link }}">{{ fee.preuser.get_user_username }}</a>
+                    {% endif %}
+                </td>
+
+                <td><a href="{% url 'bee_django_crm:preuser_detail' fee.preuser.id %}">{{ fee.preuser.name }}</a>
+                    {% if fee.preuser.pay_status == 2 %}
+                        <span style="color: red">（{{ fee.preuser.get_pay_status }}）</span>
+                    {% endif %}
+                </td>
+                <td>
+
+                    <a href="{% url 'bee_django_crm:preuser_contract_detail' fee.preuser_contract.id %}">{{ fee.preuser_contract.contract.name }}</a>
+                </td>
+                <td>{{ fee.get_pay_status }}</td>
+                <td>{{ fee.preuser_contract.price }}</td>
+                <td>{{ fee.price }}</td>
+                <td>{{ fee.paid_at|local_datetime|date:"Y-m-d" }}</td>
+
+                <td><a href="{% url 'bee_django_crm:preuser_fee_detail' fee.id %}">详情</a></td>
+                <td>
+                    {% if not fee.is_checked %}
+                        {#                        <a href="{% url 'bee_django_crm:preuser_contract_update' user_contract.id %}">修改</a>#}
+                        <a href="#"
+                           data-confirm="{% url "bee_django_crm:preuser_fee_delete" fee.id %}"
+                           onclick="click_del(this)">删除</a>
+                        {% if perms.bee_django_crm.can_check_crm_preuser_fee %}
+                            <a href="#" id="check_{{ fee.id }}"
+                               data-confirm="{% url "bee_django_crm:preuser_fee_update_check" fee.id %}"
+                               onclick="click_check(this)">审核</a>
+                        {% endif %}
+                    {% else %}
+                        已审核
+                        {% if fee.after_checked_at %}
+                            已完成后续操作
+                        {% else %}
+                            {{ fee|get_after_check_url:request.user|safe }}
+                        {% endif %}
+
+                    {% endif %}
+
+                </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+    {% include 'bee_django_crm/paginator.html' %}
+{% endblock %}
+{% block scripts %}
+    <script>
+        function click_check(_this) {
+            if (!confirm('确认要执行这个操作？')) {
+                return false;
+            }
+            var url = $(_this).attr('data-confirm');
+            $.post(url).done(function (data) {
+                alert('审核成功!');
+                location.href = data.url;
+            });
+        }
+    </script>
+{% endblock %}
