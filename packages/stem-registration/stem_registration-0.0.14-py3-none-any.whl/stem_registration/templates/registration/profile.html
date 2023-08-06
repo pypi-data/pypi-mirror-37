@@ -1,0 +1,52 @@
+{% extends "stem_registration/base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}
+    {% if user.is_authenticated %}
+        {% trans "Profile" %} - {{ user.username|title }}
+    {% else %}
+        {% trans "Log in" %}
+    {% endif %}
+{% endblock %}
+{% block description %}
+{% endblock %}
+{% block breadcrumps %}
+{% endblock %}
+{% block content %}
+
+    <main role="main" style=" width: 100%;" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+
+        <div style="padding: 30px;" class="profile__descriptions">
+            <h1>{% trans "Profile" %}</h1>
+            <p>{% trans "Name" %} :</p><span> {{ user.first_name|title }} {{ user.last_name|title }}</span><br/>
+            <p>{% trans "Login" %} :</p><span> {{ user.username|title }}</span><br/>
+            <p>{% trans "Email" %} :</p><span> {{ user.email }}</span><br/>
+            <p>{% trans "Phone number" %} :</p>
+                {% for phone in profile_phone %}
+                        <strong>{{ phone.number }}</strong>
+                {% endfor %}
+            <br/>
+            <hr/>
+            <p>{% trans "Billing address" %} :</p>
+
+            {% for bill_address in profile_billing_address %}
+                <hr/>
+                <span>
+                {{ bill_address }}
+
+            {% endfor %}
+            <hr><p>{% trans "Shipping address" %} :</p>
+
+            {% for ship_address in profile_shipping_address %}
+                <hr/>
+                <span>
+                {{ ship_address }}
+                </span>
+
+            {% endfor %}
+        </div>
+    </main>
+    </div>
+    </div>
+
+{% endblock %}
