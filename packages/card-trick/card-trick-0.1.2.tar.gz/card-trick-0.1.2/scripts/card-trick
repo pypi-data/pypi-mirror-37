@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+import argparse
+import pkg_resources
+import os
+import pkgutil
+import json
+
+import card_trick
+
+def parse_arguments():
+    description = """
+    A package to search the CARD ontology for genes that confer resistance to an antibiotic or vice versa
+
+    examples:
+    card-trick search -a tigecycline
+    card-trick search -g ctx
+    """
+    # parse all arguments
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter, )
+    parser.add_argument('-v', '--version', help='display the version number', action='store_true')
+    subparsers = parser.add_subparsers(help='The following commands are available. Type contig_tools <COMMAND> -h for more help on a specific commands', dest='command')
+
+    # The filter command
+    update_ontology_command = subparsers.add_parser('update', help='Get latest CARD ontology')
+
+    search_ontology_command = subparsers.add_parser('search', help='search CARD ontology and output matches to the STDOUT')
+    genes_or_antibiotics =  search_ontology_command.add_mutually_exclusive_group(required=True)
+    genes_or_antibiotics.add_argument('-g', '--gene_name', help='the full or partial gene name to search for', type = str)
+    genes_or_antibiotics.add_argument('-a', '--antibiotic_name', help='the full or partial antibiotic name to search for', type = str)
+    
+    search_ontology_command.add_argument('-f', '--output_format', help='the format with which to output the matches, either tsv or json', type = str, default = 'tsv', choices=['json', 'tsv'])
+    
+
+    options = parser.parse_args()
+    return options
+
+
+if __name__ == '__main__':
+    options = parse_arguments()
+    if options.command == 'update':
+        card_trick.commands.update()
+
+    if options.command == 'search':
+        card_trick.commands.search(options)
+
+    elif options.version:
+        print(pkg_resources.get_distribution('card_trick').version)
+
+
+
