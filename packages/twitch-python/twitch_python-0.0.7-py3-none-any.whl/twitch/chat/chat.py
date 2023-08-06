@@ -1,0 +1,35 @@
+from rx.subjects import Subject
+
+import twitch
+import twitch.chat as chat
+
+
+class Chat(Subject):
+
+    def __init__(self, channel: str, nickname: str, oauth: str, helix: 'twitch.Helix' = None):
+        super().__init__()
+        self.helix: 'twitch.Helix' = helix
+
+        self.irc = chat.IRC(nickname, password=oauth)
+        self.irc.incoming.subscribe(self._message_handler)
+        self.irc.start()
+
+        self.channel = channel.lstrip('#')
+        self.joined: bool = False
+
+    def _message_handler(self, data: bytes) -> None:
+        # First messages are server connection messages,
+        # which should be handled by joining the chat room.
+        if not self.joined:
+            self.irc.join_channel(self.channel)
+            self.joined = True
+
+        text = data.decode("UTF-8").strip('\n\r')
+
+        if text.find('PRIVMSG') >= 0:
+            sender = text.split('!', 1)[0][1:]
+            message = text.split('PRIVMSG', 1)[1].split(':', 1)[1]
+            self.on_next(chat.Message(channel=self.channel, sender=sender, text=message, helix_api=self.helix))
+
+    def __del__(self):
+        self.dispose()
