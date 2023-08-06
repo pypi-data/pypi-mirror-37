@@ -1,0 +1,12 @@
+from typing import List
+
+
+def pip_install(*packages: List[str]) -> str:
+    return f"pip install {' '.join(packages)}"
+
+
+language: str = "python"
+python: List[str] = ["3.6"]
+install: List[str] = [pip_install("tox", "tox-travis"), pip_install("codacy-coverage")]
+script: List[str] = ["tox"]
+after_success: List[str] = ["python-codacy-coverage -r coverage.xml"]

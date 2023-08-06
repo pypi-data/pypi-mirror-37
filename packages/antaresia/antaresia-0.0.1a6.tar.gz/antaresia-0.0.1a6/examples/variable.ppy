@@ -1,0 +1,43 @@
+# Adapted from https://raw.githubusercontent.com/zalando-stups/senza/d7ea438d4ef2bcfc98d16817c7eabeef2306e736/delivery.yaml
+CDP_PULL_REQUEST_NUMBER: str  # this needs to be declared to make mypy happy
+CDP_TARGET_REPOSITORY_COUNTER: str
+
+def command(description: str, command: str) -> dict:
+    return {"desc": description, "cmd": command}
+
+def make_script_step():
+    is_master_build = not CDP_PULL_REQUEST_NUMBER
+    commands = [
+        command("Install dependencies", "pip install -r requirements.txt"),
+        command("Run Tests", "python3 setup.py test"),
+        command("Check code style", "python3 setup.py flake8"),
+        command("Run Tests", "python3 setup.py test"),
+        command(
+            "Build Docker Image",
+            "docker build --build-arg VERSION='$(./next-version)' -t senza-release .",
+        ),
+    ]
+    if is_master_build:
+        docker_image = f"pierone.stups.zalan.do/automata/senza-release:{CDP_TARGET_REPOSITORY_COUNTER}"
+        commands.append(
+            command(
+                "Push Docker Image",
+                f"""
+                docker tag senza-release "{docker_image}"
+                docker push "{docker_image}"
+                git log -1 --pretty=%B > CHANGELOG
+                # TODO upload the wheel package
+                git gh-release --message-from-file CHANGELOG $(./next-version)
+                """,
+            )
+        )
+    return {
+        "id": "build",
+        "type": "script",
+        "overlay": "ci/python",
+        "commands": commands,
+    }
+
+version = "2017-09-20"
+notifications = {"hipchat": {"rooms": "cdp-notifications-test"}}
+pipeline = [make_script_step()]

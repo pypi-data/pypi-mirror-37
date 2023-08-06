@@ -1,0 +1,10 @@
+def test_for(python_version: str) -> dict:
+    return {
+        "image": f"python:{python_version}",
+        "script": ["PYTHONPATH='.' pipenv run pytest -vv", "pipenv run mypy antaresia"],
+    }
+
+
+before_script = ["pip install pipenv", "pipenv sync --dev"]
+run_tests_36 = test_for("3.6")
+run_tests_37 = test_for("3.7")

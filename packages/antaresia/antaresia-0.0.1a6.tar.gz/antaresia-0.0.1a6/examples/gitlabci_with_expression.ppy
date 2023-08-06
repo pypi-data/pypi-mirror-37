@@ -1,0 +1,22 @@
+SUPPORTED_PYTHON_VERSIONS = "3.6", "3.7"
+
+
+def test_for(python_version: str) -> dict:
+    return {
+        "image": f"python:{python_version}",
+        "script": ["PYTHONPATH='.' pipenv run pytest -vv", "pipenv run mypy antaresia"],
+    }
+
+
+before_script = ["pip install pipenv", "pipenv sync --dev"]
+
+pipeline: dict = {
+    "before_script": before_script,
+    **{
+        f"run_tests_{version}": test_for(version)
+        for version in SUPPORTED_PYTHON_VERSIONS
+    },
+}
+
+### antaresia return:
+pipeline
