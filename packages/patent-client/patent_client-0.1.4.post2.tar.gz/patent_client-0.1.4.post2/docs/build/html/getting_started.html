@@ -1,0 +1,226 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Getting Started &#8212; Patent Client 0.1.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="US Applications - USPTO Patent Examination Data" href="us_application.html" />
+    <link rel="prev" title="Welcome to Patent Client’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To install</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install patent_client</span>
+</pre></div>
+</div>
+<p>If you are only interested in using the USPTO API’s, no further setup is necessary. Skip ahead to the next section.</p>
+<p>If you want to take advantage of the European Patent Office’s Open Patent Services,
+which supports Inpadoc and Epo Register documents, you will need to set up your API key.</p>
+<p><strong>Step 1:</strong> Go to <a class="reference external" href="https://www.epo.org/searching-for-patents/data/web-services/ops.html#tab-1">EPO Open Patent Services</a> and
+register a new account (Free up to 4GB of data / month, which is more than sufficient).</p>
+<p><strong>Step 2:</strong> Log in to EPO OPS, and click on “My Apps,” add a new app, and write down the corresponding API <em>Consumer Key</em> and <em>Consumer Key Secret</em>.</p>
+<p><strong>Step 3:</strong> Import patent_client from anywhere. E.g.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python
+<span class="go">Python 3.6.5 (default, Jul 12 2018, 11:37:09)</span>
+<span class="gp">&gt;</span>&gt;&gt; import patent_client
+</pre></div>
+</div>
+<p>This will set up an empty settings file, located at <strong>~/.iprc</strong>. The IPRC file is a JSON object containing settings for the project.</p>
+<p><strong>Step 4:</strong> Edit the IPRC file to contain your user key and secret. E.g.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;EpoOpenPatentServices&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;ApiKey&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;Consumer Key Here&gt;&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Secret&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;Consumer Key Secret Here&gt;&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Step 5:</strong> PROFIT! Every time you import a model that requires EPO OPS access, you will automatically be logged on using that key and secret.</p>
+</div>
+<div class="section" id="basic-use">
+<h2>Basic Use<a class="headerlink" href="#basic-use" title="Permalink to this headline">¶</a></h2>
+<p>All data is accessible through an <a class="reference external" href="https://en.wikipedia.org/wiki/Active_record_pattern">Active Record</a> model
+inspired by the <a class="reference external" href="https://docs.djangoproject.com/en/2.1/topics/db/queries/">Django ORM Query API</a>. In particular, the API to Patent Client is a subset
+of the official <a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/models/querysets/">Djanog QuerySet API</a>. To access data, first import the model
+representing the data you want. E.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">patent_client</span> <span class="kn">import</span> <span class="n">USApplication</span>
+</pre></div>
+</div>
+<p>All the API’s used in this library are <strong>Read Only</strong>, so there is no way to add, delete, or modify records. Data is queried by applying filters,
+orders, and by slicing the related “objects” attribute. For example, if you wanted all patent applications filed by “Google LLC,” you would write</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">google_apps</span> <span class="o">=</span> <span class="n">USApplication</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">first_named_applicant</span><span class="o">=</span><span class="s1">&#39;Google LLC&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This returns a manager that can access all US Applications where the first named applicant is “Google LLC.” You can also apply ordering to the records, such as:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">google_apps</span> <span class="o">=</span> <span class="n">google_apps</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;appl_filing_date&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which sorts the applications by filing date. Notice that calls to “.filter,” and “.order_by” can be chained, and each chained function returns a unique manager. All the filter and order by parameters accumulate, such that:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">microsoft_pats</span> <span class="o">=</span> <span class="p">(</span><span class="n">USApplication</span><span class="o">.</span><span class="n">objects</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">first_named_applicant</span><span class="o">=</span><span class="s1">&#39;Microsoft&#39;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">app_status</span><span class="o">=</span><span class="s1">&#39;Patented Case&#39;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;patent_issue_date&#39;</span><span class="p">)</span>
+                <span class="p">)</span>
+</pre></div>
+</div>
+<p>returns a manager that returns all applications with Microsoft listed as the first applicant, that have issued as patents, and in order of their patent issue date (ascending order).</p>
+<p>Once you have a manager, the data contained by the manager can be accessed in a few ways. Record objects can be obtained by slicing or iterating on the manager itself.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">microsoft_pats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">app</span>
+<span class="s1">&#39;&lt;USApplication(appl_id=13656185)&gt;&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">patent_title</span>
+<span class="s1">&#39;DOWNHOLE APPARATUS FOR ELECTRICAL POWER GENERATION FROM SHAFT FLEXURE&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">app_status</span>
+<span class="s1">&#39;Patented Case&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">patent_number</span>
+<span class="s1">&#39;9093875&#39;</span>
+<span class="n">apps</span> <span class="o">=</span> <span class="n">microsoft_pats</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">apps</span>
+<span class="s1">&#39;[&lt;USApplication(appl_id=13656185)&gt;, &lt;USApplication(appl_id=13660608)&gt;, &lt;USApplication(appl_id=13672932)&gt;]&#39;</span>
+</pre></div>
+</div>
+<p>The data can also be accessed in other ways. Just like the Django QuerySet API, Patent Client supports the
+<a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/models/querysets/#values">values</a> and
+<a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/models/querysets/#values-list">values_list</a> methods.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">microsoft_pats</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s1">&#39;appl_id&#39;</span><span class="p">,</span> <span class="s1">&#39;patent_title&#39;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="p">[</span>
+    <span class="n">OrderedDict</span><span class="p">([(</span><span class="s1">&#39;appl_id&#39;</span><span class="p">,</span> <span class="s1">&#39;13656185&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;patent_title&#39;</span><span class="p">,</span> <span class="s1">&#39;DOWNHOLE APPARATUS FOR ELECTRICAL POWER GENERATION FROM SHAFT FLEXURE&#39;</span><span class="p">)]),</span>
+    <span class="n">OrderedDict</span><span class="p">([(</span><span class="s1">&#39;appl_id&#39;</span><span class="p">,</span> <span class="s1">&#39;13660608&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;patent_title&#39;</span><span class="p">,</span> <span class="s1">&#39;Hybrid Bearings for Downhole Motors&#39;</span><span class="p">)]),</span>
+    <span class="n">OrderedDict</span><span class="p">([(</span><span class="s1">&#39;appl_id&#39;</span><span class="p">,</span> <span class="s1">&#39;13672932&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;patent_title&#39;</span><span class="p">,</span> <span class="s1">&#39;DOUBLE SHAFT DRILLING APPARATUS WITH HANGER BEARINGS&#39;</span><span class="p">)])</span>
+<span class="p">]</span>
+<span class="n">microsoft_pats</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s1">&#39;patent_title&#39;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="bp">True</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="p">[</span>
+    <span class="s1">&#39;DOWNHOLE APPARATUS FOR ELECTRICAL POWER GENERATION FROM SHAFT FLEXURE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Hybrid Bearings for Downhole Motors&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DOUBLE SHAFT DRILLING APPARATUS WITH HANGER BEARINGS&#39;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>This is particularly useful in combination with the <a class="reference external" href="https://pandas.pydata.org/">Pandas</a> library, as a .values() manager can be used to create dataframes quickly and easily.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">patent_client</span> <span class="kn">import</span> <span class="n">USApplication</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">USApplication</span><span class="o">.</span><span class="n">objects</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">first_named_applicant</span><span class="o">=</span><span class="s1">&#39;Microsoft&#39;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s1">&#39;appl_id&#39;</span><span class="p">,</span> <span class="s1">&#39;patent_number&#39;</span><span class="p">,</span> <span class="s1">&#39;patent_title&#39;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+    <span class="n">appl_id</span> <span class="n">patent_number</span>                                       <span class="n">patent_title</span>
+<span class="mi">0</span>  <span class="mi">13656185</span>       <span class="mi">9093875</span>  <span class="n">DOWNHOLE</span> <span class="n">APPARATUS</span> <span class="n">FOR</span> <span class="n">ELECTRICAL</span> <span class="n">POWER</span> <span class="n">GENERA</span><span class="o">...</span>
+<span class="mi">1</span>  <span class="mi">13660608</span>       <span class="mi">9045941</span>                <span class="n">Hybrid</span> <span class="n">Bearings</span> <span class="k">for</span> <span class="n">Downhole</span> <span class="n">Motors</span>
+<span class="mi">2</span>  <span class="mi">13672932</span>       <span class="mi">9309720</span>  <span class="n">DOUBLE</span> <span class="n">SHAFT</span> <span class="n">DRILLING</span> <span class="n">APPARATUS</span> <span class="n">WITH</span> <span class="n">HANGER</span> <span class="n">BE</span><span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Patent Client</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-use">Basic Use</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="us_application.html">US Applications - USPTO Patent Examination Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assignments.html">Assignments - USPTO Assignment API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptab.html">Ptab Trials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="epo.html">European Patent Office - INPADOC and the EP Register</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Patent Client’s documentation!</a></li>
+      <li>Next: <a href="us_application.html" title="next chapter">US Applications - USPTO Patent Examination Data</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Parker Hancock.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/getting_started.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

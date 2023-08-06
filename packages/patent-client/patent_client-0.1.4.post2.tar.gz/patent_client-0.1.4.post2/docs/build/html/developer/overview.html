@@ -1,0 +1,239 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Developer Overview &#8212; Patent Client 0.1.4 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="European Patent Office" href="../epo.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="developer-overview">
+<h1>Developer Overview<a class="headerlink" href="#developer-overview" title="Permalink to this headline">¶</a></h1>
+<p>The goal of this project is to provide easy-to-use access to public patent data through a simple API.
+The general idea is to implement a subset of the
+<a class="reference external" href="https://docs.djangoproject.com/en/2.1/ref/models/querysets/">Django QuerySet API</a>. functionality for accessing
+the various sources of patent data.</p>
+<p>To facilitate this, two base classes are provided as scaffolding for adding new APIs - <em>Manager</em> and <em>Model</em> (both located in the patent_client.util module). The
+Django ORM implements its functionality using three classes - a Model class that models a single record in a database,
+a Manager class that provides a generic way of accessing that data, and a QuerySet that allows for sorting / filtering of data.
+Here, we omit the separate QuerySet and Manager, and instead use a single Manager class that handles both QuerySet and Manager
+functions.</p>
+<div class="section" id="managers">
+<h2>Managers<a class="headerlink" href="#managers" title="Permalink to this headline">¶</a></h2>
+<p>When filtering, ordering, or values methods are called on a Manager, it returns a new Manager object with a combination of the arguments to the old manager and the new arguments. In this way, any given Manager is <em>immutable</em>.</p>
+<p>When slicing, the Manager resolves its keyword arguments, and returns Model objects populated with data.</p>
+<p>The PTAB client is a particularly clean implementation using the base Manager and Model. Because there is significant overlap between the
+PTAB Trials and Documents endpoints, a common manager is built called PtabManager:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PtabManager</span><span class="p">(</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="n">page_size</span> <span class="o">=</span> <span class="mi">25</span>
+
+    <span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_size</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_size</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_size</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">))</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_obj_class</span><span class="p">()(</span><span class="n">results</span><span class="p">[</span><span class="n">position</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">()</span>
+        <span class="n">response_data</span> <span class="o">=</span> <span class="n">response</span>
+        <span class="k">return</span> <span class="n">response_data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">][</span><span class="s1">&#39;count&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="nb">dict</span><span class="p">()):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">},</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="n">inflection</span><span class="o">.</span><span class="n">camelize</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">uppercase_first_letter</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The only methods that must be implemented are “__len__” and “get_item.”</p>
+<p>Get_item is just a version of __getitem__ that only returns the record at a specific integer position. The
+generic __getitem__ on Manager simply calls get_item for each item in a slice. The get_item method should return a Model object.</p>
+<p>Request is a custom method added to support actually hitting the endpoint. Different custom methods can be added to support
+functionality like this. Then, to customize it for Ptab Trials, all we need to do is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PtabTrialManager</span><span class="p">(</span><span class="n">PtabManager</span><span class="p">):</span>
+    <span class="n">base_url</span> <span class="o">=</span> <span class="s1">&#39;https://ptabdata.uspto.gov/ptab-api/trials&#39;</span>
+    <span class="n">obj_class</span> <span class="o">=</span> <span class="s1">&#39;patent_client.uspto_ptab.PtabTrial&#39;</span>
+    <span class="n">primary_key</span> <span class="o">=</span> <span class="s1">&#39;trial_number&#39;</span>
+</pre></div>
+</div>
+<p>The only two required attributes are “obj_class,” which is a string pointing to the class used for specific records, and
+“primary_key” which is used to convert positional arguments into keyword arguments. For example, the call</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PtabTrial</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;IPR2016-00800&#39;</span><span class="p">)</span>
+<span class="c1"># is effectively converted to</span>
+<span class="n">PtabTrial</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">trial_number</span><span class="o">=</span><span class="s1">&#39;IPR2016-00800&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The “base_url” attribute is used by the request method of the base manager to identify the endpoint.</p>
+</div>
+<div class="section" id="models">
+<h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+<p>Because PTABTrials have no special methods (such as downloading a file), the model is simply:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PtabTrial</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">PtabDocumentManager</span><span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;&lt;PtabTrial(trial_number={self.trial_number})&gt;&#39;</span>
+</pre></div>
+</div>
+<p>The base model takes in its constructor a dictionary of data, and attaches an attribute to the object for each key, containing its value.
+Additional methods can be added in order to add new functionality to the model. For example, the PtabDocument object provides a .download method.
+The download method looks like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PtabDocument</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">PtabDocumentManager</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;href&#39;</span><span class="p">]</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_extension</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">media_type</span><span class="p">)</span>
+        <span class="n">base_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">extension</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="mi">1024</span><span class="p">):</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;&lt;PtabDocument(title={self.title})&gt;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="relationships">
+<h2>Relationships<a class="headerlink" href="#relationships" title="Permalink to this headline">¶</a></h2>
+<p>What would also be great is if the Trial and Document models could talk to each other. That is, can we fetch PtabDocuments from
+a PtabTrial object, and can we fetch the corresponding PtabTrial object from a PtabDocument? Why yes, yes we can.</p>
+<p>The .util package also has two functions that make this possible - ‘one_to_one’ and ‘one_to_many’. Both functions work the same way -
+they take a first argument, which is a string locating the other object, and then a keyword argument, where the keyword is a filter criteria,
+and the value is an attribute on the current model to use as the value.</p>
+<p>The only difference between the two functions is that “one_to_one” calls objects.get, returing a single object, while “one_to_many”
+calls objects.filter, and returns a manager of the related objects. For example, we can use these to link the Trials and Documents as below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PtabTrial</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">documents</span> <span class="o">=</span> <span class="n">one_to_many</span><span class="p">(</span><span class="s1">&#39;patent_client.PtabDocument&#39;</span><span class="p">,</span> <span class="n">trial_number</span><span class="o">=</span><span class="s1">&#39;trial_number&#39;</span><span class="p">)</span>
+    <span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">PtabDocument</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">trial</span> <span class="o">=</span> <span class="n">one_to_one</span><span class="p">(</span><span class="s1">&#39;patent_client.PtabTrial&#39;</span><span class="p">,</span> <span class="n">trial_number</span><span class="o">=</span><span class="s1">&#39;trial_number&#39;</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Once these relationships are in place, we can move from one record to the other seamlessly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">patent_client</span> <span class="kn">import</span> <span class="n">PtabTrial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">PtabTrial</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;IPR2017-00001&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">documents</span>
+<span class="go">&lt;patent_client.uspto_ptab.PtabDocumentManager object at 0x10f678b38&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">documents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;PtabDocument(title=Petitioner&#39;s Power of Attorney)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">documents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">trial</span>
+<span class="go">&lt;PtabTrial(trial_number=IPR2017-00001)&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Patent Client</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../us_application.html">US Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assignments.html">USPTO Assignments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ptab.html">Patent Trial &amp; Appeal Board</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../epo.html">European Patent Office</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#managers">Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#relationships">Relationships</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../epo.html" title="previous chapter">European Patent Office</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Parker Hancock.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/developer/overview.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
