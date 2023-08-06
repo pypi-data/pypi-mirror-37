@@ -1,0 +1,83 @@
+Metadata-Version: 2.1
+Name: arachno
+Version: 0.2.0
+Summary: DSL for coroutine orchestration
+Home-page: https://github.com/palestamp/arachno
+Author: Stas Kazhavets
+Author-email: stas.kozhevets@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Requires-Dist: jmespath
+Requires-Dist: toposort
+Requires-Dist: attr
+Requires-Dist: cached-property
+Requires-Dist: typing-extensions
+
+=======
+arachno
+=======
+
+Utility to orchestrate coroutines via DSL.
+
+Example
+-------
+
+.. code-block:: js
+
+    {
+        "actions": {
+            "target": {
+                "operation": "search-api.get_product",
+                "args": {
+                    "product_id": "${product_id}"
+                },
+                "defines": {
+                    "product-category": "result.category",
+                    "product-price": "result.price"
+                },
+                "options": {
+                    "timeout": "1s"
+                }
+            },
+            "target-account": {
+                "operation": "accounts-repository.get",
+                "args": {
+                    "account_id": "${account_id}"
+                },
+                "defines": {
+                    "favorite-categories": "${account.favorite-categories}"
+                },
+                "options": {
+                    "timeout": "1s"
+                }
+            },
+            "product-selector": {
+                "operation": "product-stats.calculate_params",
+                "args": {
+                    "input": {
+                        "category": "${target.product-category}",
+                        "country": "${target.product-price}",
+                        "segment": "Germany"
+                    },
+                    "jitter_percent": 10
+                },
+                "defines": {
+                    "output-args": "value"
+                }
+            },
+            "similar-products": {
+                "operation": "search-api.search",
+                "args": {
+                    "product_codes": "${product-selector.output-args}",
+                    "categories": {
+                        "oneof": "${target-account.favorite-categories}"
+                    }
+                },
+                "options": {
+                    "timeout": "600ms"
+                }
+            }
+        }
+    }
+
