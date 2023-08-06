@@ -1,0 +1,50 @@
+<html xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="python: 1"
+     i18n:domain="ftw.faqblock"
+     tal:define="image view/get_image_data">
+
+<div class="faqblock">
+  <input type="checkbox"
+       tal:attributes="id string:uid-${here/UID};
+                       checked view/is_reload">
+
+  <label tal:attributes="for  string:uid-${here/UID}" tal:condition="view/block_title">
+    <h2>
+      <i class="fa fa-angle-right"></i>
+      <span tal:content="view/block_title" />
+    </h2>
+  </label>
+
+
+  <div class="faqblock-container">
+    <tal:image tal:condition="image">
+      <div tal:attributes="class image/wrapper_css_classes">
+        <div class="imageContainer">
+
+          <tal:block condition="view/show_limit_indicator">
+            <div tal:content="structure context/@@limit_indicator"></div>
+          </tal:block>
+
+          <a tal:omit-tag="not: image/link_url"
+               tal:attributes="href image/link_url;
+              title image/link_title;
+              data-caption context/image_caption;
+              class image/link_css_classes">
+            <img tal:replace="structure image/image_tag" />
+          </a>
+        </div>
+
+        <div class="hiddenStructure"
+             i18n:translate="hidden_label_image_caption"> Image caption:
+        </div>
+        <div class="image-caption" tal:content="context/image_caption" />
+      </div>
+    </tal:image>
+
+    <div class="faqtext" tal:content="structure here/text/output | nothing" />
+  </div>
+  <p tal:condition="python: view.can_add and not (here.text or here.image)"
+       i18n:translate="">This block is empty.</p>
+</div>
+</html>
