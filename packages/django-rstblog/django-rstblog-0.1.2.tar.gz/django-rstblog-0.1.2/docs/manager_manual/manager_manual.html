@@ -1,0 +1,637 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Site manager manual &#8212; django-rstblog v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="author manual" href="../author_manual/author_manual.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="site-manager-manual">
+<span id="manager-manual"></span><h1><a class="toc-backref" href="#id11">Site manager manual</a><a class="headerlink" href="#site-manager-manual" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="site-manager-manual-table-of-contents">
+<p class="topic-title first"><em>site manager manual</em> table of contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#site-manager-manual" id="id11">Site manager manual</a><ul>
+<li><a class="reference internal" href="#installing-diango-rstblog" id="id12">Installing <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code></a><ul>
+<li><a class="reference internal" href="#prerequisites" id="id13">Prerequisites</a></li>
+<li><a class="reference internal" href="#installing" id="id14">Installing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#base-architecture" id="id15">Base architecture</a><ul>
+<li><a class="reference internal" href="#available-urls" id="id16">Available URLs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#administering" id="id17">Administering</a><ul>
+<li><a class="reference internal" href="#author-and-categories" id="id18">Author and Categories</a></li>
+<li><a class="reference internal" href="#user" id="id19">User</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#articles-administration" id="id20">Articles administration</a><ul>
+<li><a class="reference internal" href="#deleting-an-article" id="id21">Deleting an article</a></li>
+<li><a class="reference internal" href="#changing-an-article-filename" id="id22">Changing an article filename</a></li>
+<li><a class="reference internal" href="#articles-table-reconstruction" id="id23">Articles table reconstruction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuring" id="id24">Configuring</a><ul>
+<li><a class="reference internal" href="#articles-dir" id="id25">ARTICLES_DIR</a></li>
+<li><a class="reference internal" href="#start-content-signal" id="id26">START_CONTENT_SIGNAL</a></li>
+<li><a class="reference internal" href="#languages" id="id27">languages</a></li>
+<li><a class="reference internal" href="#types" id="id28">types</a></li>
+<li><a class="reference internal" href="#fields" id="id29">FIELDS</a></li>
+<li><a class="reference internal" href="#list-fields" id="id30">LIST_FIELDS</a></li>
+<li><a class="reference internal" href="#dt-fields" id="id31">DT_FIELDS</a></li>
+<li><a class="reference internal" href="#bool-fields" id="id32">BOOL_FIELDS</a></li>
+<li><a class="reference internal" href="#home-items" id="id33">HOME_ITEMS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Ok, so you are the manager of a website that uses <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code> to
+publish articles from an author.</p>
+<p>As a site administrator it is expected that you know how to carry out
+the operations necessary to ensure the operation of the site, from
+its installation, to routine activities during its operation.</p>
+<p>We’ll see this operations in the following chapters.</p>
+<div class="section" id="installing-diango-rstblog">
+<h2><a class="toc-backref" href="#id12">Installing <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code></a><a class="headerlink" href="#installing-diango-rstblog" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="prerequisites">
+<h3><a class="toc-backref" href="#id13">Prerequisites</a><a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>Hereafter we assume you already have a Django project currently running.
+Probably, even if not necessarly, it is installed using a <a class="reference external" href="https://docs.python.org/3.6/library/venv.html">virtualenv</a>. If
+this is true, activate it before to do the operations here described.</p>
+<p>And we assume that you are going to install in a computer having an
+Internet connection.</p>
+<p>Please, be sure to use a Python version 3.6 or newer, and a Django version 2.0
+or newer.</p>
+<p>Through the Internet connection, the Python installer (pip) will
+upload <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> and all of its dependencies:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">docutils</span></code>;</li>
+<li><code class="docutils literal notranslate"><span class="pre">django-concurrency</span></code>;</li>
+<li><code class="docutils literal notranslate"><span class="pre">Markdown</span></code>;</li>
+<li><code class="docutils literal notranslate"><span class="pre">Pygments</span></code>;</li>
+<li><code class="docutils literal notranslate"><span class="pre">python-markdown-math</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="installing">
+<h3><a class="toc-backref" href="#id14">Installing</a><a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h3>
+<p>First of all, install <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">rstblog</span>
+</pre></div>
+</div>
+<p>Then:</p>
+<ol class="arabic">
+<li><p class="first">In your project <code class="docutils literal notranslate"><span class="pre">setting.py</span></code> file:</p>
+<blockquote>
+<div><p>1.1. Add <code class="docutils literal notranslate"><span class="pre">rstblog</span></code> to your INSTALLED_APPS like <a class="footnote-reference" href="#id6" id="id1">[1]</a> this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="s1">&#39;django.contrib.sites&#39;</span><span class="p">,</span>       <span class="c1"># django&#39;s sites framework</span>
+    <span class="s1">&#39;fullurl&#39;</span><span class="p">,</span>                    <span class="c1"># django-fullurl</span>
+    <span class="o">...</span>
+    <span class="s1">&#39;rstblog&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>1.2. check for presence of login parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="n">LOGIN_REDIRECT_URL</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span> <span class="c1"># It means home view</span>
+<span class="n">LOGIN_URL</span> <span class="o">=</span> <span class="s1">&#39;/login/&#39;</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>1.3. Add a RSTBLOG configuration section like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="n">RSTBLOG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;ARTICLES_DIR&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s2">&quot;contents&quot;</span><span class="p">,</span> <span class="s2">&quot;articles&quot;</span><span class="p">),</span>
+    <span class="s1">&#39;START_CONTENT_SIGNAL&#39;</span><span class="p">:</span> <span class="s1">&#39;.. hic sunt leones&#39;</span><span class="p">,</span>     <span class="c1"># BEWARE: string on a single line, without other characters</span>
+    <span class="s1">&#39;languages&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;en&#39;</span><span class="p">:</span> <span class="s1">&#39;englis&#39;</span><span class="p">,</span>                   <span class="c1"># 1st position is default language (functioning on py 3.6+)</span>
+                   <span class="s1">&#39;it&#39;</span><span class="p">:</span> <span class="s1">&#39;italian&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;article&#39;</span><span class="p">:</span> <span class="s1">&#39;article&#39;</span><span class="p">,</span>                  <span class="c1"># 1st position is default type (ok on py 3.6+)</span>
+               <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;markup&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;atype&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;language&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;modified&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;slug&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;category&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;summary&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;authors&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;translation_of&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;LIST_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;authors&#39;</span><span class="p">,},</span>
+    <span class="s1">&#39;DT_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;modified&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;BOOL_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;HOME_ITEMS&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>1.4 check for presence of SITE_ID:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="n">SITE_ID</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">In your project urls.py file:</p>
+<blockquote>
+<div><p>2.1. include the <code class="docutils literal notranslate"><span class="pre">rstblog</span></code> URLconf:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">include</span>
+<span class="o">...</span>
+<span class="n">path</span><span class="p">(</span><span class="s1">&#39;blog/&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s1">&#39;rstblog.urls&#39;</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="s1">&#39;rstblog&#39;</span><span class="p">)),</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>2.2. check for presence of login url:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span>     <span class="k">import</span> <span class="n">views</span> <span class="k">as</span> <span class="n">auth_views</span>
+<span class="o">...</span>
+<span class="n">path</span><span class="p">(</span><span class="s1">&#39;login/&#39;</span><span class="p">,</span> <span class="n">auth_views</span><span class="o">.</span><span class="n">LoginView</span><span class="o">.</span><span class="n">as_view</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;login&#39;</span><span class="p">),</span>
+<span class="n">path</span><span class="p">(</span><span class="s1">&#39;logout/&#39;</span><span class="p">,</span> <span class="n">auth_views</span><span class="o">.</span><span class="n">LogoutView</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;next_page&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_REDIRECT_URL</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;logout&#39;</span><span class="p">),</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">About your project templates:</p>
+<blockquote>
+<div><p>3.1. they must have a <code class="docutils literal notranslate"><span class="pre">base.html</span></code> template with this blocks
+used from rstblog templates:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">block</span> <span class="n">title</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">block</span> <span class="n">meta</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">block</span> <span class="n">link</span> <span class="o">%</span><span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">block</span> <span class="n">content</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>3.2. check for the presence of <code class="docutils literal notranslate"><span class="pre">templates/registration/login.html</span></code>
+used in login.</p>
+</div></blockquote>
+</li>
+<li><p class="first">In your project directory (where live manage.py), create the
+directory <code class="docutils literal notranslate"><span class="pre">contents/articles</span></code></p>
+</li>
+<li><p class="first">Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">migrate</span></code> to create  the <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> models.</p>
+</li>
+<li><p class="first">Restart the http service and visit <code class="docutils literal notranslate"><span class="pre">https://your-domain/admin/</span></code> <a class="footnote-reference" href="#id7" id="id2">[2]</a> <a class="footnote-reference" href="#id8" id="id3">[3]</a>
+to create at least a <code class="docutils literal notranslate"><span class="pre">Category</span></code> with value <strong>uncategorized</strong> to load articles <a class="footnote-reference" href="#id9" id="id4">[4]</a>.</p>
+</li>
+<li><p class="first">Visit <code class="docutils literal notranslate"><span class="pre">https://your-domain/blog/</span></code> to show an empty list of articles.</p>
+</li>
+<li><p class="first">Prepare an article on your PC as this one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">markup</span><span class="p">:</span>   <span class="n">restructuredtext</span>
+<span class="p">:</span><span class="n">title</span><span class="p">:</span>    <span class="n">article</span>
+<span class="p">:</span><span class="n">language</span><span class="p">:</span> <span class="n">en</span>
+<span class="p">:</span><span class="n">slug</span><span class="p">:</span>     <span class="n">article</span>
+<span class="p">:</span><span class="n">category</span><span class="p">:</span> <span class="n">uncategorized</span>
+
+<span class="o">..</span> <span class="n">hic</span> <span class="n">sunt</span> <span class="n">leones</span>
+
+<span class="o">=========</span>
+<span class="n">Article</span>
+<span class="o">=========</span>
+
+<span class="n">This</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">article</span> <span class="n">content</span><span class="o">.</span>
+
+<span class="n">And</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">secod</span> <span class="n">paragraph</span> <span class="n">of</span> <span class="n">the</span> <span class="n">article</span><span class="o">.</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Visit <code class="docutils literal notranslate"><span class="pre">https:/your-domain/blog/load-article</span></code> to load the previous article.</p>
+</li>
+<li><p class="first">Now, if you visit again <code class="docutils literal notranslate"><span class="pre">https://your-domain/blog/</span></code> you get a list with
+an article, and if you click on title, you’ll show it
+(url: <a class="reference external" href="https://your-domain/blog/show/article">https://your-domain/blog/show/article</a>)</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="base-architecture">
+<h2><a class="toc-backref" href="#id15">Base architecture</a><a class="headerlink" href="#base-architecture" title="Permalink to this headline">¶</a></h2>
+<p>Here we’ll spend two words about how <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> works.</p>
+<p>It uploads articles in a directory as follows <a class="footnote-reference" href="#id10" id="id5">[5]</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">nginx</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">site</span><span class="o">/</span><span class="n">contents</span><span class="o">/</span><span class="n">articles</span>
+</pre></div>
+</div>
+<p>Usually there is at least another directory, to upload other media files:</p>
+<blockquote>
+<div>/usr/share/nginx/html/project/site/contents/media</div></blockquote>
+<p>When a user uploads an article, <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> loads it in the
+aforesaid directory (<code class="docutils literal notranslate"><span class="pre">.../articles</span></code>), then it reads the lines that
+categorize the article (its fields) and it updates consequently the
+database tables. If we have a new article: it inserts new records,
+otherwise it updates the existings ones.</p>
+<p>So, user has only one basic operation available: <code class="docutils literal notranslate"><span class="pre">load-article</span></code>, available
+at URL: <code class="docutils literal notranslate"><span class="pre">https://your-domain/blog/load-article</span></code></p>
+<div class="section" id="available-urls">
+<h3><a class="toc-backref" href="#id16">Available URLs</a><a class="headerlink" href="#available-urls" title="Permalink to this headline">¶</a></h3>
+<p>Here are the URLs available by <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>, that is its functions:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">blog/</span></code>, it shows the newer articles; allowed to all users, even anonymous;</li>
+<li><code class="docutils literal notranslate"><span class="pre">blog/index/</span></code>, it shows all the articles; allowed to all users, even anonymous;</li>
+<li><code class="docutils literal notranslate"><span class="pre">blog/index/&lt;category&gt;</span></code>, it shows all articles of indicated category; allowed to all users, even anonymous;</li>
+<li><code class="docutils literal notranslate"><span class="pre">blog/load-article</span></code>, it (re)uploads an article; allowed to known users, <em>not</em> anonymous;</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">blog/reset-article-table</span></code>, it rebuilds the DB contents from articles loaded in filesystem;</dt>
+<dd>allowed to known users, <em>not</em> anonymous;</dd>
+</dl>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">blog/show/&lt;slug&gt;</span></code>, it shows the article of indicated slug; allowed to all users, even anonymous;</li>
+<li><code class="docutils literal notranslate"><span class="pre">blog/stats</span></code>, it shows the django-rstblog statistics;  allowed to all users, even anonymous.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="administering">
+<h2><a class="toc-backref" href="#id17">Administering</a><a class="headerlink" href="#administering" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>DB administration is a site functionality, not a <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> declares its DB structures, so the Django’s administration
+can manage them.</p>
+<p class="last">So this function isn’t listed between the previous showed URLs,
+and the request URL is <code class="docutils literal notranslate"><span class="pre">https://your-domain/admin</span></code>,
+<strong>not</strong> <code class="docutils literal notranslate"><span class="pre">https://your-domain/blog/admin</span></code>.</p>
+</div>
+<div class="section" id="author-and-categories">
+<h3><a class="toc-backref" href="#id18">Author and Categories</a><a class="headerlink" href="#author-and-categories" title="Permalink to this headline">¶</a></h3>
+<p>To manage author(s) and categories recognized by <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>
+it’s necessary to store their values in the project database.</p>
+<p>To do so, call <code class="docutils literal notranslate"><span class="pre">https://your-domain/admin/</span></code>. If you aren’t logged in, the
+site will ask your username and password. Type them (this account must have
+adminstrative privileges) and you’ll get the admin interface to database
+as follow:</p>
+<img alt="../_images/admin.jpg" src="../_images/admin.jpg" />
+<p>To manage authors and categories you can click on these items showed in
+the <em>RSTBLOG</em> section of the previous image.</p>
+<p>User interface to operate this tasks is straightforward, so we don’t bother you
+showing it.</p>
+</div>
+<div class="section" id="user">
+<h3><a class="toc-backref" href="#id19">User</a><a class="headerlink" href="#user" title="Permalink to this headline">¶</a></h3>
+<p>An author of articles needs an account to upload articles. So you may have to
+create one or more (in case of more authors publishing in the same blog)
+accounts.</p>
+<p>You can create accounts using the item <em>Users</em> at the section
+<em>AUTHENTICATION AND AUTHORIZATION</em>.</p>
+<p>This voice is useful even in case you need to change user’s password: edit the
+user that have requested it.</p>
+</div>
+</div>
+<div class="section" id="articles-administration">
+<h2><a class="toc-backref" href="#id20">Articles administration</a><a class="headerlink" href="#articles-administration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="deleting-an-article">
+<h3><a class="toc-backref" href="#id21">Deleting an article</a><a class="headerlink" href="#deleting-an-article" title="Permalink to this headline">¶</a></h3>
+<p>As you can see, delete an article now isn’t a function of <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>.
+So if a user wants absolutly to erase an article he/she must ask you to do
+it, as site master.</p>
+<p>How can you do it? With two steps:</p>
+<ul class="simple">
+<li>erase the record about the article;</li>
+<li>then delete the relative file in filesystem.</li>
+</ul>
+<p>About the first step: be sure to delete the right record. Double check
+title <strong>and filename</strong> of the article.</p>
+<p>If you have only the title and/or the slug, you can retrieve the filename
+reading it in the record of the article as in the image below (it is the field
+titled <strong>File</strong>):</p>
+<img alt="../_images/admin-2.jpg" src="../_images/admin-2.jpg" />
+<p>About the second step. It’s required because in case of <a class="reference internal" href="#articles-table-reconstruction">Articles table reconstruction</a>
+(see below) the presence of the articles file recreates its record …</p>
+</div>
+<div class="section" id="changing-an-article-filename">
+<h3><a class="toc-backref" href="#id22">Changing an article filename</a><a class="headerlink" href="#changing-an-article-filename" title="Permalink to this headline">¶</a></h3>
+<p>This is another operation not allowed to the author. In case of a request
+from the author to change an article filename you must:</p>
+<ul class="simple">
+<li>change the filename in the record of the article (see the previous image);</li>
+<li>rename the file of the article in the server filesystem;</li>
+<li>tell the author to rename his/her filename in the authoring PC filesystem.</li>
+</ul>
+</div>
+<div class="section" id="articles-table-reconstruction">
+<h3><a class="toc-backref" href="#id23">Articles table reconstruction</a><a class="headerlink" href="#articles-table-reconstruction" title="Permalink to this headline">¶</a></h3>
+<p>If needed it is possible force a complete <em>Articles table</em> reconstruction.</p>
+<p>If you call URL <code class="docutils literal notranslate"><span class="pre">.../blog/reset-article-table</span></code>, <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> will
+erase all records in <em>Articles table</em>, then it will rebuild it reading
+all files present in directory <code class="docutils literal notranslate"><span class="pre">.../contents/articles</span></code>.</p>
+</div>
+</div>
+<div class="section" id="configuring">
+<h2><a class="toc-backref" href="#id24">Configuring</a><a class="headerlink" href="#configuring" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> uses setup parameters from the django project’s <code class="docutils literal notranslate"><span class="pre">settings.py</span></code>.</p>
+<p>Notably it reads the dictionary named <code class="docutils literal notranslate"><span class="pre">RSTBLOG</span></code> with this structure:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RSTBLOG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;ARTICLES_DIR&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s2">&quot;contents&quot;</span><span class="p">,</span> <span class="s2">&quot;articles&quot;</span><span class="p">),</span>
+    <span class="s1">&#39;START_CONTENT_SIGNAL&#39;</span><span class="p">:</span> <span class="s1">&#39;.. hic sunt leones&#39;</span><span class="p">,</span>     <span class="c1"># BEWARE: string on a single line, without other characters</span>
+    <span class="s1">&#39;languages&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;en&#39;</span><span class="p">:</span> <span class="s1">&#39;english&#39;</span><span class="p">,</span>                    <span class="c1"># 1st position is default language (functioning on py 3.6+)</span>
+                   <span class="s1">&#39;it&#39;</span><span class="p">:</span> <span class="s1">&#39;italian&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;article&#39;</span><span class="p">:</span> <span class="s1">&#39;article&#39;</span><span class="p">,</span>                  <span class="c1"># 1st position is default type (ok on py 3.6+)</span>
+               <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;markup&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;atype&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;language&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;modified&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;slug&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;category&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;summary&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;authors&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;translation_of&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;LIST_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;authors&#39;</span><span class="p">,},</span>
+    <span class="s1">&#39;DT_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;modified&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;BOOL_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span> <span class="p">},</span>
+    <span class="s1">&#39;HOME_ITEMS&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Let’s see the parameters in <code class="docutils literal notranslate"><span class="pre">RSTBLOG</span></code>.</p>
+<div class="section" id="articles-dir">
+<h3><a class="toc-backref" href="#id25">ARTICLES_DIR</a><a class="headerlink" href="#articles-dir" title="Permalink to this headline">¶</a></h3>
+<p>Directory containing the articles. Usually it is the directory:
+<code class="docutils literal notranslate"><span class="pre">project-base-dir/contents/articles</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>If you wish to change this parameter,
+test the new value extensively. This is because it is possible
+have links in article relative from this directory to media directory.</p>
+<p class="last">So maybe necessary move the two directories in pairs.</p>
+</div>
+<p><em>Type</em>: string.</p>
+</div>
+<div class="section" id="start-content-signal">
+<h3><a class="toc-backref" href="#id26">START_CONTENT_SIGNAL</a><a class="headerlink" href="#start-content-signal" title="Permalink to this headline">¶</a></h3>
+<p>This is the signal used from <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> to discern the fields part
+of the article, from its contents.</p>
+<p>You can change it, but keep it homogeneous: you cannot have some articles
+with one signal and other articles with another one.</p>
+<p><em>Type</em>: string.</p>
+</div>
+<div class="section" id="languages">
+<h3><a class="toc-backref" href="#id27">languages</a><a class="headerlink" href="#languages" title="Permalink to this headline">¶</a></h3>
+<p>The list of the human languages used to write articles. It is a dictionary,
+and its first introduced key is the default language.</p>
+<p>Authors must use <em>language key</em> to declare the used language in the article.</p>
+<p><em>language value</em> is displayed in html windows returned from <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>
+to browser.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Insert order in dictionary is assured using Python v.3.6+.</p>
+<p class="last">This is the reason that requires the use of Python v.3.6+.</p>
+</div>
+<p><em>Type</em>: dictionary.</p>
+<p><em>Example</em>:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;languages&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;en&#39;</span><span class="p">:</span> <span class="s1">&#39;english&#39;</span><span class="p">,</span>     <span class="c1"># 1st pos.is default language (functioning on py 3.6+)</span>
+               <span class="s1">&#39;it&#39;</span><span class="p">:</span> <span class="s1">&#39;italian&#39;</span><span class="p">,</span> <span class="p">},</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="types">
+<h3><a class="toc-backref" href="#id28">types</a><a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>The list of types managed from <code class="docutils literal notranslate"><span class="pre">django.rstblog</span></code>. This is a <strong>reserved</strong>
+dictionary, please don’t change it.</p>
+<p><em>Value</em>: it must be:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;article&#39;</span><span class="p">:</span> <span class="s1">&#39;article&#39;</span><span class="p">,</span>                  <span class="c1"># 1st position is default type (ok on py 3.6+)</span>
+           <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="p">},</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fields">
+<h3><a class="toc-backref" href="#id29">FIELDS</a><a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
+<p>The list of fields managed from <code class="docutils literal notranslate"><span class="pre">django.rstblog</span></code>. This is a <strong>reserved</strong>
+set, please don’t change it.</p>
+<p><em>Value</em>: it must be:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;markup&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;atype&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;language&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;modified&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;slug&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;category&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;summary&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;authors&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;translation_of&#39;</span><span class="p">,</span> <span class="p">},</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-fields">
+<h3><a class="toc-backref" href="#id30">LIST_FIELDS</a><a class="headerlink" href="#list-fields" title="Permalink to this headline">¶</a></h3>
+<p>The list of fields managed from <code class="docutils literal notranslate"><span class="pre">django.rstblog</span></code> that are fields. This is a <strong>reserved</strong>
+set, please don’t change it.</p>
+<p><em>Value</em>: it must be:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;LIST_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;authors&#39;</span><span class="p">,},</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dt-fields">
+<h3><a class="toc-backref" href="#id31">DT_FIELDS</a><a class="headerlink" href="#dt-fields" title="Permalink to this headline">¶</a></h3>
+<p>As above about the datetime fields. Again: this is <strong>reserved</strong>, don’t alter it.</p>
+<p><em>Value</em>: it must be:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;DT_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;modified&#39;</span><span class="p">,</span> <span class="p">},</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bool-fields">
+<h3><a class="toc-backref" href="#id32">BOOL_FIELDS</a><a class="headerlink" href="#bool-fields" title="Permalink to this headline">¶</a></h3>
+<p>As above about the boleean fields. Again: this is <strong>reserved</strong>, don’t alter it.</p>
+<p><em>Value</em>: it must be:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;BOOL_FIELDS&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;published&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;offer_home&#39;</span><span class="p">,</span> <span class="p">},</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="home-items">
+<h3><a class="toc-backref" href="#id33">HOME_ITEMS</a><a class="headerlink" href="#home-items" title="Permalink to this headline">¶</a></h3>
+<p>How many items <code class="docutils literal notranslate"><span class="pre">django.rstblog</span></code> shows in its blog home page, keeping the
+newer articles. You can change it.</p>
+<p><em>Type</em>: integer.</p>
+<p><em>Example</em>:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="s1">&#39;HOME_ITEMS&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><code class="docutils literal notranslate"><span class="pre">django.contrib.sites</span></code> and <code class="docutils literal notranslate"><span class="pre">fullurl</span></code> are apps needed
+to simplify use of <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> from the hosting django project.
+The first one is from Django, the second is the app
+<code class="docutils literal notranslate"><span class="pre">django-fullurl</span></code>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Or, you you are in a development environment, start the development
+server and visit <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000/admin/</span></code>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>You’ll need the Admin app enabled and to know an admin account.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>Classify the article using an appropriate <code class="docutils literal notranslate"><span class="pre">category</span></code> value is
+mandatory. An article with a <code class="docutils literal notranslate"><span class="pre">category</span></code> value not present in the database (or
+without this field at all) will not be uploaded.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[5]</a></td><td>It’s possible to change it, we’ll see how.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Site manager manual</a><ul>
+<li><a class="reference internal" href="#installing-diango-rstblog">Installing <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code></a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#installing">Installing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#base-architecture">Base architecture</a><ul>
+<li><a class="reference internal" href="#available-urls">Available URLs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#administering">Administering</a><ul>
+<li><a class="reference internal" href="#author-and-categories">Author and Categories</a></li>
+<li><a class="reference internal" href="#user">User</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#articles-administration">Articles administration</a><ul>
+<li><a class="reference internal" href="#deleting-an-article">Deleting an article</a></li>
+<li><a class="reference internal" href="#changing-an-article-filename">Changing an article filename</a></li>
+<li><a class="reference internal" href="#articles-table-reconstruction">Articles table reconstruction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuring">Configuring</a><ul>
+<li><a class="reference internal" href="#articles-dir">ARTICLES_DIR</a></li>
+<li><a class="reference internal" href="#start-content-signal">START_CONTENT_SIGNAL</a></li>
+<li><a class="reference internal" href="#languages">languages</a></li>
+<li><a class="reference internal" href="#types">types</a></li>
+<li><a class="reference internal" href="#fields">FIELDS</a></li>
+<li><a class="reference internal" href="#list-fields">LIST_FIELDS</a></li>
+<li><a class="reference internal" href="#dt-fields">DT_FIELDS</a></li>
+<li><a class="reference internal" href="#bool-fields">BOOL_FIELDS</a></li>
+<li><a class="reference internal" href="#home-items">HOME_ITEMS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../author_manual/author_manual.html" title="previous chapter">author manual</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manager_manual/manager_manual.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, luciano de falco alfano.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/manager_manual/manager_manual.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

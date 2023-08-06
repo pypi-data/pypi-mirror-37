@@ -1,0 +1,634 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>author manual &#8212; django-rstblog v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Site manager manual" href="../manager_manual/manager_manual.html" />
+    <link rel="prev" title="Welcome to django-rstblog documentation" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="author-manual">
+<span id="id1"></span><h1><a class="toc-backref" href="#id16">author manual</a><a class="headerlink" href="#author-manual" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="author-manual-table-of-contents">
+<p class="topic-title first">author manual table of contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#author-manual" id="id16">author manual</a><ul>
+<li><a class="reference internal" href="#article-organization" id="id17">Article organization</a></li>
+<li><a class="reference internal" href="#article-filename" id="id18">Article filename</a></li>
+<li><a class="reference internal" href="#article-fields-aka-attributes" id="id19">Article fields (aka: attributes)</a><ul>
+<li><a class="reference internal" href="#markup" id="id20">markup</a></li>
+<li><a class="reference internal" href="#language" id="id21">language</a></li>
+<li><a class="reference internal" href="#title" id="id22">title</a></li>
+<li><a class="reference internal" href="#created-and-modified" id="id23">created and modified</a></li>
+<li><a class="reference internal" href="#slug" id="id24">slug</a></li>
+<li><a class="reference internal" href="#summary" id="id25">summary</a></li>
+<li><a class="reference internal" href="#authors" id="id26">authors</a></li>
+<li><a class="reference internal" href="#category" id="id27">category</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#content" id="id28">Content</a><ul>
+<li><a class="reference internal" href="#linkt-to-other-files" id="id29">Linkt to other files</a></li>
+<li><a class="reference internal" href="#mathematical-expressions" id="id30">Mathematical expressions</a></li>
+<li><a class="reference internal" href="#loading-the-article-content" id="id31">Loading the article content</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-attributes" id="id32">Advanced attributes</a><ul>
+<li><a class="reference internal" href="#translation-of" id="id33">translation_of</a></li>
+<li><a class="reference internal" href="#published" id="id34">published</a></li>
+<li><a class="reference internal" href="#offer-home" id="id35">offer_home</a></li>
+<li><a class="reference internal" href="#image" id="id36">image</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#author-manual-end" id="id37">Author manual end</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>A note before to start.</p>
+<p>Below <em>default</em> and <em>optional</em> items are indicative by now. In this version of
+<code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> an optional field is set to its default value in case of load
+of a new article. Otherwise, i.e. changing an article already present in DB,
+an optional field is ignored, causing the previous value to survive.</p>
+<p class="last">If you wish to change an optional field value at article update, set it explicitly.
+How? Continue reading :-)</p>
+</div>
+<p>Well, end of note, let’s start the work.</p>
+<p>This is the scene: you, the author,
+have availability of a working site that uses <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code> to publish
+your articles. So, someone (a site master) gave you:</p>
+<ul class="simple">
+<li>the URL of the site <a class="footnote-reference" href="#id15" id="id2">[7]</a>;</li>
+<li>your <em>username</em>;</li>
+<li>your <em>password</em>.</li>
+</ul>
+<p>You’ll need them to upload the article: keep them safe and begin how
+to write an article, … keep going …</p>
+<div class="section" id="article-organization">
+<h2><a class="toc-backref" href="#id17">Article organization</a><a class="headerlink" href="#article-organization" title="Permalink to this headline">¶</a></h2>
+<p>Let’s speak how organize an article that we’ll publish using <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code>.</p>
+<p>It is written in a file with two parts. The first part is about fields
+categorizing our article. The second part stocks the content of the article.</p>
+<p>The two parts are separated by a line containing the string:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">hic</span> <span class="n">sunt</span> <span class="n">leones</span>
+</pre></div>
+</div>
+<p>Yes: two dots, space, and the phrase <em>hic sunt leones</em>. No more, no less, in a
+single line <a class="footnote-reference" href="#id9" id="id3">[1]</a>.</p>
+<p>So, reiterating the concept, we have this schema:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><em>fields area</em> (generally: one field every line)</div>
+<div class="line">optional empty line</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">hic</span> <span class="pre">sunt</span> <span class="pre">leones</span></code></div>
+<div class="line">optional empty line</div>
+<div class="line"><em>article contents</em></div>
+</div>
+</div></blockquote>
+<p>Hereafter, as example, we report first lines of an
+<span class="target" id="article-about-marco-tullius-cicero">article about Marco Tullius Cicero</span>, whose content is extracted from
+wikipedia. It’s written using reST:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>:markup: restructuredtext
+:language: en
+:title: Speaking about Cicero
+:created: 2018-08-05 10:00:00
+:modified: 2018-08-05 10:00:00
+:slug: speaking-about-cicero
+:summary:  The Marcus Cicero&#39;s profile: informations and life.
+:authors:   Wikipedia
+:category: latin literature history
+
+.. hic sunt leones
+
+Speaking about Cicero
+======================
+
+*Marcus Tullius Cicero* was a Roman statesman, orator, lawyer
+and philosopher, who served as consul in the year 63 BC.
+He came from a wealthy municipal family of the Roman equestrian
+order, and is considered one of Rome&#39;s greatest orators
+and prose stylists.
+
+...
+</pre></div>
+</div>
+</div>
+<div class="section" id="article-filename">
+<h2><a class="toc-backref" href="#id18">Article filename</a><a class="headerlink" href="#article-filename" title="Permalink to this headline">¶</a></h2>
+<p>Some speech about article file. How to name it? Our advice
+is: create a rule and follow it. So you’ll have a clearer
+working area.</p>
+<p>As example, you can use a progressive number and a very short title note. So, these:</p>
+<ul class="simple">
+<li>159_full_text_search_python.rst</li>
+<li>160_full_text_search_python.en.rst</li>
+</ul>
+<p>could be two files about an article regarding how to do full text search in python.
+First is in <em>default</em> language, the second is in English language.</p>
+<p>But whatever rule you’ll adopt, it will be right: <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> is filename
+agnostic. Just a caution: it would be better if file extension is related
+to the format used; i.e.: <code class="docutils literal notranslate"><span class="pre">.md</span></code> for <em>markdown</em> text, <code class="docutils literal notranslate"><span class="pre">.rst</span></code> for <em>reST</em> text
+and <code class="docutils literal notranslate"><span class="pre">.html</span></code> for <em>html</em> text.</p>
+<p><strong>Two warnings</strong> about filenames:</p>
+<ul class="simple">
+<li>1st: you cannot use the same filename to write
+two different articles; this is obvious: on your PC, if you try to save a new
+article using a used filename, you’ll scratch the old article;</li>
+<li>2nd: you cannot change filename to an article already uploaded; this is
+less obvious, but trust me: it is true; if you need to change filename
+to an old article, you must tell it to the site master: he knows
+how to do it.</li>
+</ul>
+<p>Now we’ll speak in more detail about fields and content areas.</p>
+</div>
+<div class="section" id="article-fields-aka-attributes">
+<h2><a class="toc-backref" href="#id19">Article fields (aka: attributes)</a><a class="headerlink" href="#article-fields-aka-attributes" title="Permalink to this headline">¶</a></h2>
+<p>As we saw, fields categorize our article. So they are vital.</p>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> uses fields shown in previous example
+<a class="reference internal" href="#article-about-marco-tullius-cicero">article about Marco Tullius Cicero</a>. There is one more, but we’ll
+talk about it in a while.</p>
+<p>By now, we exhort you to use all the fields shown in the example
+and to pay attention to typos. At this early stage of development
+(v0.1 as we write) there aren’t a lot of controls about syntax errors.</p>
+<p>A single field has structure:</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">:</span></code><strong>fieldname</strong><code class="docutils literal notranslate"><span class="pre">:</span></code> <em>fieldvalue</em></div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> decides <strong>fieldname</strong>(s). So you must use the right fieldname
+without typos. Instead what to put in <em>fieldvalue</em> is up to you.</p>
+<p>Let’s see the single fields meaning.</p>
+<div class="section" id="markup">
+<h3><a class="toc-backref" href="#id20">markup</a><a class="headerlink" href="#markup" title="Permalink to this headline">¶</a></h3>
+<p>This specify what markup language you use <em>to write article content</em>. Note the
+phrase <em>article content</em>. In fact field area is ever written
+using reST syntax.</p>
+<p><em>Acceptable values</em> for this field are: <code class="docutils literal notranslate"><span class="pre">markdown</span></code>, <code class="docutils literal notranslate"><span class="pre">restructuredtext</span></code> <a class="footnote-reference" href="#id10" id="id4">[2]</a>,
+<code class="docutils literal notranslate"><span class="pre">html</span></code>.</p>
+<p><em>Optional</em>: no.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">markup</span><span class="p">:</span> <span class="n">restructuredtext</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="language">
+<h3><a class="toc-backref" href="#id21">language</a><a class="headerlink" href="#language" title="Permalink to this headline">¶</a></h3>
+<p>This is about what language you use to write the article content.</p>
+<p><em>Acceptable values</em> are defined from your site configuration. And it’s
+the site master responsability to configure it. Probably, at least
+english (written as <code class="docutils literal notranslate"><span class="pre">en</span></code>) would be available. Languages are invoked
+using their abbreviations; i.e. <code class="docutils literal notranslate"><span class="pre">it</span></code> for italian, <code class="docutils literal notranslate"><span class="pre">fr</span></code> for french,
+<code class="docutils literal notranslate"><span class="pre">es</span></code> for spanish, and so on.</p>
+<p><em>Optional</em>: no.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">language</span><span class="p">:</span> <span class="n">it</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="title">
+<h3><a class="toc-backref" href="#id22">title</a><a class="headerlink" href="#title" title="Permalink to this headline">¶</a></h3>
+<p>This is the article title. It is shown in the blog index to identify
+your article and as a link to read it.</p>
+<p><em>Acceptable values</em>: whatever you want, provided that there are no other
+articles with the same title in the blog. Article title must be unique
+in the site. The maximum length is 250 characters.</p>
+<p><em>Optional</em>: no.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>:title: Speaking about Cicero
+</pre></div>
+</div>
+</div>
+<div class="section" id="created-and-modified">
+<h3><a class="toc-backref" href="#id23">created and modified</a><a class="headerlink" href="#created-and-modified" title="Permalink to this headline">¶</a></h3>
+<p>These are two fields showing:</p>
+<ul class="simple">
+<li>the first the article  creation date and time;</li>
+<li>and the second the article last modified date and time.</li>
+</ul>
+<p><em>Acceptable values</em>. Whatever, in the format:
+<strong>YYYY</strong><code class="docutils literal notranslate"><span class="pre">-</span></code><strong>MM</strong><code class="docutils literal notranslate"><span class="pre">-</span></code><strong>DD</strong> <strong>HH</strong><code class="docutils literal notranslate"><span class="pre">:</span></code><strong>MM</strong><code class="docutils literal notranslate"><span class="pre">:</span></code><strong>SS</strong></p>
+<p><em>Optional</em>: yes.</p>
+<p><em>Default value</em>: current date.</p>
+<p>Example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>:created: 2018-08-05 10:00:00
+:modified: 2018-08-05 10:00:00
+</pre></div>
+</div>
+</div>
+<div class="section" id="slug">
+<h3><a class="toc-backref" href="#id24">slug</a><a class="headerlink" href="#slug" title="Permalink to this headline">¶</a></h3>
+<p>Slug is the last piece of information used in the URL to reach your article.
+Usually it reflects the article title to help the reader (and the web
+crawler programs) to remember the article title.</p>
+<p><em>Acceptable values</em>. As titles, even slugs must be unique in the blog.
+Futhermore, they must be composed of a subset of ansi characters. To stay
+smooth, it’s usual to use only lowercase regular letters, with puntuation marks
+and spaces substitued by dashes. Maximum length is 250 characters.</p>
+<p><em>Optional</em>: no.</p>
+<p>Example. If your article would be reached by this url:
+<code class="docutils literal notranslate"><span class="pre">https://my.blog.org/blog/show/speaking-about-cicero</span></code>, you’ll use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">slug</span><span class="p">:</span> <span class="n">speaking</span><span class="o">-</span><span class="n">about</span><span class="o">-</span><span class="n">cicero</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="summary">
+<h3><a class="toc-backref" href="#id25">summary</a><a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h3>
+<p>This field value summarizes your article content. It is shown in the
+blog index page after the title of article.</p>
+<p><em>Accepted values</em>. No restrictions here. And this field can accept even
+multiple lines contents. If you want to use multiple lines, you need
+to indent it from the second line on.</p>
+<p><em>Optional</em>: yes.</p>
+<p><em>Default</em>: the empty string.</p>
+<p>Example of multiple lines summary:</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">summary:</th><td class="field-body">The Marcus Cicero’s profile: informations and life. From
+wikipedia in english language.</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="authors">
+<h3><a class="toc-backref" href="#id26">authors</a><a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h3>
+<p>Put here the name(s) of author(s) of the article (your name, I suppose :-).
+In case of multiple authors, keep them in one line and separate them using a
+comma (,).</p>
+<p><em>Accepted values</em>. Author name must be present in blog database. It is
+responsability of site manager to insert the names of accepted authors.</p>
+<p><em>Optional</em>: yes.</p>
+<p><em>Default</em>: null.</p>
+<p>Example:</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">authors:</th><td class="field-body">Lawrence of Arabia</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="category">
+<h3><a class="toc-backref" href="#id27">category</a><a class="headerlink" href="#category" title="Permalink to this headline">¶</a></h3>
+<p>This is the master of categorizations. It catalogs our article assigning
+it to a main type.</p>
+<p><em>Accepted values</em>. Again, it depends on the configuration of your blog.
+It is responsability of site manager to insert the accepted categories
+in the blog database. And only  values present in this database are
+accepted by <code class="docutils literal notranslate"><span class="pre">rstblog</span></code>.</p>
+<p><em>Optional</em>: no.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">category</span><span class="p">:</span> <span class="n">latin</span> <span class="n">literature</span> <span class="n">history</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="content">
+<h2><a class="toc-backref" href="#id28">Content</a><a class="headerlink" href="#content" title="Permalink to this headline">¶</a></h2>
+<p>What to say about content?</p>
+<p>Here the author develops his true work: to write the articles contents.</p>
+<p>You are free to choose the format type you like throught <em>markdown</em>,
+<em>reST</em> and <em>html</em>.</p>
+<div class="section" id="linkt-to-other-files">
+<h3><a class="toc-backref" href="#id29">Linkt to other files</a><a class="headerlink" href="#linkt-to-other-files" title="Permalink to this headline">¶</a></h3>
+<p>Let us to give you some advices about other files you could refer
+from your article.</p>
+<p>First of all: the external hyperlinks. These are html pages available
+thanks to other sites. And all three quoted formats allow to refer them.
+As an example, this is an external hyperlink to wikipedia main page
+using reST:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>`wikipedia &lt;https://en.wikipedia.org/wiki/Main_Page&gt;`_
+</pre></div>
+</div>
+<p>It shows word <code class="docutils literal notranslate"><span class="pre">wikipedia</span></code> and it jumps to its main page if you click
+on the word.</p>
+<p>Then, what about hyperlink to other article in the site? In this case,
+use the (relative) article URL. Remember: it uses <code class="docutils literal notranslate"><span class="pre">/blog/show</span></code> as prefix,
+and slug as article identifier. So to hyperlink to your article
+<em>Speaking about Cicero</em> you can use (for example):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>...
+you can read our wonderful `article about Cicero &lt;/blog/show/speaking-about-cicero&gt;`_
+...
+</pre></div>
+</div>
+<p>Note that it isn’t necessary to report the site domain (<code class="docutils literal notranslate"><span class="pre">my.blog.org</span></code>), and
+we use the article slug.</p>
+<p>And, last but not least, how hyperlink to other files (not articles) present
+in our site? Here we need some technical clarifications to keep in touch.</p>
+<p>In our site, files that aren’t articles can live on these directories:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">pages</span></code> that hosts the site pages that aren’t articles;</li>
+<li><code class="docutils literal notranslate"><span class="pre">media</span></code> that hosts other type of files, such as images,
+audio, video, pdf, and so on.</li>
+</ul>
+<p>Usually <code class="docutils literal notranslate"><span class="pre">media</span></code> has one subdirectory for every kind of hosted file. I.e.:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">media/images</span></code> to keep images;</li>
+<li><code class="docutils literal notranslate"><span class="pre">media/pdfs</span></code> to store pdf files, and so on.</li>
+</ul>
+<p>As you can argue, if you would hyperlink to <code class="docutils literal notranslate"><span class="pre">mylife.pdf</span></code> file, you can
+use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>...
+`here &lt;/media/pdfs/mylife.pdf&gt;`_ you can know something more about my life.
+...
+</pre></div>
+</div>
+<p>By now, these files must be uploaded to your site using some other kind of
+software; maybe ftp, or remote copy. This means that you must be
+a true site administrator to handle this files. If this is a problem
+for you: stay tuned … In the future it’s
+possible <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> could upload even these files with the article.</p>
+</div>
+<div class="section" id="mathematical-expressions">
+<h3><a class="toc-backref" href="#id30">Mathematical expressions</a><a class="headerlink" href="#mathematical-expressions" title="Permalink to this headline">¶</a></h3>
+<p>In case you need to write mathematical expressions, it’s simpler to use
+Markdown as markup language. At the moment, <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> is
+configured to render math to html from Markdown.</p>
+</div>
+<div class="section" id="loading-the-article-content">
+<h3><a class="toc-backref" href="#id31">Loading the article content</a><a class="headerlink" href="#loading-the-article-content" title="Permalink to this headline">¶</a></h3>
+<p>A last note. When you would publish your work, you need to call:</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">https://my.blog.org/blog/load-article</span></code></div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> will ask you for your username and password. When you’ll
+give them to it, it will ask for the article filename to load. Here you can
+browse to the article file <a class="footnote-reference" href="#id11" id="id5">[3]</a> and submit it, loading the request file.</p>
+</div>
+</div>
+<div class="section" id="advanced-attributes">
+<h2><a class="toc-backref" href="#id32">Advanced attributes</a><a class="headerlink" href="#advanced-attributes" title="Permalink to this headline">¶</a></h2>
+<p>Hereafter more fields, useful in case of more advanced functions.</p>
+<div class="section" id="translation-of">
+<h3><a class="toc-backref" href="#id33">translation_of</a><a class="headerlink" href="#translation-of" title="Permalink to this headline">¶</a></h3>
+<p>Surprise: a field name not quoted in the <a class="reference internal" href="#article-about-marco-tullius-cicero">article about Marco Tullius Cicero</a>!
+What is this? You can send to <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> even articles that are translations
+of article already known by <code class="docutils literal notranslate"><span class="pre">rstblog</span></code>. If is this the case, in this field
+you write the title of the <em>original</em> (translated) article.</p>
+<p>If this field is missing, the article is an <em>original</em> article, meaning
+it is a principal article whatever its language.</p>
+<p><em>Accepted values</em>. A title of an article <strong>present</strong> in the blog database.</p>
+<p><em>Default value</em>: Null <a class="footnote-reference" href="#id12" id="id6">[4]</a>.</p>
+<p><em>Optional</em>: yes.</p>
+<p>Example. If you write a translation of <a class="reference internal" href="#article-about-marco-tullius-cicero">article about Marco Tullius Cicero</a>,
+it could be as follow:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>:markup: restructuredtext
+:language: it
+:title: Parlando di Cicerone
+:created: 2018-08-05 10:00:00
+:modified: 2018-08-05 10:00:00
+:slug: parlando-di-cicerone
+:summary:  Il profilo di Marco Tullio Cicerone: notizie e vita.
+:authors:   Wikipedia
+:category: latin literature history
+:translation_of: Speaking about Cicero
+
+.. hic sunt leones
+
+Parlando di Cicerone
+====================
+
+*Marco Tullio Cicerone* è stato uno statista Romano, oratore, avvocato
+e filosofo, che ha servito come console nell&#39;anno 63 AC.
+Veniva da una agiata famiglia cittadina dell&#39;ordine Romano degli Equestri,
+ed è considerato uno dei più grandi oratori e scrittori di Roma.
+
+...
+</pre></div>
+</div>
+<p>As you can see, in the fields area of this translation, we changed:</p>
+<ul class="simple">
+<li>the language indicator, to reflect the new language used in the translation;</li>
+<li>the title (remember: two equal titles aren’t possible in the same blog);</li>
+<li>the slug (like above: no equal slugs in the blog, and we would match
+as near possible the title);</li>
+<li>the summary (maybe it would be read from Italians …).</li>
+</ul>
+<p>And we added:</p>
+<ul class="simple">
+<li>the <strong>translation_of</strong> field, with a value of <code class="docutils literal notranslate"><span class="pre">Speaking</span> <span class="pre">about</span> <span class="pre">Cicero</span></code>, the
+title of translated article.</li>
+</ul>
+</div>
+<div class="section" id="published">
+<h3><a class="toc-backref" href="#id34">published</a><a class="headerlink" href="#published" title="Permalink to this headline">¶</a></h3>
+<p>This is about considering published, or not, the article.
+Usually <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> regards an article as published by default, unless the article
+author sets this filed to <code class="docutils literal notranslate"><span class="pre">no</span></code> <a class="footnote-reference" href="#id13" id="id7">[5]</a>. An <strong>unpublished</strong> article:</p>
+<ul class="simple">
+<li>doesn’t compare in indexes;</li>
+<li>doesn’t compare in sitemap.xml;</li>
+<li>isn’t shown, even if you request it using directly the correct slug in URL.</li>
+</ul>
+<p>But it’s counted in statistics.</p>
+<p><em>Accepted values</em>: <code class="docutils literal notranslate"><span class="pre">yes</span></code> or <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+<p><em>Default value</em>: <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+<p><em>Optional</em>: yes.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">published</span><span class="p">:</span> <span class="n">yes</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="offer-home">
+<h3><a class="toc-backref" href="#id35">offer_home</a><a class="headerlink" href="#offer-home" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">offer_home</span></code> is about to show the article in the blog home index.</p>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> shows in its home some, usually 20 <a class="footnote-reference" href="#id14" id="id8">[6]</a>, newer articles, checking their
+creation dates.</p>
+<p>If you if you want an article not to be counted between the articles to consider
+in home, you can set this field to <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+<p><em>Accepted values</em>: <code class="docutils literal notranslate"><span class="pre">yes</span></code> or <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+<p><em>Default value</em>: <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+<p><em>Optional</em>: yes.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">offer_home</span><span class="p">:</span> <span class="n">yes</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="image">
+<h3><a class="toc-backref" href="#id36">image</a><a class="headerlink" href="#image" title="Permalink to this headline">¶</a></h3>
+<p>If you load an imge in <code class="docutils literal notranslate"><span class="pre">contents/media/images</span></code>, using this field you can link
+it from the summary in home page.</p>
+<p><em>Accepted values</em>: the image filename as a string.</p>
+<p><em>Default value</em>: no.</p>
+<p><em>Optional</em>: yes.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">image</span><span class="p">:</span> <span class="n">django</span><span class="o">-</span><span class="n">logo</span><span class="o">-</span><span class="n">negative</span><span class="o">.</span><span class="n">svg</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="author-manual-end">
+<h2><a class="toc-backref" href="#id37">Author manual end</a><a class="headerlink" href="#author-manual-end" title="Permalink to this headline">¶</a></h2>
+<p>That’s all folk about author manual.
+Thank you to read it. We hope you enjoy it.</p>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>A point to rember. If you wish, this signal could be changed
+by the <em>site manager</em>. And an anecdote. People say that this phrase was used in
+the maps of ancient Rome, to indicate unexplored territories of Africa.
+But there is no firm evidence that this is true. In this context we
+adopt it to indicate that from here on we enter the unknown meanders
+of the creation of the article.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[2]</a></td><td>Note the use of the full name of the sintax type.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>Or directly type it, if you remember its full path and name.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[4]</a></td><td>Meaning: it is missing.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[5]</a></td><td>The <code class="docutils literal notranslate"><span class="pre">no</span></code> value is meaning. <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> interprets any other value as <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[6]</a></td><td>This value could be modified, but it is an operation to do during the
+application installation.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id15" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[7]</a></td><td>The site URL will be something of the type: <code class="docutils literal notranslate"><span class="pre">https://site-domain/blog</span></code>.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">author manual</a><ul>
+<li><a class="reference internal" href="#article-organization">Article organization</a></li>
+<li><a class="reference internal" href="#article-filename">Article filename</a></li>
+<li><a class="reference internal" href="#article-fields-aka-attributes">Article fields (aka: attributes)</a><ul>
+<li><a class="reference internal" href="#markup">markup</a></li>
+<li><a class="reference internal" href="#language">language</a></li>
+<li><a class="reference internal" href="#title">title</a></li>
+<li><a class="reference internal" href="#created-and-modified">created and modified</a></li>
+<li><a class="reference internal" href="#slug">slug</a></li>
+<li><a class="reference internal" href="#summary">summary</a></li>
+<li><a class="reference internal" href="#authors">authors</a></li>
+<li><a class="reference internal" href="#category">category</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#content">Content</a><ul>
+<li><a class="reference internal" href="#linkt-to-other-files">Linkt to other files</a></li>
+<li><a class="reference internal" href="#mathematical-expressions">Mathematical expressions</a></li>
+<li><a class="reference internal" href="#loading-the-article-content">Loading the article content</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-attributes">Advanced attributes</a><ul>
+<li><a class="reference internal" href="#translation-of">translation_of</a></li>
+<li><a class="reference internal" href="#published">published</a></li>
+<li><a class="reference internal" href="#offer-home">offer_home</a></li>
+<li><a class="reference internal" href="#image">image</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#author-manual-end">Author manual end</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Welcome to <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> documentation</a></li>
+      <li>Next: <a href="../manager_manual/manager_manual.html" title="next chapter">Site manager manual</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/author_manual/author_manual.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, luciano de falco alfano.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/author_manual/author_manual.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

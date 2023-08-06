@@ -1,0 +1,240 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to django-rstblog documentation &#8212; django-rstblog v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="author manual" href="author_manual/author_manual.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-django-rstblog-documentation">
+<h1>Welcome to <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> documentation<a class="headerlink" href="#welcome-to-django-rstblog-documentation" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> is a <a class="reference external" href="https://www.djangoproject.com/">Django</a> app to manage a blog, driven by articles written
+using <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a>, or <a class="reference external" href="https://daringfireball.net/projects/markdown/syntax">Markdown</a> or <a class="reference external" href="https://www.w3.org/TR/2017/REC-html52-20171214/">HTML</a>.</p>
+<p>This is its documentation.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="author_manual/author_manual.html">Article author manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#article-organization">Article organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#article-filename">Article filename</a></li>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#article-fields-aka-attributes">Article fields (aka: attributes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#content">Content</a></li>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#advanced-attributes">Advanced attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="author_manual/author_manual.html#author-manual-end">Author manual end</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="manager_manual/manager_manual.html">Site manager manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manager_manual/manager_manual.html#installing-diango-rstblog">Installing <code class="docutils literal notranslate"><span class="pre">diango-rstblog</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="manager_manual/manager_manual.html#base-architecture">Base architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manager_manual/manager_manual.html#administering">Administering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manager_manual/manager_manual.html#articles-administration">Articles administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manager_manual/manager_manual.html#configuring">Configuring</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="general-introduction">
+<h2>General introduction<a class="headerlink" href="#general-introduction" title="Permalink to this headline">¶</a></h2>
+<p>The basic idea is to adopt a <em>hybrid</em> publication model,
+halfway between a static site (pure html) and a dynamic one (all inside a DB,
+as <a class="reference external" href="https://wordpress.org/">Wordpress</a>).</p>
+<p>In practice, the author writes his article locally, at his/her PC, then</p>
+<ul class="simple">
+<li>he puts a series of lines of text at the top of the article; they serve to
+categorize it, indicating the language used, the title, and other attributes …</li>
+<li>and a line of text, of fixed format, which separates the attributes from the
+article content.</li>
+</ul>
+<p>Finally he calls an address (URL) of the site that allows him to upload the article.
+If the user is not logged in to the site, this address asks for username and password.</p>
+<p>When the article is uploaded to the site, <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> uses its attributes
+to classify it in the database. The content of the article is not loaded
+in the DB; when necessary, it is resumed from the file uploaded on the site.</p>
+<p>If the author wants to modify the content of the article (or its attributes),
+he edits the file on his PC, then upload it again.</p>
+</div>
+<div class="section" id="why-use-django-rstblog">
+<h2>Why use <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>?<a class="headerlink" href="#why-use-django-rstblog" title="Permalink to this headline">¶</a></h2>
+<p>What are the reasons that led us to this design choice? The following:</p>
+<ul class="simple">
+<li>we can always count on a local backup of all the contents of the site;</li>
+<li>we can work without an Internet connection, and connect only when
+we want to upload;</li>
+<li>the program is extremely light, it runs smoothly on servers with
+limited CPU capacity as with little RAM and HDU space (as long as accesses
+are contained, and we haven’t this problem :-);</li>
+<li>we do not renounce the flexibility and speed of research that a DB allows;</li>
+<li>if we have a few articles <a class="footnote-reference" href="#id2" id="id1">[1]</a> the DB can be implemented with the support library
+of Python (<code class="docutils literal notranslate"><span class="pre">sqlite3</span></code>), without using big programs (in the sense
+that they commit a lot of resources) as <a class="reference external" href="https://dev.mysql.com/downloads/">MySQL</a>, or <a class="reference external" href="https://www.postgresql.org/community/">PostgreSQL</a>, …</li>
+</ul>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>The features that the app currently implements are:</p>
+<ul>
+<li><p class="first">the index of articles, indicating the number of consultations
+of each article and the main attributes;</p>
+</li>
+<li><p class="first">display of an article;</p>
+</li>
+<li><p class="first">upload of an article;</p>
+</li>
+<li><p class="first">complete reconstruction of the DB starting from the files of the articles uploaded to the site;</p>
+</li>
+<li><p class="first">administration of the DB contents using the Django’s admin interface; use this interface to:</p>
+<blockquote>
+<div><ul class="simple">
+<li>manage a list of authors of the articles;</li>
+<li>manage a list or arguments to classify the articles (an article must
+belong to an argument);</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">articles may have translations, they can be present in more than one language;</p>
+</li>
+<li><p class="first">indication of site statistics; in the sense of how many articles are
+loaded, how many languages ​​are used, how many articles are present in each
+classification topic and language.</p>
+</li>
+</ul>
+<p>Note that, at least by now, <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> is capable to manage sites with
+a single blog. It isn’t developed to manage multi-blogs sites.</p>
+</div>
+<div class="section" id="cons">
+<h2>Cons<a class="headerlink" href="#cons" title="Permalink to this headline">¶</a></h2>
+<p>What are the cons to the use of this environment? You must have a
+good knowledge of Python/Django:</p>
+<ul class="simple">
+<li>to customize the app to your needs;</li>
+<li>to install it in a django project and in a production server.</li>
+</ul>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>This work is distributed under a
+<a class="reference external" href="https://opensource.org/licenses/MIT">MIT License</a>
+license.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>This project is <a class="reference external" href="https://github.com/l-dfa/django-rstblog.git">hosted on GitHub</a>
+Here you will find the complete environment
+needed to develop the <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> app. It means: not only the app, but
+even a minimal django project that hosts it.</p>
+<p>If you wish to see a website implemented using this app, you can navigate
+to the <a class="reference external" href="https://luciano.defalcoalfano.it">author’s website</a>.</p>
+<p>And the full documentation is
+<a class="reference external" href="https://django-rstblog.readthedocs.io/">hosted on Read the Docs</a>.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Not so few: with hundreds articles, everything reacts well.</td></tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code> documentation</a><ul>
+<li><a class="reference internal" href="#general-introduction">General introduction</a></li>
+<li><a class="reference internal" href="#why-use-django-rstblog">Why use <code class="docutils literal notranslate"><span class="pre">django-rstblog</span></code>?</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#cons">Cons</a></li>
+<li><a class="reference internal" href="#license">License</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="author_manual/author_manual.html" title="next chapter">author manual</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, luciano de falco alfano.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
