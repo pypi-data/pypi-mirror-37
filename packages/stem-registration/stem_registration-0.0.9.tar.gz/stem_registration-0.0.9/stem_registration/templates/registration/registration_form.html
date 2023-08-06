@@ -1,0 +1,237 @@
+{% extends "stem_registration/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}
+    {% trans "Create new account (registration) - Dropshipping" %}
+{% endblock %}
+
+
+{% block description %}
+
+    <link rel="stylesheet" href="{% static 'stem_registration/css/style.css' %}">
+    {{ form.media.css }}
+{% endblock %}
+
+
+{% block breadcrumps %}
+
+{% endblock %}
+
+{% block sidebar %}
+{% endblock sidebar %}
+
+{% block content %}
+    <div class="container registration-main">
+        <div class="py-5 text-center">
+            <img class="mb-4" src="{% static 'stem_registration/img/logo.svg' %}" alt="" width="100" height="100">
+            <h2>{% trans "Create a New Account" %}</h2>
+            <p class="lead">
+                {% trans "Create your ..." %}</p>
+        </div>
+        <div class="row">
+            <div class="col-md-12 order-md-1">
+                <form class="needs-validation fp_form" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div style="min-height: 400px !important; margin-bottom: 0;" class="col-md-6 border">
+                            <h4 class="mb-3">{% trans "Account data" %}</h4>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% bootstrap_field form.username size='small' %}
+                                </div>
+                                <div class="col-md-6 mt-3">
+                                    {% bootstrap_field form.password1 size='small' %}
+                                </div>
+                                <div class="col-md-6 mt-3">
+                                    {% bootstrap_field form.password2 size='small' %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mt-3">
+                                    {% bootstrap_field form.number size='small' %}
+                                </div>
+                                <div class="col-md-6 mt-3">
+                                    {% bootstrap_field form.email size='small' %}
+                                    <div class="error"> {{ form.errors.number }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mt-3">
+                                    {% bootstrap_field form.first_name size='small' %}
+                                </div>
+                                <div class="col-md-6 mb-3 mt-3">
+                                    {% bootstrap_field form.last_name size='small' %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="min-height: 400px !important; margin-bottom: 0;"
+                             class="col-md-6 block_company border">
+                            <h4 class="mt-2">{% trans "Company  " %}</h4>
+                            <div class="row">
+                                <div class="col-md-12 mt-4">
+                                    {% bootstrap_field form.contractor_type show_label=False %}
+                                </div>
+                                <div class="col-md-12 mt-4">
+                                    {% bootstrap_field form.tax_number size='small' %}
+                                </div>
+                                <div class="col-md-12 ">
+                                    <div class="mt-3 mb-2 name-legal-wrap d-none">
+                                        {% bootstrap_field form.name_legal size='small' %}
+                                    </div>
+                                </div>
+                                <div data-toggle="id_contractor_type_0" class="d-none private_person mt-2 col-md-12">
+                                    <h5>Паспортные данные</h5>
+
+
+                                    <label for="id_file1" class="btn btn-link">
+                                        Копия паспорта стр. №1
+                                        <span></span>
+                                    </label>
+                                    {{ form.file1 }}
+
+                                    <div class="error"> {{ form.errors.file1 }}</div>
+
+
+                                    <label for="id_file2" class="btn btn-link">
+                                        Копия паспорта стр. №2
+                                        <span></span>
+                                    </label>
+                                    {{ form.file2 }}
+
+                                    <div class="error"> {{ form.errors.file2 }}</div>
+
+
+                                    <label for="id_file3" class="btn btn-link">
+                                        Копия паспорта стр. №3
+                                        <span></span>
+                                    </label>
+                                    {{ form.file3 }}
+
+                                    <div class="error"> {{ form.errors.file3 }}</div>
+
+
+                                    <label for="id_file4" class="btn btn-link">
+                                        Копия паспорта стр. №11
+                                        <span></span>
+                                    </label>
+                                    {{ form.file4 }}
+
+                                    <div class="error"> {{ form.errors.file4 }}</div>
+                                </div>
+
+
+                                <div data-toggle="id_contractor_type_1"
+                                     class="d-none individual_enterpreneur col-md-12 ">
+
+                                    <div class="mt-2">
+                                        {% bootstrap_field form.accounting_number size='small' %}
+                                    </div>
+
+                                </div>
+                                <div data-toggle="id_contractor_type_2" class="d-none company col-md-12">
+
+                                    <div class="mt-3">
+                                        <h5>Паспортные данные</h5>
+                                        <label for="id_file5" class="btn btn-link">
+                                            {% trans "Passport copy page" %} 1 jpg
+                                        </label>
+                                        {% bootstrap_field form.file5 show_label=False size='small' field_class='d-none' %}
+                                        <div class="error"> {{ form.errors.file5 }}</div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row ">
+                        <div class="col-md-6 border">
+
+                            <h4 style="margin-bottom: 33px !important;" class="mb-4">Юридический адрес</h4>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    {% bootstrap_field form.address size='small' %}
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    {% bootstrap_field form.address_optional size='small' %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {% bootstrap_field form.country size='small' %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {% bootstrap_field form.city size='small' %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {% bootstrap_field form.zip size='small' %}
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6 border">
+                            <h4 class="">Адрес доставки</h4>
+                            {{ form.same }} Аналогичен юридическому
+                            <div class="options">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {% bootstrap_field form.billing_address size='small' %}
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        {% bootstrap_field form.bill_address_optional size='small' %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        {% bootstrap_field form.bill_country size='small' %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        {% bootstrap_field form.bill_city size='small' %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        {% bootstrap_field form.bill_zip size='small' %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row border">
+                        <div class="col-md-3 mt-2">
+                            <input style="margin-right: 10px;" type="checkbox" name="agree" required
+                                   checked>{% trans "I agree with" %}<a
+                                href="/pages/terms_of_service/" target="_blank">
+                            {% trans "terms of service" %}</a>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary btn-lg btn-block" type="submit">{% trans "Save" %}</button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'stem_registration/js/dist/inputmask/inputmask.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/inputmask.extensions.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/inputmask.numeric.extensions.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/inputmask.date.extensions.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/inputmask.phone.extensions.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/jquery.inputmask.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/phone-codes/phone.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/phone-codes/phone-be.js' %}"></script>
+    <script src="{% static 'stem_registration/js/dist/inputmask/phone-codes/phone-ru.js' %}"></script>
+    <script src="{% static 'stem_registration/js/base.js' %}"></script>
+    {{ form.media.js }}
+{% endblock %}
