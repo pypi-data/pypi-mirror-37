@@ -1,0 +1,64 @@
+{% load i18n %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>
+        {% block title %}Registration{% endblock %}
+    </title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    {% block css %}
+
+    {% endblock %}
+
+
+</head>
+<body>
+<div class="container">
+    <div class="py-5 text-center">
+        <img class="mb-4" src="{% static 'stem_registration/img/logo.svg' %}" alt="" width="100" height="100">
+        <h2>{% trans "Create a New Account" %}</h2>
+        <p class="lead">
+            {% trans "Create your ..." %}</p>
+    </div>
+</div>
+
+{% block content %}
+
+
+{% endblock content %}
+{% block footer %}
+    <div id="footer">
+        <footer class="footer">
+            <div class="container">
+                <span class="text-muted">{% trans "Developed by Stem SC" %}</span>
+                {% if user.is_authenticated and user.is_superuser %}
+                    <a style="display: inline;margin-left: 40px;"
+                       href="{% url 'admin:index' %}">{% trans "Admin Panel" %}</a>
+                {% endif %}
+                <p style="display: inline;float: right;" class="text-muted">&copy; {% now "Y" %}</p>
+            </div>
+
+        </footer>
+    </div>
+
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+{% block script %}
+{% endblock %}
+</body>
+
+</html>
