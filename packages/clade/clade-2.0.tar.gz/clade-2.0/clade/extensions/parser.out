@@ -1,0 +1,303 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> variables
+Rule 1     variables -> variables variable
+Rule 2     variables -> variable ESC
+Rule 3     variables -> variable
+Rule 4     variable -> DECLARATION ESC value
+Rule 5     value -> VALUE_LIST value_list
+Rule 6     value -> simple_value
+Rule 7     value_list -> base_value value_list
+Rule 8     value_list -> base_value
+Rule 9     base_value -> STRUCTURE value
+Rule 10    base_value -> ARRAY value
+Rule 11    simple_value -> VALUE ESC
+Rule 12    simple_value -> VALUE_LIST ESC
+Rule 13    simple_value -> VALUE_LIST
+Rule 14    simple_value -> VALUE
+
+Terminals, with rules where they appear
+
+ARRAY                : 10
+DECLARATION          : 4
+ESC                  : 2 4 11 12
+STRUCTURE            : 9
+VALUE                : 11 14
+VALUE_LIST           : 5 12 13
+error                : 
+
+Nonterminals, with rules where they appear
+
+base_value           : 7 8
+simple_value         : 6
+value                : 4 9 10
+value_list           : 5 7
+variable             : 1 2 3
+variables            : 1 0
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . variables
+    (1) variables -> . variables variable
+    (2) variables -> . variable ESC
+    (3) variables -> . variable
+    (4) variable -> . DECLARATION ESC value
+
+    DECLARATION     shift and go to state 3
+
+    variables                      shift and go to state 1
+    variable                       shift and go to state 2
+
+state 1
+
+    (0) S' -> variables .
+    (1) variables -> variables . variable
+    (4) variable -> . DECLARATION ESC value
+
+    DECLARATION     shift and go to state 3
+
+    variable                       shift and go to state 4
+
+state 2
+
+    (2) variables -> variable . ESC
+    (3) variables -> variable .
+
+    ESC             shift and go to state 5
+    DECLARATION     reduce using rule 3 (variables -> variable .)
+    $end            reduce using rule 3 (variables -> variable .)
+
+
+state 3
+
+    (4) variable -> DECLARATION . ESC value
+
+    ESC             shift and go to state 6
+
+
+state 4
+
+    (1) variables -> variables variable .
+
+    DECLARATION     reduce using rule 1 (variables -> variables variable .)
+    $end            reduce using rule 1 (variables -> variables variable .)
+
+
+state 5
+
+    (2) variables -> variable ESC .
+
+    DECLARATION     reduce using rule 2 (variables -> variable ESC .)
+    $end            reduce using rule 2 (variables -> variable ESC .)
+
+
+state 6
+
+    (4) variable -> DECLARATION ESC . value
+    (5) value -> . VALUE_LIST value_list
+    (6) value -> . simple_value
+    (11) simple_value -> . VALUE ESC
+    (12) simple_value -> . VALUE_LIST ESC
+    (13) simple_value -> . VALUE_LIST
+    (14) simple_value -> . VALUE
+
+    VALUE_LIST      shift and go to state 8
+    VALUE           shift and go to state 10
+
+    value                          shift and go to state 7
+    simple_value                   shift and go to state 9
+
+state 7
+
+    (4) variable -> DECLARATION ESC value .
+
+    ESC             reduce using rule 4 (variable -> DECLARATION ESC value .)
+    DECLARATION     reduce using rule 4 (variable -> DECLARATION ESC value .)
+    $end            reduce using rule 4 (variable -> DECLARATION ESC value .)
+
+
+state 8
+
+    (5) value -> VALUE_LIST . value_list
+    (12) simple_value -> VALUE_LIST . ESC
+    (13) simple_value -> VALUE_LIST .
+    (7) value_list -> . base_value value_list
+    (8) value_list -> . base_value
+    (9) base_value -> . STRUCTURE value
+    (10) base_value -> . ARRAY value
+
+  ! shift/reduce conflict for ESC resolved as shift
+  ! shift/reduce conflict for STRUCTURE resolved as shift
+  ! shift/reduce conflict for ARRAY resolved as shift
+    ESC             shift and go to state 12
+    DECLARATION     reduce using rule 13 (simple_value -> VALUE_LIST .)
+    $end            reduce using rule 13 (simple_value -> VALUE_LIST .)
+    STRUCTURE       shift and go to state 14
+    ARRAY           shift and go to state 15
+
+  ! ESC             [ reduce using rule 13 (simple_value -> VALUE_LIST .) ]
+  ! STRUCTURE       [ reduce using rule 13 (simple_value -> VALUE_LIST .) ]
+  ! ARRAY           [ reduce using rule 13 (simple_value -> VALUE_LIST .) ]
+
+    value_list                     shift and go to state 11
+    base_value                     shift and go to state 13
+
+state 9
+
+    (6) value -> simple_value .
+
+    ESC             reduce using rule 6 (value -> simple_value .)
+    DECLARATION     reduce using rule 6 (value -> simple_value .)
+    $end            reduce using rule 6 (value -> simple_value .)
+    STRUCTURE       reduce using rule 6 (value -> simple_value .)
+    ARRAY           reduce using rule 6 (value -> simple_value .)
+
+
+state 10
+
+    (11) simple_value -> VALUE . ESC
+    (14) simple_value -> VALUE .
+
+  ! shift/reduce conflict for ESC resolved as shift
+    ESC             shift and go to state 16
+    DECLARATION     reduce using rule 14 (simple_value -> VALUE .)
+    $end            reduce using rule 14 (simple_value -> VALUE .)
+    STRUCTURE       reduce using rule 14 (simple_value -> VALUE .)
+    ARRAY           reduce using rule 14 (simple_value -> VALUE .)
+
+  ! ESC             [ reduce using rule 14 (simple_value -> VALUE .) ]
+
+
+state 11
+
+    (5) value -> VALUE_LIST value_list .
+
+    ESC             reduce using rule 5 (value -> VALUE_LIST value_list .)
+    DECLARATION     reduce using rule 5 (value -> VALUE_LIST value_list .)
+    $end            reduce using rule 5 (value -> VALUE_LIST value_list .)
+    STRUCTURE       reduce using rule 5 (value -> VALUE_LIST value_list .)
+    ARRAY           reduce using rule 5 (value -> VALUE_LIST value_list .)
+
+
+state 12
+
+    (12) simple_value -> VALUE_LIST ESC .
+
+    ESC             reduce using rule 12 (simple_value -> VALUE_LIST ESC .)
+    DECLARATION     reduce using rule 12 (simple_value -> VALUE_LIST ESC .)
+    $end            reduce using rule 12 (simple_value -> VALUE_LIST ESC .)
+    STRUCTURE       reduce using rule 12 (simple_value -> VALUE_LIST ESC .)
+    ARRAY           reduce using rule 12 (simple_value -> VALUE_LIST ESC .)
+
+
+state 13
+
+    (7) value_list -> base_value . value_list
+    (8) value_list -> base_value .
+    (7) value_list -> . base_value value_list
+    (8) value_list -> . base_value
+    (9) base_value -> . STRUCTURE value
+    (10) base_value -> . ARRAY value
+
+  ! shift/reduce conflict for STRUCTURE resolved as shift
+  ! shift/reduce conflict for ARRAY resolved as shift
+    ESC             reduce using rule 8 (value_list -> base_value .)
+    DECLARATION     reduce using rule 8 (value_list -> base_value .)
+    $end            reduce using rule 8 (value_list -> base_value .)
+    STRUCTURE       shift and go to state 14
+    ARRAY           shift and go to state 15
+
+  ! STRUCTURE       [ reduce using rule 8 (value_list -> base_value .) ]
+  ! ARRAY           [ reduce using rule 8 (value_list -> base_value .) ]
+
+    base_value                     shift and go to state 13
+    value_list                     shift and go to state 17
+
+state 14
+
+    (9) base_value -> STRUCTURE . value
+    (5) value -> . VALUE_LIST value_list
+    (6) value -> . simple_value
+    (11) simple_value -> . VALUE ESC
+    (12) simple_value -> . VALUE_LIST ESC
+    (13) simple_value -> . VALUE_LIST
+    (14) simple_value -> . VALUE
+
+    VALUE_LIST      shift and go to state 8
+    VALUE           shift and go to state 10
+
+    value                          shift and go to state 18
+    simple_value                   shift and go to state 9
+
+state 15
+
+    (10) base_value -> ARRAY . value
+    (5) value -> . VALUE_LIST value_list
+    (6) value -> . simple_value
+    (11) simple_value -> . VALUE ESC
+    (12) simple_value -> . VALUE_LIST ESC
+    (13) simple_value -> . VALUE_LIST
+    (14) simple_value -> . VALUE
+
+    VALUE_LIST      shift and go to state 8
+    VALUE           shift and go to state 10
+
+    value                          shift and go to state 19
+    simple_value                   shift and go to state 9
+
+state 16
+
+    (11) simple_value -> VALUE ESC .
+
+    ESC             reduce using rule 11 (simple_value -> VALUE ESC .)
+    DECLARATION     reduce using rule 11 (simple_value -> VALUE ESC .)
+    $end            reduce using rule 11 (simple_value -> VALUE ESC .)
+    STRUCTURE       reduce using rule 11 (simple_value -> VALUE ESC .)
+    ARRAY           reduce using rule 11 (simple_value -> VALUE ESC .)
+
+
+state 17
+
+    (7) value_list -> base_value value_list .
+
+    ESC             reduce using rule 7 (value_list -> base_value value_list .)
+    DECLARATION     reduce using rule 7 (value_list -> base_value value_list .)
+    $end            reduce using rule 7 (value_list -> base_value value_list .)
+    STRUCTURE       reduce using rule 7 (value_list -> base_value value_list .)
+    ARRAY           reduce using rule 7 (value_list -> base_value value_list .)
+
+
+state 18
+
+    (9) base_value -> STRUCTURE value .
+
+    ESC             reduce using rule 9 (base_value -> STRUCTURE value .)
+    DECLARATION     reduce using rule 9 (base_value -> STRUCTURE value .)
+    $end            reduce using rule 9 (base_value -> STRUCTURE value .)
+    STRUCTURE       reduce using rule 9 (base_value -> STRUCTURE value .)
+    ARRAY           reduce using rule 9 (base_value -> STRUCTURE value .)
+
+
+state 19
+
+    (10) base_value -> ARRAY value .
+
+    ESC             reduce using rule 10 (base_value -> ARRAY value .)
+    DECLARATION     reduce using rule 10 (base_value -> ARRAY value .)
+    $end            reduce using rule 10 (base_value -> ARRAY value .)
+    STRUCTURE       reduce using rule 10 (base_value -> ARRAY value .)
+    ARRAY           reduce using rule 10 (base_value -> ARRAY value .)
+
+WARNING: 
+WARNING: Conflicts:
+WARNING: 
+WARNING: shift/reduce conflict for ESC in state 8 resolved as shift
+WARNING: shift/reduce conflict for STRUCTURE in state 8 resolved as shift
+WARNING: shift/reduce conflict for ARRAY in state 8 resolved as shift
+WARNING: shift/reduce conflict for ESC in state 10 resolved as shift
+WARNING: shift/reduce conflict for STRUCTURE in state 13 resolved as shift
+WARNING: shift/reduce conflict for ARRAY in state 13 resolved as shift
