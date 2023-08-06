@@ -1,0 +1,60 @@
+{% extends "page.html" %}{% load i18n l10n widget_tweaks %}
+
+
+{% block meta_tags %}{{ block.super }}
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block page_title %}{% trans "Contact" %} — {{ block.super }}{% endblock %}
+{% block body_class %}contact{% endblock %}
+
+{% block menu_contact %}
+    <a class="nav-item nav-link active" href="{% url "qs_contacts:contact" %}">{% trans "Contact" %}</a>{% endblock %}
+
+
+{% block container %}
+    <div class="container-fluid">
+        <div class="row flex-items-xs-center">
+            <div class="col-xs-9">
+                <div class="flash-messages">
+                    {% include "_includes/message-panels.html" %}
+                </div>
+            </div>
+        </div>
+        <div class="row flex-items-xs-center">
+            <div class="col-md-6">
+                <div class="panel">
+                    <div class="page-header">
+                        <h1>{% trans "Contact" %}</h1>
+                    </div>
+
+                    {% block contact_form %}
+                        <form action="" method="post" role="form">
+                            {% csrf_token %}
+
+                            {% include "_includes/form-errors.html" %}
+                            {% include "_includes/antispam.html" %}
+
+                            {% block contact_form_fields %}
+                                {% include "_includes/vertical-placeholder-big-field.html" with field=form.name|attr:"autofocus" %}
+                                {% include "_includes/vertical-placeholder-big-field.html" with field=form.email %}
+                                {% include "_includes/vertical-placeholder-big-field.html" with field=form.phone %}
+                                {% include "_includes/vertical-placeholder-big-field.html" with field=form.message %}
+                            {% endblock %}
+
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-lg btn-block"
+                                        type="submit">{% trans "Send" %}</button>
+                            </div>
+                        </form>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block end_body %}{{ block.super }}
+    <script src="{{ STATIC_URL }}lib/jquery/jquery.inputmask.js"></script>
+    <script src="{{ STATIC_URL }}widgets/phone.js"></script>
+{% endblock end_body %}

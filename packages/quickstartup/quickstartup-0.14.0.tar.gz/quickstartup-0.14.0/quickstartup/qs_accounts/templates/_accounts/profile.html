@@ -1,0 +1,32 @@
+{% extends "accounts/base-profile.html" %}{% load i18n l10n pages widget_tweaks %}
+
+{% block content %}
+    <h1>
+        {% trans "Profile" %}
+        <div class="btn-group btn-group-sm float-xs-right" role="group">
+            <a href="{% url "qs_accounts:email_change" %}" class="btn btn-sm btn-outline-primary" role="button">
+                {% trans "Change E-Mail" %}
+            </a>
+            <a href="{% url "qs_accounts:password_change" %}" class="btn btn-sm btn-outline-primary" role="button">
+                {% trans "Change Password" %}
+            </a>
+        </div>
+    </h1>
+
+    <form action="" method="post" role="form">
+        {% csrf_token %}
+
+        <div class="row">
+            {% include "_includes/form-errors.html" %}
+        </div>
+
+        <div class="row">
+            {% include "_includes/vertical-labeled-big-field.html" with field=form.name|attr:"autofocus" %}
+        </div>
+
+        <div class="form-button-panel">
+            <button class="btn btn-primary" type="submit">{% trans "Update" %}</button>
+            <a href="javascript:history.back()" class="btn btn-link" role="button">{% trans "Cancel" %}</a>
+        </div>
+    </form>
+{% endblock %}

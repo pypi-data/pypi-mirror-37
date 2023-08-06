@@ -1,0 +1,60 @@
+{# Here we define the sctructure used by the application #}
+{% extends "project.html" %}{% load i18n l10n pages widget_tweaks staticfiles %}
+
+
+{% block styles %}{{ block.super }}
+    <link rel="stylesheet" href="{% static "css/project.css" %}">
+{% endblock %}
+
+{% block body_tag %}
+    <body class="app {% block body_class %}{% endblock %}">{% endblock %}
+
+
+{% block navbar_right_options %}
+    {% block menu_profile %}
+        <li class="nav-item">
+            <a class="nav-link dropdown-toggle {% block menu_profile_class %}{% endblock %}"
+               id="responsiveNavbarDropdown"
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false"
+               href="#">{{ user.email }}</a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="responsiveNavbarDropdown">
+                {% block menu_user_options %}
+                    <a class="dropdown-item" href="{% url "qs_accounts:profile" %}">{% trans "Profile" %}</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url "qs_accounts:signout" %}">{% trans "Sign out" %}</a>
+                {% endblock %}
+            </div>
+        </li>
+    {% endblock %}
+{% endblock %}
+
+
+{% block container %}
+    <div class="container-fluid">
+        <div class="row flash-messages">
+            <div class="col-xs">
+                {% include "_includes/message-panels.html" %}
+            </div>
+        </div>
+        <div class="row flex-items-xs-top">
+            {% block sidebar %}
+                <div class="col-xs-3">
+                    <div class="sidebar sidebar-nav list-group">
+                        {% block sidebar_home %}
+                            <a class="list-group-item" href="{% url "app:index" %}">{% trans "Home" %}</a>
+                        {% endblock %}
+                    </div>
+                </div>
+            {% endblock %}
+
+            <div class="col-xs-9">
+                <div class="content">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
