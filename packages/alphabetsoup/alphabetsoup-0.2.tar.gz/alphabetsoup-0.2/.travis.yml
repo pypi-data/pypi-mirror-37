@@ -1,0 +1,25 @@
+sudo: false
+language: python
+python:
+   - "3.6"
+install:
+   - pip install -U setuptools
+   - pip install -U setuptools-scm
+   - pip install -U packaging
+   - pip install -r requirements.txt
+   - pip install -e .
+before_script:
+   - export COVERAGE_PROCESS_START="${PWD}/.coveragerc"
+   - cd alphabetsoup/test
+script:
+   - alphabetsoup --help
+   - alphabetsoup --dedup --no-write --no-log --first_n 1 .
+   - alphabetsoup --minlen 200 --no-write .
+   - alphabetsoup -v .
+   - alphabetsoup --defrag --progress .
+   - cat logs/alphabetsoup.log
+   - cat logs/alphabetsoup.tsv
+after_success:
+   - coverage combine
+   - cp /tmp/.coverage .
+   - bash <(curl -s https://codecov.io/bash) -X gcov
