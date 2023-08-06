@@ -1,0 +1,121 @@
+Metadata-Version: 2.1
+Name: MarinegeoTemplateBuilder
+Version: 0.1.0
+Summary: Constructs MarineGEO data entry excel workbooks with built in validation
+Home-page: https://github.com/MarineGEO/MarineGEO-template-builder
+Author: Andy Bell
+Author-email: bellan@si.edu
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+Requires-Dist: xlsxwriter
+
+# MarineGEO Template Builder
+
+## About 
+
+Python package to create standardized data entry templates for the Marine Global Earth Observatory (MarineGEO) Network
+
+## Setup 
+
+### Requirements
+
+ - Python 3
+ - [xlsxwriter](https://xlsxwriter.readthedocs.io/)
+
+## Usage
+
+```python
+import MarinegeoTemplateBuilder
+
+MarinegeoTemplateBuilder.main(output="ExcelTemplateOutput.xlsx", fields="attributeFields.csv", 
+                                vocab="vocabTerms.csv", title="Example Notebook")
+
+
+```
+
+### Workbook Fields
+
+The attribute fields are the columns that will be added to the excel workbook. 
+
+Fields are the columns that are added to the workbook. Each field must have a destination (sheet), header name (fieldName), description (fieldDefinition) and the attribute type defined (fieldType).
+
+The allowed fieldType options are:
+ - string - general format cells with no restrictions.
+ - date - Excel date format with validation. Dates and times must have the formatString defined.
+ - list - Validation from another column in the spreadsheet. Source must be defined in the lookup variable.
+ - integer - validation of integers only. Maybe constrained using minValue and maxValue.
+ - decimal - validation of numbers. May be constrained using minValue and maxValue.
+
+Dates and times field types should have the date format defined as the formatString. Some examples include
+YYYY-MM-DD for dates and HH:MM for hours/minutes. See Excel Format Cells dialogue for help.
+
+List items should be loaded as Vocab instances.
+
+Integers and decimals fields can be limited to a certain range using the min and max values. The min and max values
+are inclusive.
+
+#### Load attribute fields from a csv file
+
+
+```
+sheet,fieldName,fieldDefinition,fieldType,formatString,loopup,unit,minValue,maxValue
+Location,site,MarineGEO site abbreviation,list,,,,,
+Location,locationID,Unique code for each sampling location,string,,,,,
+Location,locality,Local or common name of the sampling location,string,,,,,
+Cover,locationID,Foreign key to the locationID defined on the Location sheet,fkey,,Location$locationID,,,
+Cover,transectNumber,"Transect Number",integer,,,dimensionless,1,3
+Cover,stopNumber,"Stop number along transect",integer,,,dimensionless,1,5
+```
+
+#### Define attribute fields in a list
+
+```python
+from MarinegeoTemplateBuilder.classes import Field
+
+attributes = [
+
+    Field(sheet="Location", fieldname="site", fieldDefinition="MarineGEO site abbreviation",fieldType="list"),
+    Field(sheet="Location", fieldname="locationID",fieldDefinition="Unique code for each sampling location",fieldType="string"),
+    Field(sheet="Location", fieldname="locality",fieldDefinition="Local or common name of the sampling location",fieldType="string"),
+    Field(sheet="Cover",fieldName="locationID",fieldDefination="Foreign key to the locationID defined on the Location sheet",fieldType="fkey",lookup="Location$locationID"),
+    Field(sheet="Cover",fieldName="transectNumber",fieldDefination="Transect Number",fieldType="integer",unit="dimensionless",minValue=1,maxValue=3),
+    Field(sheet="Cover",fieldName="stopNumber",fieldDefinition="Stop number along transect",fieldType="integer",unit="dimensionless",minValue=1,maxValue=5)
+]
+
+```
+
+### Vocabulary
+
+Vocabulary are the terms that are used in the dropdown menus. The vocabulary can be set using two different methods. Each vocab term must have the destination fieldName, the code and the definition. All the terms will be added to the Vocab tab in the workbook.
+
+Controlled vocabulary for fields. The controlled vocabulary is used for populating validation drop down menus.
+
+Each vocabulary term must have the destination field (fieldName) and the term/code itself (code). It is also best practice to include a definition for each code.
+
+Note: the destination `fieldName` for the vocabulary must match the `fieldName` for the vocabulary and be set as a `fieldType` of `"list"`.
+
+#### Load vocabulary terms from a csv file
+
+```
+fieldName,code,definition
+percentCover,<5%,Less than 5%
+percentCover,10%,Between 5-10%
+percentCover,15%,Between 10-15%
+```
+
+#### Load vocabulary from a list of vocab class instances
+```python
+from MarinegeoTemplateBuilder.classes import Vocab
+
+vocabulary = [
+    Vocab(fieldName="percentCover",code="<5%",definition="Less than 5%"),
+    Vocab(fieldName="percentCover",code="10%",definition="Between 5-10%"),
+    Vocab(fieldName="percentCover",code="15%",definition="Between 10-15%")
+]
+
+```
+
