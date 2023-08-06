@@ -1,0 +1,210 @@
+Metadata-Version: 2.1
+Name: vsync
+Version: 1.0.0
+Summary: A tool to sync data between dissimilar Vertica clusters
+Home-page: https://gitlab.com/vsync/vsync
+Author: Yahel Agassi
+Author-email: yahel2410@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2.7
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+Requires-Dist: pyodbc
+Requires-Dist: click (>=7)
+Requires-Dist: configparser
+
+# vsync
+
+A tool to sync data between dissimilar Vertica clusters
+
+
+## Installation Methods
+- using pip
+- using docker (in development)
+
+
+## Using pip
+
+### 1. Prerequisites
+- Install unixodbc, unixodbc-dev:
+
+    RHEL based systems:
+
+    `sudo yum install unixODBC unixODBC-devel`
+
+    Debian based systems:
+
+    `sudo apt-get install unixodbc unixodbc-dev`
+
+- Install official Vertica client from [here](https://www.vertica.com/download/vertica/client-drivers/)
+
+
+
+- Setup odbc.ini file with 2 DSNs, for source DB and destination DB
+
+    For example:
+    ```
+    [vertica_src]
+    Driver = /opt/vertica/lib64/libverticaodbc.so
+    Servername = 172.18.0.2
+    Database = my_db
+    Port = 5433
+    UserName = my_user
+    Password = my_pass
+
+    [vertica_dest]
+    Driver = /opt/vertica/lib64/libverticaodbc.so
+    Servername = 172.18.0.3
+    Database = my_db
+    Port = 5433
+    UserName = my_user
+    Password = my_pass
+
+    ```
+
+    > Note:     
+    > - Source DSN requires read only privileges, e.g: `USAGE` on schemas and `SELECT` on tables.     
+    > - Destination DSN requires write privileges, e.g: `CREATE` on schemas, `OWNER` on tables, or the `DBADMIN` role.
+
+- Optional: with dbadmin, enable CompressNetworkData
+
+    `SELECT set_config_parameter('CompressNetworkData',1);`
+
+
+
+- Optional: In some installations you may need to setup Vertica export subnet on both source and destination DBs:
+    1. Get the subent's IP you wish to export on from `network_interfaces`:
+
+        `SELECT distinct subnet FROM network_interfaces WHERE subnet NOT LIKE '127.0%';` 
+    2. Create new subnet in Vertica:
+
+        `CREATE SUBNET export WITH '<SUBNET IP HERE>'`
+    3. Set this subnet as default for export:
+
+        `ALTER DATABASE docker EXPORT ON export`
+
+
+### 2. Install:
+`pip install vsync`
+
+
+### 3. Optional: Add Bash Autocomplete
+
+put `eval "$(_VSYNC_COMPLETE=source foo-bar)"` in ~/.bashrc and re-login.
+
+
+## Usage
+### Synopsis
+`vsync [options] <command> [parameters]` 
+
+### Options
+`-f, --force` (boolean): 
+
+Do not ask for override confirmation.
+
+`--log-file` (string): 
+
+Path to log file.
+
+
+`--debug` [1|2|3]: 
+
+Log level.
+
+
+### Commands
+### `sync-table-schema`
+Sync table's schema (DDL) from source DSN to destination DSN 
+
+#### Parameters
+`-s, --source-dsn` (string) [required]
+
+Source DSN
+
+
+`-d, --dest-dsn` (string) [required]             
+
+Destination DSN
+
+
+`-t, --table` (string) [required]
+
+Table to sync
+
+
+`--dest-table` (string) [optional]
+
+Destination table, default as TABLE
+
+
+`--sync-projections / --no-projections` (boolean) [optional] 
+
+ Sync / don't sync projections. Default: true
+
+
+### `sync-table`
+Sync table's data from source DSN to destination DSN. Creates the table if not exists.
+
+#### Parameters
+`-s, --source-dsn` (string) [required]
+
+Source DSN
+
+
+`-d, --dest-dsn` (string) [required]             
+
+Destination DSN
+
+
+`-t, --table` (string) [required]
+
+Table to sync
+
+
+`--dest-table` (string) [optional]
+
+Destination table. Default: as --table
+
+
+`--sync-projections / --no-projections` (boolean) [optional] 
+
+ Sync / don't sync projections. Default: true
+
+
+### `sync-table-parts`
+Sync table's partitions from source DSN to destination DSN. 
+Creates the partitions if not exists.
+
+Does not create the table if not exists.
+
+#### Parameters
+`-s, --source-dsn` (string) [required]
+
+Source DSN
+
+
+`-d, --dest-dsn` (string) [required]             
+
+Destination DSN
+
+
+`-t, --table` (string) [required]
+
+Table to sync
+
+
+`--dest-table` (string) [optional]
+
+Destination table, default as TABLE
+
+
+`--sync-projections / --no-projections` (boolean) [optional] 
+
+ Sync / don't sync projections. Default: true
+
+`-p, --parts` (string) [optional] 
+
+Comma seperated list of partitions. Default: all partitions
+
