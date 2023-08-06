@@ -1,0 +1,38 @@
+import unittest
+from app import create_app_swagger, db
+from unittest import mock
+from .init_test_data import init_test_data
+from flask.testing import FlaskClient
+
+class BasicTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app_swagger('testing').app
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+        self.client = self.app.test_client()
+        self.server ='http://localhost:9999/{{swagger.name}}/v1.0'
+        # 超级用户，管理员用户，管理员创建的用户，普通用户
+        self.super_user,self.manage_user,self.user_mng,self.user =init_test_data()
+
+    def get_headers(self,user,ext_header=None):
+        '''
+        :param user:
+        :return:
+        '''
+        result ={'X-Consumer-Username': user.uname,
+                 'X-Consumer-Custom-Id': user.uid}
+        if ext_header is not None:
+            result.update(ext_header)
+        return result
+
+    def url_for(self,endpoint):
+        return '%s/%s'%(self.server,endpoint)
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+
+
+

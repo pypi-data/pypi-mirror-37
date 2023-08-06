@@ -1,0 +1,59 @@
+from flask import g
+from collections import namedtuple
+from flask import current_app
+from mwsdk import Rightmanage
+from datetime import datetime
+
+User = namedtuple('User', ['uid', 'username', 'issystemuser','ismanageuser','manageuserid'])
+
+def tzstr2datetime(body,dtkeys):
+    '''
+    置换tzdatetime str 为 datetime
+    :param body:dict
+    :param dtkeys: 需要转换tzdatetime的keys
+    :return:
+    '''
+    for key in dtkeys:
+        if key in body.keys():
+            value = body[key]
+            if value is None:
+                continue
+            if 'T' in value and 'Z' in value and '.' in value:
+                body[key] = datetime.strptime(body[key], '%Y-%m-%dT%H:%M:%S.%fZ')
+            elif 'T' in value and 'Z' in value:
+                body[key] = datetime.strptime(body[key], '%Y-%m-%dT%H:%M:%SZ')
+            elif 'T' in value :
+                body[key] = datetime.strptime(body[key], '%Y-%m-%dT%H:%M:%S')
+            else:
+                body[key] = datetime.strptime(body[key], '%Y-%m-%d %H:%M:%S')
+
+
+
+def get_login_user():
+    '''
+    如果是开发模式，直接返回config中设定的结果
+    :return: 登录用户信息
+    '''
+    return User(uid=g.current_user.uid,
+                username=g.current_user.uname,
+                issystemuser=g.current_user.systemuser,
+                ismanageuser=g.current_user.manageuser,
+                manageuserid=g.current_user.manageuserid
+                )
+def p_check(system,subsystem,actions,msg=''):
+    '''
+    检查是否有权限，代码范例
+    p_check(p.sys, 'expense_account', ['reauditing'],'没有反审核账目的权限！')
+    '''
+    if current_app.config.get('DEVELOPMENT', False):
+        return
+
+    _,permissions_js = Rightmanage().cur_permissions(system,g.jwt)
+    permission = permissions_js.get(subsystem)
+    if permission is None:
+        raise Exception('the subsystem(%s) is not exist' % subsystem)
+    ops = permission.get('ops')
+    if not [act for act in actions if act in ops]:
+        if not msg:
+            msg = 'The user(%s) have no this (%s) right!'%(g.user_name,ops)
+        raise Exception(msg)

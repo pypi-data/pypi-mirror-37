@@ -1,0 +1,109 @@
+from app import auth, db, p
+from app.models import *
+from flask_babel import gettext as _
+
+{% for path in paths %}
+    {% for act in path.actions %}
+        {% if act.default_resp.umlcls_type=='UMLClass or act.is_auth' %}
+@auth.valid_login
+            {% if not act.is_lk %}
+@p.check("{{act.default_resp.ref_name}}",["{{right_type[act.action]}}"])
+            {% endif %}
+         {% endif %}
+
+def {{path.name.replace('{', '').replace('}', '').replace('-', '_').replace('/','_') + '_' + act.action}}({{get_params(act.params)}}):
+    """
+    {{act.summary}}
+    {{act.doc}}
+    {% for param in act.params %}
+    :param {{param.name}}:{{param.desc}}
+    :type {{param.name}}: {{param.type}}
+    
+    :rtype:{% if act.default_resp %}{{act.default_resp.ref_name.capitalize()}}{% endif %}
+    {% endfor %}
+
+    """
+        {% if act.default_resp.umlcls_type=='UMLClass' %}
+           {% if act.action == 'post' %}
+    try:
+        data = {{act.default_resp.ref_name.capitalize()}}(**body)
+        db.session.add(data)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+    return data.to_json(), 201, {"content-type": "chatset=utf8"}
+            {% endif %}
+
+            {% if act.action == 'put' %}
+    try:
+        {{act.default_resp.ref_name.capitalize()}}.query.filter({{act.default_resp.ref_name.capitalize()}}.id == id).update(body)
+    except Exception as e:
+        db.session.rollback()
+        return {"error", _(str(e))}, 422, {"content-type": "chatset=utf8"}
+    data = {{act.default_resp.ref_name.capitalize()}}.query.filter_by(id=id).first_or_404()
+    return data.to_json(), 201, {"content-type": "chatset=utf8"}
+            {% endif %}
+            {% if act.action == 'delete' %}
+    try:
+        db.session.query({{act.default_resp.ref_name.capitalize()}}).filter({{act.default_resp.ref_name.capitalize()}}.id == id).delete()
+    except Exception as e:
+        db.session.rollback()
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+    return "", 204
+            {% endif %}
+
+            {% if act.action == 'get' and not act.default_resp.is_array %}
+    data = {{act.default_resp.ref_name.capitalize()}}.query.filter_by(id=id).first_or_404()
+    return data.to_json(), 200, {"content-type": "chatset=utf8"}
+            {% endif %}
+
+            {% if act.action == 'get' and act.default_resp.is_array %}
+               {% if act.has_page %}
+    datap = {{act.default_resp.ref_name.capitalize()}}.query.order_by({{act.default_resp.ref_name.capitalize()}}.id).paginate(page,per_page)
+    return [data.to_json() for data in datap.items] ,\
+            200 ,{"content-type": "chatset=utf8","x-page":datap.page,"x-total":datap.total}
+               {% else %}
+    datas = {{act.default_resp.ref_name.capitalize()}}.query.all()
+    return [data.to_json() for data in datas],200,{"content-type": "chatset=utf8"}
+               {% endif %}
+            {% endif %}
+
+        {% else %}
+            {% if act.action == 'post' %}
+    try:
+        data = {}
+        return data, 201, {"content-type": "chatset=utf8"}
+    except Exception as e:
+        # todo handle error
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+            {% elif act.action == 'put' %}
+    try:
+        data = {}
+        return data, 201, {"content-type": "chatset=utf8"}
+    except Exception as e:
+        # todo handle error
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+            {% elif act.action == 'delete' %}
+    try:
+        data = {}
+        return "", 204
+    except Exception as e:
+        # todo handle error
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+            {% elif act.action == 'get' %}
+    try:
+        data = {}
+        return data, 200, {"content-type": "chatset=utf8"}
+    except Exception as e:
+        # todo handle error
+        return {"error": _(str(e))}, 422, {"content-type": "chatset=utf8"}
+            {% else %}
+    pass
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+
+
