@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load translations %}
+
+{% block breadcrumbs %}
+<li><a href="{% url 'profile' %}">{% trans "Your profile" %}</a></li>
+<li><a href="{% url 'billing' %}">{% trans "Billing" %}</a></li>
+{% endblock %}
+
+{% block content %}
+
+{% for billing in billings %}
+{% include "billing/detail.html" %}
+{% empty %}
+{% trans "You currently do not have any billings active." as msg %}
+{% show_message "info" msg %}
+
+{% if offer_hosting %}
+<a class="btn btn-primary" href="https://weblate.org/hosting/">{% trans "View hosting plans" %}</a>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
