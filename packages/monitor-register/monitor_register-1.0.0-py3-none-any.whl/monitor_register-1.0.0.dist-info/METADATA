@@ -1,0 +1,103 @@
+Metadata-Version: 2.1
+Name: monitor-register
+Version: 1.0.0
+Summary: Register to monitor server
+Home-page: http://git.azure.gagogroup.cn/huangtaihu/python-log-register.git
+Author: stsean
+Author-email: author@example.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >3.6.0
+Description-Content-Type: text/markdown
+
+# OVERVIEW
+
+It will help you generate and register your monitor configuration to the specific monitor server.
+here is the syntax of input api document: https://github.com/DaYeSquad/sakura-node-ts#doc
+
+# Develop
+
+## Dependencies
+
+- miniconda: download in https://conda.io/miniconda.html
+
+- python dependency: execute `conda env create -f conda_env/log-register`
+
+- pycharm setting: you need to change your interpreter to the existing conda environment: log-reigster
+
+## Directory
+
+```
+.
+├── README.md
+├── bin
+│   ├── ci_lint.sh
+│   ├── lint.sh                     # local lint tool
+│   ├── release_test.sh             # release to test pypi
+│   └── test.sh                     # test tool, run all tests
+├── conda_env
+│   └── log-register.yml            # conda env
+├── lint.rc
+├── log_register
+│   ├── __init__.py
+│   ├── api_doc
+│   │   ├── __init__.py
+│   │   └── api_doc.py              # process api doc as monitor config
+│   ├── monitor
+│   │   ├── __init__.py
+│   │   └── monitor_config.py       # main functions
+│   ├── test
+│   │   ├── __init__.py
+│   │   ├── api_doc_test.py
+│   │   ├── const.py
+│   │   ├── file_util_test.py
+│   │   └── monitor_config_test.py
+│   └── util
+│       ├── __init__.py
+│       └── file_util.py            # file util
+├── setup.py                        # setup script
+└── test_data
+    ├── apidoc.json
+    ├── config.json
+    └── test_saved_config.json
+
+```
+
+# Usage
+
+## generate file
+
+```python
+import datetime
+import os
+from log_register.monitor.monitor_config import save_doc_as_monitor_config
+
+input_file_path = os.getcwd() + '/test_data/config.json'
+final_path = '/tmp/test.config.json'
+host = 'http://mytest'
+date = datetime.datetime(2018, 10, 29, 0, 0, 0, 0)
+save_doc_as_monitor_config(input_file_path, final_path, host, 2, 3, 1, date)
+```
+
+## register api doc file to monitor server
+
+```python
+import datetime
+import os
+from log_register.monitor.monitor_config import register_to_monitor_server
+
+input_file_path = os.getcwd() + '/test_data/config.json'
+monitor_token = 'your_token';
+url = 'https://monitor_server'
+host = 'http://your_host'
+date = datetime.datetime(2018, 10, 29, 0, 0, 0, 0)
+res = register_to_monitor_server(input_file_path, url, monitor_token, host, 2, 3, 1, date)
+if res['data']['code'] == 200:
+    print("success")
+else:
+    print("failed")
+```
+
+
+
