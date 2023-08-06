@@ -1,0 +1,52 @@
+# tensorop
+<img style="float: centre;" src="tensorop_logo.png">
+
+[![PyPI version](https://badge.fury.io/py/tensorop.svg)](https://badge.fury.io/py/tensorop) 
+
+Tensorop is a Pytorch wrapper for fast prototyping for research purposes. Main purpose is to bring functionalities that Pytorch or other frameworks lack for some reason and to include best practices being used in research.
+
+## Getting Started
+
+### Prerequisites
+
+Install `pytorch` and `torchvision` from [pytorch.org](pytorch.org)
+- Pytorch >= 0.4
+- Torchvision
+- Pandas
+- Numpy
+
+### Installing
+Installation via Pypi
+```
+$ pip3 install tensorop
+```
+Using with git
+```
+$ git clone https://github.com/prajjwal1/tensorop
+$ cd tensorop
+```
+
+### To check installation
+```
+$ >>> import tensorop; print(tensorop.__version__)
+```
+
+### Components (Structure)
+- Vision
+- GANs
+- Models
+- Datasets
+- Layers
+- Loss Functions
+- Numpy utilities
+- tensorop.torch 
+- Utilities (I/O)
+
+These are frequently changing once `v0.1` is out
+
+## Contributing
+There is so much work which needs to be done as of now, PRs are always welcome. Look for [issues](https://github.com/prajjwal1/tensorop/issues) to get started. 
+
+Docs can be found [here](https://prajjwal1.github.io/tensorop/). These are not updated frequently since the framework is under constant development.
+
+
