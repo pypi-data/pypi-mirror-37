@@ -1,0 +1,38 @@
+
+{% set oh_task = item.kwargs['ox_herd_task'] %}
+<details>
+  <summary>{{ oh_task.name }} : queue = {{ oh_task.queue_name }} {{ oh_task.manager }} </summary>
+  <TABLE cellpadding="10"><TR>
+	<TH>
+	  <A HREF="{{url_for('ox_herd.launch_job')+'?jid=' + item.id}}">
+	    Launch Job Copy</A>
+	</TH>
+	<TH>
+	  <A HREF="{{url_for('ox_herd.schedule_job')+'?jid=' + item.id}}">
+	    Edit Job Copy</A>
+	</TH>
+	{% if oh_task.cron_string %}    
+	<TH>
+	  <A HREF="{{url_for('ox_herd.cancel_job')+'?jid=' + item.id}}">
+	    Cancel Job</A>
+	</TH>
+	{% endif %}
+  </TR></TABLE>
+  <UL>
+    {% if oh_task.url %}    
+    <LI>URL : <A HREF="{{oh_task.url}}"> {{oh_task.url}}</A></LI>
+    {% endif %}
+    {% if oh_task.cron_string %}    
+    <LI> Cron string : {{oh_task.cron_string}}</LI>
+    {% endif %}
+    {% if oh_task.pytest %}
+    <LI> pytest args : 
+      <PRE>{{ oh_task.pytest_cmd }}</PRE>
+    </LI>
+    {% endif %}
+    {% if oh_task.timeout %}
+    <LI> timeout : {{ oh_task.timeout }} </LI>
+    {% endif %}
+    <LI> job id : {{item.id}} </LI>
+  </UL>
+</details>

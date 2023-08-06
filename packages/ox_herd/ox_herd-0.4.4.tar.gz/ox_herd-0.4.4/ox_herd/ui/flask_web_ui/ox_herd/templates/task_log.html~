@@ -1,0 +1,71 @@
+{% extends "ox_layout.html" %}
+{% block body %}
+
+
+<div class="w3-light-grey w3-margin-bottom">
+  <details open>
+    <summary style="font-size:200%;">
+      Jobs Currently Queued and Waiting to Run:
+    </summary>
+    {% for job in queued %}
+    <details>
+      <summary>Job id : {{ job.id }}</summary>
+      <UL>
+	<LI> Name : {{ job.kwargs.ox_test_args.name }}</LI>
+	<LI> Enqueued at : {{ job.enqueued_at }}</LI>
+	<LI> Status : {{ job.status }}</LI>
+	<LI> Origin : {{ job.origin }}</LI>
+	<LI> Function : {{ job.func_name }}</LI>
+	<LI> args : {{ job.args }}</LI>
+	<LI> kwargs : {{ job.kwargs }}</LI>
+      </UL>
+    </details>
+    {% endfor %}
+    </UL>
+  </details>
+</div>
+
+    
+{% for qname in queue_names %}
+<div class="w3-light-grey w3-margin-bottom">
+  <details open>
+    <summary style="font-size:200%;">
+      Scheduled Jobs for queue "{{ qname }}":
+    </summary>
+    {% for item in test_schedule %}
+    {% set oh_task = item.kwargs['ox_herd_task'] %}
+    {% if oh_task.queue_name == qname %}
+    {% include 'test_info.html' %}
+    {% endif %}
+    {% endfor %}
+  </details>
+</div>
+
+<div class="w3-light-grey w3-margin-bottom">
+  <details>
+    <summary style="font-size:200%;">
+      Ignored jobs:
+    </summary>
+  {% for item in test_schedule %}
+  {% set oh_task = item.kwargs['ox_herd_task'] %}
+  {% if oh_task.queue_name not in queue_names %}
+  {% include 'test_info.html' %}
+  {% endif %}
+  {% endfor %}
+  </details>
+</div>
+
+
+</div>
+{% endfor %}
+
+<div class="w3-light-grey w3-margin-bottom">
+  <details open><summary style="font-size:200%;">Failed jobs:</summary>
+    {% for item in failed_jobs %}
+    {% include 'failed_job.html' %}
+    {% endfor %}
+  </details>
+</div>
+
+
+{% endblock %}
