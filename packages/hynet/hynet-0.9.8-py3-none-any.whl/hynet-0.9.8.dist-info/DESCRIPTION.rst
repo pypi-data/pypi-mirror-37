@@ -1,0 +1,161 @@
+# Welcome to *hynet*
+
+*hynet* is a package for the calculation of the optimal power flow (OPF) in hybrid AC/DC power systems. It supports power systems that comprise an arbitrary interconnection of AC grids and radial DC grids, i.e., point-to-point and radial multi-terminal HVDC systems. With respect to OPF methods, it supports the solution of the nonconvex quadratically constrained quadratic program (QCQP) as well as its semidefinite relaxation (SDR) and second-order cone relaxation (SOCR). Especially the SOCR is a computationally highly efficient approach for OPF and locational marginal pricing in power systems with the [hybrid architecture](http://ieeexplore.ieee.org/document/7997734/).
+
+*hynet* uses [SQLite](https://www.sqlite.org/)-based SQL databases to store grid infrastructure and scenario information. Several grid databases are provided [here](https://gitlab.com/tum-msv/hynet-databases), including a hybrid AC/DC adaptation of the [PJM test system](https://ieeexplore.ieee.org/document/5589973) and a model of the [German transmission grid](https://ieeexplore.ieee.org/document/8278744/), both with several different scenarios, as well as an import of all test cases of the [Power Grid Lib - Optimal Power Flow](https://github.com/power-grid-lib/pglib-opf).
+
+
+## Installation
+
+*hynet* was developed for Python 3.5 and higher and requires [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/), [pandas](https://pandas.pydata.org/), [SQLAlchemy](https://www.sqlalchemy.org/), [Matplotlib](https://matplotlib.org/), [h5py](https://www.h5py.org/) as well as at least one of the supported [solvers](#solvers). For a convenient installation, the Python distribution [Anaconda](http://www.anaconda.com/download/) (or the stripped-down [Miniconda](https://conda.io/miniconda.html)) may be used, where the included package manager [Conda](https://conda.io) supports a straightforward installation of the supported solvers.
+
+
+To install *hynet* using Python's package management system, run
+
+```sh
+pip install hynet
+```
+
+The installation of *hynet* and the installed [solvers](#solvers) can be tested with
+
+```sh
+python -m hynet test
+```
+
+To install *hynet* from its sources, get the latest source code by cloning the *hynet* repository with [Git](https://git-scm.com/) via
+
+```sh
+git clone https://gitlab.com/tum-msv/hynet.git
+```
+
+and initiate the installation with
+
+```sh
+python setup.py install
+```
+
+
+### Solvers
+
+#### IPOPT
+
+**This solver is recommended for the solution of the QCQP.** [IPOPT](https://projects.coin-or.org/Ipopt) is an open-source software package for large-scale nonlinear optimization and [CYIPOPT](https://github.com/matthias-k/cyipopt) is a Python wrapper for IPOPT. With [Conda](https://conda.io), both can be installed with
+
+```sh
+conda install -c conda-forge cyipopt
+```
+
+
+#### MOSEK
+
+**This solver is recommended for the solution of the SDR and SOCR.** [MOSEK](http://www.mosek.com) is an interior-point optimizer for large-scale conic optimization problems. It is commercial, but offers a [free academic license](https://www.mosek.com/products/academic-licenses/). With [Conda](https://conda.io), MOSEK can be installed with
+
+```sh
+conda install -c mosek mosek
+```
+
+**Even if only QCQPs are solved, it is recommended to install MOSEK**, as the computation of an initial point for QCQP solvers relies on an SOCR solver.
+
+
+#### PICOS
+
+*hynet* supports the solution of the SDR and SOCR with [PICOS](http://picos.zib.de/index.html). However, the additional modeling layer causes a performance drawback. [PICOS](http://picos.zib.de/index.html) is an open-source Python-based modeling language for linear and conic optimization problems. It supports several solvers, including the open-source solver [CVXOPT](http://cvxopt.org). With Python's package management system, PICOS and CVXOPT can be installed with
+
+```sh
+pip install PICOS==1.1.2 cvxopt
+```
+
+
+#### CVXPY
+
+*hynet* supports the solution of the SOCR with [CVXPY](http://www.cvxpy.org) (version 1.0 or higher). However, the additional modeling layer causes a performance drawback. [CVXPY](http://www.cvxpy.org) is an open-source Python-embedded modeling language for convex optimization problems. It supports several solvers, including the open-source solvers [CVXOPT](http://cvxopt.org) and [ECOS](https://www.embotech.com/ECOS). With Python's package management system, CVXPY and these solvers can be installed with
+
+```sh
+pip install cvxpy cvxopt ecos
+```
+
+
+#### PYOMO
+
+*hynet* supports the solution of the QCQP with [Pyomo](http://www.pyomo.org/). However, the additional modeling layer causes a performance drawback. Furthermore, the import of Pyomo is demanding and **slows down the import** of *hynet* significantly, thus the installation is only recommended if Pyomo is actually utilized. [Pyomo](http://www.pyomo.org/) is an open-source optimization modeling language and includes support for the solver [IPOPT](https://projects.coin-or.org/Ipopt). With [Conda](https://conda.io), both can be installed with
+
+```sh
+conda install pyomo pyomo.extras -c https://conda.anaconda.org/conda-forge
+conda install ipopt_bin -c cachemeorg
+```
+
+
+## Usage
+
+Open a terminal, navigate to the folder that contains the [grid databases](https://gitlab.com/tum-msv/hynet-databases), and start a Python shell, either the standard shell (``python``) or a more convenient one like [IPython](https://ipython.org) or [ptpython](https://github.com/jonathanslenders/ptpython) (with the ``rrt`` color scheme for proper OPF output coloring). At the Python command prompt, import *hynet* via
+
+```python
+import hynet as ht
+```
+
+To access the data of the system in the file ``pjm_hybrid.db``, connect to this database using
+
+```python
+database = ht.connect('pjm_hybrid.db')
+```
+
+The optimal power flow for the default scenario of this system can then be calculated with
+
+```python
+result = ht.calc_opf(database)
+```
+
+The object ``result`` contains all result data. For example, to print a summary, print details of the solution, and access the determined bus voltages, type
+
+```python
+print(result)
+print(result.details)
+result.bus['v']
+```
+
+By default, *hynet* selects the most appropriate solver among those installed. To specify the type of solver explicitly, set the ``solver_type`` as illustrated below.
+
+```python
+ht.calc_opf(database, solver_type=ht.SolverType.QCQP)
+ht.calc_opf(database, solver_type=ht.SolverType.SDR)
+ht.calc_opf(database, solver_type=ht.SolverType.SOCR)
+```
+
+In case the scenario shall be modified prior to the OPF calculation, it can be loaded explicitly via
+
+```python
+scenario = ht.load_scenario(database)
+```
+
+For example, to set the load at bus 2 to 100MW and 50Mvar, use
+
+```python
+scenario.bus.at[2, 'load'] = 100 + 50j
+```
+
+The optimal power flow for this modified scenario can be calculated with
+
+```python
+ht.calc_opf(scenario)
+```
+
+For more information and usage examples, please refer to the tutorials ([USAGE.md](USAGE.md)).
+
+
+## Credits
+
+This software was developed by Matthias Hotz at the [Professur für Methoden der Signalverarbeitung](http://www.msv.ei.tum.de/) of Prof. Wolfgang Utschick, [Technische Universität München](https://www.tum.de/), with the support of Vincent Bode, Michael Mitterer, Christian Wahl, and Yangyang He. Coding was performed in [PyCharm](https://www.jetbrains.com/pycharm/).
+
+
+## Citation
+
+In case *hynet* is used in the preparation of a scientific publication, we would appreciate the citation of the following work:
+
+> M. Hotz and W. Utschick, "[hynet: An Optimal Power Flow Framework for Hybrid AC/DC Power Systems](TODO:Provide_arXiv_link)," in preparation.
+
+
+## License
+
+[BSD 3-clause license](LICENSE)
+
+
