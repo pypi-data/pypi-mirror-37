@@ -1,0 +1,24 @@
+#!/bin/sh
+
+CACHEDIR="$HOME/.cache/ulp"
+INPUTFILE="$CACHEDIR/links"
+COMMANDFILE="$CACHEDIR/ulp.sh"
+mkdir -p $CACHEDIR
+
+if [ -f "$COMMANDFILE" ]
+then
+  rm -f "$COMMANDFILE" >/dev/null 2>&1
+fi
+
+ulp_extract "$@" > $INPUTFILE
+if [ "$?" -ne 0 ]; then
+  exit
+fi
+
+ulp_tui "$@" < /dev/tty
+
+if [ -f "$COMMANDFILE" ]
+then
+  . $COMMANDFILE
+  rm -f $COMMANDFILE >/dev/null 2>&1
+fi
