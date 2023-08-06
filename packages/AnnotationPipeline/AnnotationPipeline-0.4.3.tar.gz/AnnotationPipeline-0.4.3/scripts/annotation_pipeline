@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+import argparse
+import textwrap
+from rnaseqpipeline.Install import Install
+from rnaseqpipeline.Run import Run
+
+
+
+def arguments():
+    p = argparse.ArgumentParser(prog= "annotation_pipeline",
+        formatter_class = argparse.RawTextHelpFormatter,
+        epilog = textwrap.dedent('''\
+            Authors:
+                Joris van Steenbrugge <joris.vansteenbrugge@wur.nl> - Method Implementation
+                Martijn Holterman <martijn.holterman@wur.nl> - Method
+            '''))
+
+    subparsers = p.add_subparsers(dest = 'command', help = 'Sub commands for the pipeline')
+    subparsers.required = True
+
+
+    ####### INSTALLATION
+    installation_parser = subparsers.add_parser("install",
+                            help = "Pipeline installation options",
+                            formatter_class = argparse.RawTextHelpFormatter)
+    installation_sub_parser = installation_parser.add_subparsers(dest = 'install_sub',
+                                help = 'Installation options')
+
+    install_check_parser = installation_sub_parser.add_parser('check',
+                                                help = 'Verify the installation of the full pipeline')
+    installation_parser.set_defaults(func=Install.verify_installation)
+
+    install_pipeline_parser = installation_sub_parser.add_parser('pipeline',
+                                                help = 'Install the pipeline for the current user')
+
+
+    install_pipeline_parser.add_argument("--dir", dest = 'install_dir',
+                                         help = "Installation directory",
+                                         required = True)
+
+    install_pipeline_parser.set_defaults(func = Install.perform_installation)
+
+    ####### Running the Pipeline
+    running_parser = subparsers.add_parser("run",
+                        help = "Run (parts) of the pipeline",
+                        formatter_class = argparse.RawTextHelpFormatter)
+
+    running_sub_parser = running_parser.add_subparsers(dest = 'running_sub',
+                            help = "Running pipeline tools")
+
+    running_all_parser = running_sub_parser.add_parser("all",
+                                help = "Run all supported pars of the pipeline")
+    running_all_parser.set_defaults(func= Run.run_all)
+
+    running_all_parser.add_argument("--workdir", dest = "workdir", help = 'Absolute path to the working directory.',
+                                    required = True)
+    running_all_parser.add_argument('-i', dest = 'assembly', help = "Genome Assembly in fasta format",
+                                    required = True)
+    running_all_parser.add_argument('-p', dest = "n_threads", help = "The number of CPU threads to use",
+                                    required = False, default = 4, type = int)
+
+
+
+    return p.parse_args()
+
+
+
+if __name__ == "__main__":
+    options = arguments()
+    options.func(options)
