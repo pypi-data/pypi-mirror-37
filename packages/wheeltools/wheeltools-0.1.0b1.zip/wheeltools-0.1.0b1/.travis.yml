@@ -1,0 +1,61 @@
+language: python
+env:
+  global:
+    - TOXENV="py"
+    - TWINE_USERNAME="anthrotype"
+    - secure: M/6Yv5xc1YDPDrK1XZmahFdgmikGehI5cxHOjsnyMe0MTaknEtnz21XAbGQMhyhk1UEjFeB2s/YcH5T+rxO6MEiP+WJb+yd3Luuty2OcskJ/9eavWxxsa0PCoQJpY7G/E2Qfup+1cztzXTrdrU0BYgR63MfzZkHvYnPlgD/hKYNdXQjkVZly8WIQCTelwArwyoJ4o9ZJ0ahx93xNoNT0Im6x0IObVy+jpHvUh81NwaGJzVmYfisWCWYsYbfF+J3zN5Fwz9IwDDQa1nkqql5B2Y3f9iEivHjyKpfL/rDUK4YwmURwZjwAEht0+lUF1k+uW8HSslwOQLYH05PdtF+k6f3Xm6sKhYpk8dO58oZrI1yIZxdXFtCi/5TNy9H02TxT2x7+nTQE6XHjw4fS1umqwLjo7zvPnOPvOcYOfdTWsPYeTzWeJMUx2oVYiva0TXH6oI9dq1+XV/4DgWOZMcJSW4RtKL1XiP4UXQ7wUGhxOLhbZaQ6POQOb2tgDaKtc6CGppqRYCqQxTdjryLmDI/QJMKUXSz1UfwsG3Xi03GE1GRktLBUTJBRYxry778/BB9MvdKC9Yj/AvfEegL/GIxiKZ8bjnms4AkUpS543TdlPsZkBbA0SQYuZZxMsrXPhc5sF0Momjg/sN/4nekFTiW+Mb847h9WJu77tDBOr9sBDpQ=
+
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      env: TOXENV="fix_lint,py"
+    - python: 2.7
+    - python: 3.4
+    - python: 3.5
+    - python: 3.6
+    - os: osx
+      language: generic
+      env:
+        - VERSION=2.7.15
+        - BUILD_WHEELS=1
+        - MACPYTHON_URL="https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.6.pkg"
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.cache/pre-commit
+
+install:
+  - |
+    if [ -n "$BUILD_WHEELS" ]; then
+      if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+        curl -LO $MACPYTHON_URL
+        sudo installer -pkg $(basename $MACPYTHON_URL) -target /
+        py_mm=${VERSION:0:3}
+        PYTHON_EXE=/Library/Frameworks/Python.framework/Versions/$py_mm/bin/python$py_mm
+        inst_cmd="/Applications/Python ${py_mm}/Install Certificates.command"
+        if [ -e "$inst_cmd" ]; then
+            sh "$inst_cmd"
+        fi
+        $PYTHON_EXE -m pip install virtualenv
+        $PYTHON_EXE -m virtualenv .venv/
+        source .venv/bin/activate
+      fi
+      pip install wheel cython
+      (cd wheel_makers && ./make_wheels.sh)
+    fi
+  - pip install tox
+
+script:
+  - tox
+
+after_success:
+  - tox -e codecov
+  - |
+    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "anthrotype/wheeltools" ] && [ "$TRAVIS_PYTHON_VERSION" == "3.6" ]; then
+      pip install --upgrade pip setuptools twine
+      python setup.py sdist
+      pip wheel --no-deps --wheel-dir dist .
+      twine upload dist/*.whl dist/*.zip
+    fi
