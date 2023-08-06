@@ -1,0 +1,176 @@
+Metadata-Version: 2.1
+Name: Layernode
+Version: 0.0.3
+Summary: LayerProtocol blockchain
+Home-page: https://github.com/LayerProtocol/layernode.git
+Author: NoRestLabs
+Author-email: galen@norestlabs.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Description-Content-Type: text/markdown
+Requires-Dist: altgraph
+Requires-Dist: dnspython
+Requires-Dist: wheel
+Requires-Dist: pyyaml
+Requires-Dist: flask
+Requires-Dist: flask-socketio
+Requires-Dist: m3-cdecimal
+Requires-Dist: pyopenssl
+Requires-Dist: werkzeug
+Requires-Dist: tabulate
+Requires-Dist: ecdsa
+Requires-Dist: plyvel
+Requires-Dist: layer-py
+Requires-Dist: enum-compat
+Requires-Dist: eventlet
+Requires-Dist: future
+Requires-Dist: greenlet
+Requires-Dist: ipfsapi
+Requires-Dist: macholib
+Requires-Dist: pefile
+Requires-Dist: psutil
+Requires-Dist: PyInstaller
+Requires-Dist: PyMySQL
+Requires-Dist: python-slugify
+Requires-Dist: requests-toolbelt
+Requires-Dist: simplekv
+Requires-Dist: SQLAlchemy
+Requires-Dist: Unidecode
+Requires-Dist: websocket-client
+
+# Layernode
+
+Layernode is a peer-managed node that extends the functionality of the Layer Protocol and the LRX token. It caches data from the Layer network, performs computations, handles LRX token staking and more.
+
+## Local MySQL server
+
+- Install mysql server
+
+```
+sudo apt-get update
+sudo apt-get install mysql-server
+mysql_secure_installation
+```
+
+- Logon to MySQL using root user, and run the following sql
+
+```
+CREATE DATABASE layernode;
+CREATE USER 'layer_user'@'%' IDENTIFIED BY 'layer_password';  
+GRANT ALL PRIVILEGES ON layernode.* TO 'layer_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+## IPFS setup
+
+- ipfs setup
+
+```
+sudo apt-get update
+sudo apt-get install golang-go -y
+wget https://dist.ipfs.io/go-ipfs/v0.4.10/go-ipfs_v0.4.10_linux-386.tar.gz
+tar xvfz go-ipfs_v0.4.10_linux-386.tar.gz
+sudo mv go-ipfs/ipfs /usr/local/bin/ipfs
+```
+
+- ipfs config creation
+
+```
+ipfs init
+ipfs daemon
+```
+
+- ipfs service
+
+```
+cp ./ipfs.service /etc/systemd/system/ipfs.service
+systemctl daemon-reload
+systemctl enable ipfs.service
+systemctl start ipfs
+service ipfs status
+```
+
+## Install dependency and create python3 virtual environment
+
+Layernode only works and tested on Python 3 and above.
+
+```
+sudo apt-get install build-essential
+sudo apt-get install python3-dev
+sudo apt-get install python3-setuptools
+
+git clone https://github.com/LayerProtocol/layernode
+cd layernode
+virtualenv venv -p python3
+source venv/bin/activate
+pip install layernode
+```
+
+## Create and update config
+
+- create config to ~/.layernode
+```
+layernode -h
+```
+
+- update config
+> my_ip  
+> geth_rpc_host  
+> signer_endpoint  
+> ipfs
+
+## How to run
+
+```cli.py``` module offers a cool CLI to interact with the blockchain engine. When you install this package, you can call this module by 'layernode' executable.
+
+You can start the client by running
+
+```
+layernode start
+```
+
+Every service associated with blockchain runs at startup. This implies that your client will immediately start synchronizing with p2p network.
+Initial peer list is hard-coded into client but you can update this list by updating your config file. Config file can be specified at startup or can be edited manually after first start.
+Default data folder is inside your home directory and named ```.layernode```.
+
+## run layernode service on terminal
+
+- run layernode on console
+
+```
+layernode start
+```
+
+- show layernode commands
+
+```
+layernode -h
+```
+
+- stop layernode service
+
+```
+layernode stop
+```
+
+## run layernode service by daemon
+
+This daemonize will be updated later just like bitcoind.
+```
+layernode start > /dev/null 2>&1 &
+```
+
+This project is maintained by the @LayerProtocol team, with specific development inquiries directed to:
+
+- @gedanziger
+- @oleg-baturov
+- @ohtayoshida
+
+
