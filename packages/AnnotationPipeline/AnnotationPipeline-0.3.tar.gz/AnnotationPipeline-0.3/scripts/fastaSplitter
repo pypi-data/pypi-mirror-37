@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+#Author: Joris van Steenbrugge
+#since: April 19
+#Function: Takes the fasta entries from a single file and (equally) outputs them to N individual files
+from Bio import SeqIO
+import sys
+import argparse
+
+
+
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+def write_outputs(records, input_file):
+    c = 0
+    basename = input_file.split(".fa")[0]
+    for record_set in records:
+        with open("{}_{}.fa".format(basename, c), 'w') as out_file:
+            for record in record_set:
+                out_file.write(">{}\n{}\n".format(record.id, record.seq))
+        c += 1
+
+
+
+
+def parse_arguments():
+    p = argparse.ArgumentParser()
+    p.add_argument('-i', dest = 'input_file', help = "Input file in fasta format", required = True)
+    p.add_argument('-n', dest = "n_out", help =  "The number of output files", required = False, default = 10,
+                   type = int)
+
+    return p.parse_args()
+
+if __name__ == "__main__":
+
+    arguments = parse_arguments()
+    records = list(SeqIO.parse(arguments.input_file, 'fasta'))
+    splitted_records = split(records, arguments.n_out)
+
+    write_outputs(splitted_records, arguments.input_file)
