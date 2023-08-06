@@ -1,0 +1,39 @@
+ros: 0.1
+info:
+  version: 0.0.1
+  title: Man 2 Molecule 2 Man - Workflow 1
+  description: |
+    We want to build a set of models of chemical, gene, disease 
+
+workflow:
+
+  naming:
+    doc: Resolve names to ontology identifiers.
+    code: bionames
+    args:
+      query:
+        - select $disease_name from disease as disease_ids
+        - select $drug_name from drug as drug_ids
+
+  chemical_to_gene_to_disease:
+    doc: Build chemical-gene-disease associations.
+    code: requests
+    args:
+      depends:
+        - $naming
+      url: http://robokop.renci.org:6011/api/now?max_results=250
+      MaQ:
+        - chemical_substance($drug_ids)->gene->disease($disease_ids)
+      
+  return:
+    doc: Union answers.
+    code: union
+    args:
+      elements:
+        - chemical_to_gene_to_disease
+        
+        
+
+
+
+              
