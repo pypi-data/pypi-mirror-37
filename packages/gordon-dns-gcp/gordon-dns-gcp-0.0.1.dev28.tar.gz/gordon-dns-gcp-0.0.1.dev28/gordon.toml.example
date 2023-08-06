@@ -1,0 +1,27 @@
+# Gordon Core Config
+[core]
+[core.logging]
+level = "debug"
+handlers = ["syslog"]
+
+# Plugin Config
+[gcp]
+project = "my-gcp-project"
+dns_zone = "example.com."
+default_zone_prefix = "production"
+
+[gcp.enricher]
+keyfile = "/path/to/keyfiles/compute.json"
+
+[gcp.event_consumer]
+keyfile = "/path/to/keyfiles/pubsub.json"
+topic = "my-dns-changes"
+subscription = "gordon-consumer"
+max_messages = 25
+max_msg_age = 300
+
+[gcp.publisher]
+project = "my-dns-project"
+keyfile = "/path/to/keyfiles/dns.json"
+publish_wait_timeout = 10
+default_ttl = 300
