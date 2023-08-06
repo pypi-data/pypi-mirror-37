@@ -1,0 +1,74 @@
+{% extends "registration/registration_base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% load static %}
+{% block title %}
+    {% if user.is_authenticated %}
+        Dropshipping
+    {% else %}
+        {% trans "Log in" %}
+    {% endif %}
+{% endblock %}
+
+
+{% block description %}
+
+{% endblock %}
+
+
+{% block breadcrumps %}
+
+{% endblock %}
+{% block sidebar %}
+{% endblock %}
+
+{% block content %}
+    <style>
+
+    </style>
+    <div class="container text-center" style="padding-bottom: 230px;">
+    <div class="row">
+        {% if user.is_authenticated %}
+            <div class="col-md-4 mx-auto text-center">
+                <h1 class="text-center">{% trans "Hello" %} {{ user.username|title }}</h1>
+            </div>
+        {% else %}
+            <div class="col-md-3 mx-auto text-center">
+
+                <form method="post" action="" class="form-signin">
+                    <img class="mb-4" src="/static/img/logo.svg" alt="" width="100" height="100">
+                    <h1 class="please h3 mb-3 font-weight-normal">{% trans "Please sign in" %}</h1>
+                    {% if form.errors %}
+                        <div role="alert" class="alert alert-danger">
+                            <p class="text-left">
+                                {% trans "Invalid login or password." %}
+                            </p>
+                        </div>
+                    {% endif %}
+                    {% csrf_token %}
+                    {% for field in form %}
+                        {% bootstrap_field field show_label=False %}
+                    {% endfor %}
+
+                    <div class="checkbox mb-3">
+
+                        <label>
+                            <input type="checkbox" value="remember-me"> {% trans "Remember me" %}
+                        </label>
+                    </div>
+                    <button id="submit-btn" class="btn btn-lg btn-primary btn-block"
+                            type="submit">{% trans "Log in" %}</button>
+
+                </form>
+
+                <a href="{% url 'auth_password_reset' %}">{% trans "Forgot your password?" %}</a>
+                <a href="{% url 'registration_register' %}">{% trans "Sign up?" %}</a>
+
+
+            </div>
+            </div>
+
+        {% endif %}
+
+{% endblock %}
+</div>
