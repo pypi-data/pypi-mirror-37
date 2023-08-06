@@ -1,0 +1,38 @@
+import tkapi
+
+
+class StemmingFilter(tkapi.ZaakRelationFilter):
+
+    @property
+    def zaak_related_url(self):
+        return 'Besluit/Zaak'
+
+
+class Stemming(tkapi.TKItemRelated, tkapi.TKItem):
+    url = 'Stemming'
+
+    @staticmethod
+    def create_filter():
+        return StemmingFilter()
+
+    @property
+    def besluit(self):
+        from tkapi.besluit import Besluit
+        return self.related_item(Besluit)
+
+    @property
+    def fractie(self):
+        from tkapi.fractie import Fractie
+        return self.related_item(Fractie)
+
+    @property
+    def soort(self):
+        return self.get_property_or_empty_string('Soort')
+
+    @property
+    def vergissing(self):
+        return self.get_property_or_none('Vergissing')
+
+    @property
+    def fractie_size(self):
+        return self.get_property_or_none('fractieGrootte')
