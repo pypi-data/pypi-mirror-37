@@ -1,0 +1,138 @@
+Metadata-Version: 1.1
+Name: webp
+Version: 0.1.0a10
+Summary: Python bindings for WebP
+Home-page: https://github.com/anibali/pywebp
+Author: Aiden Nibali
+Author-email: UNKNOWN
+License: MIT
+Description: WebP Python bindings
+        ====================
+        
+        |CircleCI| |license| |GitHub|
+        
+        Installation
+        ------------
+        
+        .. code:: sh
+        
+            pip install webp
+        
+        Requirements
+        ~~~~~~~~~~~~
+        
+        -  `libwebp <https://github.com/webmproject/libwebp>`__ (tested with
+           v1.0.0)
+        -  Install libwebpmux and libwebpdemux components as well.
+        -  Check out the Dockerfile for steps to build from source on Ubuntu.
+        -  Python 3 (tested with v3.6)
+        -  cffi (tested with 1.10.0)
+        -  Pillow (tested with v4.1.1)
+        -  numpy (tested with v1.12.1)
+        
+        Usage
+        -----
+        
+        .. code:: python
+        
+            import webp
+        
+        Simple API
+        ~~~~~~~~~~
+        
+        .. code:: python
+        
+            # Save an image
+            webp.save_image(img, 'image.webp', quality=80)
+        
+            # Load an image
+            img = webp.load_image('image.webp', 'RGBA')
+        
+            # Save an animation
+            webp.save_images(imgs, 'anim.webp', fps=10, lossless=True)
+        
+            # Load an animation
+            imgs = webp.load_images('anim.webp', 'RGB', fps=10)
+        
+        Advanced API
+        ~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            # Encode a PIL image to WebP in memory, with encoder hints
+            pic = webp.WebPPicture.from_pil(img)
+            config = WebPConfig.new(preset=webp.WebPPreset.PHOTO, quality=70)
+            buf = pic.encode(config).buffer()
+        
+            # Read a WebP file and decode to a BGR numpy array
+            with open('image.webp', 'rb') as f:
+              webp_data = webp.WebPData.from_buffer(f.read())
+              arr = webp_data.decode(color_mode=WebPColorMode.BGR)
+        
+            # Save an animation
+            enc = webp.WebPAnimEncoder.new(width, height)
+            timestamp_ms = 0
+            for img in imgs:
+              pic = webp.WebPPicture.from_pil(img)
+              enc.encode_frame(pic, timestamp_ms)
+              timestamp_ms += 250
+            anim_data = enc.assemble(timestamp_ms)
+            with open('anim.webp', 'wb') as f:
+              f.write(anim_data.buffer())
+        
+            # Load an animation
+            with open('anim.webp', 'rb') as f:
+              webp_data = webp.WebPData.from_buffer(f.read())
+              dec = webp.WebPAnimDecoder.new(webp_data)
+              for arr, timestamp_ms in dec.frames():
+                # `arr` contains decoded pixels for the frame
+                # `timestamp_ms` contains the _end_ time of the frame
+                pass
+        
+        Features
+        --------
+        
+        -  Picture encoding/decoding
+        -  Animation encoding/decoding
+        -  Automatic memory management
+        -  Simple API for working with ``PIL.Image`` objects
+        
+        Not implemented
+        ~~~~~~~~~~~~~~~
+        
+        -  Encoding/decoding still images in YUV color mode
+        -  Advanced muxing/demuxing (color profiles, etc.)
+        -  Expose all useful fields
+        
+        Developer notes
+        ---------------
+        
+        Running tests
+        ~~~~~~~~~~~~~
+        
+        The CircleCI local CLI should be used to run tests in an isolated
+        environment:
+        
+        .. code:: bash
+        
+            $ circleci local execute
+        
+        Known issues
+        ------------
+        
+        -  An animation where all frames are identical will "collapse" in on
+           itself, resulting in a single frame. Unfortunately, WebP seems to
+           discard timestamp information in this case, which breaks
+           ``webp.load_images`` when the FPS is specified.
+        
+        .. |CircleCI| image:: https://img.shields.io/circleci/project/github/anibali/pywebp.svg
+           :target: https://circleci.com/gh/anibali/pywebp
+        .. |license| image:: https://img.shields.io/github/license/anibali/pywebp.svg
+           :target: https://github.com/anibali/pywebp/blob/master/LICENSE
+        .. |GitHub| image:: https://img.shields.io/badge/github-anibali%2Fpywebp-blue.svg
+           :target: https://github.com/anibali/pywebp
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Topic :: Multimedia :: Graphics :: Graphics Conversion
+Classifier: License :: OSI Approved :: MIT License
