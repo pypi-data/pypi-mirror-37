@@ -1,0 +1,47 @@
+Metadata-Version: 2.1
+Name: get-retries
+Version: 0.1.0
+Summary: Adding retries to Requests.get() with exponential backoff
+Home-page: https://github.com/jfilter/get_retries
+Author: Johannes Filter
+Author-email: hi@jfilter.de
+License: MIT
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: License :: OSI Approved :: MIT License
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+
+# get_retries [![Build Status](https://travis-ci.com/jfilter/get_retries.svg?branch=master)](https://travis-ci.com/jfilter/get_retries) [![PyPI](https://img.shields.io/pypi/v/get_retries.svg)](https://pypi.org/project/get_retries/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/get_retries.svg)](https://pypi.org/project/get_retries/)
+
+Adding retries to [Requests](https://github.com/requests/requests)`.get()` with [exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff).
+
+Retry unsuccessful `GET` requests after waiting for a specific time interval. With each unsuccessful request, the time interval increases exponentially (it doubles). The undertaking is declared ultimately unsuccessful when the time interval gets bigger than a _maximum backoff_ value.
+
+## Install
+
+```bash
+pip install get_requests
+```
+
+## Usage
+
+```python
+import get_requests
+
+# max_backoff: maximum interval to wait in seconds
+response = get_requests.get('https://wikipedia.com', max_backoff=32)
+
+if response:
+    print(response.status_code)
+```
+
+For more information check out the [code](get_retries/get.py).
+
+## License
+
+MIT.
+
+
