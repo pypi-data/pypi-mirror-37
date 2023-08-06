@@ -1,0 +1,162 @@
+image: python:3.7
+
+variables:
+  GIT_STRATEGY: fetch
+  PIPENV_VENV_IN_PROJECT: "true" # makes pipenv use ~/.venv
+  PIPENV_CACHE_DIR: "$CI_PROJECT_DIR/.pipenvcache"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pipcache"
+stages:
+  - Testing and Coverage
+  - Coverage Reporting
+  - Linting
+  - Package
+  - Release to Test PyPI
+  - Publish Docs
+  - Release to Live PyPI
+
+cache:
+  untracked: true
+  paths:
+  - "$CI_PROJECT_DIR/.pipcache"
+  - "$CI_PROJECT_DIR/.pipenvcache"
+  - "$CI_PROJECT_DIR/.venv"
+  - "$CI_PROJECT_DIR/.mypy_cache"
+  - "$CI_PROJECT_DIR/.pytest_cache"
+
+before_script:
+  # - pip install --upgrade pip
+  # - pip install pipenv
+  # pinned the below versions to do a bug with pip/pipenv.
+  # See https://github.com/pypa/pipenv/issues/2871
+  - pip install pipenv==2018.6.25
+  - pip install pip==18.0
+
+unit testing and coverage:
+  stage: Testing and Coverage
+  script:
+  - pipenv install --dev --ignore-pipfile
+  - pipenv run python setup.py test
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/' # regex used to pull out the coverage percentate in gitlab.
+  artifacts:
+    paths:
+        - htmlcov
+    expire_in: 1 day
+    reports:
+      junit: junit.xml
+
+
+# pages:
+#   stage: Coverage Reporting
+#   variables:
+#     GIT_STRATEGY: none  # no git data needed, as just working with artifacts.
+#   script:
+#     - mkdir -p public/coverage/$CI_COMMIT_REF_NAME/$CI_COMMIT_SHA/
+#     - cp -fr htmlcov/* public/coverage/$CI_COMMIT_REF_NAME/$CI_COMMIT_SHA/
+#   dependencies:
+#     - unit testing and coverage
+#   artifacts:
+#     paths:
+#     - public
+
+static_type_checking:
+  stage: Linting
+  script:
+  - pipenv install --dev --ignore-pipfile
+  - pipenv run mypy src --quick-and-dirty --ignore-missing-imports
+
+pylint:
+  stage: Linting
+  script:
+  - pipenv install --dev --ignore-pipfile
+  - pipenv run pylint src
+
+doccheck:
+  stage: Linting
+  script:
+  - pipenv install --dev --ignore-pipfile
+  - pipenv run python setup.py check --restructuredtext --strict  # make sure README.rst parses okay.
+  - pipenv run python setup.py check --metadata --strict # check metadata for correctness.
+  - pipenv run pydocstyle src
+
+package:
+  stage: Package
+  artifacts:
+    name: "$CI_PROJECT_NAME-$CI_COMMIT_TAG"
+    paths:
+    - dist/
+    when: on_success
+    expire_in: 10 mins
+  script:
+  - pipenv install --dev --ignore-pipfile
+  - rm -rf dist
+  - pipenv run python setup.py sdist bdist_wheel
+  only:
+  - /^v?\d+\.\d+\.\d+$/  # only semver strings e.g. 1.0.0 or v1.0.1
+
+deploy_to_test_pypi:
+  stage: Release to Test PyPI
+  variables:
+    GIT_STRATEGY: none  # no git data needed, as just working with artifacts.
+  environment:
+    name: Test PyPI
+    url: https://test.pypi.org/project/pyskyq
+  dependencies:
+  - package
+  script:
+  # - if [ -z "$CI_COMMIT_TAG" ]; then echo "Needs a git tag!"; exit 0; fi  # hack to ensure TAG is present as only: with AND doesn't work
+  - rm -f .pypirc
+  - echo "[distutils]" >> ~/.pypirc
+  - echo "index-servers =" >> ~/.pypirc
+  - echo "    pypi" >> ~/.pypirc
+  - echo "" >> ~/.pypirc
+  - echo "[pypi]" >> ~/.pypirc
+  - echo "${PYPI_REPO}" >> ~/.pypirc
+  - echo "${PYPI_USER}" >> ~/.pypirc
+  - echo "${PYPI_PASSWORD}" >> ~/.pypirc
+  - ls -la dist/
+  - pipenv run twine upload dist/*
+  only:
+  - /^v?\d+\.\d+\.\d+$/  # only semver strings e.g. 1.0.0 or v1.0.1
+  # except:
+  # - /^(?!.*(master)$).*$/  # exclude everything that does not match "master" -- DeMorgan's theorem in action.
+
+pages:
+  stage: Publish Docs
+  variables:
+    GIT_STRATEGY: clone  # needs the full repo as reno needs to read the git history to build renotes.
+  script:
+    - pipenv install --dev --ignore-pipfile
+    - pipenv run python setup.py docs
+    - mv build/sphinx/html/ public/
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
+#  - /^v?\d+\.\d+\.\d+$/  # only semver strings e.g. 1.0.0 or v1.0.1
+
+deploy_to_live_pypi:
+  stage: Release to Live PyPI
+  variables:
+    GIT_STRATEGY: none  # no git data needed, as just working with artifacts.
+  environment:
+    name: Live PyPI
+    url: https://pypi.org/project/pyskyq
+  dependencies:
+  - package
+  script:
+  # - if [ -z "$CI_COMMIT_TAG" ]; then echo "Needs a git tag!"; exit 0; fi  # hack to ensure TAG is present as only: with AND doesn't work
+  - rm -f .pypirc
+  - echo "[distutils]" >> ~/.pypirc
+  - echo "index-servers =" >> ~/.pypirc
+  - echo "    pypi" >> ~/.pypirc
+  - echo "" >> ~/.pypirc
+  - echo "[pypi]" >> ~/.pypirc
+  - echo "${PYPI_REPO}" >> ~/.pypirc
+  - echo "${PYPI_USER}" >> ~/.pypirc
+  - echo "${PYPI_PASSWORD}" >> ~/.pypirc
+  - pipenv run twine upload dist/*
+  only:
+  - /^v?\d+\.\d+\.\d+$/  # only semver strings e.g. 1.0.0 or v1.0.1
+  # except:
+  # - /^(?!.*(master)$).*$/  # exclude everything that does not match "master" -- DeMorgan's theorem in action.
