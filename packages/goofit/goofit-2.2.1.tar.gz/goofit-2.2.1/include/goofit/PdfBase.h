@@ -1,0 +1,267 @@
+#pragma once
+
+#include <goofit/GlobalCudaDefines.h>
+
+#include <goofit/PDFs/detail/Globals.h>
+#include <goofit/Variable.h>
+#include <goofit/detail/Abort.h>
+
+#include <algorithm>
+#include <map>
+#include <set>
+#include <vector>
+
+#ifdef ROOT_FOUND
+class TH1D;
+#endif
+
+namespace ROOT {
+namespace Minuit2 {
+class FunctionMinimum;
+} // namespace Minuit2
+} // namespace ROOT
+
+namespace GooFit {
+
+struct ParameterContainer;
+
+class FitControl;
+
+class DataSet;
+class BinnedDataSet;
+class UnbinnedDataSet;
+
+namespace {
+/// Utility to filter and pick out observables and variables
+GOOFIT_MAYBE_UNUSED void filter_arguments(std::vector<Observable> &oblist, std::vector<Variable> &varlist) {}
+
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const Observable &obs,
+                      Args... args);
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const EventNumber &obs,
+                      Args... args);
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const Variable &var,
+                      Args... args);
+
+/// Pick an Observable off the front
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const Observable &obs,
+                      Args... args) {
+    oblist.push_back(obs);
+    return filter_arguments(oblist, varlist, args...);
+}
+
+/// Pick an EventNumber off the front
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const EventNumber &obs,
+                      Args... args) {
+    oblist.push_back(obs);
+    return filter_arguments(oblist, varlist, args...);
+}
+
+/// Pick an Variable (parameter) off the front
+template <typename... Args>
+void filter_arguments(std::vector<Observable> &oblist,
+                      std::vector<Variable> &varlist,
+                      const Variable &var,
+                      Args... args) {
+    varlist.push_back(var);
+    return filter_arguments(oblist, varlist, args...);
+}
+} // namespace
+
+// This class never exists on the GPU
+
+class PdfBase {
+    friend std::ostream &operator<<(std::ostream &, const PdfBase &);
+
+  protected:
+    /// Runs once at the beginning of a run. Will always be called, so useful for setup. Inside things like fits, this
+    /// will not rerun, however, even if parameters change.
+    void pre_run();
+
+    /// This will run before each evaluation (after pre_run), always (even inside fits)
+    void pre_call();
+
+    /// use this function to populate the arrays generically, or specialize as needed
+    virtual void populateArrays();
+
+    /// This needs to be set before a call to setData.
+    void setNumPerTask(PdfBase *p, const int &c);
+
+    /// Generate a range to integrate over
+    void generateNormRange();
+
+    // Registration
+
+    /// This adds a parameter.
+    void registerParameter(Variable var);
+
+    /// Remove a paramter
+    void unregisterParameter(Variable var);
+
+    /// Register a constant
+    void registerConstant(fptype value);
+
+    /// Register a function for this PDF to use in evalution
+    template <typename T>
+    void registerFunction(std::string name, const T &function) {
+        reflex_name_  = name;
+        function_ptr_ = get_device_symbol_address(function);
+    }
+
+    /// Register an observable (Usually done through constructor)
+    void registerObservable(Observable obs);
+
+    /// Force all normalization values to 1
+    void recursiveSetNormalization(fptype norm = 1.0, bool subpdf = false);
+
+  public:
+    template <typename... Args>
+    explicit PdfBase(std::string pdf_name, std::string n, Args... args)
+        : pdf_name_(std::move(pdf_name))
+        , name(std::move(n)) {
+        std::vector<Observable> obs;
+        std::vector<Variable> vars;
+
+        filter_arguments(obs, vars, args...);
+
+        for(auto &ob : obs)
+            registerObservable(ob);
+        for(auto &var : vars)
+            registerParameter(var);
+    }
+
+    virtual ~PdfBase() = default;
+
+    // Standard entry functions
+
+    virtual double calculateNLL() = 0;
+    virtual fptype normalize()    = 0;
+
+    // TODO: Combine with pre_run and remove
+    void initializeIndices();
+
+    // TODO: Combine with pre_call and remove
+    void copyParams();
+
+    std::string getName() const { return name; }
+
+    std::vector<Observable> getObservables() const;
+    std::vector<Variable> getParameters() const;
+    Variable *getParameterByName(std::string n);
+
+    // User level setup
+
+    void setData(DataSet *data);
+    DataSet *getData() { return data_; }
+
+    virtual void setFitControl(std::shared_ptr<FitControl>) = 0;
+
+    /// Override to indicate that this has an analytic integral
+    virtual bool hasAnalyticIntegral() const { return false; }
+
+    /// Currently only 1D filling supported
+    void fillMCDataSimple(size_t events, unsigned int seed = 0);
+
+    /// RooFit style fitting shortcut
+    ROOT::Minuit2::FunctionMinimum fitTo(DataSet *data, int verbosity = 3);
+
+    /// Even shorter fitting shortcut
+    ROOT::Minuit2::FunctionMinimum fit(int verbosity = 3);
+
+    unsigned int getFunctionIndex() const { return functionIdx; }
+    unsigned int getParameterIndex() const { return parameters; }
+
+    void setNormalization(const fptype &v) {
+        cachedNormalization                = v;
+        host_normalizations[normalIdx + 1] = v;
+    }
+    fptype getNormalization() const { return cachedNormalization; }
+
+    /// Set a specific fineness for the integrator
+    void setIntegrationFineness(int i);
+
+    /// Have the parameters changed since last evaluation?
+    bool parametersChanged() const;
+
+    void updateVariable(Variable v, fptype newValue);
+    void updateParameters();
+
+    // Setup
+    void SigGenSetIndices() {
+        setupObservables();
+        setIndices();
+    }
+    void setupObservables();
+    virtual void recursiveSetIndices();
+    virtual void setIndices();
+
+    void setCommonNorm(bool v = true) { commonNorm = v; };
+    void setSeparateNorm(bool v = true) { separateNorm = v; };
+    bool getCommonNorm() const { return commonNorm; };
+    bool getSeparateNorm() const { return separateNorm; };
+
+    /// Get the current PDF name
+    std::string getPdfName() const { return pdf_name_; }
+
+  protected:
+    DataSet *data_ = nullptr; //< Remember the original dataset
+
+    std::string reflex_name_; //< This is the name of the type of the PDF, for reflexion purposes. Must be set or
+                              // RecursiveSetIndicies must be overloaded.
+
+    void *function_ptr_{nullptr}; //< This is the function pointer to set on the device. Must be set or
+                                  // RecursiveSetIndicies must be overloaded.
+
+    fptype numEvents{0};        //< Non-integer to allow weighted events
+    unsigned int numEntries{0}; //< Eg number of bins - not always the same as number of events, although it can be.
+
+    fptype *normRanges{nullptr}; //< This is specific to functor instead of variable so that
+                                 // MetricTaker::operator needn't use indices.
+
+    unsigned int parameters{0}; //< Stores index, in 'paramIndices', where this functor's information begins.
+
+    fptype cachedNormalization{1.0}; //< Store the normalization for this PDF directly
+
+    std::shared_ptr<FitControl> fitControl;
+    std::vector<Observable> observablesList;
+    std::vector<Variable> parametersList;
+    std::vector<fptype> constantsList;
+    std::vector<PdfBase *> components;
+
+    int integrationBins{-1};        //< Force a specific number of integration bins for all variables
+    bool properlyInitialised{true}; //< Allows checking for required extra steps in, eg, Tddp and Convolution.
+
+    unsigned int functionIdx{0}; //< Stores index of device function pointer.
+
+    unsigned int parametersIdx{0};
+    unsigned int constantsIdx{0};
+    unsigned int observablesIdx{0};
+    unsigned int normalIdx{0};
+
+    bool commonNorm{false};
+    bool separateNorm{false};
+
+    int m_iEventsPerTask{0};
+
+  private:
+    std::string pdf_name_;
+    std::string name;
+};
+
+std::ostream &operator<<(std::ostream &, const PdfBase &);
+
+} // namespace GooFit
