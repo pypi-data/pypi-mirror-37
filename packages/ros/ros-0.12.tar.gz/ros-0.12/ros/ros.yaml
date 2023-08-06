@@ -1,0 +1,27 @@
+
+system:
+  api_port: 5002
+  
+neo4j:
+  host: localhost
+  port: 7687
+  username: neo4j
+  password: neo4j0
+
+redis:
+  host: localhost
+  port: 6379
+
+plugins:
+  - name: translator
+    driver: translator.ros.plugin.Plugin
+    config:
+      bionames:
+        url: "https://bionames.renci.org/lookup/{input}/{type}/"
+
+services:
+  condition_to_similar_to_gene_to_pathway_to_drug:
+    - name : gamma
+      url : http://robokop.renci.org/api/wf1mod3a/DOID:9352/?max_results=50
+    - name : rtx
+      url : https://rtx.ncats.io/api/rtx/v1/query
