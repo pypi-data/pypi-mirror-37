@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import os
+from setuptools import setup
+
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+setup(
+    name="pamalia",
+    version="0.0.1",
+    author="Louis Abraham",
+    license="MIT",
+    author_email="louis.abraham@yahoo.fr",
+    description="",
+    long_description=read("README.rst"),
+    url="https://github.com/louisabraham/pamalia",
+    packages=["pamalia"],
+    install_requires=["sklearn"],
+    python_requires=">=3.6",
+)
