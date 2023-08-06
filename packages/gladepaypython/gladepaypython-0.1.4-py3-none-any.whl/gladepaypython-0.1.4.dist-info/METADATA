@@ -1,0 +1,135 @@
+Metadata-Version: 2.1
+Name: gladepaypython
+Version: 0.1.4
+Summary: Python wrapper for Gladepay API
+Home-page: https://gitlab.com/gladepay-apis/gladepay-python
+Author: Chinaka I. Light
+Author-email: light@yottabitconsulting.com
+License: MIT
+Platform: UNKNOWN
+Requires-Dist: requests
+Requires-Dist: nose2
+
+# Gladepay Python
+
+![Build Status](https://gitlab.com/gladepay-apis/gladepay-python/badges/develop/build.svg)
+
+GladePay is the leading digital payments provider with focus across African countries, dedicated to creating simple payments solution for African businesses. We are focused on building trust between buyers and sellers by providing simple solutions using the payment options (online or offline) preferred with complete security and efficiency.
+
+A PYTHON Package Or library that simplifies payment with Gladepay APIs
+
+To Learn more, visit www.gladepay.com.
+
+## Installation
+
+Install it yourself as:
+
+    $ pip install gladepaypython
+
+## Usage
+
+```python
+	from gladepaypython import Gladepay
+
+	initialize_vals = {
+            'action': 'initiate',
+            'paymentType': 'card',
+            'user': {
+              'firstname': 'Chinaka',
+              'lastname': 'Light',
+              'email': 'test@gmail.com',
+              'ip': '192.168.33.10',
+              'fingerprint': 'cccvxbxbxb'
+            },
+            'card': {
+              'card_no': '5438898014560229',
+              'expiry_month': '09',
+              'expiry_year': '19',
+              'ccv': '789',
+              'pin': '3310'
+            },
+            'amount': '10000',
+            'country': 'NG',
+            'currency': 'NGN'
+          }
+
+	merchant_id = "GP0000001" #Test Data
+	merchant_key = "123456789" 
+	live = true #for live server, default false for test server
+
+	# Demp or Test Server Instance
+	gladepay = Gladepay(merchant_id, merchant_key) # Or
+
+	# gladepay = Gladepay(merchant_id, merchant_key, false) # Or
+
+	#LIVE SERVER Instance
+	# gladepay = Gladepay(merchant_id, merchant_key, true) # Or
+
+	#Get Response
+	gladepay.card_payment(self.initialize_vals['amount'], self.initialize_vals['country'], self.initialize_vals['currency'], self.initialize_vals['user'], self.initialize_vals['card'])
+
+  # If OTP is required 
+	response = gladepay.validate_otp(response['txnRef'], '12345')
+
+	#Verify Transaction		
+	response = gladepay.verify_transaction(response['txnRef'])
+
+  print response["message"] #Transaction Successful
+
+  #Other methods
+  #Get list of all Banks:
+
+  all_banks_response = gladepay.all_banks()
+
+	#Get list of banks that support account payments:
+	supported_banks_response = gladepay.supported_banks_account_payment
+
+	#Get Details of a card:
+	card_details_response = gladepay.card_details(card_number)
+
+	#Get the charges applicable to a card: (first six digit of the card no)
+	card_charges_response = gladepay.card_charges(amount, card_no)
+
+	#Get the charges applicable to an account
+	account_charges_response = gladepay.account_charges(amount)
+
+	#charge with token
+	response = gladepay.charge_with_token(
+      user,
+      token,
+      amount
+    )
+
+	#Perform Money transfer:
+	money_transfer_response = gladepay.money_transfer(amount, bankcode, account_number, 'Mark Silas', 'Narration')
+
+	#Verify status of Money transfer:
+	verify_money_transfer_response = gladepay.verify_money_transfer(txnRef)
+
+	#Verify Account Name:
+	account_name_verification_response = gladepay.verify_account_name(bankcode, account_number)
+
+	#Return Values
+	All methods return an array.
+
+```
+
+
+## Development
+
+After checking out the repo, run 
+pip install -e . 
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://gitlab.com/gladepay-apis/gladepay-python. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+
+## License
+
+The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+
+## Code of Conduct
+
+Everyone interacting in the Gladepay project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://gitlab.com/gladepay-apis/gladepay-python/blob/master/CODE_OF_CONDUCT.md).
+
+

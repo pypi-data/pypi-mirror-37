@@ -1,0 +1,5 @@
+__title__ = 'gladepaypython'
+__version__ = '0.1.4'
+__author__ = 'Chinaka I. Light'
+__license__ = 'MIT'
+__copyright__ = 'Copyright 2018. Chinaka I. Light'
