@@ -1,0 +1,44 @@
+sudo: false
+language: python
+env:
+  global:
+    - TWINE_USERNAME="anthrotype"
+    - secure: VdRt0Fs7mAcDbscxeHp1IxZDFe5uZYD2cTnBav4yM6ykHglhmguJ7sLZdNHtisXBIvV3BOAxuIcplQdlHWIoKGxK7Si2UWJ29SRcy7nok84beeU27yvbJuKZooMYGGaPsqsl4NrezlEuFFYZX1jSH/yPSRdi4gd7L0JK/d8nJTlT2yVdkjRSXq/GZXv22D9IMn9mvgffChWcq9B4L0yg3Nrn0LaGwgoZ5NRq9oFXSWfKUEC41SY3lpMm/MqXEzwFsa3zNOOXSSfoJcBSPd7OP9WTWkL4Yvs24/w5qUW4q50odHoFXZ4xxjolNsazLNZKs3bFQW1wtM/+LgSs8Zi33wmfuZark7w1Ei856Tcei1a6MBxhaNX1EUHUVt9Kx2MBZ105XSinYX8U/JD7ng6c5vEh8NqqQL68zqRFpnaxYnuV15UAX1B7ntssnYYAOQS1XAoDgN+Pum7osJNSIHErM0qlxzaRKbTlekdv+mHz2wqEHaCl8efVBeKCItXzilngnZuvfGzAilfMJgveNiUMZqjAkCcEO/RME8Dzd6OKVL1Yx+gtbj1PhKtyT5iA7t95nZoRibO2e+8XrwxfcQbtfDQ7Bu+NC+8L9OCR9pppRvP/t1LqG4xWcFSaz7Difkb1+kgVbw3MTax2KqM6vSt51VxFaA0r9LUq1DQkSFCzXnc=
+
+python:
+  - "2.7"
+  - "3.6"
+
+install:
+  - pip install --upgrade pip
+  - pip install -r test_requirements.txt .
+
+script:
+  - (cd test && ./run.sh)
+
+after_success:
+  - |
+    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "googlei18n/fontmake" ] && [ "$TRAVIS_PYTHON_VERSION" == "3.6" ]; then
+      # we need to install pip from github until pypa/pip#5404 is released
+      # https://github.com/linkedin/shiv/pull/7#issuecomment-412584748
+      pip install --upgrade -e git+https://github.com/pypa/pip.git#egg=pip
+      pip install --upgrade twine setuptools wheel shiv
+      python setup.py sdist
+      pip wheel --no-deps --wheel-dir dist .
+      ./build_pyz.sh
+      twine upload dist/*.whl dist/*.zip
+    fi
+
+deploy:
+  # also create a Github Release with the current tag
+  - provider: releases
+    api_key:
+      secure: vfsMIz6Un0QZbS6uisUEUVO4db6b74COS5cu7ipmE13EGY0KtcIGQqgd+J71KxY7yQlnk/cm5Tp9Aei3L1UPEK6G4uC65kVFjq4hJRjOzm1QT6H/wyw6DpC5qUcr/MEZDQaPouVqvK2A30pNmMK+4Kohp61EgeMCgy+gcaTfbMao8o5Ao3FJvSrl31VWZEd/2pwFC9zi0kRmf2QtOVN+nnlCuU22GC4d78HmvjUF70p9XmgL+H73vjum4djd1O0kdw9gVYOolnRDlH8bR39jztKemOz6DnWDoTyB46RZ31Jyt5tsEdLOwWrO+fL2fDKgyg2716F+RaM9bqvM09BRbxHlO2ws+Mmn4g0kZs2DnBmdUac4V4tW5COQ0Ww3W4QaFRkR/caqjISlGujxifXJD/fisqwE+pnLUMQEcel39/UslgAWCtrPH7Bp0dDlopaEnugvQ8AX9hqe9AYaS9ySowcr6UfCWfjalXTbrCcTpH+Sj9r3JjEw1AZBecySwOUZCxZBejltAVdNsN8pnBbUR8oQN3ahLjIiUMDMxDCZnw8S2mQaUZoFqJiTz5SA9ED7yaciiehTLbW6M1cvTS/oqHFb+GGfn4D1CCF7HC9ML3oau82pHU6GcZqOj+zJr2v2YIJBf5cBDK54QBA8ERwNh+7Tq3IEhYQDX7HPtxsIvWI=
+    file_glob: true
+    file: "shivs/*.zip"
+    skip_cleanup: true
+    on:
+      repo: googlei18n/fontmake
+      tags: true
+      all_branches: true
+      python: 3.6
