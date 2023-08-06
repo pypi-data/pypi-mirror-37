@@ -1,0 +1,30 @@
+{% extends "stem_registration/base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}
+    {% if user.is_authenticated %}
+        {% trans "User groups" %}
+    {% else %}
+        {% trans "Log in" %}
+    {% endif %}
+{% endblock %}
+{% block description %}
+{% endblock %}
+{% block breadcrumps %}
+{% endblock %}
+{% block content %}
+
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+
+        <div class="profile__descriptions">
+            <h1>{% trans "User groups" %}</h1>
+            <ul>
+
+                {% for gr in user.groups.all %}
+                    <li>{{ gr|title }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </main>
+
+{% endblock %}
