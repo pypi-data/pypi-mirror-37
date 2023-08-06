@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+    <title>open-cravat submit</title>
+    <script src="websubmit.js"></script>
+    <script src="/submit/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" href="websubmit.css">
+    <script src='../store/webstore.js'></script>
+    <script>
+        $(document).ready(function() {
+            websubmit_run();
+        });
+    </script> 
+</head>
+
+<body style='font-family: sans-serif;'>
+
+<div id='pageselect'>
+    <div selval='t' value='submitdiv' onclick='changePage("submitdiv");'>
+        Jobs 
+    </div><div value='storediv' onclick='changePage("storediv");'>
+        Store
+    </div><div value='settingsdiv' onclick='changePage("settingsdiv");'>
+        Settings
+    </div>
+</div>
+
+<div id='submitdiv' class='appdiv'>
+    <div id = 'headerdiv' style='position: fixed; top: 0px; width: 100%; z-index: 1; padding-bottom: 20px; height: 100px; background-color: white; box-shadow: 0px 0px 20px gray; left: 0px; right: 0px;'>
+        <div style='position: absolute; left: calc(50% - 180px); bottom: 40px;'>
+            <img src='logo.png' style='width: 360px; position: relative; top: 39px;' />
+        </div>
+        <!-- <div style='position: absolute; bottom: 0px; right: 16px;'><button style='font-size: 30px; border-radius: 8px; padding: 8px; outline: none;' onclick='openSubmitDiv();'>New Analysis</button></div> -->
+        <!--
+        <button style='position: absolute; top: 0px; right: 16px; font-size: 20px; color: #b8860b;' onclick='transitionToStore();'>To Store</button>
+        <button style='position: absolute; top: 30px; right: 16px; font-size: 20px; color: #b8860b;' onclick='transitionToSettings();'>Settings</button>
+        -->
+    </div>
+
+    <table><tr><td valign='top' style=''>
+    <div id='submitcontentdiv' style='position: relative; top: 120px; display: block;'>
+        <br />
+        <div id="submit-form" style='overflow-y: auto;'>
+            <br />
+            <div class='container'>
+                <span class='divtitle'>Variants</span>
+                <br />
+                <br />
+                <br />
+                <table>
+                    <tr>
+                        <td valign='top' style='border-bottom: 1px solid black; padding-bottom: 20px;'>
+                            <table style='width: 100%'><tr><td>
+                            Upload a variant file<br />
+                            <span style='font-size: 12px;'>(<a href=''>CRAVAT</a> or <a href=''>VCF</a> format)</span>
+                            <br />
+                            <input type="file" name="input-file" id="input-file">
+                            </td>
+                            <td style='text-align: right;'>
+                                <select id="assembly-select" size='3'>
+                                    <option value="hg38" selected=true>hg38</option>
+                                    <option value="hg19">hg19</option>
+                                    <option value="hg18">hg18</option>
+                                </select>
+                            </td></tr></table>
+                        </td>
+                    </tr><tr>
+                        <td valign='top' style='border-bottom: 1px solid black; padding-bottom: 20px; position: relative; padding-top: 20px;'>
+                            <div>
+                                Type variants
+                                <br />
+                                <textarea rows="6" cols="60" id="input-text" style='font-size: 12px;' placeholder="Input text"></textarea>
+                            </div>
+                            <div class='or'>OR</div>
+                        </td>
+                    </tr><tr>
+                        <td valign='top' style='position: relative; padding-top: 20px;'>
+                            Try examples of<br />
+                            <button value="cravat" class='input-example-button'>CRAVAT Format</button>
+                            <button value="vcf" class='input-example-button'>VCF Format</button>
+                            <div class='or'>OR</div>
+                        </td>
+                    </tr>
+                </table>
+                <div class='divbanner'></div>
+            </div>
+            <br />
+            <br />
+            <div id='annotchoosediv' class='container'>
+                <span class='divtitle'>Annotators</span>
+                <br />
+                <br />
+                <br />
+                Mouse over an annotator to see details (if the browser is connected to the internet).
+                <div id="annotator-select-div"></div>
+                <div class='divbanner'></div>
+            </div>
+            <br />
+            <br />
+            <div class='container'>
+                <span class='divtitle'>Miscellaneous Setting</span>
+                <br />
+                <br />
+                <br />
+                <div>
+                    <span style='font-style: italic;'>Report types</span>
+                    <div id="report-select-div"></div>
+                </div>
+                <!--
+                <div>
+                    <span style='font-style: italic;'>Jobs directory:</span>
+                    <br />
+                    <span class='jobsdirtext' style='font-family: monospace;'></span>
+                    <br />
+                    <input class='jobsdirinput' type='text' size='40' placeholder='Enter new jobs dir to change (if wanted)' />
+                </div>
+                -->
+                <br />
+                <div>
+                    <span style='font-style: italic; vertical-align: top;'>Note: </span>
+                    <textarea id='jobnoteinput' cols='55' rows='6' placeholder='Enter a note for the analysis (optional)'></textarea>
+                </div>
+                <div class='divbanner'></div>
+            </div>
+            <br />
+        </div>
+        <br />
+
+        <div style='text-align: center;'><button id="submit-job-button" style='font-size: 24px; padding: 10px; width: 100%; background-color: #b5e0c4; border-radius: 6px; margin-bottom: 10px;'>Annotate</button></div>
+    </div>
+
+    </td><td valign='top' style='padding-left: 20px; width: 100%;'>
+    <div id="jobdiv" style='position: relative; top: 120px; display: block;'>
+        <br />
+            <div style='width: 100%; text-align: right;'>
+                <span style='font-style: italic;'>Directory (go to Setting to change):</span>
+                <span class='jobsdirtext' style='font-family: monospace;'></span>
+                <!--
+                <br />
+                <input class='jobsdirinput' type='text' size='40' placeholder='Enter new jobs dir to change' />
+                -->
+                <button id="refresh-jobs-table-btn">Refresh Table</button>
+            </div>
+            <table id="jobs-table" style='width: 100%; border-spacing: 10px;'>
+                <thead>
+                <tr>
+                    <th class='tableheadercell'>Input File</th>
+                    <th class='tableheadercell'>Job ID</th>
+                    <th class='tableheadercell'>Status</th>
+                    <th class='tableheadercell'>Note</th>
+                    <th class='tableheadercell'>Result Viewer</th>
+                    <th class='tableheadercell'>Download</th>
+                    <th class='tableheadercell'>Delete</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        <br />
+    </div>  
+    </td></tr></table>
+
+    <iframe id="download-area" style="display:none;"></iframe>
+
+</div> <!-- submitdiv -->
+
+<div id='storediv' class='appdiv'>
+    <div style='position: fixed; top: 0px; width: 100%; z-index: 1; padding-bottom: 20px; height: 100px; background-color: white; box-shadow: 0px 0px 20px gray; left: 0px; right: 0px;'>
+        <div style='position: absolute; left: calc(50% - 180px); bottom: 40px;'>
+            <img src='logo.png' style='width: 360px; position: relative; top: 39px;' />
+        </div>
+        <div style='position: absolute; right: 25px; vertical-align: bottom; bottom: 10px;'>
+            Modules directory: <span id='modulesdirspan' style='font-family: monospace;'></span>
+            <br />
+            Module type:
+            <select id='typefilter' onchange='updateFilter()' style='font-size: 16px'></select>
+            <input type='text' id='namefilter' name='namefilter' placeholder='Search the Store' oninput='updateFilter()' style='font-size: 16px'/>
+        </div>
+    </div>
+    <div id='messagediv' style='position: fixed; width: 100%; text-align: center; color: black; background-color: yellow; font-size: 20px; height: 100px; z-index: 1; display: none;'></div>
+    <div id='remotemodulepanels' style='display: flex; flex-wrap: wrap; justify-content: center; position: relative; top: 120px; background-color: white;'></div>
+</div> <!-- storediv -->
+
+<div id='settingsdiv' class='appdiv' style='display: none;'>
+    <div style='position: fixed; top: 0px; width: 100%; z-index: 1; padding-bottom: 20px; height: 100px; background-color: white; box-shadow: 0px 0px 20px gray; left: 0px; right: 0px;'>
+        <div style='position: absolute; left: calc(50% - 180px); bottom: 40px;'>
+            <img src='logo.png' style='width: 360px; position: relative; top: 39px;' />
+        </div>
+    </div>
+    <div style='position: relative; top: 120px;'>
+        <span>System configuration file:</span><span id='sysconfpathspan'></span>
+        <br />
+        <textarea id='sysconftextarea' cols='120' rows='30'></textarea>
+        <br />
+        <button style='font-size: 30px; padding: 11px; background-color: #d6ecff;' onclick='updateSystemConf();'>Update</button>
+        <button style='font-size: 30px; padding: 11px; background-color: #d6ecff;' onclick='resetSystemConf();'>Reset</button>
+    </div>
+</div> <!-- settingsdiv -->
+
+</body>
+</html>
