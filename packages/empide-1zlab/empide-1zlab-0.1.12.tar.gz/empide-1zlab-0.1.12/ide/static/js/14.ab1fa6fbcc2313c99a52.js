@@ -1,0 +1,1 @@
+webpackJsonp([14],{SJRc:function(t,s,o){"use strict";Object.defineProperty(s,"__esModule",{value:!0});s.default={methods:{slotToggleSettings:function(){this.showSettings=!this.showSettings},slotSwitch:function(t){this.switcher=t.index},slotLock:function(){this.tasklock=!0},slotUnlock:function(){this.tasklock=!1}}}}});
