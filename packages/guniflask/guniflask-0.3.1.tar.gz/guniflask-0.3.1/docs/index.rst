@@ -1,0 +1,47 @@
+==============================
+Welcome to guniflask |version|
+==============================
+
+Overview
+========
+
+guniflask是自动化生成基于flask + gunicorn的服务端项目基础代码的构建工具。
+
+Installation
+============
+
+guniflask需要Python 3.5或更高版本的环境支持。
+
+可以通过pip安装或升级guniflask::
+
+    $ pip install -U guniflask
+
+安装或升级guniflask生成的项目的依赖::
+
+    $ pip install -U guniflask[app]
+
+Table of Contents
+=================
+
+.. toctree::
+    :maxdepth: 2
+
+    run
+
+.. toctree::
+    :maxdepth: 2
+
+    config
+    settings
+    hook
+    blueprints
+    orm
+    log
+    debug
+    deploy
+
+.. toctree::
+    :maxdepth: 1
+
+    upgrading
+    changelog
