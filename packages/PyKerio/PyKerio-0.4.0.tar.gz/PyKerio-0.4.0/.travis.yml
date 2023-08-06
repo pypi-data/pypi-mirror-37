@@ -1,0 +1,19 @@
+language: python
+python:
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install: "pip install -r requirements.txt"
+script:
+  - export KERIO_USERNAME='admin-en'
+  - export KERIO_PASSWORD='kerio'
+  - export KERIO_BOX='NO'
+  - export KERIO_READONLY='YES'
+  - nosetests --verbose --detailed-errors --nocapture --with-id --with-coverage tests/types/
+  - nosetests --verbose --detailed-errors --nocapture --with-id --with-coverage tests/enums/
+  - nosetests --verbose --detailed-errors --nocapture --with-id --with-coverage tests/structs/
+  - nosetests --verbose --detailed-errors --nocapture --with-id --with-coverage tests/lists/
+  - nosetests --verbose --detailed-errors --nocapture --with-id --with-coverage tests/interfaces/
+after_success:
+  - coveralls
