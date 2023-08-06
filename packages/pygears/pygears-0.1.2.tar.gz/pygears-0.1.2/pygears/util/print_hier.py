@@ -1,0 +1,87 @@
+import pprint
+from pygears import registry
+from pygears.core.hier_node import HierVisitorBase
+import textwrap
+from pygears.conf import util_log
+
+
+def module_signature(module, fullname, params):
+    t = module.get_type()
+    if t is None:
+        types = "None"
+        sizes = ""
+    elif isinstance(t, tuple):
+        types = ', '.join([str(tt) for tt in t])
+        sizes = ', '.join([str(int(tt)) for tt in t])
+    else:
+        types = str(t)
+        sizes = int(t)
+
+    if fullname:
+        name = module.name
+    else:
+        name = module.basename
+
+    return f'{name}: {types} ({sizes})'
+
+
+class Visitor(HierVisitorBase):
+    omitted = ['definition', 'sim_setup']
+
+    def __init__(self, params=False, fullname=False):
+        self.indent = ""
+        self.params = params
+        self.fullname = fullname
+        self.res = []
+        self.pp = pprint.PrettyPrinter(indent=4, width=120)
+
+    def Gear(self, node):
+        self.print_module_signature(node)
+        self.indent += "    "
+        super().HierNode(node)
+        self.indent = self.indent[:-4]
+        return True
+
+    def print_module_signature(self, module):
+        def get_size(t):
+            try:
+                return str(int(t))
+            except TypeError:
+                return '?'
+
+        t = module.get_type()
+        if t is None:
+            types = "None"
+            sizes = ""
+        elif isinstance(t, tuple):
+            types = ', '.join([str(tt) for tt in t])
+            sizes = ', '.join([get_size(tt) for tt in t])
+        else:
+            types = str(t)
+            sizes = get_size(t)
+
+        if self.fullname:
+            name = module.name
+        else:
+            name = module.basename
+
+        self.res.append(f'{self.indent}{name}: {types} ({sizes})')
+        if self.params:
+            params = {
+                p: repr(v)
+                for p, v in module.params.items() if p not in self.omitted
+            }
+
+            p = self.pp.pformat(params)
+            # print(p)
+            self.res.append(textwrap.indent(p, self.indent))
+            # self.res.append(f'{self.indent}    {p}')
+
+
+def print_hier(root=None, params=False, fullname=False):
+    if root is None:
+        root = registry('gear/hier_root')
+
+    v = Visitor(params, fullname)
+    v.visit(root)
+    util_log().info('\n'.join(v.res))
