@@ -1,0 +1,96 @@
+general:
+  listen_addr:        127.0.0.1
+  listen_port:        8670
+  lock_timeout:       60
+  charset:            utf-8
+  content_type:       'application/json; charset=utf-8'
+  max_workers:        10
+  max_requests:       500
+  max_life_time:      3600
+  notifiers_path:     '/etc/sosbackups/notifiers'
+  testmethods:        true
+plugins:
+  retention:
+    max_workers: 2
+    worker_lifetime: 3600
+    tabs:
+      '* * * * *':
+        - path_format: '/volume1/sosbackups/'
+          date_format: '%Y-%m-%d'
+          max: '2d'
+  cronsync:
+    max_workers: 2
+    worker_lifetime: 3600
+    tabs:
+      '* 16 * * *':
+        - path: '/tmp/volume1'
+          exclude_files:
+            - /etc/sosbackups/exclude.lst
+          plugins:
+            copy:
+              __time__:
+                when: 'start'
+                kwargs:
+                  days: '-1'
+inotify:
+  max_workers: 5
+  worker_lifetime: 600
+  exclude_files:
+    - /etc/sosbackups/exclude.lst
+  rsync:
+    bin_path: 'rsync'
+    max_retries: 5
+    max_conn_retries: 5
+    args:
+      - '-az'
+      - '--no-r'
+      - '-d'
+      - '--delete-after'
+      - '--force'
+      - '--ignore-errors'
+      - '--numeric-ids'
+  plugins:
+    push:
+      enabled: true
+      hosts:
+        example.org:
+          host: example.org
+          prefix_path: '/home/foo'
+    copy:
+      enabled: true
+      #vars:
+      # foo: bar
+  events:
+    - 'create'
+    - 'close_write'
+    - 'delete'
+    - 'modify'
+    - 'moved_from'
+    - 'moved_to'
+  paths:
+    '/foo/bar':
+      plugins:
+        copy:
+          path_format: '/var/sosbackups/{time:%Y-%m-%d}/{dest}'
+          dest: '/'
+        push: false
+    '/foo/bar/daily':
+      dest: '/var/sosbackups'
+      plugins:
+        copy: false
+        push: true
+modules:
+  file:
+    routes:
+      check:
+        handler:      'check'
+        name:         'file/check'
+        op:           'HEAD'
+        safe_init:    true
+  backup:
+    routes:
+      notify:
+        handler:      'notify'
+        name:         'backup/notify'
+        op:           'PUT'
+        safe_init:    true
