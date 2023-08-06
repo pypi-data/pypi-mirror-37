@@ -1,0 +1,75 @@
+\documentclass[a4paper,12pt]{article}
+
+% Packages
+\usepackage{array}
+	\renewcommand{\arraystretch}{1.4}
+	\setlength{\tabcolsep}{10pt}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{multicol}
+\usepackage{longtable}
+
+% Set margins
+\setlength{\voffset}{-2cm}
+\addtolength{\textheight}{4cm}
+\addtolength{\hoffset}{-1.5cm}
+\addtolength{\textwidth}{3cm}
+
+\begin{document}
+    \noindent \parbox[t]{0.5\textwidth}{
+        {\Huge INVOICE} \\
+        \#\VAR{ customer.account_name }--\VAR{ '{:03d}'.format(customer.number) } \\
+        ~ \\
+        \today \\
+        ~ \\
+        {\color{gray}Bill to:} \\
+        \noindent \VAR{ customer.address|join('\\\\') }
+    }
+    \hfill
+    \parbox[t]{0.35\textwidth}{
+        \raggedleft {\large \VAR{ user.name }} \\
+        \VAR{ user.address|join(' \\\\ ') } \\
+        ~ \\
+        \VAR{ user.phone } \\
+        \VAR{ user.email }
+    } \\
+    \begin{center}
+        \begin{longtable}{| >{\small\raggedright}p{0.15\textwidth} | >{\raggedright}p{0.36\textwidth} | r | c | r |}
+            \hline
+            \normalsize ID & Description & Rate (\pounds) & Qty & Amount (\pounds) \\
+            \hline
+            \endfirsthead
+            \hline
+            \multicolumn{5}{c}{\textit{Continued from previous page}} \\
+            \hline
+            \normalsize ID & Description & Rate (\pounds) & Qty & Amount (\pounds) \\
+            \hline 
+            \endhead
+            \hline \multicolumn{5}{r}{\textit{Continued on next page}} \\
+            \endfoot
+            \hline
+            \endlastfoot
+            \BLOCK{ for entry in invoice.entries }
+                \VAR{ entry.latex() } \\
+            \BLOCK{ endfor }
+        \end{longtable}
+    \end{center}
+    \vfill
+    \begin{multicols}{2}
+        \noindent Payment is due within 30 days of receipt of this invoice. \\
+        \noindent{\color{gray}Payment details:} \\
+        Account \#: \VAR{ user.account_number } \\
+        Sort code: \VAR{ user.sort_code } \\
+        \columnbreak
+        \begin{flushright}
+            \begin{tabular}{ r r }
+                Sub total: & \pounds\VAR{ invoice.sub_total } \\
+                \hline
+                Discount: & \pounds\VAR{ invoice.discount } \\ 
+                Shipping: & \pounds\VAR{ invoice.shipping } \\
+                \hline \hline
+                \bf Amount Due: & \bf \pounds\VAR{ invoice.total }
+            \end{tabular}
+        \end{flushright}
+    \end{multicols}
+\end{document}
