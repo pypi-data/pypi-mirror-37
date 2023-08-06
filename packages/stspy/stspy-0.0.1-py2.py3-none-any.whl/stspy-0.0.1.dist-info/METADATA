@@ -1,0 +1,33 @@
+Metadata-Version: 2.1
+Name: stspy
+Version: 0.0.1
+Summary: Scanning Tunneling Spectra Analysis in Python
+Home-page: UNKNOWN
+Author: UNKNOWN
+Author-email: UNKNOWN
+License: GNU GENERAL PUBLIC LICENSE
+Platform: UNKNOWN
+
+#####################    STSPY    #########################
+
+Scanning Tunneling Spectra Python Analysis
+
+Establishes a python class called spectra which takes a single .VERT file as an input
+
+Automatically pulls parameters of particular importance including:
+ZPiezoconst
+LockinAmpl
+
+Once called, spectra object contains has the following properties:
+t: total time the spectra took
+V: sample voltage (volts)
+z: (Angstroms)
+I: current (amps)
+dIdV: differential conductance (amps)
+V0, I0, z0 dIdV0: copies of these files which are maintained after methods are applied
+
+Methods available:
+average(hyst_cor = True): if there are multiple passes, averages the spectra back and forth. hyst_cor (default True) applies a correction accounting for differences upon sweeping
+normalize(kappa): if using a z-ramp, this is useful. Multiplies the current and conductance by exp(-2*kappa*z) where kappa is a provided number (or array same length as z) to be determined by measurement
+
+
