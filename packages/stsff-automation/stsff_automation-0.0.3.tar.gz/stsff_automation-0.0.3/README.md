@@ -1,0 +1,3 @@
+# stsff-automation-lib
+
+A Python library with some stuff for automation, utils, vcs_info, helper and etc... 
