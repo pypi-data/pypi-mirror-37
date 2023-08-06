@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+alias errcho='>&2 echo'
+
+{%- if ml_data_b64 %}
+    mkdir -p ~/.MissingLinkAI
+    if [ ! -s "~/.MissingLinkAI/{{ ml_file_name }}" ]
+    then
+    echo "{{ ml_data_b64 }}" | base64 -d > ~/.MissingLinkAI/{{ ml_file_name }}
+    else
+    echo "~/.MissingLinkAI/{{ ml_file_name }} is already present. Won't override!"
+    fi
+{%- endif %}
+
+{%- if ssh_identity_b64 %}
+    mkdir -p ~/.ssh
+    if [ ! -s "~/.ssh/id_rsa" ]
+    then
+    echo "{{ ssh_identity_b64 }}" | base64 -d > ~/.ssh/id_rsa
+    chmod 600 ~/.ssh/id_rsa
+    echo "{{ ssh_identity_pub_b64 }}" | base64 -d > ~/.ssh/id_rsa.pub
+    echo "Skipping StrictHostKeyChecking" > ~/.ssh/config
+    echo "Host *" > ~/.ssh/config
+    echo "   StrictHostKeyChecking=no" >> ~/.ssh/config
+    echo "   IdentityFile=$HOME/.ssh/id_rsa"  >> ~/.ssh/config
+    else
+    echo "Identity file already present. Won't override!"
+    fi
+{%- endif %}
