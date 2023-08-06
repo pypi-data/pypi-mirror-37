@@ -1,0 +1,943 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "erepfit",
+  "type": "object",
+  "definitions": {
+    "skfileinfo": {
+      "description": "Electrinic SKFiles Information",
+      "type": "object",
+      "oneOf": [{
+          "type": "object",
+          "description": "DFTB+ Type2Names type of input<br>Note that this kind of input does not support multi-shell SK files",
+          "properties": {
+            "type2filenames": {
+              "enum": [
+                true
+              ]
+            },
+            "lowercase": {
+              "type": "boolean",
+              "default": false
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "separator": {
+              "type": "string"
+            },
+            "suffix": {
+              "type": "string"
+            },
+            "max_angular_momentum": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Z][a-z]?$": {
+                  "enum": [
+                    "s",
+                    "p",
+                    "d",
+                    "f"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "max_angular_momentum"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "DFTB+ direct specification type of input",
+          "properties": {
+            "type2filenames": {
+              "enum": [
+                false
+              ]
+            },
+            "selected_shells": {
+              "properties": {},
+              "patternProperties": {
+                "^[A-Z][a-z]?$": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^s?p?d?f?$"
+                  },
+                  "additionalItems": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "skfiles": {
+              "properties": {},
+              "patternProperties": {
+                "^[A-Z][a-z]?-[A-Z][a-z]?$": {
+                  "description": "Filepath of the SK files",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "additionalItems": false
+                }
+              }
+            }
+          },
+          "required": [
+            "selected_shells",
+            "skfiles"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "plain_kpoints": {
+      "description": "Simple KPoint input: [x, y, z, weight].",
+      "type": "array",
+      "items": [{
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "supercell_folding_kpoints": {
+      "type": "array",
+      "description": "Supercell folding KPoint definition:<br>[k1x, k1y, k1z]<br>[k2x, k2y, k2z]<br>[k3x, k3y, k3z]<br>[shift_x, shift_y, shift_z]",
+      "items": [{
+          "$ref": "#/definitions/ivector3"
+        },
+        {
+          "$ref": "#/definitions/ivector3"
+        },
+        {
+          "$ref": "#/definitions/ivector3"
+        },
+        {
+          "$ref": "#/definitions/dvector3"
+        }
+      ]
+    },
+    "i1dvector3": {
+      "type": "array",
+      "items": [{
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "additionalItems": false
+    },
+    "s1dvector3": {
+      "type": "array",
+      "items": [{
+          "type": "string",
+          "pattern": "^[A-Z][a-z]?$"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "additionalItems": false
+    },
+    "coordinate": {
+      "type": "array",
+      "description": "Coordinates definition: [Symbol, x, y, z] in Angstrom",
+      "items": {
+        "$ref": "#/definitions/s1dvector3"
+      },
+      "additionalItems": false
+    },
+    "dmatrix3_3": {
+      "type": "array",
+      "items": [{
+          "$ref": "#/definitions/dvector3"
+        },
+        {
+          "$ref": "#/definitions/dvector3"
+        },
+        {
+          "$ref": "#/definitions/dvector3"
+        }
+      ],
+      "additionalItems": false
+    },
+    "length_unit": {
+      "enum": [
+        "AA",
+        "aa",
+        "bohr",
+        "Bohr"
+      ],
+      "default": "bohr"
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+    },
+    "ivector3": {
+      "type": "array",
+      "items": [{
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        }
+      ],
+      "additionalItems": false
+    },
+    "dvector3": {
+      "type": "array",
+      "items": [{
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "additionalItems": false
+    },
+    "i1dvector3n": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/i1dvector3"
+      },
+      "additionalItems": false
+    },
+    "s1dvector3n": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/s1dvector3"
+      },
+      "additionalItems": false
+    },
+    "dvector3n": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/dvector3"
+      },
+      "additionalItems": false
+    },
+    "geometry_molecule_xyz": {
+      "type": "object",
+      "properties": {
+        "charge": {
+          "type": "integer",
+          "default": 0
+        },
+        "spin": {
+          "type": "integer",
+          "default": 1
+        },
+        "coordinates_xyz": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "coordinates_xyz"
+      ]
+    },
+    "geometry_molecule_gen": {
+      "type": "object",
+      "properties": {
+        "charge": {
+          "type": "integer",
+          "default": 0
+        },
+        "spin": {
+          "type": "integer",
+          "default": 1
+        },
+        "coordinates_gen": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "coordinates_gen"
+      ]
+    },
+    "geometry_molecule": {
+      "type": "object",
+      "properties": {
+        "basis_set": {},
+        "method": {},
+        "charge": {
+          "type": "integer",
+          "default": 0
+        },
+        "spin": {
+          "type": "integer",
+          "default": 1
+        },
+        "spinpol": {
+          "type": "boolean",
+          "default": false
+        },
+        "coordinates": {
+          "$ref": "#/definitions/s1dvector3n"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "coordinates"
+      ]
+    },
+    "geometry_crystal": {
+      "type": "object",
+      "properties": {
+        "basis_set": {},
+        "method": {},
+        "kpoints": {
+          "oneOf": [{
+              "type": "object",
+              "properties": {
+                "plain": {
+                  "$ref": "#/definitions/plain_kpoints"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "supercell_folding": {
+                  "$ref": "#/definitions/supercell_folding_kpoints"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "lattice_vectors": {
+          "$ref": "#/definitions/dmatrix3_3"
+        },
+        "scaling_factor": {
+          "type": "number",
+          "default": 1
+        },
+        "coordinates": {
+          "$ref": "#/definitions/s1dvector3n"
+        },
+        "fractional_coordinates": {
+          "type": "boolean"
+        },
+        "spinpol": {
+          "type": "boolean",
+          "default": false
+        },
+        "upe": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kpoints",
+        "lattice_vectors",
+        "coordinates",
+        "fractional_coordinates"
+      ]
+    },
+    "geometry_crystal_gen": {
+      "type": "object",
+      "properties": {
+        "kpoints": {
+          "oneOf": [{
+              "type": "object",
+              "properties": {
+                "plain": {
+                  "$ref": "#/definitions/plain_kpoints"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "supercell_folding": {
+                  "$ref": "#/definitions/supercell_folding_kpoints"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "coordinates_gen": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kpoints",
+        "coordinates_gen"
+      ]
+    },
+    "geometry_crystal_xyz": {
+      "type": "object",
+      "properties": {
+        "kpoints": {
+          "oneOf": [{
+              "type": "object",
+              "properties": {
+                "plain": {
+                  "$ref": "#/definitions/plain_kpoints"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "supercell_folding": {
+                  "$ref": "#/definitions/supercell_folding_kpoints"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "coordinates_xyz": {
+          "type": "string"
+        },
+        "lattice_vectors": {
+          "$ref": "#/definitions/dmatrix3_3"
+        },
+        "scaling_factor": {
+          "type": "number",
+          "default": 1
+        },
+        "fractional_coordinates": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kpoints",
+        "coordinates_xyz",
+        "lattice_vectors"
+      ]
+    }
+  },
+  "properties": {
+    "options": {
+      "type": "object",
+      "properties": {
+        "toolchain": {
+          "type": "object",
+          "properties": {
+            "evaluation_timeout": {
+              "type": "integer",
+              "default": -1
+            },
+            "name": {
+              "enum": [
+                "dftb+",
+                "dc-dftb-k"
+              ]
+            },
+            "path": {
+              "type": "string"
+            },
+            "options": {
+              "oneOf": [{
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "path"
+          ]
+        },
+        "potential_type":{
+          "enum": [
+            "spline", "polynomial"
+          ],
+          "default": "spline"
+        },
+        "spline_order": {
+          "enum": [
+            3,
+            4
+          ],
+          "default": 4
+        },
+        "fit_all_atom_energy": {
+          "type": "boolean"
+        },
+        "debug": {
+          "type": "boolean"
+        },
+        "use_cache": {
+          "type": "boolean",
+          "default": false
+        },
+        "continous_order": {
+          "type": "integer",
+          "default": 3
+        },
+        "output_prefix": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "toolchain"
+      ]
+    },
+    "systems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "uuid": {
+            "$ref": "#/definitions/uuid"
+          },
+          "template_input": {
+            "type": "string"
+          },
+          "geometry": {
+            "oneOf": [{
+                "$ref": "#/definitions/geometry_crystal"
+              },
+              {
+                "$ref": "#/definitions/geometry_molecule"
+              }
+            ]
+          },
+          "evaluated": {
+            "type": "boolean"
+          },
+          "elec_data": {},
+          "opt_upe": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "uuid",
+          "template_input",
+          "geometry"
+        ]
+      },
+      "additionalItems": false
+    },
+    "dftb_options": {
+      "oneOf": [{
+          "type": "object",
+          "properties": {
+            "shell_resolved_spin": {
+              "type": "boolean",
+              "default": true
+            },
+            "hubbard_derivatives": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Z][a-z]?$": {
+                  "oneOf": [{
+                      "type": "number"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    }
+                  ]
+                }
+              }
+            },
+            "spin_constants": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Z][a-z]?$": {
+                  "oneOf": [{
+                      "type": "number"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 1,
+                      "maxItems": 1
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 4,
+                      "maxItems": 4
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 9,
+                      "maxItems": 9
+                    }
+                  ]
+                }
+              }
+            },
+            "dispertion": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "d3", "lj"
+                  ]
+                },
+                "parameters": {
+
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "equations": {
+      "properties": {
+        "energy": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "uuid": {
+                "$ref": "#/definitions/uuid"
+              },
+              "weight": {
+                "type": "number",
+                "default": 1
+              },
+              "energy": {
+                "type": "number"
+              },
+              "unit": {
+                "enum": [
+                  "kcal/mol",
+                  "eV",
+                  "h",
+                  "H",
+                  "ev"
+                ],
+                "default": "kcal/mol"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "energy",
+              "uuid"
+            ]
+          },
+          "additionalItems": false
+        },
+        "force": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "uuid": {
+                "$ref": "#/definitions/uuid"
+              },
+              "weight": {
+                "type": "number",
+                "default": 1
+              },
+              "fitting_indexes": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "additionalItems": false
+              },
+              "reference_force": {
+                "oneOf": [{
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/definitions/dvector3n"
+                  }
+                ]
+              },
+              "include_stress": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "uuid"
+            ]
+          },
+          "additionalItems": false
+        },
+        "reaction": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "uuid": {
+                "$ref": "#/definitions/uuid"
+              },
+              "weight": {
+                "type": "number",
+                "default": 1
+              },
+              "energy": {
+                "type": "number"
+              },
+              "unit": {
+                "enum": [
+                  "kcal/mol",
+                  "eV",
+                  "h",
+                  "H",
+                  "ev"
+                ],
+                "default": "kcal/mol"
+              },
+              "reactants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "uuid": {
+                      "$ref": "#/definitions/uuid"
+                    },
+                    "coefficient": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "uuid",
+                    "coefficient"
+                  ]
+                },
+                "additionalItems": false
+              },
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "uuid": {
+                      "$ref": "#/definitions/uuid"
+                    },
+                    "coefficient": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "uuid",
+                    "coefficient"
+                  ]
+                },
+                "additionalItems": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "uuid",
+              "energy",
+              "reactants",
+              "products"
+            ]
+          },
+          "additionalItems": false
+        },
+        "additional": {
+          "properties": {},
+          "patternProperties": {
+            "^[A-Z][a-z]?-[A-Z][a-z]?$": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "weight": {
+                    "type": "number",
+                    "default": 1
+                  },
+                  "derivative": {
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ]
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/length_unit"
+                  },
+                  "distance": {
+                    "type": "number"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "derivative",
+                  "distance",
+                  "unit",
+                  "value"
+                ]
+              },
+              "additionalItems": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "electronic_slater_koster_files": {
+      "$ref": "#/definitions/skfileinfo"
+    },
+    "atomic_energy": {
+      "type": "object",
+      "properties": {},
+      "patternProperties": {
+        "^[A-Z][a-z]?$": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "potential_grids": {
+      "properties": {},
+      "patternProperties": {
+        "^[A-Z][a-z]?-[A-Z][a-z]?$": {
+          "oneOf": [{
+            "type": "object",
+            "properties": {
+              "unit": {
+                "$ref": "#/definitions/length_unit"
+              },
+              "knots": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "additionalItems": false
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "knots"
+            ]
+          }, {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "$ref": "#/definitions/length_unit"
+              },
+              "cutoff": {
+                "type": "number"
+              },
+              "minimal_order": {
+                "type": "integer",
+                "default": 3,
+                "minimum": 2
+              },
+              "maximal_order": {
+                "type": "integer",
+                "default": 9,
+                "minimum": 2
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "cutoff"
+            ]
+          }]
+        }
+      },
+      "additionalProperties": false
+    },
+    "external_repulsive_potentials": {
+      "properties": {},
+      "patternProperties": {
+        "^[A-Z][a-z]?-[A-Z][a-z]?$": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {}
+  },
+  "additionalProperties": false,
+  "required": [
+    "systems",
+    "equations",
+    "potential_grids"
+  ]
+}
