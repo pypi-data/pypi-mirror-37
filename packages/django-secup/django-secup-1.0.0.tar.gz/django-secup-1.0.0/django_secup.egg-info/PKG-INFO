@@ -1,0 +1,119 @@
+Metadata-Version: 1.1
+Name: django-secup
+Version: 1.0.0
+Summary: Allow django users to securely communicating sensitive files over the internet.
+Home-page: https://github.com/realsby/django-secup
+Author: Yusuf Ozer
+Author-email: realsby@gmail.com
+License: BSD License
+Description: # django-secup
+        
+        Allow django users to securely communicating sensitive files over the internet.
+        
+        Only django users which is staff can invite an external user to upload a sensitive file.
+        
+        Ordinary django users can send file with description to the django staff users if have valid emails. If invalid email address is used, secup managers defined in the settings will be notified.
+        
+        Signed urls created to navigates users to secup.
+        
+        
+        ## Warning
+        
+        If we want to securly serve files from Cloud, it is easy. But if we don't use a cloud provider, the best solution requires cooperation of django and web server like X-Sendfile. Other methods not included web servers is not completely secure or should not prefered if the file sizes are large. 
+        
+        This application package uses a secure method not included web servers, but it's not ideal way to serve large files expecting high traffic.
+        
+        
+        ## Todos
+        
+        - Create a new flow for staff to sends files to external users.
+        - Create a structure to sign files which uploaded by staff with GnuPG.
+        - Write tests with high coverage.
+        
+        
+        ## Quick start
+        
+        1. Install the secup module::
+        ```sh
+            pip install django-secup
+        ```
+        
+        2. Add "secup" to your INSTALLED_APPS setting like this::
+        ```python
+            INSTALLED_APPS = [
+                ...
+                'secup',
+            ]
+        ```
+        
+        3. Include the secup URLconf in your project urls.py like this::
+        ```python
+            path('secup/', include('secup.urls')),
+        ```
+        
+        4. Run migrations to create the secup models::
+        ```sh
+            python manage.py migrate
+        ```
+        
+        5. You have to define secup managers in the settings.py, superusers or a tuple of users::
+        ```python
+        SUPERUSERS_AS_SECUP_MANAGERS = True
+        # or
+        CUSTOM_SECUP_MANAGERS = (
+            ('Yusuf Ozer', 'realsby@gmail.com'),
+        )
+        ```
+        
+        6. You can set secure media folder in the settings.py, default is 'secure-media' folder::
+        ```python
+        SECURE_MEDIA_URL_PREFIX = '/secure-media/'
+        SECURE_MEDIA_ROOT = os.path.join(BASE_DIR, 'secure-media/')
+        ```
+        
+        7. To send notification mails with signed urls to related users set::
+        ```python
+        SEND_SECUP_NOTIFICATION_MAILS = True
+        ```
+        
+        8. Edit notification email templates if you set true previous setting. All templates included related 'SecureUpload' object as context::
+        
+        - templates/secup/email_invited.html
+        - templates/secup/email_invited.txt
+        - templates/secup/email_managers.html
+        - templates/secup/email_managers.txt
+        - templates/secup/email_uploaded.html
+        - templates/secup/email_uploaded.txt
+        
+        9. Set default timeout for signed urls::
+        ```python
+        SECUP_LINKS_VALID_SECONDS = 7200  # default is 2 hours 
+        ```
+        
+        
+        ## To Check Locally
+        
+        ```sh
+            python manage.py runserver 127.0.0.1:8000
+        ```
+        To invite external user to upload file (django staff required):
+        http://127.0.0.1:8000/secup/create-invite/
+        
+        To see files uploaded to you (django user required):
+        http://127.0.0.1:8000/secup/files/
+        
+        To upload files to staff members (django user required):
+        http://127.0.0.1:8000/secup/upload-to-secup/
+        
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 2.1
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content

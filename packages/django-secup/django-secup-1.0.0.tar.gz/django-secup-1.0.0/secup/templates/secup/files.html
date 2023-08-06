@@ -1,0 +1,31 @@
+{% extends 'secup/base.html' %}
+{% block content %}
+
+{% if uploads %}
+Uploads related with you:<br>
+<table>
+	<thead>
+	    <tr>
+	      <th>ID</th>
+	      <th>Uploader</th>
+	      <th>File</th>
+	      <th>Description</th>
+	      <th>Signed Upload URL</th>
+	      <th>Created</th>
+	      <th>Updated</th>
+	    </tr>
+  	</thead>
+	{% for upload in uploads %}
+	<tr>
+		<td>{{upload.id}}</td>
+		<td>{% if not upload.uploader %}{{upload.uploader_email}}{% else %}<a href="{% url 'admin:auth_user_change' upload.uploader.id %}">{{upload.uploader.email}}</a>{% endif %}</td>
+		<td>{% if not upload.file %}Waiting to upload{% else %}<a href="{{upload.file.url}}">{{upload.file}}</a>{% endif %}</td>
+		<td>{{ upload.description }}</td>
+		<td>{% if upload.upload_url %}<a href="{{ upload.upload_url }}">Link</a>{% endif %}</td>
+		<td>{{ upload.created_at }}</td>
+		<td>{{ upload.updated_at }}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endif %}
+{% endblock %}
