@@ -1,0 +1,111 @@
+Metadata-Version: 2.1
+Name: quma
+Version: 0.1.0a4
+Summary: A SQL/database library
+Home-page: https://github.com/ebenefuenf/quma
+Author: ebene fünf GmbH
+Author-email: info@ebenefuenf.de
+License: MIT License
+Keywords: sql database
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Database :: Front-Ends
+Requires-Python: >=3.5
+Description-Content-Type: text/x-rst
+Provides-Extra: mysql
+Requires-Dist: mysqlclient; extra == 'mysql'
+Provides-Extra: postgres
+Requires-Dist: psycopg2; extra == 'postgres'
+Provides-Extra: templates
+Requires-Dist: mako; extra == 'templates'
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+Requires-Dist: pytest-cov; extra == 'test'
+
+====
+quma
+====
+
+|release| |build| |docs|
+
+quma is a small SQL database library for **Python**  and **PyPy** version 3.5 and higher.
+It maps object methods to SQL script files and supports **SQLite**, **PostgreSQL**,
+**MySQL** and **MariaDB**.
+
+Unlike ORMs, it allows to write SQL as it was intended and to use all features
+the DBMS provides. As it uses plain SQL files you can fully utilize your database 
+editor or IDE to author your queries.
+
+It also provides a simple connection pool.
+
+Installation
+------------
+
+::
+
+    pip install quma
+
+Quick Start
+-----------
+
+The full documentation is available at https://quma.readthedocs.io
+
+Given a directory with some SQL scripts e. g.:
+
+::
+
+    /path/to/sql/scripts
+    ├── users
+    │    ├── all.sql
+    │    └── remove.sql
+    └── get_admin.sql
+
+You can access these scripts after connecting to the database:
+
+.. code-block:: python
+
+    from quma import Database
+
+    db = Database('sqlite:///:memory:', '/path/to/sql/scripts')
+
+    db.execute('CREATE TABLE users ...')
+
+    with db.cursor as cur:
+        all_users = cur.users.all()
+
+        for user in all_users:
+            print(user['name'])
+
+        cur.users.remove(id=user['id']).run()
+        cur.commit()
+
+        admin = cur.get_admin()
+
+License
+-------
+
+quma is released under the MIT license.
+
+Copyright © 2018 ebene fünf GmbH. All rights reserved.
+
+.. |release| image:: https://travis-ci.org/ebenefuenf/quma.svg?branch=master
+    :target: https://travis-ci.org/ebenefuenf/quma
+    :alt: master Travis CI Status
+
+.. |build| image:: https://badge.fury.io/py/quma.svg
+    :target: https://badge.fury.io/py/quma
+    :alt: PyPi package version
+
+.. |docs| image:: https://readthedocs.org/projects/quma/badge/?version=latest
+    :target: https://quma.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+
