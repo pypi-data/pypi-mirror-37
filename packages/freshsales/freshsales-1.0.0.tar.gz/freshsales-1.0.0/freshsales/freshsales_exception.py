@@ -1,0 +1,2 @@
+class FreshsalesException(Exception):
+    pass
