@@ -1,0 +1,39 @@
+{% load bootstrap3 %}
+
+<div>
+    <form method="post">
+        {% csrf_token %}
+        {% bootstrap_form comment_form %}
+        {% bootstrap_button '提交' %}
+    </form>
+
+    {% for e in comments %}
+        <div style="padding:5px; margin-bottom:10px;">
+            <div style="color:#666;">{{ e.user.first_name | default:e.user.username }}</div>
+            <div>{{ e.comment }}</div>
+            <div style="color:#ccc;">{{ e.submit_date }}</div>
+            {% if e.user == request.user %}
+                <a href="{% url 'bee_django_course:edit_user_live_comment' user_live_comment_id=e.id %}">编辑</a>
+                <a href="#" class="delete_comment" data-confirm="{% url 'bee_django_course:delete_user_live_comment' e.id %}">删除</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.delete_comment').click(function (e) {
+                e.preventDefault();
+                if (confirm('是否删除此评论?')) {
+                    var url = $(this).attr('data-confirm');
+                    var this_comment = $(this).parent();
+                    $.post(url).done(function (data) {
+                        alert(data['message']);
+                        this_comment.remove();
+                    })
+                }
+            })
+        })
+    </script>
+{% endblock %}
