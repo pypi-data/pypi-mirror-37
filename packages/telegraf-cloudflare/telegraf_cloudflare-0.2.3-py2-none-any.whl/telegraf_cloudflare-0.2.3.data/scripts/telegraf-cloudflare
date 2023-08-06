@@ -1,0 +1,54 @@
+#!python
+
+import sys
+import argparse
+from cloudflare import Client, Parser
+import warnings
+
+if not sys.warnoptions:
+        warnings.simplefilter("ignore")
+
+def __handle_cli(args):
+    parser = argparse.ArgumentParser(
+        description='Plugin for Telegraf for gathering statistics from Cloudflare')
+
+    parser.add_argument(
+        '--zone-id',
+        help='Cloudflare zone ID',
+        default=None,
+        required=True
+    )
+
+    parser.add_argument(
+        '--email',
+        help='Cloudflare email',
+        default=None,
+        required=True
+    )
+
+    parser.add_argument(
+        '--api-key',
+        help='Cloudflare API key',
+        default=None,
+        required=True
+    )
+
+    parser.add_argument(
+        '--interval',
+        help='Interval',
+        default=360,
+        type=int
+    )
+
+    return parser.parse_args(args)
+
+def main(args):
+    cli = __handle_cli(args)
+    stats = Client(cli.zone_id, cli.email, cli.api_key).get_dashboard(cli.interval)
+    parsed = Parser().parse_dashboard(cli.zone_id, stats)
+
+    sys.stdout.write(str(parsed))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
