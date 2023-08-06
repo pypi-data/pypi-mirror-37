@@ -1,0 +1,26 @@
+from flask import Flask
+
+from .database import db
+
+
+def create_app():
+    # create and configure the app
+    app = Flask(__name__)
+    app.config.from_mapping(
+        SECRET_KEY='dev'
+    )
+
+
+    app.config.from_pyfile('config.py')
+
+
+    # LOAD BLUEPRINTS HERE
+    # from .blueprint.[blueprint_1] import bp as [blueprint_alias]
+    # app.register_blueprint([blueprint_alias])
+    print("Initializing DB")
+    db.init_app(app)
+    with app.test_request_context():
+        db.create_all()
+    print("DB Initialized successfully")
+
+    return app
