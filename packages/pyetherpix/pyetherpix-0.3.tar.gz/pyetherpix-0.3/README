@@ -1,0 +1,31 @@
+python EtherPix library
+
+EtherPix is a large scale display architecture that is driven using UDP/IP.
+It consists of single pixels that are connected to chains. A number of those
+pixel chains is then connected to a so called distributor module that
+receives data over ethernet and distributes it to the pixel chains.
+
+The protocol used on UDP is MCUF (microcontroller unit frame, see
+http://wiki.blinkenarea.org/index.php/MicroControllerUnitFrame). However,
+as EtherPix displays can have more than 65536 pixels, multiple MCUF packets
+are sent for one frame - a single MCUF frame to every distributor.
+The coordinates of the pixels in the MCUF packets do not correspond to pixel
+locations, but to pixel addresses. The y coordinate is the number of the
+output of the distributor and the x coordinate is the number of the pixel
+in the chain. The number of channels is always 1 (monochrome)  or 3 (RGB) and
+the maximum value is always 255 (8 bit per channel).
+
+This library can be used to send the required UDP packets to the EtherPix
+display to make it show images and/or videos.
+As the libarary has to know how the pixels are wired and where there are
+located (i.e. which pixel in the source image they represent), a rather
+complex config file is needed. Examples of config files can be found in
+the "pyetherpix/config" and example code showing how to use the library is
+located in "pyetherpix/examples".
+
+clone URL: http://git.blinkenarea.org/projects/pyetherpix
+
+URL to web interface: http://git.blinkenarea.org/index.php?p=pyetherpix
+
+about the name: PIXels connected via ETHERnet -> EtherPix
+

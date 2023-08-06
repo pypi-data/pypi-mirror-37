@@ -1,0 +1,26 @@
+# EtherPix configuration file
+
+# the address to bind the local socket to
+#  - the EtherPix network 10.70.80.0/16 must be reachable from this address
+bindAddr = 0.0.0.0:0
+
+# the size of the display
+#  - <width>,<height> in pixels
+size = 8,8
+
+# this line adds a new distributor
+#  - the general format is: distributor <distributor number> = <number of outputs>,<number of pixel per output>
+distributor 0 = 6,64
+
+# those lines introduce a mapping between the channel values in the video and the values transmitted to the display
+#  - mapping is done per distributor and applies to all pixels connected to it
+#  - RGB distributors use red, green and blue, monochrone distributors use white
+#  - the general format is: mapping <distributor number> (red|green|blue|white) = <base> <factor> <gamma>
+#  - the mapping formula is: <display value> := <base> + <factor> * <original value> ^ (1 / <gamma>)
+mapping 0 white = 0.0 1.0 1.0
+
+# these lines specify the logical positions of the pixels at an output in movie coordinates
+#  - the general format is: output <distributor number>,<output number> = <pixel x>,<pixel y> ...
+#  - the order of the pixels is the order they are connected in the chain
+output 0,0 = 0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 7,1 6,1 5,1 4,1 3,1 2,1 1,1 0,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 7,3 6,3 5,3 4,3 3,3 2,3 1,3 0,3 0,4 1,4 2,4 3,4 4,4 5,4 6,4 7,4 7,5 6,5 5,5 4,5 3,5 2,5 1,5 0,5 0,6 1,6 2,6 3,6 4,6 5,6 6,6 7,6 7,7 6,7 5,7 4,7 3,7 2,7 1,7 0,7
+
