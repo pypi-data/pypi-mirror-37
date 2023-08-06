@@ -1,0 +1,232 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Parallel Collapse &#8212; Documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Functions of the cf module" href="function.html" />
+    <link rel="prev" title="Discrete sampling geometries" href="discrete_sampling_geometries.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="function.html" title="Functions of the cf module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="discrete_sampling_geometries.html" title="Discrete sampling geometries"
+             accesskey="P">previous</a> |</li>
+  <li><a target="_blank" href="../archive.html">Archive</a> &laquo;</li>
+  <li><a target="_blank" href="http://cfpython.bitbucket.io">cf-python 2.3.0</a> &raquo;</li>
+<!--
+  <li><a target="_blank" href="http://cfpython.bitbucket.io">cf-python</a> &raquo;</li>
+  <li><select onchange="location = this.options[this.selectedIndex].value;">
+
+      <option value="../1.0/index.html">1.0
+
+      <option value="../0.9.9/index.html">0.9.9
+
+      <option value="../0.9.8.3/index.html">0.9.8.3
+
+      <option value="../archive.html">Archive
+
+      </select>
+  </li>
+-->
+  
+        <li class="nav-item nav-item-0"><a href="index.html">Documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="reference.html" accesskey="U">Reference manual</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="parallel-collapse">
+<span id="id1"></span><h1>Parallel Collapse<a class="headerlink" href="#parallel-collapse" title="Permalink to this headline">¶</a></h1>
+<p>cf-python scripts may be run in parallel using mpirun and any calls to
+collapse will be parallelised. This requires the mpi4py module to be
+installed. Only calls to collapse will be parallelised. Other methods
+are not yet parallelised. This is an experimental feature and is not
+recommended for operational use.</p>
+<div class="section" id="installing-mpi4py-with-conda">
+<h2>Installing mpi4py with conda<a class="headerlink" href="#installing-mpi4py-with-conda" title="Permalink to this headline">¶</a></h2>
+<p>To install mpi4py with conda type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>$ conda install mpi4py
+</pre></div>
+</div>
+<p>This also installs the mpich implementation of MPI. To install MPI 3
+rather than 2 type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>$ conda install -c conda-forge mpi4py
+</pre></div>
+</div>
+<p>It is planned to use MPI 3 features in future versions of cf-python.</p>
+<p>If you are using another version of Python other than Anaconda you
+will need to install either mpich or openmpi and mpi4py.</p>
+<p>Note that if you are using regridding in a parallel script ESMF must
+be compiled without parallel support.</p>
+</div>
+<div class="section" id="running-a-cf-python-script-in-parallel">
+<h2>Running a cf-python script in parallel<a class="headerlink" href="#running-a-cf-python-script-in-parallel" title="Permalink to this headline">¶</a></h2>
+<p>To use a cf-python script in parallel with 2 processors type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>$ mpirun -n 2 python name_of_script.py
+</pre></div>
+</div>
+<p>To use more processors increase the number after n. We would expect
+this to work across multiple nodes as well as on a single node,
+although the use of memory may not be optimal. If using across
+multiple nodes <a class="reference internal" href="generated/cf.TEMPDIR.html#cf.TEMPDIR" title="cf.TEMPDIR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cf.TEMPDIR</span></code></a> must be set to a shared location.</p>
+<p>If you get an error <code class="xref py py-obj docutils literal notranslate"><span class="pre">gethostbyname</span> <span class="pre">failed</span></code> you could consider adding
+the following line to <code class="xref py py-obj docutils literal notranslate"><span class="pre">/etc/hosts</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span> <span class="n">computername</span>
+</pre></div>
+</div>
+<p>where <code class="xref py py-obj docutils literal notranslate"><span class="pre">computername</span></code> is the name of your machine.</p>
+</div>
+<div class="section" id="optimising-a-parallel-collapse-operation">
+<h2>Optimising a parallel collapse operation<a class="headerlink" href="#optimising-a-parallel-collapse-operation" title="Permalink to this headline">¶</a></h2>
+<p>There are three possible modes of optimisation, which can be set in
+your script using <code class="xref py py-obj docutils literal notranslate"><span class="pre">cf.COLLAPSE_PARALLEL_MODE</span></code>:</p>
+<ol class="arabic simple" start="0">
+<li>This attempts to maximise parallelism, possibly at the expense of
+extra communication. This is the default mode.</li>
+<li>This minimises communication, possibly at the expense of the
+degree of parallelism. If collapse is running slower than you
+would expect, you can try changing to mode 1 to see if this
+improves performance. This is only likely to work if the output of
+collapse will be a sizeable array, not a single point.</li>
+<li>This is here for debugging purposes, but we would expect this to
+maximise communication possibly at the expense of parallelism. The
+use of this mode is, therefore, not recommended.</li>
+</ol>
+<p>Calling <code class="xref py py-obj docutils literal notranslate"><span class="pre">cf.COLLAPSE_PARALLEL_MODE</span></code> with no arguments returns the
+current value, otherwise the value prior to the change is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">COLLAPSE_PARALLEL_MODE</span><span class="p">()</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">COLLAPSE_PARALLEL_MODE</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span><span class="o">.</span><span class="n">COLLAPSE_PARALLEL_MODE</span><span class="p">()</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>The parallelism is based on partitions created by <a class="reference internal" href="lama.html#lama"><span class="std std-ref">LAMA</span></a>
+and will be affected by the size and number of those partitions. The
+size of the partitions can be changed by calling <a class="reference internal" href="generated/cf.CHUNKSIZE.html#cf.CHUNKSIZE" title="cf.CHUNKSIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cf.CHUNKSIZE</span></code></a> before
+reading a file.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Parallel Collapse</a><ul>
+<li><a class="reference internal" href="#installing-mpi4py-with-conda">Installing mpi4py with conda</a></li>
+<li><a class="reference internal" href="#running-a-cf-python-script-in-parallel">Running a cf-python script in parallel</a></li>
+<li><a class="reference internal" href="#optimising-a-parallel-collapse-operation">Optimising a parallel collapse operation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="discrete_sampling_geometries.html"
+                        title="previous chapter">Discrete sampling geometries</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="function.html"
+                        title="next chapter">Functions of the <code class="docutils literal notranslate"><span class="pre">cf</span></code> module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parallel_collapse.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="function.html" title="Functions of the cf module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="discrete_sampling_geometries.html" title="Discrete sampling geometries"
+             >previous</a> |</li>
+  <li><a target="_blank" href="../archive.html">Archive</a> &laquo;</li>
+  <li><a target="_blank" href="http://cfpython.bitbucket.io">cf-python 2.3.0</a> &raquo;</li>
+<!--
+  <li><a target="_blank" href="http://cfpython.bitbucket.io">cf-python</a> &raquo;</li>
+  <li><select onchange="location = this.options[this.selectedIndex].value;">
+
+      <option value="../1.0/index.html">1.0
+
+      <option value="../0.9.9/index.html">0.9.9
+
+      <option value="../0.9.8.3/index.html">0.9.8.3
+
+      <option value="../archive.html">Archive
+
+      </select>
+  </li>
+-->
+  
+        <li class="nav-item nav-item-0"><a href="index.html">Documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="reference.html" >Reference manual</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, David Hassell.
+      Last updated on Oct 22, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.
+    </div>
+  </body>
+</html>
