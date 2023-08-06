@@ -1,0 +1,5 @@
+LEVEL_ERROR = "[ERR]"
+LEVEL_WARNING = "[WARN]"
+LEVEL_NOTE = "[NOTE]"
+
+PARSE_ERR = "Parse error!"
