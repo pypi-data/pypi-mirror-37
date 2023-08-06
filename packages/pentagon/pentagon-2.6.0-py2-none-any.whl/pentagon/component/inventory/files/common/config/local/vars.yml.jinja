@@ -1,0 +1,31 @@
+ANSIBLE_CONFIG: '${INFRASTRUCTURE_REPO}/inventory/${INVENTORY}/config/private/ansible.cfg'
+KUBECONFIG: '${INFRASTRUCTURE_REPO}/inventory/${INVENTORY}/config/private/kube_config'
+HELM_HOME: "${INFRASTRUCTURE_REPO}/helm"
+
+{%- if cloud | lower == 'aws' %}
+VPC_NAME: "{{ vpc_name }}"
+
+INFRASTRUCTURE_BUCKET: "{{ infrastructure_bucket }}"
+
+AWS_DEFAULT_REGION:  "{{ aws_default_region }}"
+AWS_AVAILABILITY_ZONES: "{{ aws_availability_zones }}"
+AWS_AVAILABILITY_ZONE_COUNT: "{{ aws_availability_zone_count }}"
+
+AWS_INVENTORY_PATH: '${INFRASTRUCTURE_REPO}/plugins/'
+
+KOPS_STATE_STORE_BUCKET: "{{ infrastructure_bucket }}"
+KOPS_STATE_STORE: "s3://${KOPS_STATE_STORE_BUCKET}"
+
+vpc_tag_name: "{{ vpc_name }}"
+org: "{{ project_name }}"
+
+canonical_zone: "{{ dns_zone }}"
+vpn_bucket: "{{project_name}}-vpn"
+
+{%- elif cloud == 'gcp' %}
+
+CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+CLOUDSDK_COMPUTE_ZONE: "{{ gcp_zone }}"
+CLOUDSDK_COMPUTE_REGION: "{{ gcp_region }}"
+
+{%- endif %}
