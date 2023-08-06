@@ -1,0 +1,153 @@
+Metadata-Version: 2.1
+Name: docker-playbook
+Version: 0.0.1
+Summary: YAML driven docker playbook
+Home-page: UNKNOWN
+Author: Alex Yang
+Author-email: aleozlx@gmail.com
+License: UNKNOWN
+Description: # docker-playbook
+        
+        YAML driven (nvidia) docker playbook
+        
+        ## Requirements
+        
+        * Python3.x
+        * Nvidia-docker2 (Make sure you can `nvidia-smi` and `docker images`)
+        * PyYAML>=3.12 (both host and docker image)
+        
+        > Template Dockerfile is provided at the bottom, which is optional     
+        > though recommended because of its **security enhancements** and **useful features**.
+        
+        ## Usage example
+        
+        ```
+        ./playbook.py sample.yml
+        ```
+        
+        **Features**
+        
+        * Runs with `nvidia-docker2` mostly in non-interactive mode (so if your script waits for input by accident, it gets signal and dies)
+        * Runs (whitelisted) steps in sequential manner
+        * Context deduction: each step can run in different docker images or host
+        * Full access to host network services in non-interactive mode
+        * Simple step function siginature `step_blah(ctx)` - easy to extend
+        * Minimal command line arguments `./playbook.py some.yml` is all you do
+        * Single source file & low dependency (only PyYAML is not in standard library, replacable but strongly recommend)
+        * Colorful logging for readability
+        
+        ## How to add steps?
+        
+        1. Copy `library.steps` module from this repository to start developing your own `library.steps` module for this script to import.
+        2. Add a function `def step_something(ctx)`. Current execution context is in `ctx` as dict. Keys are proxied to attributes to save a lot of brakets and quotes. You may use `logger` to print info.
+        ```python
+        def step_something(ctx):
+            logger.info(ctx.other_vars)
+        ```
+        3. Whitelist your step in `library.steps.whitlist` without the `step_` prefix.
+        4. Add an entry to your YAML file in `steps` where `action` is the step function name without prefix:
+        
+        ```yml
+        steps:
+          - name: Some message here
+            action: something
+            other_vars: goes_to_ctx
+        ```
+        
+        ## Context deduction rules
+        
+        ```
+        docker overrides > step config > global config > parser defualts > context initialization
+        ```
+        
+        ## How to specify docker environment?
+        
+        You may add a default docker environment.
+        And use `docker_overrides` to change context variables when docker is in use.
+        ```yml
+        docker:
+          image: aleozlx/tkstack2:latest
+          runtime: nvidia
+          gui: False
+          ports:
+            - 6006:6006
+          volumes:
+            - /tmp:/workspace/build
+            - /mnt/datasets:/workspace/datasets
+          docker_overrides:
+            storage: /workspace/datasets
+        steps:
+          - name: Some message here
+            action: something
+            storage: /mnt/datasets
+        ```
+        
+        Or override the docker environment completely per step
+        ```yml
+        docker:
+          # ...
+        steps:
+          - name: Some message here
+            action: something
+            storage: /mnt/datasets
+            docker:
+              image: aleozlx/tkstack2:latest
+              runtime: nvidia
+              volumes:
+                - /tmp:/workspace/build
+            docker_overrides:
+                storage: /workspace/datasets
+        ```
+        
+        Or use the host
+        ```yml
+        docker:
+          # ...
+        steps:
+          - name: Some message here
+            action: something
+            storage: /mnt/datasets
+            docker: null
+        ```
+        
+        > Note: When a docker environment is present, the playbook starts docker accordingly and resumes itself inside docker to reuse many of the playbooks' features, so that context deduction and logging have consistent behavior. (To do that, you code containing the playbook will have to be mounted read-only. This is automatic.) That's why PyYAML is also required inside your docker image. Consider you are keeping the full operationalizing mechanism with a silght dependency constraint.
+        
+        ## Security assumptions (or gotchas)
+        
+        > **Host file system**: volumes specified in your playbook will be mounted RW. Although your code will be mounted RO automatically. Playbook assumes that you use a docker image that uses non-root user (like recommended) whose uid:gid **hopefully** maps to you on host system.
+        
+        > **Network**: network services inside docker are **not isolated** from host in non-interactive mode to provide **convenient access** to host databases etc. Playbook assumes whatever you are operationalizing is trusted and that your host should have a proper set of INPUT rules, and that services inside docker should be protected by an independent firewall if necessary.
+        
+        > **X11**: the recommended docker image does intend to provide isolated X11 access by creating non-root user that **presumably** maps to you on host and your X authentication files are natually mounted with proper permissions already in place. But the uid in that image is just a guess so on a host shared by many users, this is probably no good if it even works. (Docker image needs to be build in a better way)
+        
+        > **Playbook itself**: the playbook itself is obviously a very capable shell program. It has execute permission by default for convenience (not necessarily good idea). It is based on a simple whitelist to allow any actions to be executed. The docker shell provided shouldn't be able to be spawned on host. But all these are best-effort, no promises.
+        
+        At the end of day, this is an under-2^7-line script that is supposed to just drive other things and make them work. Composition over inheritance principle makes things simpler and useful.
+        
+        ## Template Dockerfile
+        
+        https://gitlab-p01.cgi.missouri.edu/ExternalUsers/AlexYang_Fun/tkstack2/blob/master/src/Dockerfile
+        
+        **Features**
+        
+        * Non-root with passwordless sudo
+        * Low maintenance: base image is `tensorflow/tensorflow:1.8.0-devel-gpu-py3`
+        * Numpy + Scipy linked against libblas + liblapack
+        * Isolated X11 GUI support
+        * Details at https://gitlab-p01.cgi.missouri.edu/ExternalUsers/AlexYang_Fun/tkstack2
+        
+        ## License
+        
+        Licensed under either of
+        
+         * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+         * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+        
+        at your option.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: License :: OSI Approved :: MIT License
+Description-Content-Type: text/markdown
