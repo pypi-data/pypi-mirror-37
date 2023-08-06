@@ -1,0 +1,67 @@
+#
+# @Email:  jmaggio14@gmail.com
+#
+# MIT License: https://github.com/jmaggio14/imsciutils/blob/master/LICENSE
+#
+# Copyright (c) 2018 Jeff Maggio, Nathan Dileas, Ryan Hartzell
+#
+"""
+Helper functions that contain canned tests or checks that we will run
+frequently
+"""
+import numpy as np
+from collections import Iterable
+
+from .. import core
+
+
+def interpolation_type_check(interp):
+    """
+    checks to see if the interpolation type is one of the acceptable
+    values specified in opencv, otherwise raises an
+    imsciutils.InvalidInterpolationType error
+    """
+    if interp not in core.CV2_INTERPOLATION_TYPES:
+        raise core.InvalidInterpolationType(interp)
+
+    return True
+
+
+def dtype_type_check(dtype):
+    """
+    checks to see if the interpolation type is one of the acceptable
+    values specified in opencv, otherwise raises an
+    imsciutils.InvalidInterpolationType error
+    """
+    if dtype not in core.NUMPY_TYPES:
+        raise core.InvalidNumpyType(interp)
+
+    return True
+
+
+def is_numpy_array(arr):
+    """returns True if input is a numpy array or subclass of numpy array"""
+    return isinstance(arr,np.ndarray)
+
+def is_iterable(var):
+    """returns True if input is an iterable type, false otherwise"""
+    return isinstance(var,Iterable)
+
+
+
+def type_error_message(variable,variable_name,desired_types):
+    """
+    returns an error message for a type error_msg
+    inputs:
+        variable (the variable you want raise an error for):
+        variable_name (the name of variable):
+        desired_types (type,iterable of desired types):
+    returns:
+        error_msg (str): formatted error message string
+    """
+    if not isinstance(desired_types,Iterable):
+        desired_types = [desired_types]
+    error_msg =  "'{name}' must be on of [{desired}], currently is {cur}".format(name=variable_name,
+                                                                                desired=','.join(desired_types),
+                                                                                cur=type(variable))
+    return error_msg
