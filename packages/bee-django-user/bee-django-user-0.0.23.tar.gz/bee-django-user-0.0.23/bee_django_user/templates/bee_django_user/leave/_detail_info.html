@@ -1,0 +1,42 @@
+{#{% if perms.bee_django_user.change_userprofile %}#}
+{#        <a href="{% url 'bee_django_user:user_update'  user.id %}">修改</a>#}
+{#    {% endif %}#}
+<table class="table">
+    <tr>
+        <td class="col-xs-3">姓名</td>
+        <td>{{ record.user.first_name }}</td>
+    </tr>
+    <tr>
+        <td>请假类型</td>
+        <td>{{ record.get_type }}</td>
+    </tr>
+    <tr>
+        <td>{{ record.get_type }}开始日期</td>
+        <td>{{ record.start|default:"" }}</td>
+    </tr>
+    <tr>
+        <td>{{ record.get_type }}结束日期</td>
+        <td>{{ record.end|default:"" }}</td>
+    </tr>
+    <tr>
+        <td>原结课日期</td>
+        <td><span style="color: red">{{ record.old_expire|default:"" }}</span></td>
+    </tr>
+    <tr>
+        <td>新结课日期</td>
+        <td><span style="color: red">{{ record.new_expire }}</span></td>
+    </tr>
+    <tr>
+        <td>添加时间</td>
+        <td>于{{ record.created_at }}添加</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            {% include 'bee_django_user/leave/_check.html' %}
+
+        </td>
+    </tr>
+
+
+</table>
