@@ -1,0 +1,32 @@
+version: 1
+disable_existing_loggers: True
+formatters:
+  # Add a new formatter if it's needed by your application
+  basic:
+    format: '%(asctime)s %(levelname)-8s %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  in_console:
+    format: '      %(asctime)s: %(levelname)-8s %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: in_console
+    stream: ext://sys.stdout
+  error_console:
+    class: logging.StreamHandler
+    level: WARN
+    formatter: in_console
+    stream: ext://sys.stderr
+  file:
+    class: logging.FileHandler
+    level: INFO
+    formatter: basic
+    filename: output.log
+    mode: w
+    encoding: utf-8
+root:
+  level: INFO
+  propagate: False
+  handlers: [console, error_console, file]
