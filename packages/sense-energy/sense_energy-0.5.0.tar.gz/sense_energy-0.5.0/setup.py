@@ -1,0 +1,23 @@
+from setuptools import setup
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setup(
+    name = 'sense_energy',
+    packages = ['sense_energy'], 
+    install_requires=[
+        'requests',
+        'websocket-client',
+    ],
+    version = '0.5.0',
+    description = 'API for the Sense Energy Monitor',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    author = 'scottbonline',
+    author_email = 'scottbonline@gmail.com',
+    url = 'https://github.com/scottbonline/sense',
+    download_url = 'https://github.com/scottbonline/sense/archive/0.5.0.tar.gz', 
+    keywords = ['sense', 'energy', 'api', 'pytest'], 
+    classifiers = [],
+)
