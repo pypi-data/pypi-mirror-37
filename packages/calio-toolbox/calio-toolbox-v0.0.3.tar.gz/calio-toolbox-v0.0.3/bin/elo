@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import sys
+import toolbox.elo as elo
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser(description="read items from stdio and sort them with elo ranking")
+    parser.add_argument('-r', '--round', help="number of rounds to run comparisons, defaults to the number of items")
+    parser.add_argument('-f', '--file', help="intput file")
+    parser.add_argument('item', nargs='*')
+    args = parser.parse_args()
+
+    if args.file:
+        with open(args.file) as f:
+            items = [x.strip() for x in f]
+    else:
+        items = args.item
+
+    result = elo.sorted(items, cmp=elo.tui_cmp, reverse=True, rounds=args.round)
+
+    for r in result:
+        print(r)
+
+
+if __name__ == "__main__":
+    main()
