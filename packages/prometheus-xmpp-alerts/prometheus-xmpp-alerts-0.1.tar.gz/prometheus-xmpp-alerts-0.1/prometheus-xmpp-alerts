@@ -1,0 +1,115 @@
+#!/usr/bin/python3
+# Simple HTTP web server that forwards prometheus alerts over XMPP.
+#
+# To use, configure a web hook in alertmanager. E.g.:
+#
+# receivers:
+# - name: 'jelmer-pager'
+#   webhook_configs:
+#   - url: 'http://192.168.2.1:9199/alert'
+#
+# Edit xmpp-alerts.yml.example, then run:
+# $ python3 prometheus-xmpp-alerts --config=xmpp-alerts.yml.example
+
+import aiowsgi
+import argparse
+import asyncio
+import logging
+import sys
+import json
+import os
+import slixmpp
+import logging
+import yaml
+
+DEFAULT_CONF_PATH = '/etc/prometheus/xmpp-alerts.yml'
+consoleloghandler = logging.StreamHandler()
+root_log = logging.getLogger('nbxmpp')
+#root_log.setLevel('DEBUG')
+root_log.addHandler(consoleloghandler)
+
+
+def create_message(message):
+    for i, alert in enumerate(message['alerts']):
+        yield '%s, %d/%d, %s, %s' % (
+            message['status'].upper(), i + 1, len(message['alerts']),
+            alert['startsAt'], alert['annotations']['summary'])
+
+
+class XmppApp(slixmpp.ClientXMPP):
+
+    def __init__(self, jid, password):
+        slixmpp.ClientXMPP.__init__(self, jid, password)
+        self.add_event_handler("session_start", self.start)
+        self.add_event_handler("message", self.message)
+        self.register_plugin('xep_0030') # Service Discovery
+        self.register_plugin('xep_0004') # Data Forms
+        self.register_plugin('xep_0060') # PubSub
+        self.register_plugin('xep_0199') # XMPP Ping
+
+    def start(self, event):
+        """Process the session_start event.
+
+        Args:
+          event: Event data (empty)
+        """
+        self.send_presence()
+        self.get_roster()
+
+    def message(self, msg):
+        """Handle an incoming message.
+
+        Args:
+            msg: The received message stanza.
+        """
+        # TODO(jelmer): Allow ack/nack here
+        # if msg['type'] in ('chat', 'normal'):
+        #    msg.reply("Thanks for sending\n%(body)s" % msg).send()
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', dest='config_path',
+                    type=str, default=DEFAULT_CONF_PATH,
+                    help='Path to configuration file.')
+args = parser.parse_args()
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(levelname)-8s %(message)s')
+
+config = yaml.load(open(args.config_path))
+
+app = XmppApp(config['jid'], config['password'])
+app.connect()
+loop = asyncio.get_event_loop()
+
+@asyncio.coroutine
+def wsgi_application(environ, start_response):
+    if environ['PATH_INFO'] == '/test':
+        text = 'Test message.'
+    elif environ['PATH_INFO'] == '/alert':
+        try:
+            try:
+                content_length = int(environ['CONTENT_LENGTH'])
+            except KeyError:
+                alert = json.load(environ['wsgi.input'])
+            else:
+                alert = json.loads(environ['wsgi.input'].read(
+                    content_length).decode('utf-8'))
+        except json.decoder.JSONDecodeError as e:
+            start_response('422 Unprocessable Entity', [])
+            return [str(e).encode('utf-8')]
+        text = '\n'.join(create_message(alert))
+    else:
+        start_response('404 Not Found', [])
+        return [b'Please access /test or /alert']
+    id_ = app.send_message(mto=config['to_jid'],
+                  mbody=text,
+                  mtype='chat')
+    start_response('200 OK', [])
+    return [('Sent message with id %s' %  id_).encode('utf-8')]
+
+
+srv = aiowsgi.create_server(
+        wsgi_application, loop=loop,
+        port=config['listen_port'], host=config['listen_address'])
+loop.run_forever()
