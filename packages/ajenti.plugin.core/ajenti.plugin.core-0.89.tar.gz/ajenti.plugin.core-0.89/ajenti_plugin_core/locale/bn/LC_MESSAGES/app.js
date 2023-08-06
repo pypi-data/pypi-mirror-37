@@ -1,0 +1,1 @@
+{"": "", "Username": "", "Authenticate": "", "OK": "", "Authorization failed": "", "Write configuration file": "", "Log out": "", "A bootstrap error has occured": "", "Read configuration file": "", "System": "", "Please see browser console": "", "General": "", "Elevate": "", "Software": "", "Other": "", "Log in": "", "Enter": "", "Password": "", "Tools": "", "Quick search": ""}
