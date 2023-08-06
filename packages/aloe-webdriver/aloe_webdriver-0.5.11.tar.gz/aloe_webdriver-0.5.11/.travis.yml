@@ -1,0 +1,39 @@
+sudo: required
+dist: trusty
+language: python
+python:
+- '3.6'
+- '3.5'
+- '3.4'
+- '2.7'
+env:
+- BROWSER=chrome
+- BROWSER=firefox
+- BROWSER=phantomjs
+services:
+- docker
+install:
+- pip install -r requirements.txt
+- sh -c 'if python --version 2>&1 | grep -q "Python 2"; then pip install Django==1.*; fi'
+- pip install -r test_requirements.txt
+- pip install coveralls
+script:
+- pycodestyle .
+- pylint aloe_webdriver setup.py
+- coverage erase
+- ./tools/with_docker_browser $BROWSER coverage run -m unittest discover -v -b
+- coverage report
+- "./tools/check_installs"
+- make -C docs coverage
+after_success:
+- coveralls
+deploy:
+  provider: script
+  script: ./tools/deploy
+  on:
+    tags: true
+    all_branches: true
+    python: 3.6
+    condition:
+      - '"$TRAVIS_TAG" = "v$(python setup.py --version)"'
+      - '"$BROWSER" = phantomjs'
