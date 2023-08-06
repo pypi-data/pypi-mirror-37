@@ -1,0 +1,301 @@
+Metadata-Version: 1.2
+Name: acumos-model-runner
+Version: 0.2.2
+Summary: Acumos model runner for Python models
+Home-page: https://gerrit.acumos.org/r/gitweb?p=python-model-runner.git
+Author: Paul Triantafyllou, Eric Zavesky
+Author-email: trianta@research.att.com, ezavesky@research.att.com
+License: Apache License 2.0
+Description: .. ===============LICENSE_START=======================================================
+        .. Acumos CC-BY-4.0
+        .. ===================================================================================
+        .. Copyright (C) 2017-2018 AT&T Intellectual Property & Tech Mahindra. All rights reserved.
+        .. ===================================================================================
+        .. This Acumos documentation file is distributed by AT&T and Tech Mahindra
+        .. under the Creative Commons Attribution 4.0 International License (the "License");
+        .. you may not use this file except in compliance with the License.
+        .. You may obtain a copy of the License at
+        ..
+        ..      http://creativecommons.org/licenses/by/4.0
+        ..
+        .. This file is distributed on an "AS IS" BASIS,
+        .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        .. See the License for the specific language governing permissions and
+        .. limitations under the License.
+        .. ===============LICENSE_END=========================================================
+        
+        =====================================
+        Acumos Python Model Runner User Guide
+        =====================================
+        
+        |Build Status|
+        
+        .. |Build Status| image:: https://jenkins.acumos.org/buildStatus/icon?job=python-model-runner-tox-verify-master
+           :target: https://jenkins.acumos.org/job/python-model-runner-tox-verify-master/
+        
+        The ``acumos_model_runner`` package installs a command line tool ``acumos_model_runner`` for running models created by the `Acumos Python client library <https://pypi.org/project/acumos/>`__.
+        
+        The model runner provides an HTTP API for invoking model methods, as well as a `Swagger UI <https://swagger.io/tools/swagger-ui/>`__ for documentation. See the tutorial for more information on usage.
+        
+        Installation
+        ============
+        
+        You will need a Python 3.4+ environment in order to install ``acumos_model_runner``.
+        You can use `Anaconda <https://www.anaconda.com/download/>`__
+        (preferred) or `pyenv <https://github.com/pyenv/pyenv>`__ to install and
+        manage Python environments.
+        
+        The ``acumos_model_runner`` package can be installed with pip:
+        
+        .. code:: bash
+        
+            $ pip install acumos_model_runner
+        
+        Command Line Usage
+        ==================
+        
+        .. code:: bash
+        
+            usage: acumos_model_runner [-h] [--host HOST] [--port PORT]
+                                       [--workers WORKERS] [--timeout TIMEOUT]
+                                       [--cors CORS]
+                                       model_dir
+        
+            positional arguments:
+              model_dir          Directory containing a dumped Acumos Python model
+        
+            optional arguments:
+              -h, --help         show this help message and exit
+              --host HOST        The interface to bind to
+              --port PORT        The port to bind to
+              --workers WORKERS  The number of gunicorn workers to spawn
+              --timeout TIMEOUT  Time to wait (seconds) before a frozen worker is
+                                 restarted
+              --cors CORS        Enables CORS if provided. Can be a domain, comma-
+                                 separated list of domains, or *
+        
+        .. ===============LICENSE_START=======================================================
+        .. Acumos CC-BY-4.0
+        .. ===================================================================================
+        .. Copyright (C) 2017-2018 AT&T Intellectual Property & Tech Mahindra. All rights reserved.
+        .. ===================================================================================
+        .. This Acumos documentation file is distributed by AT&T and Tech Mahindra
+        .. under the Creative Commons Attribution 4.0 International License (the "License");
+        .. you may not use this file except in compliance with the License.
+        .. You may obtain a copy of the License at
+        ..
+        ..      http://creativecommons.org/licenses/by/4.0
+        ..
+        .. This file is distributed on an "AS IS" BASIS,
+        .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        .. See the License for the specific language governing permissions and
+        .. limitations under the License.
+        .. ===============LICENSE_END=========================================================
+        
+        ===================================
+        Acumos Python Model Runner Tutorial
+        ===================================
+        
+        This tutorial demonstrates how to use the Acumos Python model runner with an example model.
+        
+        Creating A Model
+        ================
+        
+        An Acumos model must first be defined using the `Acumos Python client library <https://pypi.org/project/acumos/>`__. For illustrative purposes, a simple model with deterministic methods is defined below.
+        
+        .. code:: python
+        
+            # example_model.py
+            from collections import Counter
+        
+            from acumos.session import AcumosSession
+            from acumos.modeling import Model, List, Dict
+        
+            def add(x: int, y: int) -> int:
+                '''Adds two numbers'''
+                return x + y
+        
+            def count(strings: List[str]) -> Dict[str, int]:
+                '''Counts the occurrences of words in `strings`'''
+                return Counter(strings)
+        
+            model = Model(add=add, count=count)
+        
+            session = AcumosSession()
+            session.dump(model, 'example-model', '.')
+        
+        Executing ``example_model.py`` results in the following directory:
+        
+        .. code:: python
+        
+            .
+            ├── example_model.py
+            └── example-model
+        
+        
+        Running A Model
+        ===============
+        
+        Now the ``acumos_model_runner`` command line tool can be used to run the saved model.
+        
+        .. code:: bash
+        
+            $ acumos_model_runner example-model/
+            [2018-08-08 12:16:57 -0400] [61113] [INFO] Starting gunicorn 19.9.0
+            [2018-08-08 12:16:57 -0400] [61113] [INFO] Listening at: http://0.0.0.0:3330 (61113)
+            [2018-08-08 12:16:57 -0400] [61113] [INFO] Using worker: sync
+            [2018-08-08 12:16:57 -0400] [61151] [INFO] Booting worker with pid: 61151
+        
+        Using A Model
+        =============
+        
+        The model HTTP API can be explored via its generated Swagger UI. The Swagger UI of ``example-model`` above can be accessed by navigating to ``http://localhost:3330`` in your web browser.
+        
+        Below are some screenshots of the Swagger UI for ``example-model``.
+        
+        Model APIs
+        ----------
+        
+        The Swagger UI enumerates model method APIs, as well as APIs for accessing model artifacts. Below, the APIs corresponding to the ``add`` and ``count`` methods are listed under the ``methods`` tag.
+        
+        |Model APIs|
+        
+        .. |Model APIs| image:: https://gerrit.acumos.org/r/gitweb?p=python-model-runner.git;a=blob_plain;f=docs/tutorial/example-model-apis.png;hb=HEAD
+        
+        Count Method API
+        ----------------
+        
+        Expanding the documentation for the ``count`` method reveals more information on how to invoke the API.
+        
+        |Model Method|
+        
+        .. |Model Method| image:: https://gerrit.acumos.org/r/gitweb?p=python-model-runner.git;a=blob_plain;f=docs/tutorial/example-model-method.png;hb=HEAD
+        
+        Count Method Request
+        --------------------
+        
+        The Swagger UI provides an input form that can be used to try out the ``count`` API with sample data.
+        
+        |Model Method Request|
+        
+        .. |Model Method Request| image:: https://gerrit.acumos.org/r/gitweb?p=python-model-runner.git;a=blob_plain;f=docs/tutorial/example-model-request.png;hb=HEAD
+        
+        Count Method Response
+        ---------------------
+        
+        The response from the ``count`` API shows that everything is working as expected!
+        
+        |Model Method Response|
+        
+        .. |Model Method Response| image:: https://gerrit.acumos.org/r/gitweb?p=python-model-runner.git;a=blob_plain;f=docs/tutorial/example-model-response.png;hb=HEAD
+        
+        .. ===============LICENSE_START============================================================
+        .. Acumos CC-BY-4.0
+        .. ========================================================================================
+        .. Copyright (C) 2017-2018 AT&T Intellectual Property & Tech Mahindra. All rights reserved.
+        .. ========================================================================================
+        .. This Acumos documentation file is distributed by AT&T and Tech Mahindra
+        .. under the Creative Commons Attribution 4.0 International License (the "License");
+        .. you may not use this file except in compliance with the License.
+        .. You may obtain a copy of the License at
+        ..
+        .. http://creativecommons.org/licenses/by/4.0
+        ..
+        .. This file is distributed on an "AS IS" BASIS,
+        .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        .. See the License for the specific language governing permissions and
+        .. limitations under the License.
+        .. ===============LICENSE_END==============================================================
+        
+        ========================================
+        Acumos Python Model Runner Release Notes
+        ========================================
+        
+        v0.2.2
+        ======
+        - Fixed 404 bug for model artifact resources caused by relative model directory
+        - Fixed incorrect media type for protobuf resource
+        
+        v0.2.1
+        ======
+        - Upgraded Swagger UI from v2 to v3
+        
+        v0.2.0
+        ======
+        - Overhaul of model runner API
+        - Added support for ``application/json`` via ``Content-Type`` and ``Accept`` headers
+        - Added automatic generation of `OpenAPI Specification <https://swagger.io/docs/specification/2-0/basic-structure/>`__ and `Swagger UI <https://swagger.io/tools/swagger-ui/>`__
+        - Added support for CORS
+        
+        v0.1.0
+        ======
+        - Model runner implementation split off from `Acumos Python client <https://pypi.org/project/acumos/>`__ project
+        
+        .. ===============LICENSE_START=======================================================
+        .. Acumos CC-BY-4.0
+        .. ===================================================================================
+        .. Copyright (C) 2017-2018 AT&T Intellectual Property & Tech Mahindra. All rights reserved.
+        .. ===================================================================================
+        .. This Acumos documentation file is distributed by AT&T and Tech Mahindra
+        .. under the Creative Commons Attribution 4.0 International License (the "License");
+        .. you may not use this file except in compliance with the License.
+        .. You may obtain a copy of the License at
+        ..
+        ..      http://creativecommons.org/licenses/by/4.0
+        ..
+        .. This file is distributed on an "AS IS" BASIS,
+        .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        .. See the License for the specific language governing permissions and
+        .. limitations under the License.
+        .. ===============LICENSE_END=========================================================
+        
+        ==========================================
+        Acumos Python Model Runner Developer Guide
+        ==========================================
+        
+        Testing
+        =======
+        
+        We use a combination of ``tox``, ``pytest``, and ``flake8`` to test
+        ``acumos_model_runner``. Code which is not PEP8 compliant (aside from E501) will be
+        considered a failing test. You can use tools like ``autopep8`` to
+        “clean” your code as follows:
+        
+        .. code:: bash
+        
+            $ pip install autopep8
+            $ cd python-model-runner
+            $ autopep8 -r --in-place --ignore E501 acumos_model_runner/ testing/ examples/
+        
+        Run tox directly:
+        
+        .. code:: bash
+        
+            $ cd python-model-runner
+            $ tox
+        
+        You can also specify certain tox environments to test:
+        
+        .. code:: bash
+        
+            $ tox -e py34  # only test against Python 3.4
+            $ tox -e flake8  # only lint code
+        
+        And finally, you can run pytest directly in your environment *(recommended starting place)*:
+        
+        .. code:: bash
+        
+            $ pytest
+            $ pytest -s   # verbose output
+        
+Keywords: acumos machine learning model runner server protobuf ml ai
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: License :: OSI Approved :: Apache Software License
+Requires-Python: >=3.4
