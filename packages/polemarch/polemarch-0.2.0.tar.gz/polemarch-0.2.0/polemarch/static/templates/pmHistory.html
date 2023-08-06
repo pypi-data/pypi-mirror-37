@@ -1,0 +1,105 @@
+
+<script type="text/x-just" data-just="history_stdout_line"><span class="stdout-line <%- line.fatal %>" ><%= guiObj.Syntax(line.text) %></span>
+</script>
+
+<script type="text/x-just" data-just="history_one">
+    <!-- history_one -->
+
+    <%[ main_content_row %>
+
+        <div class="history-mode">
+        <section class="col-lg-8 history-LeftInfo">
+            <div class="box box-info collapsed-box">
+                <div class="box-header with-border collapsed-box">
+                    Inventory<br>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool btn-history-resize" onclick="$('.history-mode').toggleClass('history-fullsize');" >
+                            <i class="glyphicon glyphicon-resize-full"></i>
+                            <i class="glyphicon glyphicon-resize-small"></i>
+                        </button>
+
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i> </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <pre
+                            id="raw_inventory-pre"
+                            style="overflow: auto; max-height: 600px;" ><%= guiObj.model.data.justText('raw_inventory') %></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box box-info">
+                <div class="box-header with-border">
+                    stdout<br>
+                    <div class="box-tools pull-right">
+
+                            <~ guiObj.model.data.status>
+                                <% if(guiObj.model.data.status != 'RUN' && guiObj.model.data.status != 'DELAY'){ %>
+
+                                        <button type="button"
+                                                class="btn btn-default"
+                                                id="clear_output"
+                                                style="margin-right:5px; padding: 3px 9px;"
+                                                <%= justOn('click', emptyAction(guiObj.api.actions['clear'], guiObj), 'clear_output') %>
+                                        >
+
+
+
+                                            <span class="fa fa-trash" style="font-size:20px;"></span> <span class="hidden-sm hidden-xs" ></span>
+                                        </button>
+
+                                <% } %>
+                            <~>
+
+                        <button type="button" class="btn btn-box-tool btn-history-resize" onclick="$('.history-mode').toggleClass('history-fullsize');" >
+                            <i class="glyphicon glyphicon-resize-full"></i>
+                            <i class="glyphicon glyphicon-resize-small"></i>
+                        </button>
+
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" ><i class="fa fa-minus"></i> </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <label class="control-label" >stdout
+                                (<a href="<%- guiObj.model.data.raw_stdout %>"
+                                        target="_blank"
+                                        download="stdout-<%- guiObj.model.data.mode %>-<%- guiObj.model.data.start_time %>.log"
+                                        >Full raw stdout</a>)</label>
+                            <pre
+                                class="history-stdout"
+                                id="history-stdout"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="col-lg-4 history-RightInfo col12-mode">
+            <div class="box box-info">
+                <div class="box-header with-border">
+                    Task<br>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" onclick="$('.history-mode').toggleClass('history-fullsize');" ><i class="glyphicon glyphicon-resize-small"></i> </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <%* fields_block %>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <%] %>
+    <!-- /items_new_page -->
+
+    <%! entity_one %>
+</script>
