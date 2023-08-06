@@ -3,36 +3,10 @@
 This repo contains 40000 packages uploaded to PyPI between 
 2018-10-08 14:18 and 2018-11-02 07:18.
 
-The repo is 59% (23996/40000) complete.
+The repo is 64% (25996/40000) complete.
 
-## Packages:
+Package contents can be found [in the code branch](https://github.com/pypi-data/pypi-mirror-37/tree/code/packages).
 
-| Name  | Count |
-| ----- | ----- |
-| torchfun | 206 |
-| frida | 132 |
-| lalsuite | 110 |
-| cs18-sidecar | 108 |
-| spacy | 97 |
-| dimod | 96 |
-| dmcam | 94 |
-| ruamel.yaml | 88 |
-| epicscorelibs | 84 |
-| catboost-dev | 84 |
-| mysql-toolkit | 81 |
-| qitian-module | 79 |
-| p4p | 78 |
-| pulumi | 77 |
-| imagecodecs | 77 |
-| confluent-kafka | 75 |
-| python-dev-docker-project | 74 |
-| harvesters | 70 |
-| gecosistema-core | 70 |
-| magician-package | 69 |
-| responder | 68 |
-| umihico | 66 |
-| murmurhash | 65 |
-| pymoose | 64 |
-| grpcio-tools | 64 |
+A browsable package list for all repositories [all packages here](https://pypi-data.github.io/website/repositories/pypi-mirror-37).
 
 
