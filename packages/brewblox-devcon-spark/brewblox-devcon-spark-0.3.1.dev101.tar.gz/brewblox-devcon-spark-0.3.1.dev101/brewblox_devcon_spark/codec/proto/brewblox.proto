@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+message BrewbloxFieldOptions {
+  enum LinkType {
+    InvalidLink = 0;
+    ProcessValueLink = 1;
+    TempSensorLink = 2;
+    SetpointLink = 3;
+    SetpointSensorPairLink = 4;
+    ActuatorAnalogLink = 5;
+    ActuatorDigitalLink = 6;
+    BalancerLink = 7;
+    MutexLink = 8;
+    OneWireDeviceLink = 9;
+  }
+  enum UnitType {
+      NotSet = 0;
+      Temp = 1;
+      DeltaTemp = 2;
+      DeltaTempPerTime = 3;
+      Time = 4;
+  }
+  UnitType unit = 1;
+  uint32 scale = 2;
+  LinkType link = 3;
+  bool hexed = 4;
+  bool readonly = 5;
+}
+
+extend google.protobuf.FieldOptions { BrewbloxFieldOptions brewblox = 50001; }
