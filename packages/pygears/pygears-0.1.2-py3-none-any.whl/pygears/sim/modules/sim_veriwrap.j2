@@ -1,0 +1,148 @@
+#include "V{{top_name}}.h"
+#include "verilated.h"
+#include "verilated_vcd_c.h"
+#include "stdio.h"
+
+extern "C" {
+
+V{{top_name}}* top;
+vluint64_t main_time = 0;
+
+{% if tracing %}
+VerilatedVcdC* tfp = NULL;
+{% endif %}
+
+void eval(void) {
+#ifdef DEBUG
+    printf("eval\n");
+#endif
+    top->eval();
+}
+
+void back(void) {
+#ifdef DEBUG
+    printf("back\n");
+#endif
+    top->eval();
+{% if tracing %}
+    if (tfp) tfp->dump (main_time);
+{% endif %}
+    main_time+=5;
+    top->clk = 0;
+    top->rst = 0;
+    top->eval();
+{% if tracing %}
+    if (tfp) tfp->dump (main_time);
+{% endif %}
+    main_time+=5;
+}
+
+void trig(void) {
+#ifdef DEBUG
+    printf("trig\n");
+#endif
+    top->clk = 1;
+    top->eval();
+}
+
+int init(void) {
+    top = new V{{top_name}};
+
+{% if tracing %}
+    Verilated::traceEverOn(true);
+    tfp = new VerilatedVcdC;
+    top->trace(tfp, 99);  // Trace 99 levels of hierarchy
+    {# mkdir("logs", 0777); #}
+
+
+#ifdef DEBUG
+    printf("%p\n", tfp);
+#endif
+    tfp->open("{{outdir}}/vlt_dump.vcd");  // Open the dump file
+#ifdef DEBUG
+    printf("tfp->open\n");
+#endif
+{% endif %}
+
+{% for p in out_ports -%}
+    top->{{p.basename}}_ready = 0;
+{% endfor %}
+
+    top->rst = 1;
+    top->eval();
+
+    return 0;
+}
+
+void final() {
+    top->final();
+{% if tracing %}
+    if (tfp) { tfp->close(); tfp = NULL; }
+{% endif %}
+    delete top; top = NULL;
+}
+
+{% for p in in_ports -%}
+  {% if int(p.dtype) > 64 %}
+void set_{{p.basename}}(uint32_t* data, uint valid) {
+  {% elif int(p.dtype) > 32 %}
+void set_{{p.basename}}(vluint64_t data, uint valid) {
+  {% else %}
+void set_{{p.basename}}(uint32_t data, uint valid) {
+  {% endif %}
+
+  {% if int(p.dtype) > 64 %}
+    for (int i = 0; i < {{ (int(p.dtype) + 31) // 32 }}; ++i) {
+        top->{{p.basename}}_data[i] = data[i];
+#ifdef DEBUG
+        printf("Din: %x, Valid: %d\n", data[i], valid);
+#endif
+    }
+  {% else %}
+
+#ifdef DEBUG
+    printf("Din: %lx, Valid: %d\n", data, valid);
+#endif
+
+    top->{{p.basename}}_data = data;
+  {% endif %}
+
+    top->{{p.basename}}_valid = valid;
+}
+
+int get_{{p.basename}}() {
+    return top->{{p.basename}}_ready;
+}
+
+{% endfor %}
+
+{% for p in out_ports -%}
+int get_{{p.basename}}(uint32_t* data) {
+  {% if int(p.dtype) > 64 %}
+    uint32_t* p_data = top->{{p.basename}}_data;
+  {% elif int(p.dtype) > 32 %}
+    uint32_t* p_data = (uint32_t*) &top->{{p.basename}}_data;
+  {% endif %}
+
+  {% if int(p.dtype) > 32 %}
+    for (int i = 0; i < {{ (int(p.dtype) + 31) // 32 }}; ++i) {
+    data[i] = p_data[i];
+    }
+  {% else %}
+    data[0] = top->{{p.basename}}_data;
+  {% endif %}
+
+#ifdef DEBUG
+    printf("Dout: %lx, Valid: %d\n", data[0], top->{{p.basename}}_valid);
+#endif
+    return top->{{p.basename}}_valid;
+}
+
+int set_{{p.basename}}(uint ready) {
+#ifdef DEBUG
+    printf("{{p.basename}}_ready = %d\n", ready);
+#endif
+    top->{{p.basename}}_ready = ready;
+}
+{% endfor %}
+}
