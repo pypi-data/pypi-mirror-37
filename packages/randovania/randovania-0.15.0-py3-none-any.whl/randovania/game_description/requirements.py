@@ -1,0 +1,314 @@
+from functools import lru_cache
+from typing import NamedTuple, Optional, Iterable, FrozenSet, Iterator
+
+from randovania.game_description.resources import ResourceInfo, CurrentResources, DamageResourceInfo, ResourceType, \
+    ResourceDatabase, SimpleResourceInfo
+
+
+def _calculate_reduction(resource: DamageResourceInfo,
+                         current_resources: CurrentResources,
+                         database: ResourceDatabase) -> float:
+    multiplier = 1
+
+    for reduction in resource.reductions:
+        if current_resources.get(database.get_by_type_and_index(ResourceType.ITEM, reduction.inventory_index), 0) > 0:
+            multiplier *= reduction.damage_multiplier
+
+    return multiplier
+
+
+class IndividualRequirement(NamedTuple):
+    resource: ResourceInfo
+    amount: int
+    negate: bool
+
+    @classmethod
+    def with_data(cls,
+                  database: ResourceDatabase,
+                  resource_type: ResourceType,
+                  requirement_index: int,
+                  amount: int,
+                  negate: bool) -> "IndividualRequirement":
+        return cls(
+            database.get_by_type_and_index(resource_type, requirement_index),
+            amount,
+            negate)
+
+    def satisfied(self, current_resources: CurrentResources, database: ResourceDatabase) -> bool:
+        """Checks if a given resources dict satisfies this requirement"""
+
+        if isinstance(self.resource, DamageResourceInfo):
+            assert not self.negate, "Damage requirements shouldn't have the negate flag"
+            # TODO: actually implement the damage resources
+
+            current_energy = current_resources.get(database.energy_tank, 0) * 100
+            damage = _calculate_reduction(self.resource, current_resources, database) * self.amount
+
+            return current_energy >= damage
+
+        has_amount = current_resources.get(self.resource, 0) >= self.amount
+        if self.negate:
+            return not has_amount
+        else:
+            return has_amount
+
+    def __repr__(self):
+        return "{} {} {}".format(
+            self.resource,
+            "<" if self.negate else ">=",
+            self.amount)
+
+    @property
+    def pretty_text(self):
+        if self.amount == 1:
+            return "{}{}".format("No " if self.negate else "", self.resource)
+        else:
+            return str(self)
+
+    def __lt__(self, other: "IndividualRequirement") -> bool:
+        return str(self) < str(other)
+
+
+class RequirementList:
+    items: FrozenSet[IndividualRequirement]
+
+    def __deepcopy__(self, memodict):
+        return self
+
+    def __init__(self, items: Optional[Iterable[IndividualRequirement]] = None):
+        if items is None:
+            items = []
+        self.items = frozenset(items)
+
+    def __eq__(self, other):
+        return isinstance(
+            other, RequirementList) and self.items == other.items
+
+    def __lt__(self, other: "RequirementList"):
+        return self.items < other.items
+
+    def __hash__(self):
+        return hash(self.items)
+
+    def __repr__(self):
+        return repr(self.items)
+
+    def amount_unsatisfied(self, current_resources: CurrentResources, database: ResourceDatabase) -> bool:
+        return sum(not requirement.satisfied(current_resources, database)
+                   for requirement in self.values())
+
+    def satisfied(self, current_resources: CurrentResources, database: ResourceDatabase) -> bool:
+        """
+        A list is considered satisfied if all IndividualRequirement that belongs to it are satisfied.
+        In particular, an empty RequirementList is considered satisfied.
+        :param database:
+        :param current_resources:
+        :return:
+        """
+        return all(requirement.satisfied(current_resources, database)
+                   for requirement in self.values())
+
+    def simplify(self,
+                 static_resources: CurrentResources,
+                 database: ResourceDatabase) -> Optional["RequirementList"]:
+        """
+        Creates a new RequirementList that does not contain reference to resources in static_resources
+        :param static_resources:
+        :param database:
+        :return: None if this RequirementList is impossible to satisfy, otherwise the simplified RequirementList.
+        """
+        items = []
+        for item in self.values():
+            # The impossible resource is always impossible.
+            if item.resource == database.impossible_resource():
+                return None
+
+            if item.resource in static_resources:
+                # If the resource is a static resource, we either remove it from the list or
+                # consider this list impossible
+                if not item.satisfied(static_resources, database):
+                    return None
+
+            elif item.resource != database.trivial_resource():
+                # An empty RequirementList is considered satisfied, so we don't have to add the trivial resource
+                items.append(item)
+
+        return RequirementList(items)
+
+    def get(self, resource: ResourceInfo) -> Optional[IndividualRequirement]:
+        """
+        Gets an IndividualRequirement that uses the given resource
+        :param resource:
+        :return:
+        """
+        for item in self.values():
+            if item.resource == resource:
+                return item
+        return None
+
+    @property
+    def dangerous_resources(self) -> Iterator[SimpleResourceInfo]:
+        """
+        Return an iterator of all SimpleResourceInfo in this list that have the negate flag
+        :return:
+        """
+        for individual in self.values():
+            if individual.negate:
+                yield individual.resource
+
+    def replace(self, individual: IndividualRequirement, replacement: "RequirementList") -> "RequirementList":
+        items = []
+        for item in self.values():
+            if item == individual:
+                items.extend(replacement)
+            else:
+                items.append(item)
+        return RequirementList(items)
+
+    def values(self) -> FrozenSet[IndividualRequirement]:
+        return self.items
+
+    def union(self, other: "RequirementList") -> "RequirementList":
+        return RequirementList(self.items | other.items)
+
+
+def _get_quantity_or_zero(individual: Optional[IndividualRequirement]) -> int:
+    if individual is not None:
+        return individual.amount
+    else:
+        return 0
+
+
+class RequirementSet:
+    """
+    Represents multiple alternatives of satisfying a requirement.
+    For example, going from A to B may be possible by having Grapple+Space Jump or Screw Attack.
+    """
+    alternatives: FrozenSet[RequirementList]
+
+    def __init__(self, alternatives: Iterable[RequirementList]):
+        """
+        Constructs a RequirementSet from given iterator of RequirementList.
+        Redundant alternatives (Bombs or Bombs + Space Jump) are automatically removed.
+        :param alternatives:
+        """
+        input_set = frozenset(alternatives)
+        self.alternatives = frozenset(
+            requirement
+            for requirement in input_set
+            if not any(other < requirement for other in input_set)
+        )
+
+    def __eq__(self, other):
+        return isinstance(
+            other, RequirementSet) and self.alternatives == other.alternatives
+
+    def __hash__(self):
+        return hash(self.alternatives)
+
+    def __repr__(self):
+        return repr(self.alternatives)
+
+    def pretty_print(self, indent=""):
+        to_print = []
+        if self == RequirementSet.impossible():
+            to_print.append("Impossible")
+        elif self == RequirementSet.trivial():
+            to_print.append("Trivial")
+        else:
+            for alternative in self.alternatives:
+                to_print.append(", ".join(map(str, sorted(alternative.values()))))
+        for line in sorted(to_print):
+            print(indent + line)
+
+    @classmethod
+    @lru_cache()
+    def trivial(cls) -> "RequirementSet":
+        # empty RequirementList.satisfied is True
+        return cls([RequirementList([])])
+
+    @classmethod
+    @lru_cache()
+    def impossible(cls) -> "RequirementSet":
+        # No alternatives makes satisfied always return False
+        return cls([])
+
+    def satisfied(self, current_resources: CurrentResources, database: ResourceDatabase) -> bool:
+        """
+        Checks if at least one alternative is satisfied with the given resources.
+        In particular, an empty RequirementSet is *never* considered satisfied.
+        :param database:
+        :param current_resources:
+        :return:
+        """
+        return any(
+            requirement_list.satisfied(current_resources, database)
+            for requirement_list in self.alternatives)
+
+    def minimum_satisfied_difficulty(self,
+                                     current_resources: CurrentResources,
+                                     database: ResourceDatabase,
+                                     ) -> Optional[int]:
+        """
+        Gets the minimum difficulty that is currently satisfied
+        :param database:
+        :param current_resources:
+        :return:
+        """
+        difficulties = [
+            _get_quantity_or_zero(requirement_list.get(database.difficulty_resource))
+            for requirement_list in self.alternatives
+            if requirement_list.satisfied(current_resources, database)
+        ]
+        if difficulties:
+            return min(difficulties)
+        else:
+            return None
+
+    def simplify(self, static_resources: CurrentResources,
+                 database: ResourceDatabase) -> "RequirementSet":
+        """"""
+        new_alternatives = [
+            alternative.simplify(static_resources, database)
+            for alternative in self.alternatives
+        ]
+        return RequirementSet(alternative
+                              for alternative in new_alternatives
+
+                              # RequirementList.simplify may return None
+                              if alternative is not None)
+
+    def replace(self, individual: IndividualRequirement, replacements: "RequirementSet") -> "RequirementSet":
+        result = []
+
+        for alternative in self.alternatives:
+            if replacements.alternatives:
+                for other in replacements.alternatives:
+                    result.append(alternative.replace(individual, other))
+            elif individual not in alternative.values():
+                result.append(alternative)
+
+        return RequirementSet(result)
+
+    def union(self, other: "RequirementSet") -> "RequirementSet":
+        """Create a new RequirementSet that is only satisfied when both are satisfied"""
+        return RequirementSet(
+            a.union(b)
+            for a in self.alternatives
+            for b in other.alternatives)
+
+    def expand_alternatives(self, other: "RequirementSet") -> "RequirementSet":
+        """Create a new RequirementSet that is satisfied when either are satisfied."""
+        return RequirementSet(self.alternatives | other.alternatives)
+
+    @property
+    def dangerous_resources(self) -> Iterator[SimpleResourceInfo]:
+        """
+        Return an iterator of all SimpleResourceInfo in all alternatives that have the negate flag
+        :return:
+        """
+        for alternative in self.alternatives:
+            yield from alternative.dangerous_resources
+
+
+SatisfiableRequirements = FrozenSet[RequirementList]
