@@ -1,0 +1,108 @@
+Metadata-Version: 2.1
+Name: aiohttp-spyne
+Version: 1.0.0
+Summary: Aiohttp transport for Spyne RPC library
+Home-page: https://github.com/katajakasa/aiohttp-spyne
+Author: Tuomas Virtanen
+Author-email: katajakasa@gmail.com
+License: LGPLv2.1
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Classifier: Operating System :: OS Independent
+Classifier: Framework :: AsyncIO
+Requires-Dist: aiohttp (<4.0.0,>=3.0.0)
+Requires-Dist: spyne (>=2.12.7)
+
+.. image:: https://travis-ci.org/katajakasa/aiohttp-spyne.svg?branch=master
+    :target: https://travis-ci.org/katajakasa/aiohttp-spyne
+    :alt: Build status
+
+.. image:: https://landscape.io/github/katajakasa/aiohttp-spyne/master/landscape.svg
+    :target: https://landscape.io/github/katajakasa/aiohttp-spyne/master
+    :alt: Code Health
+
+About
+=====
+
+Aiohttp transport for Spyne RPC library.
+
+Requirements:
+
+* Python >= 3.6
+* Aiohttp >= 3.0.0
+* Spyne >= 2.12.7
+
+Installation
+------------
+
+Just run ``pip install aiohttp-spyne`` :)
+
+Examples
+--------
+
+* Test server: ``python -m examples.hello_world``
+* Threaded test server: ``python -m examples.hello_world_threads``
+* Test client: ``python -m examples.test_client``
+
+Usage
+-----
+
+First, initialize your spyne application as normal. Here's an example
+for a simple SOAP service (See examples for a more complete service setup).
+
+::
+
+    spyne_app = spyne.Application(
+        [HelloWorldService],
+        tns='aiohttp_spyne.examples.hello',
+        in_protocol=Soap11(validator='lxml'),
+        out_protocol=Soap11())
+
+
+Next, wrap your Spyne application with AIOSpyne. Note that you can run
+your application entrypoints in a thread by setting the threads parameter.
+If you want to keep your entrypoints running in the same thread as the
+main application, just leave this None. If you DO run your entrypoints
+in threads, be aware that some signals sent by spyne will also be run
+in threads, and be extra careful of using your main loop!
+
+::
+
+    handler = AIOSpyne(spyne_app, threads=25)
+
+
+Lastly, make an aiohttp application as usual, and just bind GET and POST
+entrypoints from AIOSpyne to wherever. Note that both paths need to be
+the same.
+
+With GET, if the request address ends ?wsdl or .wsdl, a WSDL schema is
+returned in a response. Otherwise requests are redirected to spynes
+RPC handler.
+
+::
+
+    app = web.Application()
+    app.router.add_get('/{tail:.*}', handler.get)
+    app.router.add_post('/{tail:.*}', handler.post)
+    web.run_app(app, port=8080)
+
+Tests
+-----
+
+Run ``pytest``. Make sure requirements are installed!
+
+To check for PEP8 problems, run ``flake8``.
+
+License
+-------
+
+LGPL-2.1 -- Please see LICENSE for details.
+
+
