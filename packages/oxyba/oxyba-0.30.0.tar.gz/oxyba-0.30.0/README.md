@@ -1,0 +1,156 @@
+# oxyba -- my wrapper functions and classes for python
+
+The oxyba package contains my wrapper functions and classes.
+
+There is no particular purpose nor structure within this package.
+New wrapper functions and classes are just added to main package folder.
+
+I advise against using any of this code in production.  
+Just don't.
+Feel free to copy code and adjust it to your own needs. 
+
+
+### Installation
+
+Check the source code at https://github.com/ulf1/oxyba
+
+```sh
+pip install oxyba
+```
+
+### Load the package
+
+I am going to use the ox shortcut
+
+```python
+import oxyba as ox
+```
+
+### Examples
+* see [oxyba.kmedian.com/docs](http://oxyba.kmedian.com/docs/)
+* or download [Jupyter Notebooks](examples)
+
+### Versioning
+
+After v0.1.11 the versioning rules changed. 
+A version X.Y.Z will have the following meaning.
+
+- X: Major changes for the package
+- Y: New function, class, module was added
+- Z: Bugfixes, minor changes
+
+
+### Notes to myself
+
+1. Update setup.py (version, requirements)
+2. Update CHANGES.txt (what's added, changed, removed?)
+3. Run:  python setup.py sdist upload -r pypi
+
+* use `flake8 --ignore=F401`
+* use `autopep8 --in-place oxyba/*.py`
+
+### Functions
+
+
+#### Sampling, Resampling
+
+* block_idxmat_sets
+* block_idxmat_shuffle
+* crossvalidation_loop
+* crossvalidation_stats
+* <s>threeway_split</s> -- replaced by [threesplit](https://pypi.org/project/threesplit/) pypi package
+* jackknife_loop
+* jackknife_stats
+
+
+#### Data Cleaning with Pandas
+
+* clean_add_strdec
+* clean_dateobject_to_string
+* clean_german_date
+* clean_german_number
+* clean_to_decimal
+
+#### Data Cleaning (other)
+
+* date_to_datetime
+* drop_empty_records
+
+#### Feature/Variable Checking
+
+* features_check_singular
+* isordinal
+
+#### Correlations Matricies
+
+* corr
+* corr_rank
+* corr_tau
+
+DataViz
+
+* heatmap_corr
+* hist_corr_pval
+* hist_corr_pval_groups
+
+#### <s>Correlation Matrix Adjustment</s>
+
+* <s>illcond_corrmat</s> -- replaced by [illmat](https://pypi.org/project/illmat/) pypi package
+* <s>subjcorr_luriegold</s> -- replaced by [luriegold](https://pypi.org/project/luriegold/) pypi package
+* <s>subjcorr_kfactor</s> -- replaced by [kfactor](https://pypi.org/project/kfactor/) pypi package
+* <s>subjcorr_onepara</s> -- replaced by [onepara](https://pypi.org/project/onepara/) pypi package
+
+#### Random Variables
+
+Random Correlated Variables
+
+* rand_bivar
+* rand_chol
+* rand_imancon
+
+Random Dates
+
+* <s>rand_dates</s> -- replaced by [randdate](https://pypi.org/project/randdate/) pypi package
+
+#### Date Functions
+
+* yearfrac_365q
+
+#### Other stats
+
+* nominal_count
+* nominal_mode
+* norm_mle
+
+
+#### Linear Regression 
+
+* linreg_ridge_lu
+* linreg_mle
+* linreg_ols_lu
+* linreg_ols_pinv
+* linreg_ols_qr
+* linreg_ols_svd
+
+linreg_ols_utils.py
+
+* linreg_predict
+* linreg_residuals
+* linreg_ssr
+* linreg_mse
+* linreg_rmse
+
+
+#### Financial Models
+
+* leland94
+
+
+#### Databases 
+
+* mysql_batch_and_fetch
+
+
+#### Python
+
+* pip_upgrade
