@@ -1,0 +1,93 @@
+{% extends ../../../templates/base.html %}
+
+{% block title %}[{{instance.hostname}}:{{instance.pg_port}}] - Activity{% end %}
+{% block title %}[{{instance.hostname}}:{{instance.pg_port}}] - Activity / {% if mode == 'waiting' %}Waiting{% elif mode == 'blocking' %}Blocking{% elif mode == 'running' %}Running{% end %} queries{% end %}
+
+{% block content %}
+<div class="modal fade" id="Modal" tabindex="-1" role="dialog" aria-labelledby="ModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="ModalLabel"></h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body" id="ModalInfo">
+      </div>
+      <div class="modal-body" id="ModalBody">
+      </div>
+      <div class="modal-footer" id="ModalFooter">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% include menu.html %}
+<div class="row d-flex justify-content-between">
+  <div class="col-auto">
+    <span class="d-inline-block" data-toggle="tooltip" title="Terminate the backends selected below">
+      <button type="button" class="btn btn-danger disabled" id="killButton">Terminate</button>
+    </span>
+  </div>
+  <div class="col-auto">
+    <div class="form-row align-items-center">
+      <div class="col-auto">
+        <button type="button" class="btn btn-secondary" disabled id="refreshButton"><i class="fa fa-refresh"></i> Refresh</button>
+      </div>
+      <div class="col-auto">
+        <div class="form-check">
+          <input type="checkbox" checked class="form-check-input" id="autoRefreshCheckbox">
+          <label class="form-check-label" for="autoRefreshCheckbox">
+            Auto refresh every <span id="intervalDuration"></span>s
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12 d-flex justify-content-between">
+    <div>
+      <img id="loadingIndicator" src="/images/ring-alt.svg" class="fa-fw">
+    </div>
+    <a class="collapse-toggle dropdown-toggle collapsed" data-toggle="collapse" href="#filters" role="button" aria-expanded="false" aria-controls="filters">
+      filters
+    </a>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12 collapse" id="filters">
+    <div class="justify-content-end d-flex">
+      <div class="form-group mb-1">
+        <input id="searchFilter" type="text" placeholder="Search" class="form-control">
+      </div>
+    </div>
+    <form id="state-filter" class="form-inline justify-content-end d-flex">
+      <div class="form-group pr-1">
+        <label><strong>States:</strong></label>
+      </div>
+      {% for state in ['active', 'idle', 'idle in transaction', 'idle in transaction (aborted)', 'fastpath function call', 'disabled'] %}
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="state-filter-{{state}}" value="{{ state }}" checked>
+        <label class="form-check-label" for="state-filter-{{state}}">{{ state }}</label>
+      </div>
+      {% end %}
+    </form>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12">
+    <table id="tableActivity" class="table-activity table table-sm table-striped small"></table>
+  </div>
+</div>
+
+<script src="/js/highlightjs/highlight.pack.js"></script>
+<script src="/js/datatables/datatables.min.js"></script>
+<script src="/js/activity/temboard.activity.js"></script>
+<script>
+var xsession = "{{xsession}}";
+var agent_address = "{{instance.agent_address}}";
+var agent_port = "{{instance.agent_port}}";
+var activityMode = "{{mode}}";
+</script>
+
+{% end %}

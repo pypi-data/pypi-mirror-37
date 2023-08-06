@@ -1,0 +1,39 @@
+{% extends base.html %}
+
+{% block title %}[{{instance.hostname}}:{{instance.pg_port}}] - Notifications{% end %}
+
+{% block content %}
+<div class="limiter">
+<div class="row">
+  <div class="col-12">
+    <table id="tableNotifications" class="table table-sm table-striped" cellspacing="0">
+    <thead>
+      <tr>
+        <th width="150">Date</th>
+        <th>Username</th>
+        <th>Content</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for notification in notifications %}
+      <tr>
+        <td class="date">{{notification['date']}}</td>
+        <td><span class="badge badge-success">{{notification['username']}}</span></td>
+        <td>{{notification['message']}}</td>
+      </tr>
+      {% end %}
+    </tbody>
+    </table>
+  </div>
+</div>
+</div> <!-- end limiter -->
+<script src="/js/datatables/datatables.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('#tableNotifications').DataTable({
+    order: [[0, 'desc']],
+    pageLength: 25
+  });
+});
+</script>
+{% end %}

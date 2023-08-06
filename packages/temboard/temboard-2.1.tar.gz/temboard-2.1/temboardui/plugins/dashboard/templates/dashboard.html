@@ -1,0 +1,237 @@
+{% extends ../../../templates/base.html %}
+
+{% block title %}[{{instance.hostname}}:{{instance.pg_port}}] - Dashboard{% end %}
+
+{% block content %}
+
+<div class="row mb-3">
+  <div class="col-xl-4 col-12 mb-3 mb-xl-0">
+    <div class="row">
+      <div class="col-xl-12 col mb-xl-2">
+        <div class="small text-muted text-center">
+          System
+        </div>
+        <div class="small text-center">
+        {% if 'linux_distribution' in dashboard %}
+        {{ dashboard['linux_distribution'] }} /
+        {% end %}
+        <span id="os_version">{{ dashboard['os_version'] }}</span>
+        </div>
+        <div class="row mt-2">
+          <div class="col-6 small text-center">
+            <div class="chart-title">
+              CPU &times; {{ dashboard['n_cpu'] }}
+              <i class="fa fa-info-circle text-muted" data-toggle="tooltip"
+                 title="{% for model, count in dashboard['cpu_models'].items() %} {{ count }} &times; {{ model }}{% end %}">
+              </i>
+            </div>
+            <div id="total-cpu" class="font-weight-bold">
+              &nbsp;
+            </div>
+            <div class="card-body p-2 chart-small">
+              <canvas id="chart-cpu"></canvas>
+            </div>
+          </div>
+          <div class="col-6 small text-center">
+            <div class="chart-title">
+              Memory
+            </div>
+            <div>
+              <span id="total-memory" class="font-weight-bold">
+              &nbsp;
+              </span>
+              of
+              <span id="memory" data-type="size" class="font-weight-bold">
+                {{ dashboard['memory']['total'] * 1000 }}
+              </span>
+            </div>
+            <div class="card-body p-2 chart-small">
+              <canvas id="chart-memory"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-12 col">
+        <div class="small text-muted text-center">
+          Postgres
+        </div>
+        <div class="small text-center">
+          <b id="nb_db">
+            {{ dashboard['databases']['databases'] }}
+          </b>
+          Databases
+          - <b id="size">{{ dashboard['databases']['total_size'] }}</b>
+          <br>
+          Uptime: <strong id="pg_uptime">{{ dashboard['pg_uptime'] }}</strong>
+        </div>
+        <div class="row mt-2">
+          <div class="col-6 small text-center">
+            <div class="chart-title">
+              Cache Hit Ratio
+            </div>
+            <div id="total-hit" class="font-weight-bold">
+            </div>
+            <div class="card-body p-2 chart-small">
+              <canvas id="chart-hitratio"></canvas>
+            </div>
+          </div>
+          <div class="col-6 small text-center">
+            <div class="chart-title">
+              Sessions
+            </div>
+            <div id="total-sessions" class="font-weight-bold">
+            </div>
+            <div class="card-body p-2 chart-small">
+              <canvas id="chart-sessions"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-8 col-12">
+    <div class="h-50 pb-3">
+      <div class="card h-100">
+        <div class="text-center small p-0">
+          <span class="chart-title">
+            Loadaverage
+          </span>
+          <div class="position-absolute top-0 right-0 pr-1"><span id="loadaverage" class="badge badge-primary">{{dashboard['loadaverage']}}</span></div>
+        </div>
+        <div class="card-body h-100 p-2">
+          <div id="canvas-loadaverage-holder" class="canvas-wrapper chart-h-min chart-h-min-xl-0">
+            <canvas id="chart-loadaverage" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="h-50">
+      <div class="card h-100">
+        <div class="text-center small p-0">
+          <span class="chart-title">
+            TPS
+          </span>
+          <div class="position-absolute top-0 right-0 pr-1">Commit: <span id="tps_commit" class="badge badge-success">0</span> Rollback: <span id="tps_rollback" class="badge badge-danger">0</span></div>
+        </div>
+        <div class="card-body h-100 p-2">
+          <div id="canvas-tps-holder" class="canvas-wrapper chart-h-min chart-h-min-xl-0">
+            <canvas id="chart-tps"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-6">
+    <div>
+      <div class="text-center small">
+        Notifications
+      </div>
+      <div class="small" id="divNotif10">
+        <div class="text-center"><div class="progress"><div class="progress-bar progress-bar-striped" style="width: 100%;">Please wait ...</div></div></div>
+      </div>
+    </div>
+  </div>
+  {% if 'monitoring' in [plugin.plugin_name for plugin in instance.plugins] %}
+  <div class="col-6" id="divAlerts">
+    <div class="text-center small">
+      Current status
+      <div class="position-absolute top-0 right-0 pr-2">
+        <a href="alerting" class="small text-muted">More&hellip;</a>
+      </div>
+    </div>
+    <div class="row small mb-2">
+      <template v-for="state in states">
+        <div class="col-3 col-xxl-2 p-1 text-center">
+          <div class="p-1 rounded" v-bind:class="[getBorderColor(state.state), {'striped bg-light': !state.enabled }]">
+            <a v-bind:href="'alerting/' + state.name"
+               v-bind:class="{'text-muted': !state.enabled}">
+              <div class="text-nowrap font-weight-bold"
+                   style="overflow: hidden; text-overflow: ellipsis"
+                   v-bind:title="state.description">
+                {{!state.description}}
+              </div>
+              <div class="text-center">
+                <span class="badge" v-bind:class="'badge-' + state.state.toLowerCase()">{{! state.state }}</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="text-center small">
+      Last alerts
+    </div>
+    <div class="small" style="max-height:300px; overflow-y:auto;">
+      <div class="text-center" v-if="!alerts">
+        <div class="progress"><div class="progress-bar progress-bar-striped" style="width: 100%;">Please wait ...</div></div>
+      </div>
+      <div class="text-muted" v-if="alerts.length == 0">
+        No alerts
+      </div>
+      <div v-cloak class="mb-0">
+        <template v-for="alert in alerts">
+          <div class="bg-light mb-1" :data-toggle-popover="alert.state == 'WARNING' || alert.state == 'CRITICAL'" data-trigger="hover">
+            <div class="p-1">
+              <div class="float-right text-muted text-right">
+                {{!moment(alert.datetime).fromNow()}}<br>
+              </div>
+              <div>
+                <a v-bind:href="'alerting/' + alert.name">
+                <span class="small text" v-bind:class="'text-' + alert.state.toLowerCase()">
+                  <i class="fa fa-square"></i>
+                </span>
+                <span>
+                  {{!alert.description}}
+                </span>
+                <span v-if="alert.key">
+                  -
+                  {{!alert.key}}
+                </span>
+                </a>
+              </div>
+              <div class="popover-content text-muted d-none" v-if="alert.state == 'WARNING' || alert.state == 'CRITICAL'">
+                {{!moment(alert.datetime).format()}}<br>
+                <span v-bind:class="'badge badge-' + alert.state.toLowerCase()">{{! alert.state }}</span>
+                <br>
+                <span class="font-weight-bold">
+                  {{!alert.value}}
+                </span>
+                <br>
+                Thresholds:
+                warning {{!alert.warning}}
+                /
+                critical {{!alert.critical}}
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+    {% end %}
+  </div>
+</div>
+
+<!-- <script src="/js/Chart.js"></script> -->
+<script src="/js/vue.min.js"></script>
+<script src="/js/Chart.min.js"></script>
+<script src="/js/dashboard/temboard.dashboard.js"></script>
+<script src="/js/filesize.min.js"></script>
+<script src="/js/moment.min.js"></script>
+<script>
+  var config = JSON.parse('{% raw config %}');
+  var jdata_history = JSON.parse('{% raw history %}');
+  var lastDatabasesDatum = jdata_history[jdata_history.length -1].databases;
+  var xsession = "{{xsession}}";
+  var agent_address = "{{instance.agent_address}}";
+  var agent_port = "{{instance.agent_port}}";
+
+  $(document).ready(function() {
+    $('[data-type=size]').each(function(){
+      if ($(this).html() != 'None')
+        $(this).html(filesize($(this).html()));
+    });
+  });
+</script>
+{% end %}
