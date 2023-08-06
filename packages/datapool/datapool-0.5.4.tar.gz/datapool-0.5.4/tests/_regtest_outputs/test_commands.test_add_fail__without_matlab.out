@@ -1,0 +1,47 @@
+
+>>> add sitex fail
+stdout: add('<tmpdir_from_fixture>', 'sitex', (), print_ok, print_err, mock_input)
+stderr: - argument 'sitex' invalid. allowed values are:
+stderr:   - parameter
+stderr:   - site
+stderr:   - source
+stderr:   - source_type
+
+>>> add site fail wrong default setting
+stdout: add('<tmpdir_from_fixture>', 'site', ('name=abc=',), print_ok, print_err, mock_input)
+stderr: - setting 'name=abc=' invalid, required syntax is VARIABLE=VALUE
+
+>>> add site fail invalid field
+stdout: add('<tmpdir_from_fixture>', 'site', ('name=abc', 'house=here', 'domain=unknown'), print_ok, print_err, mock_input)
+stderr: - variable 'house' not allowed for site
+stderr: - variable 'domain' not allowed for site
+stderr: - allowed variables are:
+stderr:   - name
+stderr:   - description
+stderr:   - street
+stderr:   - postcode
+stderr:   - city
+stderr:   - x
+stderr:   - y
+stderr:   - z
+stdout: add('<tmpdir_from_fixture>/fail', 'site', (), print_ok, print_err, mock_input)
+>>> fail add parameter
+stdout: add('<tmpdir_from_fixture>', 'parameter', ('name=abc',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/parameters.yaml
+stdout: add('<tmpdir_from_fixture>', 'parameter', ('name=abcd',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/parameters.yaml
+stdout: add('<tmpdir_from_fixture>', 'parameter', ('name=abcd',), print_ok, print_err, mock_input)
+stderr: parameter with name 'abcd' already exists
+>>> fail add site twice
+stdout: add('<tmpdir_from_fixture>', 'site', ('name=abc',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/sites/abc/site.yaml
+stdout: add('<tmpdir_from_fixture>', 'site', ('name=abc',), print_ok, print_err, mock_input)
+stderr: error: <tmpdir_from_fixture>/sites/abc/site.yaml already exists
+>>> fail add sourc without existing source type
+stdout: add('<tmpdir_from_fixture>', 'source', ('source_type=abc',), print_ok, print_err, mock_input)
+stderr: source_type 'abc' does not exists
+>>> fail add source_type twice
+stdout: add('<tmpdir_from_fixture>', 'source_type', ('name=abc',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/abc/source_type.yaml, please edit the special_values dummy section
+stdout: add('<tmpdir_from_fixture>', 'source_type', ('name=abc',), print_ok, print_err, mock_input)
+stderr: error: <tmpdir_from_fixture>/data/abc/source_type.yaml already exists

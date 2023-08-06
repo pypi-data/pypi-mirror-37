@@ -1,0 +1,176 @@
+>>> add ok site
+stdout: add('<tmpdir_from_fixture>', 'site', (), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/sites/name_x/site.yaml
+
+   sites/name_x/site.yaml
+    | name: name_x
+    | description: description_x
+    | street: street_x
+    | postcode: postcode_x
+    | city: city_x
+    | coordinates:
+    |     x: x_x
+    |     y: y_x
+    |     z: z_x
+    | 
+    | pictures:
+    |     -
+    |        path: images/DELETE_ME.png
+    |        description: description
+    |        # timestamp is optional:
+    |        timestamp: 2018/01/31 12:34:56
+   sites/name_x/images/DELETE_ME.png
+
+>>> add ok site abort
+stdout: add('<tmpdir_from_fixture>', 'site', ('name=abcd',), print_ok, print_err, mock_input_abort)
+stderr: aborted
+
+   sites/name_x/site.yaml
+    | name: name_x
+    | description: description_x
+    | street: street_x
+    | postcode: postcode_x
+    | city: city_x
+    | coordinates:
+    |     x: x_x
+    |     y: y_x
+    |     z: z_x
+    | 
+    | pictures:
+    |     -
+    |        path: images/DELETE_ME.png
+    |        description: description
+    |        # timestamp is optional:
+    |        timestamp: 2018/01/31 12:34:56
+   sites/name_x/images/DELETE_ME.png
+
+>>> add ok source_type
+stdout: add('<tmpdir_from_fixture>', 'source_type', ('name=abc',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/abc/source_type.yaml, please edit the special_values dummy section
+
+   sites/name_x/site.yaml
+    | name: name_x
+    | description: description_x
+    | street: street_x
+    | postcode: postcode_x
+    | city: city_x
+    | coordinates:
+    |     x: x_x
+    |     y: y_x
+    |     z: z_x
+    | 
+    | pictures:
+    |     -
+    |        path: images/DELETE_ME.png
+    |        description: description
+    |        # timestamp is optional:
+    |        timestamp: 2018/01/31 12:34:56
+   sites/name_x/images/DELETE_ME.png
+   data/abc/source_type.yaml
+    | 
+    | name: abc
+    | description: description_x
+    | special_values:
+    |     - categorical_value: NA
+    |       numerical_value: -666.0
+    |       description: not a number
+
+>>> add ok source
+stdout: add('<tmpdir_from_fixture>', 'source', ('source_type=abc',), print_ok, print_err, mock_input)
+stdout: please check <tmpdir_from_fixture>/data/abc/name_x/source.yaml and maybe modify the special_values dummy section
+
+   sites/name_x/site.yaml
+    | name: name_x
+    | description: description_x
+    | street: street_x
+    | postcode: postcode_x
+    | city: city_x
+    | coordinates:
+    |     x: x_x
+    |     y: y_x
+    |     z: z_x
+    | 
+    | pictures:
+    |     -
+    |        path: images/DELETE_ME.png
+    |        description: description
+    |        # timestamp is optional:
+    |        timestamp: 2018/01/31 12:34:56
+   sites/name_x/images/DELETE_ME.png
+   data/abc/source_type.yaml
+    | 
+    | name: abc
+    | description: description_x
+    | special_values:
+    |     - categorical_value: NA
+    |       numerical_value: -666.0
+    |       description: not a number
+   data/abc/name_x/source.yaml
+    | name: name_x
+    | description: description_x
+    | serial: serial_x
+    | manufacturer: manufacturer_x
+    | manufacturing_date: manufacturing_date_x
+
+>>> add ok parameter
+stdout: add('<tmpdir_from_fixture>', 'parameter', ('name=p1',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/parameters.yaml
+stdout: add('<tmpdir_from_fixture>', 'parameter', ('name=p2',), print_ok, print_err, mock_input)
+stdout: wrote <tmpdir_from_fixture>/data/parameters.yaml
+
+   sites/name_x/site.yaml
+    | name: name_x
+    | description: description_x
+    | street: street_x
+    | postcode: postcode_x
+    | city: city_x
+    | coordinates:
+    |     x: x_x
+    |     y: y_x
+    |     z: z_x
+    | 
+    | pictures:
+    |     -
+    |        path: images/DELETE_ME.png
+    |        description: description
+    |        # timestamp is optional:
+    |        timestamp: 2018/01/31 12:34:56
+   sites/name_x/images/DELETE_ME.png
+   data/parameters.yaml
+    | - name: p1
+    |   unit: unit_x
+    |   description: description_x
+    | 
+    | - name: p2
+    |   unit: unit_x
+    |   description: description_x
+   data/abc/source_type.yaml
+    | 
+    | name: abc
+    | description: description_x
+    | special_values:
+    |     - categorical_value: NA
+    |       numerical_value: -666.0
+    |       description: not a number
+   data/abc/name_x/source.yaml
+    | name: name_x
+    | description: description_x
+    | serial: serial_x
+    | manufacturer: manufacturer_x
+    | manufacturing_date: manufacturing_date_x
+stdout: - check names and places of changed files at landing zone <tmpdir_from_fixture>
+stdout: - file names and their places are ok
+stdout: - check yaml files in landing zone at <tmpdir_from_fixture>
+stderr: - setup fresh development db. productive does not exist or is empty.
+stdout: - check folder structure
+stdout:   - sites is ok
+stdout:   - data is ok
+stdout:   - data/abc/name_x/raw_data is ok
+stdout: - detected 4 yaml files:
+stdout:   - <tmpdir_from_fixture>/data/parameters.yaml
+stdout:   - <tmpdir_from_fixture>/data/abc/source_type.yaml
+stdout:   - <tmpdir_from_fixture>/data/abc/name_x/source.yaml
+stdout:   - <tmpdir_from_fixture>/sites/name_x/site.yaml
+stdout: - check yaml files
+stderr:   - got error: entry manufacturing_date is not a valid date
+stderr: + detected problems in yaml files

@@ -1,0 +1,11 @@
+stages:
+    - tests
+
+tests:
+    variables:
+        PYTHONUNBUFFERED: '1'
+    script:
+        - pyenv local $(latest_python 3.6)
+        - scripts/setup_julia_et_al.sh
+        - tox -r -vv
+    stage: tests

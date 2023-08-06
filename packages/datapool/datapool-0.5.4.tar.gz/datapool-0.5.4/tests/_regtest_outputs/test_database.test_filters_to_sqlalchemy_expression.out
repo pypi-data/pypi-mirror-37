@@ -1,0 +1,25 @@
+['timestamp > 2017, site==abc']
+signal.timestamp > :timestamp_1 AND site.name = :name_1 [('name_1', 'abc'), ('timestamp_1', datetime.datetime(2017, 1, 1, 0, 0))]
+
+['timestamp <= 2017, site==abc', 'x==7']
+signal.timestamp <= :timestamp_1 AND site.name = :name_1 AND signal.coord_x = :coord_x_1 [('coord_x_1', '7'), ('name_1', 'abc'), ('timestamp_1', datetime.datetime(2017, 1, 1, 0, 0))]
+
+['timestamp > 2017, source==abc']
+signal.timestamp > :timestamp_1 AND source.name = :name_1 [('name_1', 'abc'), ('timestamp_1', datetime.datetime(2017, 1, 1, 0, 0))]
+
+['timestamp >= 2017, parameter==a']
+signal.timestamp >= :timestamp_1 AND parameter.name = :name_1 [('name_1', 'a'), ('timestamp_1', datetime.datetime(2017, 1, 1, 0, 0))]
+
+['timestamp, parameter==a']
+filter timestamp has not the form FIELD CMP VALUE with CMP in (==, <=, <, >=, >)
+
+['timestamp != 2017, parameter==a']
+filter timestamp != 2017 has not the form FIELD CMP VALUE with CMP in (==, <=, <, >=, >)
+
+['timestamp == 2017-13, parameter==a']
+datetime 2017-13 is not of format '%Y-%m-%d:%H:%M:%S' or contains invalid values
+
+['timestamp == 2017-13, invalid_field==a']
+datetime 2017-13 is not of format '%Y-%m-%d:%H:%M:%S' or contains invalid values
+filter invalid_field==a has invalid field invalid_field, allowed are parameter, site, source, timestamp, x, y, z
+
