@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import sys
+from dizmogen_converter.generator_dizmo import GeneratorDizmo
+from dizmogen_converter.grace_dizmo import GraceDizmo
+from dizmogen_converter.exceptions import GeneratorDizmoError, GraceDizmoError
+
+graceDizmo = GraceDizmo()
+genDizmo = GeneratorDizmo(graceDizmo.get_generator_info())
+
+error = False
+
+try:
+    genDizmo.load()
+    genDizmo.write_config_diff(graceDizmo.get_config_diff())
+    genDizmo.write_html(graceDizmo.get_html())
+    if not graceDizmo.get_generator_info()['coffeescript']:
+        genDizmo.write_plain_js(graceDizmo.get_plain_js())
+    else:
+        genDizmo.copy_coffeescript()
+    genDizmo.copy_libs()
+    genDizmo.copy_styles()
+    genDizmo.copy_assets()
+except (GeneratorDizmoError, GraceDizmoError) as e:
+    print(str(e))
+except Exception:
+    raise Exception
+else:
+    genDizmo.copy_source()
+finally:
+    genDizmo.remove_tempdir()
