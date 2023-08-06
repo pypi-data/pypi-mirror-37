@@ -1,0 +1,318 @@
+{% extends "bee_django_course/base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load bee_django_course_filter %}
+{% block  styles %}
+    <style>
+        #nav_div {
+            margin: 10px 0;
+            padding: 10px 0;
+        }
+
+        .question_view_div {
+            margin: 10px;
+            padding: 10px;
+        }
+
+        .question_view_div:hover {
+            background-color: #FFFAE4;
+
+        }
+
+        .question_edit_div {
+        {#            margin: 10px;#} padding: 10px;
+            background-color: #efefef;
+            min-height: 200px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    {#插入区#}
+    {% include 'bee_django_course/question/insert-button-template.html' %}
+    <div id="nav_div">
+        插入:
+        <insert-button name="单选题" type_id="1"></insert-button>
+        <insert-button name="多选题" type_id="2"></insert-button>
+{#        <insert_button name="多选题" type_id="2"></insert_button>#}
+    </div>
+
+    <div class="row ">
+        <div class="col-xs-6">
+            <h4>展示区</h4>
+
+            <div id="questions">
+                <question-view v-for="question in sort_questions" :key="question.id"
+                               :question="question"></question-view>
+            </div>
+        </div>
+
+        <div class="col-xs-6 question_edit_div">
+            <h4>编辑区</h4>
+
+            <div id="question_edit"></div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'bee_django_course/vue/vue.js' %}"></script>
+    <script src="{% static 'bee_django_course/axios/axios.min.js' %}"></script>
+    <script src="{% static 'bee_django_course/js/questions.js' %}"></script>
+
+    {% verbatim %}
+
+
+    <script type="text/x-template" id="question-view-template">
+        <div @click="edit_question()" class="question_view_div">
+            <div>{{ question.order_by }}-{{ question.question }}
+                <button @click="delete_question(question)" style="color: red;" title="删除该问题"> X</button>
+            </div>
+
+            <div v-for="option in question.options" :key="option.id">{{ option.order_by }}- {{ option.option}}
+                <span v-if="option.is_correct" style="color: red;">(正确答案)</span>
+            </div>
+            <div>
+                <div style="color: green">正确时提示：{{ question.tip_correct }}</div>
+                <div style="color: red">错误时提示：{{ question.tip_wrong }}</div>
+            </div>
+        </div>
+
+    </script>
+    <script type="text/x-template" id="question-edit-template">
+        <div v-if="question">
+            <div>顺序：<input v-model="question.order_by"></div>
+            <div>问题：<input v-model="question.question"></div>
+            <hr>
+
+            <div style="color: red">* 无正确答案时，答了即算对</div>
+            <div>选项：
+                <button @click="add_option()">添加选项</button>
+                <div v-for="option in sort_options">
+                    <button @click="delete_option(option)" style="color: red" title="删除该选项"> X</button>
+                    <input v-model="option.order_by" style="max-width: 40px;"> - <input v-model="option.option ">
+                    <input type="checkbox" id="option.id" v-model="option.is_correct">正确答案
+
+                </div>
+            </div>
+            <hr>
+            <div>
+                <div>正确时提示：<textarea v-model="question.tip_correct" style="width: 100%"></textarea></div>
+                <div>错误时提示：<textarea v-model="question.tip_wrong" style="width: 100%"></textarea></div>
+            </div>
+            <hr>
+            <div>
+                <input type="submit" value="提交" class="btn btn-default"
+                       @click="save_question()"/>
+            </div>
+        </div>
+    </script>
+
+
+
+
+    {% endverbatim %}
+    <script type="text/javascript">
+
+        var section_id = '{{section.id}}';
+        $(document).ready(function () {
+            load_questions()
+        });
+
+        function load_questions() {
+            var url = '{% url "bee_django_course:section_question_list_json"  section_id %}';
+            axios.get(url).then(function (resp) {
+                if (resp.data.error == 0) {
+                    var question_list = resp.data.question_list;
+                    questions_vm.questions = JSON.parse(question_list);
+                }
+
+            });
+        }
+
+        {#===操作区===#}
+        Vue.component('insert-button', {
+            props: {
+                name: String,
+                type_id: String
+            },
+
+            template: '#insert-button-template',
+            methods: {
+                add_question: function (type_id) {
+                    var url = "{% url 'bee_django_course:section_question_add' %}";
+                    add_question(questions_vm,url,section_id,type_id);
+
+                }
+            }
+        });
+        new Vue({
+            el: '#nav_div'
+
+        });
+        {#===操作区完===#}
+        {#===问题展示区===#}
+        Vue.component('question-view', {
+            props: {
+                question: Object
+            },
+            template: '#question-view-template',
+            methods: {
+                edit_question: function () {
+                    question_edit_vm.question = this.question;
+                },
+                delete_question: function (question) {
+                    var msg = "确定要删除该问题吗？";
+                    if (confirm(msg) == true) {
+                        var form_data = new FormData();
+                        var url = "{{ ex_url }}" + "/course/section/question/delete/" + question.id + "/";
+                        form_data.append('question_id', question.id);
+                        axios.defaults.xsrfCookieName = 'csrftoken';
+                        axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                        axios.post(url, form_data).then(function (resp) {
+                            alert(resp.data.message);
+                            if (resp.data.error == 0) {
+                                var index = $.inArray(question, questions_vm.questions);
+                                if (index >= 0) {
+                                    questions_vm.questions.splice(index, 1);
+                                    question_edit_vm.question = null;
+                                }
+                            }
+                        });
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+                }
+            }
+
+        });
+        var questions_vm = new Vue({
+            el: '#questions',
+            data: {
+                questions: []
+            },
+            computed: {
+                sort_questions: function () {
+                    return sort_key(this.questions, "order_by");
+                }
+
+            }
+
+        });
+
+
+        {#===问题展示区完===#}
+
+        {#===问题编辑区===#}
+        var question_edit_vm = new Vue({
+            el: '#question_edit',
+            data: {
+                question: null
+            },
+            template: '#question-edit-template',
+            methods: {
+                save_question: function () {
+                    if (!this.question) {
+                        return;
+                    }
+                    var url = "{{ ex_url }}" + "/course/section/question/save/" + this.question.id + '/';
+                    var options_str = JSON.stringify(this.question.options);
+
+                    var form_data = new FormData();
+                    form_data.append('question_id', this.question.id);
+                    form_data.append('question_name', this.question.question);
+                    form_data.append('question_order_by', this.question.order_by);
+                    form_data.append('options_str', options_str);
+                    if (this.question.tip_correct){
+                        form_data.append('question_tip_correct', this.question.tip_correct);
+                    }
+                    if (this.question.question_tip_wrong){
+                        form_data.append('question_tip_wrong', this.question.tip_wrong);
+                    }
+                    axios.defaults.xsrfCookieName = 'csrftoken';
+                    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                    axios.post(url, form_data).then(function (resp) {
+                        alert(resp.data.message);
+                        if (resp.data.error == 0) {
+                            question_edit_vm.question = null;
+                        }
+
+                    });
+                },
+                add_option: function () {
+                    if (!this.question) {
+                        return;
+                    }
+                    var url = "{{ ex_url }}" + "/course/section/option/add/" + this.question.id + "/";
+                    var form_data = new FormData();
+                    form_data.append('question_id', this.question.id);
+                    axios.defaults.xsrfCookieName = 'csrftoken';
+                    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                    axios.post(url, form_data).then(function (resp) {
+                        alert(resp.data.message);
+                        if (resp.data.error == 0) {
+                            question_edit_vm.question.options.push(JSON.parse(resp.data.new_option));
+                        }
+
+
+                    });
+                },
+                delete_option: function (option) {
+
+                    if (!option) {
+                        return;
+                    }
+                    var msg = "确定要删除该选项吗？";
+                    if (confirm(msg) == true) {
+                        var url = "{{ ex_url }}" + "/course/section/option/delete/" + option.id + "/";
+                        var form_data = new FormData();
+                        form_data.append('option_id', option.id);
+                        axios.defaults.xsrfCookieName = 'csrftoken';
+                        axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                        axios.post(url, form_data).then(function (resp) {
+                            alert(resp.data.message);
+                            if (resp.data.error == 0) {
+                                var index = $.inArray(option, question_edit_vm.question.options);
+                                if (index >= 0) {
+                                    question_edit_vm.question.options.splice(index, 1);
+                                }
+
+                            }
+
+
+                        });
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+
+                }
+            },
+            computed: {
+                sort_options: function () {
+                    return sort_key(this.question.options, "order_by");
+                }
+
+            }
+
+
+        });
+        {#===问题展示区完===#}
+
+
+        function sort_key(array, key) {
+            return array.sort(function (a, b) {
+                var x = parseInt(a[key]);
+                var y = parseInt(b[key]);
+                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            })
+        }
+    </script>
+
+
+{% endblock %}
