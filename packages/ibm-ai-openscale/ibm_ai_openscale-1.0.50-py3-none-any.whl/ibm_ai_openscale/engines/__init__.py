@@ -1,0 +1,2 @@
+from .watson_machine_learning import WatsonMachineLearningInstance, WatsonMachineLearningAsset
+from .generic_machine_learning import GenericMachineLearningInstance, GenericAsset
