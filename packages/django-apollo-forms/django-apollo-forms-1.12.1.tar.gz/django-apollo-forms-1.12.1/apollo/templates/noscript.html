@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Noscript Apollo Form</title>
+    <link rel="stylesheet" type="text/css" href="{{ themes_url }}/default/index.css" />
+</head>
+<body class="form-{{ form_id }}">
+    <div class="icarus">
+        <form class="icarus-form" method="post">{% csrf_token %}
+            <div class="icarus-layout-static">
+            {% for field in form %}
+                <div class="icarus-field field-{{ field.name }}">
+                    {% if field.label and field.is_visible %}
+                    <label for="{{ field.name }}">{{ field.label }}</label>
+                    {% endif %}
+
+                    {{ field }}
+                </div>
+            {% endfor %}
+            </div>
+
+            <input type="hidden" value="{{ form_id }}" name="form_id" />
+
+            {% if error %}
+            <ul class="icarus-errors">
+                <li>{{ error }}</li>
+            </ul>
+            {% endif %}
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
