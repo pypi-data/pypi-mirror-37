@@ -1,0 +1,79 @@
+#!/bin/bash
+ROLE_NAME=deploy
+DIR=~/.ansible/roles/$ROLE_NAME
+GIT_BASE=${GIT_BASE:-https://github.com/moshloop}
+inventory=
+ARGS=
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "USAGE: ansible-$ROLE_NAME [any ansible-playbook arguments]"
+    echo "Use ansible-$ROLE_NAME install to install the ansible roles only without execution"
+    exit
+fi
+while getopts ":i: " opt; do
+  case $opt in
+    i)
+    inventory=$OPTARG
+      ;;
+    esac
+done
+
+if [[ "$inventory" == "" && -d inventory ]]; then
+  ARGS+=" -i inventory"
+  inventory="inventory"
+fi
+
+ARG1=$1
+
+checkout_role() {
+  if [[ ! -e $DIR ]]; then
+    git clone $GIT_BASE/ansible-$ROLE_NAME.git $DIR
+  fi
+  pwd=$(pwd)
+  if [[ "$ARG1" == "install" ]]; then
+    return
+  elif [[  "$ARG1" == "update" ]]; then
+    cd $DIR
+    git fetch --all
+    cd $pwd
+    return
+  fi
+  filter="._meta.hostvars | values[] | .ansible_${ROLE_NAME}_version"
+  desired_tag=$( ansible-inventory -i $inventory --list | jq -r "$filter" | head -n1)
+  cd $DIR
+  current_tag=$(git describe --tags)
+
+  if [[ "$desired_tag" != "null" && "$desired_tag" != "" && "$desired_tag" != "$current_tag" ]]; then
+    echo "Checking out $desired_tag"
+    current_base=$(git config --get remote.origin.url)
+
+    if [[ "$current_base" != $GIT_BASE* ]]; then
+        echo "Switching origin to: $GIT_BASE"
+        git remote remove origin
+        git remote add origin $GIT_BASE/ansible-${ROLE_NAME}.git
+    fi
+    git fetch
+    git checkout $desired_tag
+  fi
+  echo "Using ansible-${ROLE_NAME}"
+  git log -n1
+  cd $pwd
+}
+
+link_playbook() {
+  ln -s $DIR/$ROLE_NAME.yml .ansible-$ROLE_NAME.yml
+  function finish {
+    rm .ansible-$ROLE_NAME.yml
+  }
+  trap finish EXIT
+}
+
+checkout_role
+
+if [[ "$ARG1" == "install" || "$ARG1" == "update" ]]; then
+  exit
+fi
+
+link_playbook
+ANSIBLE_HASH_BEHAVIOUR=merge
+ansible-playbook .ansible-$ROLE_NAME.yml $@ $ARGS
