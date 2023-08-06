@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+'''pgdocgen starting point'''
+
+import pgdocgen.utils
+from pgdocgen.parser import Parser
+from pgdocgen.files import read_dir
+from pgdocgen.output import HtmlGenerator
+
+#Configuration dictionary
+settings = {}
+log = None
+
+
+def process_file(jdoc):
+    '''Function to be called on each source file.
+       It parses file and generates JDOC objects'''
+    def process_int(s):
+        '''internal process_file without jdoc parameter'''
+        p = Parser(default_schema = settings.get("default_schema","public"))
+        r = p.parse(s)
+        global jdoc
+        jdoc = jdoc + r
+    return process_int
+
+
+if __name__ == '__main__':
+    '''main'''
+
+    settings = pgdocgen.utils.parse_options(settings)
+    settings = pgdocgen.utils.load_config(settings)
+    log = pgdocgen.utils.init_logging(settings)
+    log.info('Pgdocgen started')
+
+    jdoc = []
+
+    if 'db_connect_string' in settings.keys():
+        log.debug('Reading from database...')
+        from pgdocgen.ddlobject.db import DB
+        db = DB(settings['db_connect_string'])
+        from pgdocgen.readddl import readddl
+        jdoc = readddl(db)
+
+    if 'input_dir' in settings.keys():
+        log.debug('Reading input files...')
+        read_dir(settings['input_dir'],
+                 settings['input_ext'],
+                 process_file(jdoc))
+
+    if len(jdoc) == 0:
+        log.error('Output is empty!')
+        exit(1)
+    else:
+        g = HtmlGenerator(settings['project_name'])
+        log.debug('Writing output files...')
+        g.write_files(jdoc, settings['output_dir'])
+        log.info('Done!')
