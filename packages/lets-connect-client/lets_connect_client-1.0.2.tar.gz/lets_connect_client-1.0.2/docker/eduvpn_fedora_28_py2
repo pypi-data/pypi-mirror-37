@@ -1,0 +1,23 @@
+FROM fedora:28
+
+RUN dnf install -y \
+        libnotify \
+        gtk3 \
+        dbus-python \
+        python-repoze-lru \
+        python-gobject \
+        python2-pynacl \
+        python2-requests-oauthlib \
+        python2-configparser \
+        python2-future \
+        python2-dateutil \
+        python2-mock \
+        python2-pytest \
+        python2-cryptography \
+        python2-qrcode \
+        python2-pillow
+
+ADD . /code
+WORKDIR /code
+RUN python setup.py install
+RUN python setup.py test
