@@ -1,0 +1,56 @@
+
+module "vpc" {
+  source                             = "git::https://github.com/reactiveops/terraform-vpc.git?ref=v3.0.0"
+  aws_vpc_name                       = "${var.aws_vpc_name}"
+  aws_region                         = "${var.aws_region}"
+
+  az_count                           = "${var.az_count}"
+  aws_azs                            = "${var.aws_azs}"
+
+  vpc_cidr_base                      = "${var.vpc_cidr_base}"
+
+  admin_subnet_parent_cidr           = "${var.admin_subnet_parent_cidr}"
+  admin_subnet_cidrs                 = "${var.admin_subnet_cidrs}"
+
+  public_subnet_parent_cidr          = "${var.public_subnet_parent_cidr}"
+  public_subnet_cidrs                = "${var.public_subnet_cidrs}"
+
+  private_prod_subnet_parent_cidr    = "${var.private_prod_subnet_parent_cidr}"
+  private_prod_subnet_cidrs          = "${var.private_prod_subnet_cidrs}"
+
+  private_working_subnet_parent_cidr = "${var.private_working_subnet_parent_cidr}"
+  private_working_subnet_cidrs       = "${var.private_working_subnet_cidrs}"
+
+}
+
+
+// Output VPC values to allow this statefile to be used as a datasource
+
+output "aws_vpc_subnet_admin_ids" {
+  value = "${module.vpc.aws_subnet_admin_ids}"
+}
+
+output "aws_vpc_subnet_private_working_ids" {
+  value = "${module.vpc.aws_subnet_private_working_ids}"
+}
+
+output "aws_vpc_subnet_private_prod_ids" {
+  value = "${module.vpc.aws_subnet_private_prod_ids}"
+}
+
+output "aws_vpc_subnet_public_ids" {
+  value = "${module.vpc.aws_subnet_public_ids}"
+}
+
+output "aws_vpc_id" {
+  value = "${module.vpc.aws_vpc_id}"
+}
+
+output "aws_vpc_cidr" {
+  value = "${module.vpc.aws_vpc_cidr}"
+}
+
+output "aws_nat_gateway_ids" {
+  value = "${module.vpc.aws_nat_gateway_ids}"
+}
+
