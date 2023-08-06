@@ -1,0 +1,1 @@
+from .hashverify import verifyTool
