@@ -1,0 +1,29 @@
+language: python
+python:
+- '3.6'
+cache:
+  directories:
+  - ".cache"
+  - libs
+os:
+- linux
+after_success:
+- codecov
+- codecov --token='6b85102c-c69a-4b95-8ddc-4325d01b4c9f'
+- make lint
+jobs:
+  include:
+  - stage: Tests
+    install:
+      - source scripts/bootstrap
+    script: make ci HYPOTHESIS_PROFILE=ci
+  - stage: Deploy to pypi
+    python: '3.6'
+    script: skip
+    deploy:
+      provider: pypi
+      user: wkretzsch
+      password: $PYPI_PASSWORD
+      server: https://test.pypi.org/legacy/
+      on:
+        tags: true
