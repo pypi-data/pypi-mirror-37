@@ -1,0 +1,97 @@
+Metadata-Version: 2.1
+Name: jujuna
+Version: 0.1.0
+Summary: UNKNOWN
+Home-page: https://github.com/huntdatacenter/jujuna
+Author: Matus Kosut
+Author-email: matuskosut@gmail.com
+Maintainer: HUNT Data Center
+Maintainer-email: cloud@hunt.ntnu.no
+License: Apache 2
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Environment :: Console
+Requires-Dist: pyyaml
+Requires-Dist: async-timeout (==2.0.1)
+Requires-Dist: juju (>=0.10.2)
+Requires-Dist: argcomplete
+
+# Jujuna
+
+[![Build Status](https://travis-ci.org/huntdatacenter/jujuna.svg?branch=master)](https://travis-ci.org/huntdatacenter/jujuna)
+[![Documentation Status](https://readthedocs.org/projects/jujuna/badge/?version=latest)](https://jujuna.readthedocs.io/en/latest/?badge=latest)
+
+Continuous deployment, upgrade and testing for Juju.
+
+Maintaining OpenStack deployment is a demanding task. Considerably frequent releases can cause some pain even when using Juju. It is therefore advised to test new releases and upgrade scenarios on a separate but somewhat similar infrastructures in order to discover any issues before doing upgrade on production.
+
+Using Jujuna in your CI pipeline enables you to automate deployment and upgrade scenarios and run specific tests.
+
+## Installation
+
+Easy to install using:
+
+```
+apt install libssl-dev
+pip3 install .
+```
+
+Run command `jujuna --help` to get the help menu. You can also check the usage in [the documentation](https://jujuna.readthedocs.io/en/latest/usage.html).
+
+## Usage
+
+Running Jujuna requires a working deployment of Juju controller. Juju configs `~/.local/share/juju/` have to be present or credentials have to be specified using params.
+
+```
+# Deploy Ceph bundle into ceph model
+jujuna deploy openstack/bundle.yaml -m test-cloud -w
+
+# Upgrade apps in ceph model_name
+jujuna upgrade -m test-cloud
+
+# Test apps in the model after upgrade
+jujuna test tests/openstack-ocata.yaml -t 1800 -m test-cloud
+
+# Destroy apps within a model, without destroying the model
+jujuna clean -m test-cloud -w -f -t 1800
+
+```
+
+## Testing Jujuna
+
+How to make sure jujuna and your feature works before pushing out new version.
+
+Testing jujuna with python environments:
+```
+tox -e lint
+tox -e py35
+tox -e py36
+tox -e py37
+```
+
+Testing specific feature:
+
+```
+py.test -k test_feature
+```
+
+## Deploy to docker registry:
+
+Build image:
+
+```
+docker build -t registry.example.com/group/jujuna:0.2.1 -t registry.example.com/group/jujuna:latest .
+```
+
+Push to registry:
+
+```
+docker push registry.example.com/group/jujuna
+```
+
+
