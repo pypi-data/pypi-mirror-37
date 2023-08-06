@@ -1,0 +1,33 @@
+build: false
+environment:
+  matrix:
+    - PYTHON_VERSION: 3.6
+      MINICONDA: C:\Miniconda3-x64
+init:
+  - "ECHO %PYTHON_VERSION% %MINICONDA%"
+install:
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda info -a
+  - "conda create -n testenv --yes python=%PYTHON_VERSION% \
+        flask \
+        isodate \
+        networkx \
+        numpy \
+        pandas \
+        pint \
+        pyarrow \
+        pytest \
+        python-dateutil \
+        ruamel.yaml \
+        rtree \
+        shapely \
+        libgdal \
+        gdal \
+        fiona \
+        xarray"
+  - activate testenv
+  - python setup.py develop
+test_script:
+  - python -m pytest
