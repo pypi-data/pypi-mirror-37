@@ -1,0 +1,72 @@
+{% extends "bee_django_report/base.html" %}
+{% load bee_django_report_filter %}
+{% block content %}
+    {% include 'bee_django_report/logo.html' %}
+    {% include 'bee_django_report/nav.html' %}
+    <div><h4>{{ class_id|get_class_name }}</h4></div>
+    <div>{{ year }}年第{{ week }}周 {{ start_dt }} - {{ end_dt }}</div>
+    <div>
+        {% if prev_week %}
+            <a href="?offset={{ prev_week }}">上周</a>
+        {% endif %}
+        {% if next_week %}
+            <a href="?offset={{ next_week }}">下周</a>
+        {% endif %}
+    </div>
+    <div>
+        <button class="btn btn-default" onclick="click_export()">导出</button>
+    </div>
+    <div style="margin: 10px 0;">
+        <table class="table table-bordered">
+            <tr>
+                <th></th>
+                <th>学生</th>
+                <th>进度</th>
+                <th>练习分钟</th>
+                <th>练习天数</th>
+                <th>练习次数</th>
+                <th>日志数</th>
+            </tr>
+            {% for data in records %}
+                <tr>
+                    <td>
+                        {% if data.type_int == 3 %}
+                            {{ forloop.counter }}
+                        {% endif %}
+                    </td>
+                    {% if data.type_int == 1 %}
+                        <td>共计</td>
+                    {% elif data.type_int == 2 %}
+                        <td>平均</td>
+                    {% elif data.type_int == 3 %}
+                        <td>{{ data.user_id|get_user|get_name_detail|safe }}</td>
+                    {% else %}
+                        <td>{% if data.type_int == 9 %}助教：{% endif %}
+                            {{ data.mentor.id|get_user|get_name_detail|safe }}
+                        </td>
+
+                    {% endif %}
+                    <td>
+                        {% if data.type_int == 3 or data.type_int == 9 %}
+                            {{ data.last_user_section_id|get_section_name|default:"" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ data.live_mins }}</td>
+                    <td>{{ data.live_days }}</td>
+                    <td>{{ data.live_count }}</td>
+                    <td>{{ data.feed_count }}</td>
+
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        function click_export() {
+            var url = getRequestUrl("{% url 'bee_django_report:class_week' class_id=class_id %}", "export", 1);
+            console.log(url);
+            location.href = url;
+        }
+    </script>
+{% endblock %}
