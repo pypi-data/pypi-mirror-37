@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# diamond-patterns (cc) 2016 Ian Dennis Miller
+
+import click
+import pkg_resources
+import os
+import diamond_patterns
+from distutils import dir_util
+
+
+@click.group()
+@click.option('--pattern', help='name of pattern to apply.')
+@click.pass_context
+def cli(ctx, pattern):
+    ctx.obj['pattern'] = pattern
+
+
+def run_scaffold(ctx, testing=False):
+    if ctx.obj['pattern'] in pkg_resources.resource_listdir('diamond_patterns', 'patterns'):
+        filename = pkg_resources.resource_filename('diamond_patterns', 'patterns')
+        pathname = os.path.dirname(os.path.abspath(diamond_patterns.__file__))
+
+        # if pattern exists, remove it
+        if os.path.isdir(".pattern"):
+            dir_util.remove_tree(".pattern")
+
+        # create a local copy of the pattern
+        full_path = os.path.join(pathname, filename, ctx.obj['pattern'])
+        print(full_path)
+        dir_util.copy_tree(full_path, ".pattern")
+
+        # invoke mr.bob with the local copy of the pattern
+        if testing:
+            cmd = "mrbob -w -n -O . .pattern"
+        else:
+            cmd = "mrbob -w -O . .pattern"
+        os.system(cmd)
+
+        # clean up after ourselves
+        if os.path.isdir(".pattern"):
+            dir_util.remove_tree(".pattern")
+    else:
+        print("unrecognized pattern: {0}".format(ctx.obj['pattern']))
+
+
+@cli.command('scaffold', short_help='scaffold a folder with a pattern.')
+@click.pass_context
+def scaffold(ctx):
+    from diamond_patterns.__meta__ import __version__
+    print("Diamond-Patterns", __version__)
+    run_scaffold(ctx)
+
+
+@cli.command('noprompt', short_help='non-interactive scaffold.')
+@click.pass_context
+def non_interactive(ctx):
+    from diamond_patterns.__meta__ import __version__
+    print("Diamond-Patterns", __version__)
+    run_scaffold(ctx, testing=True)
+
+
+@cli.command('list', short_help='list available patterns.')
+def list_patterns():
+    from diamond_patterns.__meta__ import __version__
+    print("Diamond-Patterns", __version__)
+
+    print("Available patterns:\n")
+    for pattern in pkg_resources.resource_listdir('diamond_patterns', 'patterns'):
+        print("- {0}".format(pattern))
+    print("")
+
+
+@cli.command('version', short_help='show version')
+def version():
+    from diamond_patterns.__meta__ import __version__
+    print(__version__)
+
+
+if __name__ == '__main__':
+    cli(obj={})
