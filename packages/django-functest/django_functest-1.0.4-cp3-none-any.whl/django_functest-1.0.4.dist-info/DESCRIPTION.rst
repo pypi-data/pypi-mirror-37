@@ -1,0 +1,227 @@
+===============
+django-functest
+===============
+
+.. image:: https://travis-ci.org/django-functest/django-functest.png?branch=master
+   :target: https://travis-ci.org/django-functest/django-functest
+
+.. image:: https://coveralls.io/repos/django-functest/django-functest/badge.svg?branch=master&service=github
+   :target: https://coveralls.io/github/django-functest/django-functest?branch=master
+
+.. image:: https://readthedocs.org/projects/django-functest/badge/?version=latest
+   :target: https://django-functest.readthedocs.org/en/latest/
+
+
+Helpers for creating high-level functional tests in Django, with a unified API
+for WebTest and Selenium tests.
+
+Documentation
+-------------
+
+The full documentation is at https://django-functest.readthedocs.org.
+
+Installation
+------------
+
+::
+
+   pip install django-functest
+
+See also the `dependencies documentation
+<http://django-functest.readthedocs.io/en/latest/installation.html#dependencies>`_
+for important compatibility information.
+
+Features
+--------
+
+* A simplified API for writing functional tests in Django (tests that check the
+  behaviour of entire views, or sets of views, e.g. a checkout process).
+
+* A unified API that abstracts over both `WebTest
+  <http://webtest.pythonpaste.org/en/latest/>`_ and `Selenium
+  <https://pypi.python.org/pypi/selenium>`_ - write two tests at once!
+
+* Many of the gotchas and difficulties of using WebTest and Selenium ironed out
+  for you.
+
+* Well tested - as well as its own test suite, which is run against Firefox
+  and Chrome, it is also used by `Wolf & Badger
+  <https://www.wolfandbadger.com/>`_ for tests covering many business critical
+  functionalities.
+
+Typical usage
+-------------
+
+In your tests.py::
+
+    from django.test import LiveServerTestCase, TestCase
+    from django_functest import FuncWebTestMixin, FuncSeleniumMixin, FuncBaseMixin
+
+    class ContactTestBase(FuncBaseMixin):
+        # Abstract class, doesn't inherit from TestCase
+
+        def test_contact_form(self):
+            self.get_url('contact_form')
+            self.fill({'#id_name': 'Joe',
+                       '#id_message': 'Hello'})
+            self.submit('input[type=submit]')
+            self.assertTextPresent("Thanks for your message")
+
+     class ContactWebTest(ContactTestBase, FuncWebTestMixin, TestCase):
+         pass
+
+     class ContactSeleniumTest(ContactTestBase, FuncSeleniumMixin, LiveServerTestCase):
+         pass
+
+In this way, you can write a single test with a high-level API, and run it in
+two ways - using a fast, WSGI-based method which emulates typical HTTP usage of a
+browser, and using a full browser that actually executes Javascript (if present)
+etc.
+
+Under the hood, the WSGI-based method uses and builds upon `WebTest
+<http://webtest.pythonpaste.org/en/latest/>`_ and `django-webtest
+<https://pypi.python.org/pypi/django-webtest>`_.
+
+django-functest provides its functionality as mixins, so that you can have your
+own base class for tests.
+
+Contributing and tests
+----------------------
+
+See CONTRIBUTING.rst for information about running the test suite and
+contributing to django-functest.
+
+Credits
+-------
+
+This library was built by developers at `Wolf & Badger
+<https://www.wolfandbadger.com/>`_, released with the kind permission of that
+company.
+
+Tools used in rendering this package:
+
+*  Cookiecutter_
+*  `cookiecutter-djangopackage`_
+
+.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+.. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage
+
+
+
+
+History
+-------
+
+1.0.4
++++++
+
+* Fixed bug with setting checkboxes if a form with multiple checkboxes of the same name
+* Enabled installation on PyPy (doesn't necessarily work completely).
+* Test against Django 2.1
+* Removed tests and official support for PhantomJS. (No actual functionality
+  was changed regarding PhantomJS).
+
+1.0.3
++++++
+
+* Deprecated ``fill_by_id``. Instead of ``fill_by_id({'foo': 'bar'})`` you
+  should do ``fill({'#foo': 'bar'})``, because it is shorter and more flexible.
+* Test against latest Firefox
+* Django 2.0 compatibility
+* Fix for Django 1.11.2 and later for MultiThreadedLiveServerMixin
+
+1.0.2
++++++
+
+* Fixes to cope with WebTest 2.0.28. We now require django-webtest 1.9.2 or
+  later, and only test against the latest WebTest.
+* Fixed some deprecation warnings
+
+1.0.1
++++++
+
+* Fixed incompatibility with django-webtest 1.9.0 and later
+
+1.0
++++
+
+* Added Django 1.11 support.
+* Dropped official Django 1.7 support (may still work).
+
+0.2.1
++++++
+
+* Made :meth:`~django_functest.FuncCommonApi.get_literal_url` accept
+  absolute URLs for Selenium (WebTest already worked by accident).
+
+0.2.0
++++++
+
+* Added :meth:`~django_functest.FuncCommonApi.new_browser_session` and
+  :meth:`~django_functest.FuncCommonApi.switch_browser_session` to the common
+  API. These can be used to simulate multiple devices or users accessing the
+  site. See the docs for important usage information.
+
+0.1.9
++++++
+
+* Fix for scrolling to exactly the right place.
+* Added docstrings everywhere, and a base class you can inherit from
+  for the purpose of providing autocomplete help.
+
+0.1.8
++++++
+
+* Django 1.10 compatibility
+
+0.1.7
++++++
+
+* Fixed performance/reliability issue caused by browsers attempting
+  to retrieve ``/favicon.ico`` after visiting ``emptypage``.
+
+0.1.6
++++++
+
+* Fixed bug where elements wouldn't scroll into view if html height is set to
+  100%
+* New method :meth:`~django_functest.FuncSeleniumMixin.get_webdriver_options`
+  for customizing WebDriver behaviour.
+
+0.1.5
++++++
+
+* Added get_session_data()
+* Improved reliability of ``FuncSeleniumMixin.get_literal_url()``
+* Allow ``<select>`` elements to be set using integers for values.
+* Fixed issues with ``.value()`` for radio buttons and text areas
+* Fixed bug with setting radio buttons when there are more than
+  one set of radio buttons in the form.
+
+0.1.4
++++++
+
+* Added support for file uploads
+
+0.1.3
++++++
+
+* Support for filling radio buttons
+* More convenient support for quotes and apostrophes (" ') in text assertion methods.
+
+0.1.2
++++++
+
+* Fixed wheel building - again!
+
+0.1.1
++++++
+
+* Fixed packaging bug that caused wheels to fail on Python 3.
+
+0.1.0
++++++
+
+* First release on PyPI.
+
+
