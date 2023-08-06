@@ -1,0 +1,99 @@
+Metadata-Version: 2.1
+Name: frozentype
+Version: 0.6.0.1
+Summary: Package frozentype provide some frozen python types (frozendict (C based) and frozenmap (Cython based))
+Home-page: http://intellimath.bitbucket.org/frozentype
+Author: Zaur Shibzukhov
+Author-email: szport@gmail.com
+License: MIT License
+Download-URL: https://bitbucket.org/intellimath/frozentype
+Keywords: frozen type,frozen mapping,immutable mapping,frozen dict,immutable dict
+Platform: Linux
+Platform: Mac OS X
+Platform: Windows
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+
+==========
+frozentype
+==========
+
+**frozentype** is `MIT Licensed <http://opensource.org/licenses/MIT>`_ python library.
+It implements some frozen python types: ``frozendict`` type (in C) and ``FrozenDict``, ``FrozenMap`` classes (in Cython). 
+
+* `frozendict` is read-only and hashable dictionary (C based).
+* `FrozenMap` is read-only mapping object wrapped around a mutable mapping object (Cython based).
+* `FrozenDict` is read-only and hashable dictionary (Cython based).
+
+This library actually is an attempt to proof the concept of fast frozendict (C/Cython based).
+
+Main repository for ``frozentype`` 
+is on `bitbucket <https://bitbucket.org/intellimath/frozentype>`_.
+
+Quick start:
+------------
+
+
+First load inventory::
+
+    >>> from frozentype import frozendict, FrozenDict
+
+Simple example::
+
+    >>> fd = frozendict(a=1,b=2,c=3)
+    >>> fd
+    frozendict({'a': 1, 'b': 2, 'c': 3})
+    >>> fd['a']
+    1
+    >>> fd['a'] = 10
+    ........
+    TypeError: 'frozentype._frozendict.frozendict' object does not support item assignment
+    >>> del fd['a']
+    .........
+    TypeError: 'frozentype._frozendict.frozendict' object does not support item deletion
+    >>> fd.pop('a')
+    .........
+    AttributeError: 'frozentype._frozendict.frozendict' object has no attribute 'pop'
+
+
+    >>> fd = FrozenDict(a=1,b=2,c=3)
+    >>> print(fp)
+    FrozenDict({'a': 1, 'b': 2, 'c': 3})
+    >>> fd['a']
+    1
+    >>> fd['a'] = 10
+    ........
+    TypeError: 'frozentype.frozendict.FrozenDict' object does not support item assignment
+    >>> del fd['a']
+    .........
+    TypeError: 'frozentype.frozendict.FrozenDict' object does not support item deletion
+    >>> fd.pop('a')
+    .........
+    AttributeError: 'frozentype.frozendict.FrozenDict' object has no attribute 'pop'
+
+
+Changes:
+--------
+
+** 0.6.0.1 ** (technical version to convince pypi to upload project with fixed title in README)
+
+** 0.6 ** (migrate from project intellimath/frozenmap)
+
+* Add C implementation for `frozendict`.
+* Add tests for frozendict type.
+
+**0.5** Initial version
+
+
+
