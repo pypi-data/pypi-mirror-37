@@ -1,0 +1,52 @@
+# django-switchtemplatedir
+Django middleware - symply switch template dir
+<h2>Setup</h2>
+
+```sh
+    pip install django-switchtemplatedir
+```
+
+<h3>In settings.py</h3>
+<p>Add 'django-switchtemplatedir.TemplateDirManager.TemplateDirMiddleware'</p>
+<p>Add TEMPLATE_DIR_METHOD 'switch' or 'subdomain'</p>
+<p>Add TEMPLATE_DIR_SETTINGS dictionary as defoult key named 'default' and list type value. Set first index of the list direction to the folder.</p>
+<p>Optional - if need change the files format, set second index of the list '.format'</p>
+<p>Example</p>
+
+
+```python
+    TEMPLATE_DIR_METHOD = 'switch'
+    TEMPLATE_DIR_SETTINGS = {'default' : [''], 'd' :  ['desktop/'], 'm' : ['mobile/', '.html']}
+```
+
+<p>Explanation</p>
+<p>In this example we use switch method</p>
+<p>Key 'defoult' reach to template root folder, 'd' reach to ROOT/desktop folder, 'm' reach to ROOT/mobile and change predetermined in template_name file format to html</p>
+
+<hr>
+
+<h4>switch</h4>
+<p>Recomended to use SwitchTemplateDir method. Import this method from django-switchtemplatedir.switcher</p>
+<p>In urls.py add
+
+```python 
+'SOME_DIR/<str:key>' 
+```
+
+path and switch with key name of TEMPLATE_DIR_SETTINGS</p>
+<p>Example</p>
+    
+```python
+    urls.py
+    from django-switchtemplatedir.switcher import SwitchTemplateDir
+    urlpatterns += [ path('somedir/<str:key>', SwitchTemplateDir.as_view()), ]
+```
+
+<p>If set up by example below, then link /somedir/d will switch to 'desktop/' folder</p>
+<p>Or use switchTemplateDir function from TemplateDirManager and give argument one of TEMPLATE_DIR_SETTINGS keys</p>
+
+<hr>
+
+<p><b>Tested on Django 2.0</b></p>
+
+<a href="" target="_blank"><b>MIT License</b></a>
