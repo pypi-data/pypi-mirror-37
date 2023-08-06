@@ -1,0 +1,57 @@
+Inky
+====
+
+Python library for the `Inky
+pHAT <https://shop.pimoroni.com/products/inky-phat>`__ and `Inky
+wHAT <https://shop.pimoroni.com/products/inky-what>`__ e-paper displays.
+
+Inky pHAT
+---------
+
+`Inky pHAT <https://shop.pimoroni.com/products/inky-phat>`__ is a
+212x104 pixel e-paper display, available in red/black/white,
+yellow/black/white and black/white. It's great for nametags and
+displaying very low frequency information such as a daily calendar or
+weather overview.
+
+Inky wHAT
+---------
+
+`Inky wHAT <https://shop.pimoroni.com/products/inky-what>`__ is a
+400x300 pixel e-paper display available in red/black/white. It's got
+tons of resolution for detailed daily todo lists, multi-day weather
+forecasts, bus timetables and more.
+
+Usage
+=====
+
+The Inky library contains modules for both the pHAT and wHAT, load the
+InkyPHAT one as follows:
+
+.. code:: python
+
+    from inky import InkyPHAT
+
+You'll then need to pick your colour, one of 'red', 'yellow' or 'black'
+and instantiate the class:
+
+.. code:: python
+
+    inkyphat = InkyPHAT('red')
+
+If you're using the wHAT you'll need to load the InkyWHAT class from the
+Inky library like so:
+
+.. code:: python
+
+    from inky import InkyWHAT
+    inkywhat = InkyWHAT('red')
+
+Since Inky wHAT is currently only available in red, we pick that colour.
+
+0.0.1
+=====
+
+* Initial Release
+
+
