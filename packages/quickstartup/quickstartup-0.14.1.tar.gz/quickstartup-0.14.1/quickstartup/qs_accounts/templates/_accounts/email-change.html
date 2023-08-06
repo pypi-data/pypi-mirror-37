@@ -1,0 +1,29 @@
+{% extends "accounts/base-profile.html" %}{% load i18n l10n pages widget_tweaks %}
+
+{% block content %}
+    <h1>{% trans "Change E-Mail" %}</h1>
+
+    <form action="" method="post" role="form">
+        {% csrf_token %}
+
+        <div class="row">
+            {% include "_includes/form-errors.html" %}
+        </div>
+
+        <div class="row">
+            <div class="form-group col-lg-8">
+                <label class="form-control-label" for="id_email">{% trans "E-mail" %}</label>
+                <input id="id_email" class="form-control form-control-lg" readonly value="{{ object.email }}">
+            </div>
+        </div>
+
+        <div class="row">
+            {% include "_includes/vertical-labeled-big-field.html" with field=form.new_email|attr:"autofocus" cols=8 %}
+        </div>
+
+        <div class="form-button-panel">
+            <button class="btn btn-primary" type="submit">{% trans "Update" %}</button>
+            <a href="{% url "qs_accounts:profile" %}" class="btn btn-link" role="button">{% trans "Cancel" %}</a>
+        </div>
+    </form>
+{% endblock %}
