@@ -1,0 +1,46 @@
+logging:
+  version: 1
+  disable_existing_loggers: True
+  formatters:
+    json:
+      format: '%(levelname)s%(filename)s%(funcName)s%(created)s%(message)slineno%(lineno)d%(module)s%(name)s%(pathname)s%(process)d%(thread)d'
+      (): 'pythonjsonlogger.jsonlogger.JsonFormatter'
+      json_indent: !envvar:DEVCONFIG_JSON_LOGGING_INDENT
+        default: null
+        constructor: !!python/name:devconfig.helper.int_or_none
+  handlers:
+    default:
+      level: !envvar:DEVCONFIG_LOGLEVEL
+        default: DEBUG
+      formatter: json
+      class: logging.StreamHandler
+  loggers:
+    devconfig:
+      level: !envvar:DEVCONFIG_LOGLEVEL
+        default: DEBUG
+      handlers:
+        - default
+      propagate: false
+    '':
+      propagate: true
+      level: !envvar:DEVCONFIG_LOGLEVEL
+        default: DEBUG
+    django:
+      propagate: false
+      level: !envvar:DJANGO_LOG_LEVEL
+        default: !envvar:DEVCONFIG_LOGLEVEL
+          default: DEBUG
+      handlers:
+        - default
+    django.request:
+      propagate: false
+      level: !envvar:DJANGO_REQUEST_LOG_LEVEL
+        default: !envvar:DEVCONFIG_LOGLEVEL
+          default: DEBUG
+      handlers:
+        - default
+  root:
+      handlers:
+        - default
+      level: !envvar:DEVCONFIG_LOGLEVEL
+        default: DEBUG
