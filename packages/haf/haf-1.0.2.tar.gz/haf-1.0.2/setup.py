@@ -1,0 +1,25 @@
+from setuptools import setup
+
+setup(
+        name='haf',
+        version='1.0.2',
+        packages=['haf'],
+        install_requires=[
+            'pytest',
+            #pytest-allure-adaptor
+            'allure-pytest',
+            'requests',
+            'openpyxl',
+            'pymysql',
+            #export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1
+            #pymssql
+            'sphinx',
+            'xpinyin',
+            'paramiko',
+            'pytest-html',
+            'redis'
+        ]
+)
+
+
+
