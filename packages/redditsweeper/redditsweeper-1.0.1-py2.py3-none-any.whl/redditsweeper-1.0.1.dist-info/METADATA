@@ -1,0 +1,134 @@
+Metadata-Version: 2.1
+Name: redditsweeper
+Version: 1.0.1
+Summary: Tool for automated removal of old reddit comments.
+Home-page: https://www.github.com/scott-hand/redditsweeper
+License: MIT
+Author: Scott Hand
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: ConfigArgParse (>=0.13.0,<0.14.0)
+Requires-Dist: colorama (>=0.4.0,<0.5.0)
+Requires-Dist: praw (>=6.0,<7.0)
+Project-URL: Repository, https://www.github.com/scott-hand/redditsweeper
+Description-Content-Type: text/markdown
+
+# Reddit Sweeper
+
+![Build Status](https://travis-ci.org/scott-hand/redditsweeper.svg)
+
+This tool is designed to be an easy-to-use utility to clear out old reddit
+comments. It aims for simplicity in terms of use as well as configuration. It
+currently supports the following features:
+
+* Delete comments and/or submissions
+* Exclude one or more subreddits when search for content to delete
+* Include only a subset of subreddits when searching for content to delete
+* Only delete comments over a given number of days old
+* Save a record of deleted content in an easy to parse JSON file
+
+It supports Python 2.7, 3.6, 3.7, and PyPy and uses
+[poetry](https://poetry.eustace.io/) for dependency management.
+
+# Installation
+
+## Pip
+
+The easiest way to install redditsweeper is via Pip, using the following
+command:
+
+```
+pip install -U redditsweeper
+```
+
+## Poetry
+
+To install redditsweeper from Github, clone it to your local filesystem, and
+then from the redditsweeper directory, use:
+
+```
+poetry install
+```
+
+# Usage
+
+Once installed, a CLI tool called `redditsweeper` should available to use. It
+may be configured either via command line arguments, a config file, or
+environment variables of the form REDDITSWEEPER_<option>.
+
+## Configuring Reddit credentials
+
+First, it is necessary to obtain script credentials from reddit. You can set
+this up easily [here](https://www.reddit.com/prefs/apps/) by doing the
+following:
+
+1. Click "create another app..."
+2. Enter a name of "redditsweeper"
+3. Choose the "script" option
+4. Leave description blank.
+5. Just put "http://127.0.0.1" in each URL field (this are just dummy values
+   and are not used)
+6. Click "create app"
+7. Get the client ID by looking at the line underneath "personal use script"
+8. Get the client secret next to the word "secret"
+
+Create a copy of [praw.ini.sample](praw.ini.sample) called "praw.ini" and set
+up the values for client ID and secret that you just obtained, as well as
+entering your username and password.
+
+If your account has multi-factor authentication enabled, you will need to
+supply redditsweeper with a MFA code each time you run it with the "--mfa"
+parameter in addition to the username and password you set up here.
+
+## Configuring redditsweeper
+
+If you want to store the settings used, make a copy of
+[redditsweeper.cfg.sample](redditsweeper.cfg.sample) called "redditsweeper.cfg"
+and fill in the options you need. A brief overview of options is as follows:
+
+* **dry** - This is `True` or `False`. If `True`, redditsweeper will operate in
+  dry run mode. It will show you what it would do with each comment or
+  submission, but it will not delete anything.
+* **exclude** - This is a list of subreddits (in the form r/subreddit name)
+  that should be excluded from deletion. Anything found belonging to one of
+  these subreddits will be skipped.
+* **include** - If you want to provide an explicit list of subreddits to target
+  for deletion, provide it here. If nothing is provided, redditsweeper simply
+  considers everything for deletion. Note that if the comment or submission is
+  either in an excluded subreddit or is too new and the `--keep` option was
+  set, it will be skipped regardless of whether it's in the include list.
+* **keep** - This is a number of days worth of comments or submissions to keep.
+  Anything newer will be kept no matter what, and anything older will be
+  considered for deletion.
+* **savefile** - If set, a JSON file will be created at the given filename, and
+  it will be updated with the contents of comments and submissions deleted.
+  Any existing savefile will be overwritten.
+* **type** - The type of reddit content to delete. It can be "comment",
+  "submission", or "both".
+* **user** - This controls which section of praw.ini will be used. If you have
+  multiple user accounts and want to switch between deleting content from one
+  account to the other, just overwrite this setting.
+
+# Testing
+
+redditsweeper uses pytest to run tests, with
+[responses](https://github.com/getsentry/responses) used to stub fake responses
+from reddit, so no credentials are required for testing. Run the set of tests
+using the following command:
+
+```
+poetry run py.test --cov=redditsweeper tests/
+```
+
+It currently supports Python 2.7, 3.6, 3.7, and PyPy, and multi-version tests
+can be run using:
+
+```
+poetry run tox
+```
+
