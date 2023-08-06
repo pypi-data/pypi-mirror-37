@@ -1,0 +1,3 @@
+import wmt
+
+main()
