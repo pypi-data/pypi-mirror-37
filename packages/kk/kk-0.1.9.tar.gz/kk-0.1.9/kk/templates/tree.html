@@ -1,0 +1,22 @@
+{% extends base.html %}
+
+{% block title %}
+<title>Download Server</title>
+{% end %}
+
+{% block content %}
+<ul id="tree"></ul>
+{% end %}
+
+{% block js %}
+<script>
+  layui.use(['tree'], function(){
+    $.get(location.pathname + '?f=json', function(ret){
+      layui.tree({
+        elem: '#tree',
+        nodes: ret.nodes,
+      });
+    })
+  })
+</script>
+{% end %}
