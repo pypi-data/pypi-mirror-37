@@ -1,0 +1,41 @@
+#!/usr/local/bin/python3.7
+import os
+import configparser
+
+from j_builds import build
+
+current_dir = os.path.abspath(os.path.dirname(''))
+config = configparser.ConfigParser()
+config.read(f'{current_dir}/build.ini')
+
+keys = [
+    'main',
+    'git',
+    'docker',
+    'before build',
+    'on success',
+    'on fail'
+]
+
+for key in keys:
+    assert key in config, f'missing key [{key}]'
+
+repos = [repo for repo, use in config['git'].items() if use]
+docker_namespace = config['docker']['namespace']
+
+
+def run_or_skip(key: str) -> None:
+    try:
+        os.system(config[key]['cmd'])
+    except KeyError:
+        pass
+
+run_or_skip('before build')
+
+success = build(repos, docker_namespace)
+
+if success:
+    run_or_skip('on success')
+else:
+    run_or_skip('on fail')
+
