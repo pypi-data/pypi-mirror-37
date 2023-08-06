@@ -1,0 +1,56 @@
+package:
+  name: toyplot
+  version: "0.17.0" ## need to set this explicit b/c the git version is v0.15.0
+
+source:
+  git_url: https://github.com/sandialabs/toyplot.git
+  git_rev: v0.17.0
+
+
+build:
+  number: 0  # {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  script: python setup.py install # --single-version-externally-managed --record=record.txt
+  
+requirements:
+  build:
+    - python {{ python }}
+    - setuptools
+    - numpy >=1.8.2
+    - multipledispatch  ## render
+    - pandas >=0.14.1
+    - pypng >=0.0.18    ## png
+    - pillow            ## pdf 
+    - reportlab         ## pdf
+    - graphviz          ## graphs
+    - networkx          ## graphs
+    - six               ## not really being used
+    - mock              ## docs
+    - custom_inherit    ## not really being used
+    - ghostscript       ## PNGs    
+    - arrow             ## used for date-times 
+  run:
+    - python {{ python }}
+    - setuptools
+    - numpy >=1.8.2
+    - pypng >=0.0.18
+    - pandas >=0.14.1    
+    - pillow
+    - reportlab
+    - graphviz
+    - networkx
+    - multipledispatch
+    - six
+    - custom_inherit
+    - ghostscript       ## PNGs    
+    - arrow
+
+test:
+  imports:
+    - toyplot
+
+    
+about:
+  home: http://github.com/sandialabs/toyplot
+  license: BSD
+  summary: A modern plotting toolkit supporting electronic publishing and reproducibility.
+
