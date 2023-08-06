@@ -1,0 +1,52 @@
+2018-10-10 22:15:38,962 - kgraph - DEBUG - conneting to neo4j at bolt://localhost:7687
+2018-10-10 22:15:38,980 - ros - DEBUG - import
+2018-10-10 22:15:38,984 - ros - DEBUG -   importing bionames@workflows/bionames.ros
+2018-10-10 22:15:38,985 - ros - DEBUG - validate
+2018-10-10 22:15:38,986 - ros - DEBUG -   disease_identifiers
+2018-10-10 22:15:38,986 - ros - DEBUG -   condition_to_drug
+2018-10-10 22:15:38,986 - ros - DEBUG -   module_3
+2018-10-10 22:15:38,986 - ros - DEBUG -   biothings_module_4_and_5
+2018-10-10 22:15:38,986 - ros - DEBUG -   return
+2018-10-10 22:15:38,986 - ros - DEBUG - valid.
+2018-10-10 22:15:38,986 - ros - DEBUG - dag
+2018-10-10 22:15:38,986 - ros - DEBUG -   dependency: xray.condition_expansion_to_gene_pathway_drug->disease_identifiers
+2018-10-10 22:15:38,987 - ros - DEBUG -   dependency: gamma.module_wf1_mod3->disease_identifiers
+2018-10-10 22:15:38,987 - ros - DEBUG -   dependency: biothings.annotate_drugs->condition_to_drug
+2018-10-10 22:15:38,987 - ros - DEBUG -   dependency: union->biothings_module_4_and_5
+2018-10-10 22:15:38,987 - ros - DEBUG -   dependency: union->module_3
+2018-10-10 22:15:38,987 - runner - DEBUG - scheduler
+2018-10-10 22:15:38,987 - runner - DEBUG -  -sched: disease_identifiers
+2018-10-10 22:15:38,987 - runner - DEBUG -    done: dict_keys([]) deps: []
+2018-10-10 22:15:38,987 - runner - DEBUG -     -exec: disease_identifiers
+2018-10-10 22:15:38,987 - runner - DEBUG -      call_op: disease_identifiers
+2018-10-10 22:15:39,160 - router - DEBUG -     --(disease_identifiers[get.])>> [{'result_list': [{'result_graph': {'node_list': [{'id': 'MONDO:0005148', 'type': 'di..
+2018-10-10 22:15:39,178 - graph - DEBUG -   --node> {'id': 'MONDO:0005148', 'type': 'disease', 'name': 'type 2 diabetes mellitus'}
+2018-10-10 22:15:39,178 - graph - DEBUG -   --node> {'id': 'MONDO:0014488', 'type': 'disease', 'name': 'diabetes mellitus, noninsulin-dependent, 5'}
+2018-10-10 22:15:39,178 - graph - DEBUG - node: 0:('MONDO:0005148', {'attr_dict': {'id': 'MONDO:0005148', 'type': 'disease', 'name': 'type 2 diabetes mellitus'}})
+2018-10-10 22:15:39,178 - kgraph - DEBUG - create: stmt:MERGE (n:disease { id : "MONDO:0005148" }) SET  n.type="disease" , n.name="type 2 diabetes mellitus" 
+2018-10-10 22:15:39,179 - graph - DEBUG - node: 1:('MONDO:0014488', {'attr_dict': {'id': 'MONDO:0014488', 'type': 'disease', 'name': 'diabetes mellitus, noninsulin-dependent, 5'}})
+2018-10-10 22:15:39,179 - kgraph - DEBUG - create: stmt:MERGE (n:disease { id : "MONDO:0014488" }) SET  n.type="disease" , n.name="diabetes mellitus, noninsulin-dependent, 5" 
+2018-10-10 22:15:39,180 - runner - DEBUG -  -sched: module_3
+2018-10-10 22:15:39,180 - runner - DEBUG -    done: dict_keys([]) deps: ['disease_identifiers']
+2018-10-10 22:15:39,180 - runner - DEBUG -  -sched: condition_to_drug
+2018-10-10 22:15:39,180 - runner - DEBUG -    done: dict_keys([]) deps: ['disease_identifiers']
+2018-10-10 22:15:39,180 - runner - DEBUG -  -sched: biothings_module_4_and_5
+2018-10-10 22:15:39,180 - runner - DEBUG -    done: dict_keys([]) deps: ['condition_to_drug']
+2018-10-10 22:15:39,180 - runner - DEBUG -  -sched: return
+2018-10-10 22:15:39,180 - runner - DEBUG -    done: dict_keys([]) deps: ['biothings_module_4_and_5', 'module_3']
+2018-10-10 22:15:39,181 - runner - DEBUG - running job: disease_identifiers done:True
+2018-10-10 22:15:39,181 - runner - DEBUG - removing disease_identifiers from running.
+Traceback (most recent call last):
+  File "app.py", line 258, in <module>
+    main ()
+  File "app.py", line 237, in main
+    loop.run_until_complete(asyncio.wait(tasks))
+  File "uvloop/loop.pyx", line 1442, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1435, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1344, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 486, in uvloop.loop.Loop._run
+  File "uvloop/loop.pyx", line 403, in uvloop.loop.Loop._on_idle
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "app.py", line 125, in execute
+    time.sleep (1)
+KeyboardInterrupt
