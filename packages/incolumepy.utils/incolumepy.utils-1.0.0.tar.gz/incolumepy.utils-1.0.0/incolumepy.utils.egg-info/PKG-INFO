@@ -1,0 +1,215 @@
+Metadata-Version: 1.1
+Name: incolumepy.utils
+Version: 1.0.0
+Summary: package incolumepy utils
+Home-page: http://www.incolume.com.br
+Author: @britodfbr
+Author-email: contato@incolume.com.br
+License: BSD
+Project-URL: Documentation, https://brito.blog.incolume.com.br/search/label/development-incolume
+Project-URL: Funding, None
+Project-URL: Say Thanks!, None
+Project-URL: Source, https://gitlab.com/development-incolume/incolumepy.utils
+Project-URL: Git, https://gitlab.com/development-incolume/incolumepy.utils.git
+Project-URL: Tracker, https://gitlab.com/development-incolume/incolumepy.utils/issues
+Project-URL: Oficial, https://pypi.org/project/incolumepy.utils/
+Description: --------
+        Projeto desenvolvido e administrado incolume.com.br
+        --------
+        
+        Este pacote disponibiliza diversas funcionalidades para utilização em rotinas com Python.
+        
+        Dentre elas:
+        
+        * geração de números de CPF não verificados;
+        
+        * geração de lista para namespace para pacotes Python;
+        
+        * obtenção rápida para conteúdo de arquivos;
+        
+        * sequências de vários tipos;
+        
+        * Nome único para gravação de arquivos sem sobrescrita;
+        
+        
+        Instalar o pacote
+        -------
+        
+            $ pip install incolumepy.utils
+        
+        Atualizar o pacote
+        -------
+            $ pip install -U incolumepy.utils
+        
+        Gerar pacote a partir dos fontes para instalação
+        ------
+        
+            $ python setup.py bdist_egg bdist_wheel
+        
+        Exemplos
+        -------
+        Exemplos disponíveis em docs/EXAMPLES
+        
+        
+        
+        History
+        =======
+        
+        This package came from personal needs and has evolved in a way that was surprising.
+        Faced with this incredible evolution I decided to share it via pypi.org.
+        
+        
+        Este pacote surgiu de necessidades pessoais e evoluiu de maneira a surpriendente.
+        Diante desta incrivel evolução resolvi compartilha-lo via pypi.org.
+        
+        Examples
+        =======
+        
+        Atualizações disponíveis em:
+        https://brito.blog.incolume.com.br/search/label/development-incolume
+        
+        Example incolumpy.utils.fake_cpf
+        --
+        c1 = gen_fake_cpf()
+        print([next(c1) for x in range(5)])
+        # ['773.552.588-66', '959.954.188-10', '238.604.439-34', '382.437.455-81', '870.384.823-36']
+        
+        c2 = gen_fake_cpf(False)
+        print([next(c2) for x in range(5)])
+        # ['79513660721', '06283805873', '91521854282', '09569983076', '99565733840']
+        
+        Example incolumepy.utils.files.ll
+        --
+        from incolumepy.utils.files import ll
+        ll('/tmp') or ll('/tmp', True) or ll('/tmp', string=True)
+        # ['/tmp/ased']
+        
+        ll('/tmp', False) or ll('/tmp', string=False)
+        # [('/tmp','ased')]
+        
+        Example incolumepy.utils.files.realfilename
+        --
+        from incolumepy.utils.files import realfilename
+        
+            with open(realfilename(
+                    os.path.join('tmp', 'britodfbr','diretorio', 'para', 'teste'),
+                    ext='.dat', separador=True), 'w') as file:
+                file.write('teste ok')
+        
+            #tmp/britodfbr/diretorio/para/teste.dat
+            #tmp/britodfbr/diretorio/para/teste_01.dat
+        
+            with open(realfilename(
+                    os.path.join('tmp', 'diretorio', 'para', 'teste'),
+                    separador=True, ext='md'),'w') as file:
+                file.write('teste ok')
+            # tmp/diretorio/para/teste.md
+            # tmp/diretorio/para/teste_01.md
+        
+            with open(realfilename(('tmp/teste/test.json'),
+                    separador=True, ext='bash'),'w') as file:
+                file.write('teste ok')
+            # tmp/teste/test.bash
+            # tmp/teste/test_01.bash
+        
+            with open(realfilename(('tmp/teste/lll'),
+                    separador=True),'w') as file:
+                file.write('teste ok')
+        
+            # tmp/teste/lll.txt
+            # tmp/teste/lll_01.txt
+        
+            with open(realfilename(('tmp/teste/jjj.json'),
+                    separador=True),'w') as file:
+                file.write('teste ok')
+        
+            # tmp/teste/jjj.json
+            # tmp/teste/jjj_01.json
+        
+        
+            with open(realfilename('../utils/tmp/registro.xml'), 'w') as file:
+                file.write(file.name)
+        
+        Example incolumepy.utils.sequencia.Sequencia
+        --
+        from incolumepy.utils.sequencia import Sequencia
+        a = Sequencia.Primos()
+        for i in range(10):
+            print(next(a))
+        # [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+        
+        a = Sequencia.Fibonacci()
+        for i in range(10):
+            print(next(a))
+        # [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+        
+        a = Sequencia.Impares()
+        for i in range(10):
+            print(next(a))
+        # [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+        
+        a = Sequencia.Pares()
+        for i in range(10):
+            print(next(a))
+        # [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+        
+        a = Sequencia.Naturais()
+        for i in range(10):
+            print(next(a))
+        # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        
+        
+        
+        Example incolumepy.utils.utils.namespace
+        --
+        from incolumepy.utils.utils import namespace
+        
+        namespace('incolumepy.package.subpackage')
+        # ['incolumepy', 'incolumepy.package']
+        
+        namespace('incolumepy.package.subpackage.module')
+        # ['incolumepy','incolumepy.package','incolumepy.package.subpackage']
+        
+        
+        Example incolumepy.utils.utils.read
+        --
+        from incolumepy.utils.utils import read
+        read('version.txt')
+        # 0.7.2
+        
+        Contributors
+        ============
+        
+        @britodfbr
+        
+        Changes
+        =======
+        
+        CHARGES
+        =============
+        1.0.0           acrescentado o modulo decorator
+        0.9.4           Chamada do pacote utils através do Namespace
+        0.9.3           Nova implementação para incolumepy.utils.utils.namespace
+        0.9.2           package incolumepy.utils.sequencias remaked into incolumepy.sequencias
+        0.9.1           corrigido namespace
+        0.9             nonexequi para restrição de execução em serie
+        0.8             ll() adicionado
+        0.7.2           EXAMPLE.rst
+        0.7.1           atualizações no setup, e na apresentação da documentação
+        0.7             added incolumepy.utils.files.ll
+        0.6             automatic tests adding
+        0.5             incolumepy.utils.files adding
+        0.4             incolumepy.utils.fake_cpf adding
+        0.3             incolumepy.utils.sequencia
+        0.2             Nova implementação para def namespace
+        0.1             :D
+        
+        
+Keywords: python utils incolumepy
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Operating System :: OS Independent
+Classifier: Natural Language :: Portuguese (Brazilian)
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
