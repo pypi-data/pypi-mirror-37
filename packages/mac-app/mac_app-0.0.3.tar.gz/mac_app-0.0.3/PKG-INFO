@@ -1,0 +1,80 @@
+Metadata-Version: 2.1
+Name: mac_app
+Version: 0.0.3
+Summary: UNKNOWN
+Home-page: https://github.com/looking-for-a-job/mac_app.py
+License: UNKNOWN
+Description: [![](https://img.shields.io/badge/OS-MacOS-blue.svg?longCache=True)]()
+        [![](https://img.shields.io/pypi/pyversions/mac_app.svg?longCache=True)](https://pypi.org/pypi/mac_app/)
+        
+        ### Install
+        ```bash
+        $ [sudo] pip install mac_app
+        ```
+        
+        ### How it works
+        ```
+        path/to/<name>.py                                   class Name(mac_app.App)
+        /usr/local/var/images/<name>.png                    (customizable)
+        
+        output:
+        ~/Applications/.appify/<name>.app                   (customizable)
+        ```
+        
+        app logs:
+        ```
+        ~/Library/Logs/Applications/<name>/out.log         (customizable)
+        ~/Library/Logs/Applications/<name>/out.log         (customizable)
+        ```
+        
+        app files:
+        ```
+        <name>.app/Contents/MacOS/executable                bash wrapper (hack to keep app visible)
+        <name>.app/Contents/MacOS/agent.plist               LaunchAgent
+        <name>.app/Contents/MacOS/run.py                    (your class file)
+        ```
+        
+        ### Examples
+        ```python
+        >>> import mac_app
+        >>> class Name(mac_app.App):
+                def run(self):
+                    pass
+        
+            if __name__ == "__main__":
+                MyApp().run()
+        ```
+        
+        create app and make alias
+        ```python
+        >>> Name().appify().mkalias("~/alias")
+        ```
+        
+        customize
+        ```python
+        >>> class Name(mac_app.App):
+                app_name = "app_name"
+                app_path = "path/to/app_name.app"
+                app_script = "path/to/script.py"
+                app_image = "path/to/image.png"
+                app_stdout = "path/to/stdout.log"
+                app_stderr = "path/to/stderr.log"
+        
+                def atexit(self):
+                    os.system("say bye")
+        ```
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: MacOS X
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development
+Description-Content-Type: text/markdown
