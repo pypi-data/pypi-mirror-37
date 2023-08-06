@@ -1,0 +1,63 @@
+#!/bin/bash
+ROLE_NAME=deploy
+DIR=~/.ansible/roles/$ROLE_NAME
+GIT_BASE=${GIT_BASE:-https://github.com/moshloop}
+inventory=
+ARGS=
+while getopts ":i:, :h, " opt; do
+  case $opt in
+    h)
+      echo "USAGE: ansible-$ROLE_NAME [any ansible-playbook arguments]"
+      echo "Use ansible-$ROLE_NAME install to install the ansible roles only without execution"
+      exit
+      ;;
+    i)
+    inventory=$OPTARG
+      ;;
+    esac
+done
+
+if [[ "$inventory" == "" && -d inventory ]]; then
+  ARGS+=" -i inventory"
+  inventory="inventory"
+fi
+
+install_only=$(test "$1" == "install")
+
+checkout_role() {
+  if [[ ! -e $DIR ]]; then
+    git clone $GIT_BASE/ansible-$ROLE_NAME.git $DIR
+  fi
+
+  if $install_only; then
+    exit
+  fi
+
+  echo "Checking desired version"
+  desired_tag=$( ansible-inventory -i $inventory --list | jq -r '._meta.hostvars | values[] | .ansible_$ROLE_NAME_version' | head -n1)
+
+  pwd=$(pwd)
+  cd $DIR
+  current_tag=$(git describe --tags)
+
+  if [[ "$desired_tag" != "null" && "$desired_tag" != "" && "$desired_tag" != "$current_tag" ]]; then
+    echo "Checking out $desired_tag"
+    git fetch
+    git checkout $desired_tag
+  fi
+
+  cd $pwd
+}
+
+link_playbook() {
+  ln -s $DIR/$ROLE_NAME.yml .ansible-$ROLE_NAME.yml
+  function finish {
+    rm .ansible-$ROLE_NAME.yml
+  }
+  trap finish EXIT
+}
+
+checkout_role
+link_playbook
+ANSIBLE_HASH_BEHAVIOUR=merge
+ansible-playbook .ansible-$ROLE_NAME.yml $@ $ARGS
