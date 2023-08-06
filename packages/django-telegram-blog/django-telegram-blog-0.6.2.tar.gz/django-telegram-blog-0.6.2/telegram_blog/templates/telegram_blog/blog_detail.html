@@ -1,0 +1,60 @@
+{% extends 'telegram_blog/base.html' %}
+
+{% load telegram_blog %}
+
+{% block title %}{{ blog.title }}{% endblock %}
+
+{% block content %}
+
+  <div style="text-align: center">
+    {% if blog.photo_url_small %}
+      <img src="{{ blog.photo_url_small }}">
+    {% endif %}
+    <h1>{{ blog.title }}</h1>
+    {% if chrono %}
+      <p><a href="{% url 'telegram_blog:blog_detail' blog.pk %}">view newest entries first</a></p>
+    {% else %}
+      <p><a href="{% url 'telegram_blog:blog_detail' blog.pk %}?chrono=1">view in chronological order</a></p>
+    {% endif %}
+  </div>
+
+  <hr style="max-width: 300px; color: #ccc">
+  {% for entry in entries %}
+
+    <div class="entry entry-{{ entry.type }}">
+      <div class="entry-meta">
+        <time><strong>{{ entry.message_time }} UTC</strong></time>
+        {% if blog.type != "private" and entry.message.from %}
+          <span>{{ entry.message.from.first_name }}</span>
+        {% endif %}
+        {% if entry.message.author_signature %}
+          <span>{{ entry.message.author_signature }}</span>
+        {% endif %}
+      </div>
+
+      {% include entry.template with entry=entry %}
+    </div>
+
+  {% endfor %}
+
+  <hr style="max-width: 300px; color: #ccc">
+
+  <div class="pagination">
+    <span class="step-links">
+        {% if entries.has_previous %}
+          <a href="{% set_qsarg 'page' 1 %}">&laquo; first</a>
+          <a href="{% set_qsarg 'page' entries.previous_page_number %}">previous</a>
+        {% endif %}
+
+      <span class="current">Page {{ entries.number }} of {{ entries.paginator.num_pages }}.</span>
+
+      {% if entries.has_next %}
+        <a href="{% set_qsarg 'page' entries.next_page_number %}">next</a>
+        <a href="{% set_qsarg 'page' entries.paginator.num_pages %}">last &raquo;</a>
+      {% endif %}
+    </span>
+  </div>
+
+  <hr style="max-width: 300px; color: #ccc">
+  <p style="text-align: center; margin: 2rem auto"><a href="{% url 'telegram_blog:index' %}">view other blogs</a></p>
+{% endblock content %}
