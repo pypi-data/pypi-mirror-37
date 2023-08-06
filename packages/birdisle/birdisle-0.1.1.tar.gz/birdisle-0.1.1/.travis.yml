@@ -1,0 +1,18 @@
+---
+
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install:
+  - pip install -U pip setuptools wheel
+  - pip install -r requirements.txt
+  - pip install .
+script:
+  # Workaround for https://github.com/pytest-dev/pytest-cov/issues/98
+  - (cd tests && pytest --cov=birdisle --cov-branch) && coverage combine tests/.coverage
+  - if [[ "$TRAVIS_PYTHON_VERSION" == 3.6 ]]; then flake8; fi
+after_success:
+  - coveralls
