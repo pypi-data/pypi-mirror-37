@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Grade Conversion Calculator Demo</title>
+        <meta name="description" content="">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta http-equiv="cleartype" content="on">
+
+        {% load staticfiles %}
+
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/less" href="{% static "grade_conversion_calculator/css/mobile.less" %}"/>
+
+        {% if not request.is_mobile and not request.is_tablet %}
+        <link rel="stylesheet" type="text/less" href="{% static "grade_conversion_calculator/css/desktop.less" %}"/>
+        {% endif %}
+
+        <script src="{% static 'grade_conversion_calculator/js/vendor/less-1.7.0.min.js' %}"></script>
+
+    </head>
+    <body>
+        <div style="padding: 20px;">
+            <h1>Grade Conversion Calculator Demo</h1>
+            <br/>
+            <div id="calculator"></div>
+        </div>
+
+        {% include "grade_conversion_calculator/handlebars/converter.html" %}
+        {% include "grade_conversion_calculator/handlebars/calculator_row.html" %}
+        {% include "grade_conversion_calculator/handlebars/calculator_addrow.html" %}
+        {% include "grade_conversion_calculator/handlebars/grade_scale_row.html" %}
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="{% static "grade_conversion_calculator/js/vendor/handlebars-1.0.0.min.js" %}"></script>
+        <script src="{% static "grade_conversion_calculator/js/handlebars-i18n.js" %}"></script>
+        <script src="{% static "grade_conversion_calculator/js/main.js" %}"></script>
+        <script src="{% url "javascript-catalog" %}"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var opts = {};
+                $("#calculator").grade_conversion_calculator(opts);
+            });
+        </script>
+
+    </body>
+</html>
