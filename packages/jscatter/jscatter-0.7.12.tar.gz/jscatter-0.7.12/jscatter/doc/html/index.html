@@ -1,0 +1,550 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Jscatter’s documentation &#8212; jscatter 0.7.12 documentation</title>
+    <link rel="stylesheet" href="_static//default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/Jscatter-32x-32.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. Beginners Guide / Help" href="BeginnersGuide.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BeginnersGuide.html" title="1. Beginners Guide / Help"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">jscatter 0.7.12 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="jscatter-s-documentation">
+<h1>Jscatter’s documentation<a class="headerlink" href="#jscatter-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p><strong>The aim of Jscatter is treatment of experimental data and models</strong>:</p>
+<a class="reference internal image-reference" href="_images/Jscatter.jpeg"><img alt="Jscatter Logo" class="align-right" src="_images/Jscatter.jpeg" style="width: 200px; height: 200px;" /></a>
+<ul class="simple">
+<li>Reading and analyzing experimental data with associated attributes as temperature, wavevector, comment, ….</li>
+<li>Multidimensional fitting taking the attributes (as fixed parameters) into account.</li>
+<li>Providing useful models for <strong>neutron and X-ray scattering</strong> form factors, structure factors
+and dynamic models (quasi elastic neutron scattering) and other topics.</li>
+<li>Simplified plotting with paper ready quality (preferred in xmgrace).</li>
+<li>Easy model building for non programmers.</li>
+<li>Python scripts to document data evaluation and modelling.</li>
+</ul>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.1470307"><div align="right" class="align-right"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.1470307.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.1470307.svg" /></div>
+</a>
+<p><strong>Main concept</strong></p>
+<ul class="simple">
+<li>Link data from experiment, analytical model or simulation with attributes as .temperature, .wavevector, .pressure,…</li>
+<li>Methods for fitting, filter, merging,… using the attributes by name.</li>
+<li>Provide an extensible library with common theories for fitting of physical models.</li>
+</ul>
+<ol class="arabic simple">
+<li><strong>Data organisation</strong></li>
+</ol>
+<blockquote>
+<div><p>Multiple measurements are stored in a <a class="reference internal" href="dataList.html#jscatter.dataarray.dataList" title="jscatter.dataarray.dataList"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataList</span></code></a> (subclass of list) containing
+<a class="reference internal" href="dataArray.html#jscatter.dataarray.dataArray" title="jscatter.dataarray.dataArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataArray</span></code></a> ´s (subclass of numpy ndarray).
+Both allow attributes to contain additional information of the measurement.</p>
+<p>Thus dataList represents e.g. a temperature series (as dataList) with measurements (dataArray) as list elements.</p>
+<p>Special attributes are .X,.Y,.eY…- for convenience and easy reading. Full numpy ndarray functionality is preserved.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><strong>Read/Write data</strong></li>
+</ol>
+<blockquote>
+<div><p>The intention is to read everything from a file to use it later if needed.
+Multiple measurement files can be read at once and then filtered according to attributes to get subsets.</p>
+<p>A file may consist of multiple sets of data with optional attributes or comments in between.
+Data are a matrix like values in a file. Attribute lines have a name in front.
+Everything else is a comment and might be used later.
+Thus the first two words (separated by whitespace) decide about assignment of a line:</p>
+<ul class="simple">
+<li>string + value     -&gt; <strong>attribute</strong> with attribute name + list of values</li>
+<li>value  + value     -&gt; <strong>data line</strong> as sequence of numbers</li>
+<li>string + string    -&gt; <strong>comment</strong></li>
+<li>single words       -&gt; <strong>comment</strong></li>
+<li>string+&#64;unique_name-&gt; <strong>link</strong> to other dataArray with a unique_name</li>
+</ul>
+<p>Even complex ASCII files can be read with a few changes given as options.
+The ASCII file is still human readable and can be edited.
+New attributes can be generated from content of the comments if not detected automatically
+(see <a class="reference internal" href="BeginnersGuide.html#reading-ascii-files"><span class="std std-ref">Reading ASCII files</span></a>).</p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><strong>Fitting</strong></li>
+</ol>
+<blockquote>
+<div><p>Multidimensional attribute dependent fitting (least square Levenberg-Marquardt,
+differential evolution, …from scipy.optimize).</p>
+<p>Attributes are used automatically as fixed fit parameters.</p>
+<p>Simulation with changed parameters (e.g. to observe change within error limits).</p>
+<p>See <a class="reference internal" href="dataList.html#jscatter.dataarray.dataList.fit" title="jscatter.dataarray.dataList.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a> for detailed description.</p>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><strong>Plotting</strong></li>
+</ol>
+<blockquote>
+<div><p>We use an adaption of Xmgrace for 2D plots (a wrapper; see <a class="reference internal" href="GracePlot.html#graceplot"><span class="std std-ref">GracePlot</span></a>) as it allows
+interactive publication ready output in high quality for 2D plots and is much faster than matplotlib.</p>
+<p>The figure is stored as ASCII file (.agr) including data points and not as non-editable image as jpg/pdf…
+This allows a later change of the plot layout without recalculation, because data are stored as data and not as image.
+Imagine the boss/reviewer asking for a change of colors/symbol size.</p>
+<p>Nevertheless a small <a class="reference external" href="https://matplotlib.org/">matplotlib</a> interface is there and
+matplotlib can be used as it is (e.g. for 3D plots).</p>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><strong>Models</strong></li>
+</ol>
+<blockquote>
+<div><p>By intention the user should write own models or modify existing ones to combine different contributions
+(to include e.g. a background, instrument resolution, …)</p>
+<p>Models can be defined as lambda function or normal functions within a script or in interactive session of (I)python.
+See <a class="reference internal" href="examples.html#how-to-build-simple-models"><span class="std std-ref">How to build simple models</span></a> and <a class="reference internal" href="examples.html#how-to-build-a-more-complex-model"><span class="std std-ref">How to build a more complex model</span></a> .</p>
+<p>A set of models/theories is included, see e.g. <a class="reference internal" href="formel.html#formel"><span class="std std-ref">formel</span></a>, <a class="reference internal" href="formfactor.html#formfactor-ff"><span class="std std-ref">formfactor (ff)</span></a> and <a class="reference internal" href="structurefactor.html#structurefactor-sf"><span class="std std-ref">structurefactor (sf)</span></a>.
+Models contain model parameters as attributes for later access.</p>
+<p>Contribution by new models is welcome.
+Please give a documentation, reference to relevant publication and authorship as in the provided models.</p>
+</div></blockquote>
+<p><strong>Some special functions</strong>:</p>
+<ul class="simple">
+<li><a class="reference internal" href="formel.html#jscatter.formel.scatteringLengthDensityCalc" title="jscatter.formel.scatteringLengthDensityCalc"><code class="xref py py-func docutils literal notranslate"><span class="pre">scatteringLengthDensityCalc()</span></code></a> -&gt; Electron density, coh and inc neutron scattering length, mass</li>
+<li><a class="reference internal" href="formel.html#jscatter.formel.waterdensity" title="jscatter.formel.waterdensity"><code class="xref py py-func docutils literal notranslate"><span class="pre">waterdensity()</span></code></a> -&gt; Density of water (H2O/D2O) with inorganic subtstances</li>
+<li><a class="reference internal" href="formel.html#jscatter.formel.sedimentationProfile" title="jscatter.formel.sedimentationProfile"><code class="xref py py-func docutils literal notranslate"><span class="pre">sedimentationProfile()</span></code></a> -&gt; The Lamm equation of sedimenting particles</li>
+<li><a class="reference internal" href="structurefactor.html#jscatter.structurefactor.RMSA" title="jscatter.structurefactor.RMSA"><code class="xref py py-func docutils literal notranslate"><span class="pre">RMSA()</span></code></a> -&gt; Rescaled MSA structure factor for dilute charged colloidal dispersions</li>
+<li><a class="reference internal" href="structurefactor.html#jscatter.structurefactor.hydrodynamicFunct" title="jscatter.structurefactor.hydrodynamicFunct"><code class="xref py py-func docutils literal notranslate"><span class="pre">hydrodynamicFunct()</span></code></a> -&gt; Hydrodynamic function from hydrodynamic pair interaction</li>
+<li><a class="reference internal" href="formfactor.html#jscatter.formfactor.multiShellSphere" title="jscatter.formfactor.multiShellSphere"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiShellSphere()</span></code></a> -&gt; Formfactor of multi shell spherical particles</li>
+<li><a class="reference internal" href="formfactor.html#jscatter.formfactor.multiShellCylinder" title="jscatter.formfactor.multiShellCylinder"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiShellCylinder()</span></code></a> -&gt; Formfactor of multi shell cylinder particles with caps</li>
+<li><a class="reference internal" href="formfactor.html#jscatter.formfactor.orientedCloudScattering" title="jscatter.formfactor.orientedCloudScattering"><code class="xref py py-func docutils literal notranslate"><span class="pre">orientedCloudScattering()</span></code></a> -&gt; 2D scattering of an oriented cloud of scatterers</li>
+<li><a class="reference internal" href="dynamic.html#jscatter.dynamic.finiteZimm" title="jscatter.dynamic.finiteZimm"><code class="xref py py-func docutils literal notranslate"><span class="pre">finiteZimm()</span></code></a> -&gt; Zimm model with internal friction -&gt; intermediate scattering function</li>
+<li><a class="reference internal" href="dynamic.html#jscatter.dynamic.diffusionHarmonicPotential" title="jscatter.dynamic.diffusionHarmonicPotential"><code class="xref py py-func docutils literal notranslate"><span class="pre">diffusionHarmonicPotential()</span></code></a> -&gt; Diffusion in harmonic potential-&gt; intermediate scattering function</li>
+<li><a class="reference internal" href="sas.html#jscatter.smallanglescattering.smear" title="jscatter.smallanglescattering.smear"><code class="xref py py-func docutils literal notranslate"><span class="pre">smear()</span></code></a> -&gt; Smearing for SANS (Pedersen), SAXS (line collimation) or by explicit Gaussian</li>
+<li><a class="reference internal" href="sas.html#jscatter.smallanglescattering.desmear" title="jscatter.smallanglescattering.desmear"><code class="xref py py-func docutils literal notranslate"><span class="pre">desmear()</span></code></a> -&gt; Desmearing according to the Lake algorithm for the above</li>
+<li><a class="reference internal" href="sas.html#jscatter.smallanglescattering.waterXrayScattering" title="jscatter.smallanglescattering.waterXrayScattering"><code class="xref py py-func docutils literal notranslate"><span class="pre">waterXrayScattering()</span></code></a> -&gt; Absolute scattering of water with components (salt, buffer)</li>
+</ul>
+<p><strong>How to use Jscatter</strong> or see <a class="reference internal" href="examples.html#label-examples"><span class="std std-ref">Examples</span></a> and <a class="reference internal" href="BeginnersGuide.html#beginners-guide-help"><span class="std std-ref">Beginners Guide / Help</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># import jscatter and numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">jscatter</span> <span class="kn">as</span> <span class="nn">js</span>
+
+<span class="c1"># read the data (16 sets) with attributes as q, Dtrans .... into dataList</span>
+<span class="n">i5</span><span class="o">=</span><span class="n">js</span><span class="o">.</span><span class="n">dL</span><span class="p">(</span><span class="n">js</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">datapath</span><span class="o">+</span><span class="s1">&#39;/iqt_1hho.dat&#39;</span><span class="p">)</span>
+
+<span class="c1"># define a model for the fit</span>
+<span class="n">diffusion</span><span class="o">=</span><span class="k">lambda</span> <span class="n">A</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">elastic</span><span class="p">,</span><span class="n">wavevector</span><span class="o">=</span><span class="mi">0</span><span class="p">:</span><span class="n">A</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">wavevector</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="o">+</span><span class="n">elastic</span>
+<span class="c1"># do the fit</span>
+<span class="n">i5</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">diffusion</span><span class="p">,</span>                     <span class="c1"># the fit function</span>
+       <span class="n">freepar</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;D&#39;</span><span class="p">:[</span><span class="mf">0.08</span><span class="p">],</span><span class="s1">&#39;A&#39;</span><span class="p">:</span><span class="mf">0.98</span><span class="p">},</span>       <span class="c1"># start parameters, &quot;[]&quot; -&gt; independent fit</span>
+       <span class="n">fixpar</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;elastic&#39;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">},</span>              <span class="c1"># fixed parameters</span>
+       <span class="n">mapNames</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;t&#39;</span><span class="p">:</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;wavevector&#39;</span><span class="p">:</span><span class="s1">&#39;q&#39;</span><span class="p">})</span> <span class="c1"># map names from the model to names from the data</span>
+<span class="c1"># single valued start parameters are the same for all dataArrays</span>
+<span class="c1"># list start parameters indicate independent fitting for datasets</span>
+<span class="c1"># the command line shows progress and the final result, which is found in .lastfit</span>
+<span class="n">i5</span><span class="o">.</span><span class="n">showlastErrPlot</span><span class="p">(</span><span class="n">yscale</span><span class="o">=</span><span class="s1">&#39;l&#39;</span><span class="p">)</span> <span class="c1"># opens plot with residuals</span>
+
+<span class="c1"># open a plot with fixed size and plot</span>
+<span class="n">p</span><span class="o">=</span><span class="n">js</span><span class="o">.</span><span class="n">grace</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="c1"># plot the data with Q values in legend as symbols</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">i5</span><span class="p">,</span><span class="n">symbol</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">legend</span><span class="o">=</span><span class="s1">&#39;Q=$q&#39;</span><span class="p">)</span>
+<span class="c1"># plot fit results in lastfit as lines without symbol or legend</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">i5</span><span class="o">.</span><span class="n">lastfit</span><span class="p">,</span><span class="n">symbol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">line</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># pretty up if needed</span>
+<span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span><span class="nb">max</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="s1">&#39;log&#39;</span><span class="p">,</span><span class="n">charsize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;I(Q,t)/I(Q,0)&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="nb">max</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span><span class="n">charsize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;t / ns&#39;</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span><span class="n">charsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;I(Q,t) as measured by Neutron Spinecho Spectroscopy&#39;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mf">1.3</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;for diffusion a single exp. decay&#39;</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span><span class="n">rot</span><span class="o">=</span><span class="mi">360</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;f(t)=A*e\S-Q\S2\N\SDt&#39;</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span><span class="n">rot</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">charsize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># optional; save in different formats</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;DiffusionFit.agr&#39;</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;DiffusionFit.jpg&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/DiffusionFit.jpg"><img alt="Picture about diffusion fit" class="align-center" src="_images/DiffusionFit.jpg" style="height: 300px;" /></a>
+<p><strong>Shortcuts</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jscatter</span> <span class="k">as</span> <span class="nn">js</span>
+<span class="n">js</span><span class="o">.</span><span class="n">showDoc</span><span class="p">()</span>                  <span class="c1"># Show html documentation in browser</span>
+<span class="n">exampledA</span><span class="o">=</span><span class="n">js</span><span class="o">.</span><span class="n">dA</span><span class="p">(</span><span class="s1">&#39;test.dat&#39;</span><span class="p">)</span>   <span class="c1"># shortcut to create dataArray from file</span>
+<span class="n">exampledL</span><span class="o">=</span><span class="n">js</span><span class="o">.</span><span class="n">dL</span><span class="p">(</span><span class="s1">&#39;test.dat&#39;</span><span class="p">)</span>   <span class="c1"># shortcut to create dataList from file</span>
+<span class="n">p</span><span class="o">=</span><span class="n">js</span><span class="o">.</span><span class="n">grace</span><span class="p">()</span>                  <span class="c1"># create plot</span>
+<span class="n">p</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">exampledL</span><span class="p">)</span>             <span class="c1"># plot the read dataList</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+<div class="line-block">
+<div class="line">If not otherwise stated in the files:</div>
+<div class="line"><br /></div>
+<div class="line">written by Ralf Biehl at the Forschungszentrum Jülich ,</div>
+<div class="line">Jülich Center for Neutron Science 1 and Institute of Complex Systems 1</div>
+<div class="line-block">
+<div class="line">Jscatter is a program to read, analyse and plot data</div>
+<div class="line">Copyright (C) 2015  Ralf Biehl</div>
+<div class="line"><br /></div>
+<div class="line">This program is free software: you can redistribute it and/or modify</div>
+<div class="line">it under the terms of the GNU General Public License as published by</div>
+<div class="line">the Free Software Foundation, either version 3 of the License, or</div>
+<div class="line">(at your option) any later version.</div>
+<div class="line"><br /></div>
+<div class="line">This program is distributed in the hope that it will be useful,</div>
+<div class="line">but WITHOUT ANY WARRANTY; without even the implied warranty of</div>
+<div class="line">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</div>
+<div class="line">GNU General Public License for more details.</div>
+<div class="line"><br /></div>
+<div class="line">You should have received a copy of the GNU General Public License</div>
+<div class="line">along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</div>
+</div>
+</div>
+<span class="target" id="module-jscatter"></span></div>
+<div class="section" id="jscatter-package-contents">
+<h1>Jscatter package contents<a class="headerlink" href="#jscatter-package-contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="BeginnersGuide.html">1. Beginners Guide / Help</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#reading-ascii-files">1.1. Reading ASCII files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#creating-from-numpy-arrays">1.2. Creating from numpy arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#manipulating-dataarray-datalist">1.3. Manipulating dataArray/dataList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#indexing-dataarray-datalist-and-reducing">1.4. Indexing dataArray/dataList and reducing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#fitting-experimental-data">1.5. Fitting experimental data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#why-fits-may-fail">1.6. Why Fits may fail</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#plot-experimental-data-and-fit-result">1.7. Plot experimental data and fit result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#save-data-and-fit-results">1.8. Save data and fit results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BeginnersGuide.html#additional-stuff">1.9. Additional stuff</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataArray.html">2. dataArray</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dataArray.html#class">2.1. Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataArray.html#attributes">2.2. Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataArray.html#fitting">2.3. Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataArray.html#housekeeping">2.4. Housekeeping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataArray.html#convenience">2.5. Convenience</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataList.html">3. dataList</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dataList.html#class">3.1. Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataList.html#attributes">3.2. Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataList.html#fitting">3.3. Fitting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataList.html#housekeeping">3.4. Housekeeping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="formel.html">4. formel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#functions">4.1. Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#quadrature">4.2. Quadrature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#centrifugation">4.3. Centrifugation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#nmr">4.4. NMR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#material-data">4.5. Material Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#other-stuff">4.6. other Stuff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formel.html#constants-and-tables">4.7. Constants and Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sas.html">5. smallanglescattering (sas)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sas.html#smear-desmear-1d">5.1. Smear/desmear 1D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sas.html#module-jscatter.sasimagelib">5.2. 2D sasImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sas.html#d-sasimage-convenience">5.3. 2D sasImage convenience</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sas.html#housekeeping">5.4. Housekeeping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="formfactor.html">6. formfactor (ff)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="formfactor.html#form-factors">6.1. Form Factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formfactor.html#cloud-of-scatterers">6.2. Cloud of scatterers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formfactor.html#distribution">6.3. Distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structurefactor.html">7. structurefactor (sf)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structurefactor.html#structure-factors">7.1. Structure Factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structurefactor.html#hydrodynamics">7.2. Hydrodynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structurefactor.html#pair-correlation">7.3. Pair Correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structurefactor.html#lattice">7.4. Lattice</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic.html">8. dynamic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dynamic.html#transfom-between-domains">8.1. Transfom between domains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic.html#time-domain">8.2. Time domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamic.html#frequency-domain">8.3. Frequency domain</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dls.html">9. dls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parallel.html">10. parallel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GracePlot.html">11. Plotting in XmGrace</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="GracePlot.html#graceplot">11.1. GracePlot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GracePlot.html#gracegraph">11.2. GraceGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GracePlot.html#helper-classes">11.3. Helper Classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mpl.html">12. mpl</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mpl.html#plot">12.1. Plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpl.html#figures">12.2. Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpl.html#axes">12.3. Axes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">13. Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#in-a-hurry-and-short">13.1. In a hurry and short</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#how-to-build-simple-models">13.2. How to build simple models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#how-to-build-a-more-complex-model">13.3. How to build a more complex model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#some-sinusoidal-fits-with-different-kinds-to-use-data-atrributes">13.4. Some Sinusoidal fits with different kinds to use data atrributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#simple-diffusion-fit-of-not-so-simple-diffusion-case">13.5. Simple diffusion fit of not so simple diffusion case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#how-to-smooth-xray-data-and-make-an-inset-in-the-plot">13.6. How to smooth Xray data and make an inset in the plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#analyse-sas-data">13.7. Analyse SAS data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#how-to-fit-sans-data-including-the-resolution-for-different-detector-distances">13.8. How to fit SANS data including the resolution for different detector distances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#smearing-and-desmearing-of-sax-and-sans-data">13.9. Smearing and desmearing of SAX and SANS data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#a-long-example-for-diffusion-and-how-to-analyze-step-by-step">13.10. A long example for diffusion and how to analyze step by step</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#sedimentation-of-two-particle-sizes-and-resulting-scattering-a-simulation">13.11. Sedimentation of two particle sizes and resulting scattering: a Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#create-a-stacked-chart-of-some-curves">13.12. Create a stacked chart of some curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#a-comparison-of-different-dynamic-models-in-frequency-domain">13.13. A comparison of different dynamic models in frequency domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#protein-incoherent-scattering-in-frequency-domain">13.14. Protein incoherent scattering in frequency domain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#fitting-a-multishellcylinder-in-various-ways">13.15. Fitting a multiShellcylinder in various ways</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#hydrodynamic-function">13.16. Hydrodynamic function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#multilamellar-vesicles">13.17. Multilamellar Vesicles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#d-oriented-scattering">13.18. 2D oriented scattering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#a-nano-cube-build-of-different-lattices">13.19. A nano cube build of different lattices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#using-cloudscattering-as-fit-model">13.20. Using cloudscattering as fit model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Extending.html">14. Extending/Contributing/Fortran</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">15. Tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Remarks.html">16. Intention and Remarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">17. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">18. Citing Jscatter</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>Dependencies</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>numpy, scipy  -&gt;  Mandatory, automatically installed by pip</li>
+<li>Pillow        -&gt;  Mandatory, for reading of SAXS images, automatic install by pip</li>
+<li>matplotlib    -&gt;  Mandatory, for 3D plots and on Windows</li>
+<li>Ipython       -&gt;  Optional, for convenience as a powerfull python shell</li>
+<li>gfortran      -&gt;  Optional, without some functions dont work or use a slower python version</li>
+<li>xmgrace       -&gt;  Optional, prefered plotting on Unix like (use matplotlib on Windows)</li>
+</ul>
+</div></blockquote>
+<p>Installation may need root privileges. Use “sudo” on Linux and MacOS if needed.</p>
+<ul>
+<li><p class="first">Pip installation options (use pip2 or pip3 dependent if you use python2.7 or python3)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span>
+</pre></div>
+</div>
+<p>As user in home directory (pip default is in ~/.local/).
+No sudo needed, only user privileges:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span> <span class="o">--</span><span class="n">user</span>
+</pre></div>
+</div>
+<p>from a local repository (development versions):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span> <span class="o">--</span><span class="n">user</span> <span class="o">--</span><span class="n">upgrade</span> <span class="o">--</span><span class="n">pre</span> <span class="o">--</span><span class="n">find</span><span class="o">-</span><span class="n">links</span> <span class="o">/</span><span class="n">where</span><span class="o">/</span><span class="n">the</span><span class="o">/</span><span class="n">file</span><span class="o">/</span><span class="ow">is</span><span class="o">/</span><span class="n">saved</span>
+
+<span class="n">options</span>
+<span class="o">--</span><span class="n">user</span>       <span class="p">:</span> <span class="n">Install</span> <span class="ow">in</span> <span class="n">user</span> <span class="n">directory</span> <span class="p">(</span><span class="n">folder</span> <span class="n">defined</span> <span class="n">by</span> <span class="n">PYTHONUSERBASE</span> <span class="ow">or</span> <span class="n">the</span> <span class="n">default</span> <span class="o">~/.</span><span class="n">local</span><span class="p">)</span>
+<span class="o">--</span><span class="n">find</span><span class="o">-</span><span class="n">links</span> <span class="p">:</span> <span class="n">look</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">given</span> <span class="n">path</span> <span class="k">for</span> <span class="n">package</span> <span class="n">links</span> <span class="n">e</span><span class="o">.</span><span class="n">g</span> <span class="n">development</span> <span class="n">releases</span>
+<span class="o">--</span><span class="n">upgrade</span>    <span class="p">:</span> <span class="n">to</span> <span class="n">install</span> <span class="n">upgrades</span>
+<span class="o">--</span><span class="n">pre</span>        <span class="p">:</span> <span class="n">to</span> <span class="n">install</span> <span class="n">also</span> <span class="n">development</span> <span class="n">versions</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Ubuntu, all Debian related Linux</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">gfortran</span> <span class="n">grace</span> <span class="n">python</span><span class="o">-</span><span class="n">matplotlib</span>  <span class="c1"># or python3-matplotlib</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">ipython</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">CentOs, Suse, Fedora … do same as above but with yum/zypper…</p>
+</li>
+<li><p class="first">MacOs, install Homebrew first as given on their web page (see <a class="reference external" href="https://brew.sh/">Homebrew</a>)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># install XQuartz from homebrew or from the AppStore</span>
+<span class="n">sudo</span> <span class="n">brew</span> <span class="n">cask</span> <span class="n">install</span> <span class="n">xquartz</span>
+<span class="c1"># install xmgrace and gfortran</span>
+<span class="n">sudo</span> <span class="n">brew</span> <span class="n">install</span> <span class="n">grace</span> <span class="n">gfortran</span> <span class="n">matplotlib</span>
+<span class="c1"># then use pip</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">ipython</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Windows: <a class="reference external" href="https://www.anaconda.com/distribution">Anaconda</a> is a python distribution as alternative
+with numpy, scipy, matplotlib, Ipython preinstalled.
+Need of sudo depends on how Anaconda was installed (root or user).
+Maybee the matplotlib backend needs to be configured on Windows to work properly.</p>
+<p>And there was more to adjust, when i stopped waisting my time.
+In my testcase it was a pain, but test and examples work (no Xmgrace, no fortran).</p>
+<p>I strongly advise to <strong>use Linux in a VirtualMachine</strong> as it is easier to install and use.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># install jscatter on working anaconda environment</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Manjaro Linux (yaourt asks for permission as root or prepend sudo as above)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># install gfortran</span>
+<span class="n">yaourt</span> <span class="n">gcc</span><span class="o">-</span><span class="n">fortran</span>
+<span class="c1"># install xmgrace (only found in AUR), fonts are needed for the interface, fonts are loaded after restart</span>
+<span class="n">yaourt</span> <span class="n">xorg</span><span class="o">-</span><span class="n">fonts</span><span class="o">-</span><span class="mi">75</span> <span class="n">xorg</span><span class="o">-</span><span class="n">fonts</span><span class="o">-</span><span class="mi">100</span> <span class="n">grace</span><span class="o">-</span><span class="n">openmotif</span> <span class="n">python</span><span class="o">-</span><span class="n">matplotlib</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">ipython</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">jscatter</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">CONTIN in DLS module (Only if needed).</p>
+<p>See DLS module documentation for details how to get and compile the original fortran code.</p>
+</li>
+<li><p class="first">Testing</p>
+<p>You can test basic functionality of jscatter after installation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jscatter</span> <span class="k">as</span> <span class="nn">js</span>
+<span class="n">js</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">doTest</span><span class="p">()</span>
+<span class="c1">#basic graphics and fitting</span>
+<span class="n">js</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">runExample</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Example 7 shows :</dt>
+<dd><ul class="first last simple">
+<li>3 sine fit plots with one sine</li>
+<li>a fit plot with 5 sine curves fitted simultanous</li>
+<li>a simple plot with 5 points ( phase against Amplitude of the 5 sines)</li>
+<li>a 3D Sinusoidal fit in matplotlib.</li>
+</ul>
+</dd>
+</dl>
+<p>During development:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">test</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Troubleshooting and tips</p>
+<p>If xmgrace is not found by jscatter the path to the executable may be not on your PATH variable.
+Check this by calling xmgrace in a shell.
+Change your PATH in your .bashrc by adding:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PATH=/path/to/xmgrace:$(PATH) )
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>To open .agr files by klicking add a new file association e.g. to KDE.</dt>
+<dd><p class="first">In SystemSettings/FileAssociations add a new type xmgrace.
+Inside this add FilenamePatterns ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>.agr’ and similar.</p>
+<dl class="docutils">
+<dt>In ‘ApplicationPreferenceOrder’ add xmgrace and edit this new application :</dt>
+<dd><p class="first last">In General :  edit name to “xmgrace” (keep it).
+In Application : edit name to “xmgracefree” and command to “xmgrace -free”.
+This will open files in free floating size format.</p>
+</dd>
+</dl>
+<p class="last">In ‘ApplicationPreferenceOrder’ add again application xmgrace (no changes)
+The second opens files in fixed size format (no ‘-free’).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="#">
+              <img class="logo" src="_static/Jscatter1.gif" alt="Logo"/>
+            </a></p>
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="BeginnersGuide.html">1. Beginners Guide / Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataArray.html">2. dataArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataList.html">3. dataList</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formel.html">4. formel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sas.html">5. smallanglescattering (sas)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formfactor.html">6. formfactor (ff)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structurefactor.html">7. structurefactor (sf)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic.html">8. dynamic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dls.html">9. dls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parallel.html">10. parallel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GracePlot.html">11. Plotting in XmGrace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mpl.html">12. mpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">13. Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Extending.html">14. Extending/Contributing/Fortran</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">15. Tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Remarks.html">16. Intention and Remarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">17. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">18. Citing Jscatter</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="BeginnersGuide.html"
+                        title="next chapter">1. Beginners Guide / Help</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BeginnersGuide.html" title="1. Beginners Guide / Help"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">jscatter 0.7.12 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-18, Ralf Biehl.
+      Last updated on Oct 28, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.
+    </div>
+  </body>
+</html>
