@@ -1,0 +1,161 @@
+<!doctype html>
+<html style="position: relative; min-height: 100%;">
+<head>
+
+    <title>VINDTA recalculation</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/user.css') }}?v=4" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" rel="stylesheet">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='img/manifest.json') }}">
+    <link rel="mask-icon" href="{{ url_for('static', filename='img/safari-pinned-tab.svg') }}" color="#5bbad5">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+<body style="margin-bottom: 60px; ">
+    <header>
+        <a title="Go to GitHub for more information (https://github.com/luke-gregor/vindta_reCAlk)" class="text-dark" target="_blank" href="https://github.com/luke-gregor/vindta_reCAlk" style="text-decoration: none">
+            <h1 style="font-size: 6vw; font-weight: 800">VINDTA RECALCULATION  {{ version }}</h1>
+        </a>
+    </header>
+
+        {% with messages = get_flashed_messages(with_categories=True) %} {% if messages %} {% for category, message in messages %}
+            <div class="alert alert-{{category}}" role="alert" style="text-align: center; z-index: 5; border-radius: 0px;">
+                {{ message }}
+            </div>
+        {% endfor %} {% endif %} {% endwith %}
+
+
+    <main class="container" role="main" style="max-width: 1200px; min-width: 800px;">
+    <form action="{{ url_for('vindta.index') }}" method="post" enctype=multipart/form-data>
+        <!-- FILE directories values -->
+        <div class="col-12">
+            <h2 style="float: left;">Input files</h2>
+
+            <div style="clear: both"></div>
+            <div class="col-8" style="float: left; font-size: 11pt">
+                    <!-- DBS file -->
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">DBS path</span>
+                        </div>
+                        <input type="text" class="form-control filename" name="dbs_file" id="dbs" value="{{ filenames['dbs_file'] }}">
+                    </div>
+
+                    <!-- DBS file -->
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">DAT path</span>
+                        </div>
+                        <input type="text" class="form-control filename" name="dat_file" id="dat" value="{{ filenames['dat_file'] }}">
+                    </div>
+
+                    <!-- DBS file -->
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">XLS dest</span>
+                        </div>
+                        <input type="text" class="form-control filename" name="xls_file" id="xls" value="{{ filenames['xls_file'] }}">
+                    </div>
+            </div>
+
+            <div class="run-code col-4 row" style="float: left; height: 128px; padding-left: 15px; padding-right: 0px">
+                <div class="align-self-start" style="padding-bottom: 4px; height: 33%; width:100%">
+                    <input class="btn btn-primary" type="submit" name='create_excel' value="Create Excel from DBS" style="height: 100%; width:100%">
+                </div>
+                <div class="align-self-center" style="padding-bottom: 4px; padding-top: 4px; height: 33%; width:100%">
+                    <input class="btn btn-success" type="submit" name='recalculate' value="Recalculate DIC and TA" style="height: 100%; width:100%">
+                </div>
+                <div class="align-self-end" style="padding-top: 4px; height: 33%; width:100%">
+                    <input class="btn btn-warning" type="submit" name='reset' value="Reset to defaults" style="height: 100%; width:100%">
+                </div>
+            </div>
+        </div>
+
+        <!-- default values -->
+        <div class="col-12" style="clear: both; padding-top: 10px">
+            {% if dropdowns or header or number_defaults %}
+
+            <a class="row text-dark" href="#collapseDefaults" style="padding-left: 15px; text-decoration: none;"
+               onclick="$('#collapsed-chevron').toggleClass('fa-rotate-180')"
+               data-toggle="collapse" aria-expanded="true" aria-controls="collapseDefaults">
+
+                <h2 style="float: left">Default values</h2>
+                <i class="fa fa-lg fa-chevron-down align-self-center" id="collapsed-chevron" style="padding: 0px 20px"></i>
+            </a>
+            <div class="collapse show" id='collapseDefaults' style="clear: both;">
+            <div class="default-options-box">
+                {% if dropdowns %} {% for key, value in dropdowns.items() %}
+                <div class="input-group mb-3 input-group-sm">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">{{key}}</span>
+                    </div>
+                    <select class="custom-select form-control" name="{{key}}">
+                        {% for v in value %}
+                        <option value="{{ v }}">{{ v }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %} {% endif %} {% if number_defaults %} {% for key, value in number_defaults.items() %}
+                <div class="input-group mb-3 input-group-sm" lang="en-US">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" style="text-align: right">{{key}}</span>
+                    </div>
+                    <input type="text"
+                           class="form-control"
+                           name="{{key}}"
+                           value="{{value}}"
+                           pattern="[0-9]+\.?[0-9]*">
+                </div>
+                {% endfor %} {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- textbox -->
+            <div class="default-options-box">
+                {% if header %}
+                <div class="card">
+                    <div class="card-header">
+                        Column headers
+                    </div>
+                    <div class="collapse show">
+                        <textarea class="card-body header-list" style="padding-left: 20px" name='header'>{% for v in header %}{{v}},
+{% endfor %}</textarea>
+                    </div>
+                </div>
+
+                {% endif %}
+            </div>
+            </div>
+        </div>
+
+    </form>
+
+    {% if stdout %}
+        <script type="text/javascript">
+            $('#collapseDefaults').collapse('hide')
+        </script>
+        <div class="col-12" style="clear: both">
+            <h2>Processing log</h2>
+            <div class="col-12">
+            <div class="card" style="padding: 2px;">
+                <div class="card-body" style="height: 500px;">
+                <textarea class="header-list" name="textarea" style="font-size: 10pt; font-family: monospace; padding-left: 20px">
+                    {% for line in stdout %}
+{{line}}{% endfor %}</textarea>
+                    {% endif %}
+                </div>
+            </div>
+            </div>
+        </div>
+
+
+    </main>
+
+</body>
+</html>
