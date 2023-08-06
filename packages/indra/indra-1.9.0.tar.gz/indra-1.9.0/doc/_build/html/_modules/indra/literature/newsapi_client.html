@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.literature.newsapi_client &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="indra.literature" href="../literature.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../literature.html">indra.literature</a> &raquo;</li>
+        
+      <li>indra.literature.newsapi_client</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.literature.newsapi_client</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module provides a client for the NewsAPI web service</span>
+<span class="sd">(https://newsapi.org/). The web service requires an API key which is</span>
+<span class="sd">available after registering at https://newsapi.org/account. This key can be</span>
+<span class="sd">set as NEWSAPI_API_KEY in the INDRA config file or as an environmental</span>
+<span class="sd">variable with the same name.</span>
+
+<span class="sd">NewsAPI also requires attribution e.g. &quot;powered by NewsAPI.org&quot; for derived</span>
+<span class="sd">uses.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">indra</span> <span class="k">import</span> <span class="n">has_config</span><span class="p">,</span> <span class="n">get_config</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;newsapi_client&#39;</span><span class="p">)</span>
+
+
+<span class="n">api_key</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">has_config</span><span class="p">(</span><span class="s1">&#39;NEWSAPI_API_KEY&#39;</span><span class="p">):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;NewsAPI API key could not be found in config file or &#39;</span> <span class="o">+</span> \
+                 <span class="s1">&#39;environment variable.&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">api_key</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="s1">&#39;NEWSAPI_API_KEY&#39;</span><span class="p">)</span>
+
+<span class="n">newsapi_url</span> <span class="o">=</span> <span class="s1">&#39;https://newsapi.org/v2&#39;</span>
+
+
+<div class="viewcode-block" id="send_request"><a class="viewcode-back" href="../../../modules/literature/index.html#indra.literature.newsapi_client.send_request">[docs]</a><span class="k">def</span> <span class="nf">send_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the response to a query as JSON from the NewsAPI web service.</span>
+
+<span class="sd">    The basic API is limited to 100 results which is chosen unless explicitly</span>
+<span class="sd">    given as an argument. Beyond that, paging is supported through the &quot;page&quot;</span>
+<span class="sd">    argument, if needed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    endpoint : str</span>
+<span class="sd">        Endpoint to query, e.g. &quot;everything&quot; or &quot;top-headlines&quot;</span>
+
+<span class="sd">    kwargs : dict</span>
+<span class="sd">        A list of keyword arguments passed as parameters with the query.</span>
+<span class="sd">        The basic ones are &quot;q&quot; which is the search query, &quot;from&quot; is a start</span>
+<span class="sd">        date formatted as for instance 2018-06-10 and &quot;to&quot; is an end date</span>
+<span class="sd">        with the same format.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res_json : dict</span>
+<span class="sd">        The response from the web service as a JSON dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">api_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;NewsAPI cannot be used without an API key&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">newsapi_url</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;apiKey&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;apiKey&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+    <span class="k">if</span> <span class="s1">&#39;pageSize&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;pageSize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+    <span class="n">res_json</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> </div>
+    <span class="k">return</span> <span class="n">res_json</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

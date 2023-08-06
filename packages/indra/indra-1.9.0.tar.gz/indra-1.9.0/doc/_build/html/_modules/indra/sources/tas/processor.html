@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.tas.processor &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.tas.processor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.tas.processor</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;TasProcessor&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">indra.statements</span> <span class="k">import</span> <span class="n">Inhibition</span><span class="p">,</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Evidence</span>
+<span class="kn">from</span> <span class="nn">indra.databases</span> <span class="k">import</span> <span class="n">hgnc_client</span><span class="p">,</span> <span class="n">chebi_client</span>
+<span class="kn">from</span> <span class="nn">indra.databases.lincs_client</span> <span class="k">import</span> <span class="n">LincsClient</span>
+
+
+<span class="n">CLASS_MAP</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="s1">&#39;Kd &lt; 100nM&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="s1">&#39;100nM &lt; Kd &lt; 1uM&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="s1">&#39;1uM &lt; Kd &lt; 10uM&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;10&#39;</span><span class="p">:</span> <span class="s1">&#39;Kd &gt; 10uM&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="TasProcessor"><a class="viewcode-back" href="../../../../modules/sources/tas/index.html#indra.sources.tas.processor.TasProcessor">[docs]</a><span class="k">class</span> <span class="nc">TasProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A processor for the Target Affinity Spectrum data table.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">affinity_class_limit</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lc</span> <span class="o">=</span> <span class="n">LincsClient</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">affinity_class_limit</span> <span class="o">=</span> <span class="n">affinity_class_limit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="c1"># Skip rows that are above the affinity class limit</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;class_min&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">affinity_class_limit</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_process_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="n">drug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_drug</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;hms_id&#39;</span><span class="p">])</span>
+        <span class="n">prot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_protein</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;approved_symbol&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">])</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_evidence</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;class_min&#39;</span><span class="p">])</span>
+        <span class="c1"># NOTE: there are several entries in this data set that refer to</span>
+        <span class="c1"># non-human Entrez genes, e.g.</span>
+        <span class="c1"># https://www.ncbi.nlm.nih.gov/gene/3283880</span>
+        <span class="c1"># We skip these for now because since resources for Entrez-based</span>
+        <span class="c1"># mappings for non-human genes are not integrated, and would cause</span>
+        <span class="c1"># pre-assembly issues.</span>
+        <span class="k">if</span> <span class="s1">&#39;HGNC&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prot</span><span class="o">.</span><span class="n">db_refs</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Inhibition</span><span class="p">(</span><span class="n">drug</span><span class="p">,</span> <span class="n">prot</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_extract_drug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hms_id</span><span class="p">):</span>
+        <span class="n">refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lc</span><span class="o">.</span><span class="n">get_small_molecule_refs</span><span class="p">(</span><span class="n">hms_id</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lc</span><span class="o">.</span><span class="n">get_small_molecule_name</span><span class="p">(</span><span class="n">hms_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;PUBCHEM&#39;</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">:</span>
+            <span class="n">chebi_id</span> <span class="o">=</span> <span class="n">chebi_client</span><span class="o">.</span><span class="n">get_chebi_id_from_pubchem</span><span class="p">(</span><span class="n">refs</span><span class="p">[</span><span class="s1">&#39;PUBCHEM&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">chebi_id</span><span class="p">:</span>
+                <span class="n">refs</span><span class="p">[</span><span class="s1">&#39;CHEBI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;CHEBI:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">chebi_id</span>
+        <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">db_refs</span><span class="o">=</span><span class="n">refs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_extract_protein</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">):</span>
+        <span class="n">refs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;EGID&#39;</span><span class="p">:</span> <span class="n">gene_id</span><span class="p">}</span>
+        <span class="n">hgnc_id</span> <span class="o">=</span> <span class="n">hgnc_client</span><span class="o">.</span><span class="n">get_hgnc_from_entrez</span><span class="p">(</span><span class="n">gene_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hgnc_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">refs</span><span class="p">[</span><span class="s1">&#39;HGNC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hgnc_id</span>
+            <span class="n">up_id</span> <span class="o">=</span> <span class="n">hgnc_client</span><span class="o">.</span><span class="n">get_uniprot_id</span><span class="p">(</span><span class="n">hgnc_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">up_id</span><span class="p">:</span>
+                <span class="n">refs</span><span class="p">[</span><span class="s1">&#39;UP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">up_id</span>
+            <span class="c1"># If there is a HGNC ID, we standardize the gene name</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">hgnc_client</span><span class="o">.</span><span class="n">get_hgnc_name</span><span class="p">(</span><span class="n">hgnc_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">db_refs</span><span class="o">=</span><span class="n">refs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_evidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_min</span><span class="p">):</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">Evidence</span><span class="p">(</span><span class="n">source_api</span><span class="o">=</span><span class="s1">&#39;tas&#39;</span><span class="p">,</span> <span class="n">epistemics</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direct&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                      <span class="n">annotations</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class_min&#39;</span><span class="p">:</span> <span class="n">CLASS_MAP</span><span class="p">[</span><span class="n">class_min</span><span class="p">]})</span></div>
+        <span class="k">return</span> <span class="n">ev</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

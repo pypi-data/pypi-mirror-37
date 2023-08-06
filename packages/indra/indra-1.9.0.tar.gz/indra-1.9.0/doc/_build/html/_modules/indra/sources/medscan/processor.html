@@ -1,0 +1,1177 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.medscan.processor &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.medscan.processor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.medscan.processor</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">codecs</span>
+<span class="kn">import</span> <span class="nn">lxml.etree</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">indra.statements</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">indra.databases.chebi_client</span> <span class="k">import</span> <span class="n">get_chebi_id_from_cas</span>
+<span class="kn">from</span> <span class="nn">indra.databases.hgnc_client</span> <span class="k">import</span> <span class="n">get_hgnc_from_entrez</span><span class="p">,</span> <span class="n">get_uniprot_id</span><span class="p">,</span> \
+        <span class="n">get_hgnc_name</span>
+<span class="kn">from</span> <span class="nn">indra.util</span> <span class="k">import</span> <span class="n">read_unicode_csv</span>
+<span class="kn">from</span> <span class="nn">indra.sources.reach.processor</span> <span class="k">import</span> <span class="n">ReachProcessor</span><span class="p">,</span> <span class="n">Site</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;medscan&#39;</span><span class="p">)</span>
+
+
+<span class="n">MedscanEntity</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;MedscanEntity&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;urn&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;properties&#39;</span><span class="p">])</span>
+
+
+<span class="n">MedscanProperty</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;MedscanProperty&#39;</span><span class="p">,</span>
+                                         <span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;urn&#39;</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">_read_famplex_map</span><span class="p">():</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                         <span class="s1">&#39;../../resources/famplex_map.tsv&#39;</span><span class="p">)</span>
+    <span class="n">famplex_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">csv_rows</span> <span class="o">=</span> <span class="n">read_unicode_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv_rows</span><span class="p">:</span>
+        <span class="n">source_ns</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">be_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">famplex_map</span><span class="p">[(</span><span class="n">source_ns</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">be_id</span>
+    <span class="k">return</span> <span class="n">famplex_map</span>
+
+
+<span class="n">famplex_map</span> <span class="o">=</span> <span class="n">_read_famplex_map</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="is_statement_in_list"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.is_statement_in_list">[docs]</a><span class="k">def</span> <span class="nf">is_statement_in_list</span><span class="p">(</span><span class="n">statement</span><span class="p">,</span> <span class="n">statement_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True of given statement is equivalent to on in a list</span>
+
+<span class="sd">    Determines whether the statement is equivalent to any statement in the</span>
+<span class="sd">    given list of statements, with equivalency determined by Statement&#39;s</span>
+<span class="sd">    equals method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    statement : indra.statements.Statement</span>
+<span class="sd">        The statement to compare with</span>
+<span class="sd">    statement_list : list[indra.statements.Statement]</span>
+<span class="sd">        The statement list whose entries we compare with statement</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    in_list : bool</span>
+<span class="sd">        True if statement is equivalent to any statements in the list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">statement_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="ProteinSiteInfo"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.ProteinSiteInfo">[docs]</a><span class="k">class</span> <span class="nc">ProteinSiteInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a site on a protein, extracted from a StateEffect event.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    site_text : str</span>
+<span class="sd">        The site as a string (ex. S22)</span>
+<span class="sd">    object_text : str</span>
+<span class="sd">        The protein being modified, as the string that appeared in the original</span>
+<span class="sd">        sentence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_text</span><span class="p">,</span> <span class="n">object_text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">site_text</span> <span class="o">=</span> <span class="n">site_text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">object_text</span> <span class="o">=</span> <span class="n">object_text</span>
+
+<div class="viewcode-block" id="ProteinSiteInfo.get_sites"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.ProteinSiteInfo.get_sites">[docs]</a>    <span class="k">def</span> <span class="nf">get_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the site-text string and return a list of sites.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sites : list[Site]</span>
+<span class="sd">            A list of position-residue pairs corresponding to the site-text</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_text</span>
+        <span class="n">suffixes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39; residue&#39;</span><span class="p">,</span> <span class="s1">&#39; residues&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">suffixes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+                <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">suffix</span><span class="p">)]</span>
+        <span class="k">assert</span><span class="p">(</span><span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+
+        <span class="c1"># Strip parentheses</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; or &#39;</span><span class="p">,</span> <span class="s1">&#39; and &#39;</span><span class="p">)</span>  <span class="c1"># Treat end and or the same</span>
+
+        <span class="n">sites</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; and &#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">):</span>
+                <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sites</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ReachProcessor</span><span class="o">.</span><span class="n">_parse_site_text</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span></div></div>
+        <span class="k">return</span> <span class="n">sites</span>
+
+
+<div class="viewcode-block" id="MedscanProcessor"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.MedscanProcessor">[docs]</a><span class="k">class</span> <span class="nc">MedscanProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes Medscan data into INDRA statements.</span>
+
+<span class="sd">    The special StateEffect event conveys information about the binding</span>
+<span class="sd">    site of a protein modification. Sometimes this is paired with additional</span>
+<span class="sd">    event information in a seperate SVO. When we encounter a StateEffect, we</span>
+<span class="sd">    don&#39;t process into an INDRA statement right away, but instead store</span>
+<span class="sd">    the site information and use it if we encounter a ProtModification</span>
+<span class="sd">    event within the same sentence.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    statements : list&lt;str&gt;</span>
+<span class="sd">        A list of extracted INDRA statements</span>
+<span class="sd">    sentence_statements : list&lt;str&gt;</span>
+<span class="sd">        A list of statements for the sentence we are currently processing.</span>
+<span class="sd">        Deduplicated and added to the main statement list when we finish</span>
+<span class="sd">        processing a sentence.</span>
+<span class="sd">    num_entities : int</span>
+<span class="sd">        The total number of subject or object entities the processor attempted</span>
+<span class="sd">        to resolve</span>
+<span class="sd">    num_entities_not_found : int</span>
+<span class="sd">        The number of subject or object IDs which could not be resolved by</span>
+<span class="sd">        looking in the list of entities or tagged phrases.</span>
+<span class="sd">    last_site_info_in_sentence : SiteInfo</span>
+<span class="sd">        Stored protein site info from the last StateEffect event within the</span>
+<span class="sd">        sentence, allowing us to combine information from StateEffect and</span>
+<span class="sd">        ProtModification events within a single sentence in a single INDRA</span>
+<span class="sd">        statement. This is reset at the end of each sentence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_entities_not_found</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_entities</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_site_info_in_sentence</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MedscanProcessor.process_csxml_from_file_handle"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.MedscanProcessor.process_csxml_from_file_handle">[docs]</a>    <span class="k">def</span> <span class="nf">process_csxml_from_file_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">num_documents</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processes a filehandle to MedScan csxml input into INDRA</span>
+<span class="sd">        statements.</span>
+
+<span class="sd">        The CSXML format consists of a top-level `&lt;batch&gt;` root element</span>
+<span class="sd">        containing a series of `&lt;doc&gt;` (document) elements, in turn containing</span>
+<span class="sd">        `&lt;sec&gt;` (section) elements, and in turn containing `&lt;sent&gt;` (sentence)</span>
+<span class="sd">        elements.</span>
+
+<span class="sd">        Within the `&lt;sent&gt;` element, a series of additional elements appear in</span>
+<span class="sd">        the following order:</span>
+
+<span class="sd">        * `&lt;toks&gt;`, which contains a tokenized form of the sentence in its text</span>
+<span class="sd">          attribute</span>
+<span class="sd">        * `&lt;textmods&gt;`, which describes any preprocessing/normalization done to</span>
+<span class="sd">          the underlying text</span>
+<span class="sd">        * `&lt;match&gt;` elements, each of which contains one of more `&lt;entity&gt;`</span>
+<span class="sd">          elements, describing entities in the text with their identifiers.</span>
+<span class="sd">          The local IDs of each entities are given in the `msid` attribute of</span>
+<span class="sd">          this element; these IDs are then referenced in any subsequent SVO</span>
+<span class="sd">          elements.</span>
+<span class="sd">        * `&lt;svo&gt;` elements, representing subject-verb-object triples. SVO</span>
+<span class="sd">          elements with a `type` attribute of `CONTROL` represent normalized</span>
+<span class="sd">          regulation relationships; they often represent the normalized</span>
+<span class="sd">          extraction of the immediately preceding (but unnormalized SVO</span>
+<span class="sd">          element). However, in some cases there can be a &quot;CONTROL&quot; SVO</span>
+<span class="sd">          element without its parent immediately preceding it.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f : file object</span>
+<span class="sd">            A filehandle to a source of MedScan csxml data</span>
+<span class="sd">        num_documents : int</span>
+<span class="sd">            The number of documents to process, or None to process all</span>
+<span class="sd">            documents in the input stream</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pmid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">tagged_sent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">svo_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">doc_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">match_text</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">in_prop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">last_relation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">property_entities</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">property_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_entities</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Go through the document again and extract statements</span>
+        <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">lxml</span><span class="o">.</span><span class="n">etree</span><span class="o">.</span><span class="n">iterparse</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">),</span>
+                                                <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+                                                <span class="n">recover</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="c1"># If opening up a new doc, set the PMID</span>
+            <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;doc&#39;</span><span class="p">:</span>
+                <span class="n">pmid</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uri&#39;</span><span class="p">)</span>
+            <span class="c1"># If getting a section, set the section type</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;sec&#39;</span><span class="p">:</span>
+                <span class="n">sec</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+            <span class="c1"># Set the sentence context</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;sent&#39;</span><span class="p">:</span>
+                <span class="n">tagged_sent</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;msrc&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Reset last_relation between sentences, since we will only be</span>
+                <span class="c1"># interested in the relation immediately preceding a CONTROL</span>
+                <span class="c1"># statement but within the same sentence.</span>
+                <span class="n">last_relation</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">entities</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;sent&#39;</span><span class="p">:</span>
+                <span class="c1"># End of sentence; deduplicate and copy statements from this</span>
+                <span class="c1"># sentence to the main statements list</span>
+
+                <span class="c1"># Make a list of those statments in sentence_statements sans</span>
+                <span class="c1"># duplicates</span>
+                <span class="n">statements_to_add</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_statement_in_list</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">statements_to_add</span><span class="p">):</span>
+                        <span class="n">statements_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+                <span class="c1"># Add deduplicated statements to the main statements list</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">statements_to_add</span><span class="p">)</span>
+
+                <span class="c1"># Reset sentence statements list to prepare for processing the</span>
+                <span class="c1"># next sentence</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># Reset site info</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_site_info_in_sentence</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;match&#39;</span><span class="p">:</span>
+                <span class="n">match_text</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;chars&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;entity&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">in_prop</span><span class="p">:</span>
+                    <span class="n">ent_id</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;msid&#39;</span><span class="p">]</span>
+                    <span class="n">ent_urn</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;urn&#39;</span><span class="p">)</span>
+                    <span class="n">ent_type</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+                    <span class="n">entities</span><span class="p">[</span><span class="n">ent_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">MedscanEntity</span><span class="p">(</span><span class="n">match_text</span><span class="p">,</span> <span class="n">ent_urn</span><span class="p">,</span>
+                                                     <span class="n">ent_type</span><span class="p">,</span> <span class="p">{})</span>
+
+                    <span class="n">tuple_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">ent_type</span><span class="p">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">),</span> <span class="n">ent_urn</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ent_type</span> <span class="o">==</span> <span class="s1">&#39;Complex&#39;</span> <span class="ow">or</span> <span class="n">ent_type</span> <span class="o">==</span> <span class="s1">&#39;FunctionalClass&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log_entities</span><span class="p">[</span><span class="n">tuple_key</span><span class="p">]</span> <span class="o">=</span> \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">log_entities</span><span class="p">[</span><span class="n">tuple_key</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ent_type</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+                    <span class="n">ent_urn</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;urn&#39;</span><span class="p">]</span>
+                    <span class="n">ent_name</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                    <span class="n">property_entities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MedscanEntity</span><span class="p">(</span><span class="n">ent_name</span><span class="p">,</span> <span class="n">ent_urn</span><span class="p">,</span>
+                                                           <span class="n">ent_type</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;svo&#39;</span><span class="p">:</span>
+                <span class="n">subj</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;subj&#39;</span><span class="p">)</span>
+                <span class="n">verb</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verb&#39;</span><span class="p">)</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj&#39;</span><span class="p">)</span>
+                <span class="n">svo_type</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+                <span class="n">svo</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uri&#39;</span><span class="p">:</span> <span class="n">pmid</span><span class="p">,</span>
+                       <span class="s1">&#39;sec&#39;</span><span class="p">:</span> <span class="n">sec</span><span class="p">,</span>
+                       <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">tagged_sent</span><span class="p">,</span>
+                       <span class="s1">&#39;entities&#39;</span><span class="p">:</span> <span class="n">entities</span><span class="p">}</span>
+                <span class="n">svo</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">)</span>
+
+                <span class="c1"># Aggregate information about the relation</span>
+                <span class="n">relation</span> <span class="o">=</span> <span class="n">MedscanRelation</span><span class="p">(</span>
+                                       <span class="n">uri</span><span class="o">=</span><span class="n">pmid</span><span class="p">,</span>
+                                       <span class="n">sec</span><span class="o">=</span><span class="n">sec</span><span class="p">,</span>
+                                       <span class="n">tagged_sentence</span><span class="o">=</span><span class="n">tagged_sent</span><span class="p">,</span>
+                                       <span class="n">entities</span><span class="o">=</span><span class="n">entities</span><span class="p">,</span>
+                                       <span class="n">subj</span><span class="o">=</span><span class="n">subj</span><span class="p">,</span>
+                                       <span class="n">verb</span><span class="o">=</span><span class="n">verb</span><span class="p">,</span>
+                                       <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span>
+                                       <span class="n">svo_type</span><span class="o">=</span><span class="n">svo_type</span><span class="p">,</span>
+                                      <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">relation</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">svo_type</span> <span class="o">==</span> <span class="s1">&#39;CONTROL&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process_relation</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="n">last_relation</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Sometimes a CONTROL SVO can be after an unnormalized SVO</span>
+                    <span class="c1"># that is a more specific but less uniform version of the</span>
+                    <span class="c1"># same extracted statement.</span>
+                    <span class="n">last_relation</span> <span class="o">=</span> <span class="n">relation</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;prop&#39;</span><span class="p">:</span>
+                <span class="n">in_prop</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">property_name</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+                <span class="n">property_entities</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;prop&#39;</span><span class="p">:</span>
+                <span class="n">in_prop</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">entities</span><span class="p">[</span><span class="n">ent_id</span><span class="p">]</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">property_entities</span>
+            <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;doc&#39;</span><span class="p">:</span>
+                <span class="n">doc_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># Give a status update</span>
+                <span class="k">if</span> <span class="n">doc_counter</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processed </span><span class="si">%d</span><span class="s2"> documents&quot;</span> <span class="o">%</span> <span class="n">doc_counter</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">num_documents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">doc_counter</span> <span class="o">&gt;=</span> <span class="n">num_documents</span><span class="p">:</span></div>
+                    <span class="k">break</span>
+
+
+<div class="viewcode-block" id="MedscanProcessor.process_relation"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.MedscanProcessor.process_relation">[docs]</a>    <span class="k">def</span> <span class="nf">process_relation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relation</span><span class="p">,</span> <span class="n">last_relation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process a relation into an INDRA statement.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        relation : MedscanRelation</span>
+<span class="sd">            The relation to process (a CONTROL svo with normalized verb)</span>
+<span class="sd">        last_relation : MedscanRelation</span>
+<span class="sd">            The relation immediately proceding the relation to process within</span>
+<span class="sd">            the same sentence, or None if there are no preceding relations</span>
+<span class="sd">            within the same sentence. This proceeding relation, if available,</span>
+<span class="sd">            will refer to the same interaction but with an unnormalized</span>
+<span class="sd">            (potentially more specific) verb, and is used when processing</span>
+<span class="sd">            protein modification events.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">subj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_from_entity</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="n">relation</span><span class="o">.</span><span class="n">subj</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_from_entity</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="n">relation</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">subj</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Don&#39;t extract a statement if the subject or object cannot</span>
+            <span class="c1"># be resolved</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Make evidence object</span>
+        <span class="n">untagged_sentence</span> <span class="o">=</span> <span class="n">_untag_sentence</span><span class="p">(</span><span class="n">relation</span><span class="o">.</span><span class="n">tagged_sentence</span><span class="p">)</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">relation</span><span class="o">.</span><span class="n">uri</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;info:pmid/([0-9]+)&#39;</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Extract the pmid from the URI if the URI refers to a pmid</span>
+            <span class="n">pmid</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">last_relation</span><span class="p">:</span>
+            <span class="n">last_verb</span> <span class="o">=</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">last_verb</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;verb&#39;</span><span class="p">:</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span><span class="p">,</span> <span class="s1">&#39;last_verb&#39;</span><span class="p">:</span> <span class="n">last_verb</span><span class="p">}</span>
+        <span class="n">epistemics</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">epistemics</span><span class="p">[</span><span class="s1">&#39;direct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Overridden later if needed</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="p">[</span><span class="n">Evidence</span><span class="p">(</span><span class="n">source_api</span><span class="o">=</span><span class="s1">&#39;medscan&#39;</span><span class="p">,</span> <span class="n">source_id</span><span class="o">=</span><span class="n">source_id</span><span class="p">,</span> <span class="n">pmid</span><span class="o">=</span><span class="n">pmid</span><span class="p">,</span>
+                       <span class="n">text</span><span class="o">=</span><span class="n">untagged_sentence</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="n">annotations</span><span class="p">,</span>
+                       <span class="n">epistemics</span><span class="o">=</span><span class="n">epistemics</span><span class="p">)]</span>
+
+        <span class="c1"># These normalized verbs are mapped to IncreaseAmount statements</span>
+        <span class="n">increase_amount_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ExpressionControl-positive&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;MolSynthesis-positive&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;CellExpression&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;QuantitativeChange-positive&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;PromoterBinding&#39;</span><span class="p">]</span>
+
+        <span class="c1"># These normalized verbs are mapped to DecreaseAmount statements</span>
+        <span class="n">decrease_amount_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ExpressionControl-negative&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;MolSynthesis-negative&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;miRNAEffect-negative&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;QuantitativeChange-negative&#39;</span><span class="p">]</span>
+
+        <span class="c1"># These normalized verbs are mapped to Activation statements (indirect)</span>
+        <span class="n">activation_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;UnknownRegulation-positive&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Regulation-positive&#39;</span><span class="p">]</span>
+        <span class="c1"># These normalized verbs are mapped to Activation statements (direct)</span>
+        <span class="n">d_activation_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DirectRegulation-positive&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;DirectRegulation-positive--direct interaction&#39;</span><span class="p">]</span>
+        <span class="c1"># All activation verbs</span>
+        <span class="n">all_activation_verbs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">activation_verbs</span><span class="p">)</span>
+        <span class="n">all_activation_verbs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">d_activation_verbs</span><span class="p">)</span>
+
+        <span class="c1"># These normalized verbs are mapped to Inhibition statements (indirect)</span>
+        <span class="n">inhibition_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;UnknownRegulation-negative&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Regulation-negative&#39;</span><span class="p">]</span>
+        <span class="c1"># These normalized verbs are mapped to Inhibition statements (direct)</span>
+        <span class="n">d_inhibition_verbs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DirectRegulation-negative&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;DirectRegulation-negative--direct interaction&#39;</span><span class="p">]</span>
+        <span class="c1"># All inhibition verbs</span>
+        <span class="n">all_inhibition_verbs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inhibition_verbs</span><span class="p">)</span>
+        <span class="n">all_inhibition_verbs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">d_inhibition_verbs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">increase_amount_verbs</span><span class="p">:</span>
+            <span class="c1"># If the normalized verb corresponds to an IncreaseAmount statement</span>
+            <span class="c1"># then make one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                   <span class="n">IncreaseAmount</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                                  <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">decrease_amount_verbs</span><span class="p">:</span>
+            <span class="c1"># If the normalized verb corresponds to a DecreaseAmount statement</span>
+            <span class="c1"># then make one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                   <span class="n">DecreaseAmount</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                                  <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">all_activation_verbs</span><span class="p">:</span>
+            <span class="c1"># If the normalized verb corresponds to an Activation statement,</span>
+            <span class="c1"># then make one</span>
+            <span class="k">if</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">d_activation_verbs</span><span class="p">:</span>
+                <span class="n">ev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">epistemics</span><span class="p">[</span><span class="s1">&#39;direction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">Activation</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                    <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">all_inhibition_verbs</span><span class="p">:</span>
+            <span class="c1"># If the normalized verb corresponds to an Inhibition statement,</span>
+            <span class="c1"># then make one</span>
+            <span class="k">if</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="ow">in</span> <span class="n">d_inhibition_verbs</span><span class="p">:</span>
+                <span class="n">ev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">epistemics</span><span class="p">[</span><span class="s1">&#39;direct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">Inhibition</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;ProtModification&#39;</span><span class="p">:</span>
+            <span class="c1"># The normalized verb &#39;ProtModification&#39; is too vague to make</span>
+            <span class="c1"># an INDRA statement. We look at the unnormalized verb in the</span>
+            <span class="c1"># previous svo element, if available, to decide what type of</span>
+            <span class="c1"># INDRA statement to construct.</span>
+
+            <span class="k">if</span> <span class="n">last_relation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># We cannot make a statement unless we have more fine-grained</span>
+                <span class="c1"># information on the relation type from a preceding</span>
+                <span class="c1"># unnormalized SVO</span>
+                <span class="k">return</span>
+
+            <span class="c1"># Map the unnormalized verb to an INDRA statement type</span>
+            <span class="n">statement_type</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{phosphorylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Phosphorylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{dephosphorylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Dephosphorylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{ubiquitinate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Ubiquitination</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{acetylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Acetylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{methylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Methylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{deacetylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Deacetylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{demethylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Demethylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{hyperphosphorylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Phosphorylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{hydroxylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Hydroxylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{sumoylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Sumoylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{palmitoylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Palmitoylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{glycosylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Glycosylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{ribosylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Ribosylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{deglycosylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Deglycosylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{myristylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Myristoylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{farnesylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Farnesylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{desumoylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Desumoylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{geranylgeranylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Geranylgeranylation</span>
+            <span class="k">elif</span> <span class="n">last_relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;TK</span><span class="si">{deacylate}</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">statement_type</span> <span class="o">=</span> <span class="n">Deacetylation</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># This unnormalized verb is not handled, do not extract an</span>
+                <span class="c1"># INDRA statement</span>
+                <span class="k">return</span>
+
+            <span class="n">obj_text</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]</span>
+            <span class="n">last_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_site_info_in_sentence</span>
+            <span class="k">if</span> <span class="n">last_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">obj_text</span> <span class="o">==</span> <span class="n">last_info</span><span class="o">.</span><span class="n">object_text</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_site_info_in_sentence</span><span class="o">.</span><span class="n">get_sites</span><span class="p">():</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="n">site</span><span class="o">.</span><span class="n">residue</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">site</span><span class="o">.</span><span class="n">position</span>
+
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">statement_type</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">residue</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+                                       <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statement_type</span><span class="p">(</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span>
+                                                <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">))</span>
+
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;Binding&#39;</span><span class="p">:</span>
+            <span class="c1"># The Binding normalized verb corresponds to the INDRA Complex</span>
+            <span class="c1"># statement.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sentence_statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                   <span class="n">Complex</span><span class="p">([</span><span class="n">subj</span><span class="p">,</span> <span class="n">obj</span><span class="p">],</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+                                  <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;ProtModification-negative&#39;</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># TODO? These occur so infrequently so maybe not worth it</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;Regulation-unknown&#39;</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># TODO? These occur so infrequently so maybe not worth it</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;StateEffect-positive&#39;</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="c1"># self.sentence_statements.append(</span>
+            <span class="c1">#                       ActiveForm(subj, obj, evidence=ev)</span>
+            <span class="c1">#                      )</span>
+            <span class="c1"># TODO: disabling for now, since not sure whether we should set</span>
+            <span class="c1"># the is_active flag</span>
+        <span class="k">elif</span> <span class="n">relation</span><span class="o">.</span><span class="n">verb</span> <span class="o">==</span> <span class="s1">&#39;StateEffect&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_site_info_in_sentence</span> <span class="o">=</span> \
+                    <span class="n">ProteinSiteInfo</span><span class="p">(</span><span class="n">site_text</span><span class="o">=</span><span class="n">subj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span></div>
+                                    <span class="n">object_text</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="MedscanProcessor.agent_from_entity"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.MedscanProcessor.agent_from_entity">[docs]</a>    <span class="k">def</span> <span class="nf">agent_from_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relation</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a (potentially grounded) INDRA Agent object from a given a</span>
+<span class="sd">        Medscan entity describing the subject or object.</span>
+
+<span class="sd">        Uses helper functions to convert a Medscan URN to an INDRA db_refs</span>
+<span class="sd">        grounding dictionary.</span>
+
+<span class="sd">        If the entity has properties indicating that it is a protein with</span>
+<span class="sd">        a mutation or modification, then constructs the needed ModCondition</span>
+<span class="sd">        or MutCondition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        relation : MedscanRelation</span>
+<span class="sd">            The current relation being processed</span>
+<span class="sd">        entity_id : str</span>
+<span class="sd">            The ID of the entity to process</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        agent : indra.statements.Agent</span>
+<span class="sd">            A potentially grounded INDRA agent representing this entity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Extract sentence tags mapping ids to the text. We refer to this</span>
+        <span class="c1"># mapping only if the entity doesn&#39;t appear in the grounded entity</span>
+        <span class="c1"># list</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="n">_extract_sentence_tags</span><span class="p">(</span><span class="n">relation</span><span class="o">.</span><span class="n">tagged_sentence</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_entities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_entities</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">_extract_id</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relation</span><span class="o">.</span><span class="n">entities</span> <span class="ow">and</span> \
+                <span class="n">entity_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+            <span class="c1"># Could not find the entity in either the list of grounded</span>
+            <span class="c1"># entities of the items tagged in the sentence. Happens for</span>
+            <span class="c1"># a very small percentage of the dataset.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_entities_not_found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_entities_not_found</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">relation</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+            <span class="c1"># The entity is not in the grounded entity list</span>
+            <span class="c1"># Instead, make an ungrounded entity, with TEXT corresponding to</span>
+            <span class="c1"># the words with the given entity id tagged in the sentence.</span>
+            <span class="n">entity_text</span> <span class="o">=</span> <span class="n">tags</span><span class="p">[</span><span class="n">entity_id</span><span class="p">]</span>
+            <span class="n">db_refs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;TEXT&#39;</span><span class="p">:</span> <span class="n">entity_text</span><span class="p">}</span>
+            <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">normalize_medscan_name</span><span class="p">(</span><span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]),</span>
+                         <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="n">relation</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="n">entity_id</span><span class="p">]</span>
+
+            <span class="n">prop</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">properties</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="s1">&#39;Protein&#39;</span> <span class="ow">in</span> <span class="n">prop</span> \
+               <span class="ow">and</span> <span class="s1">&#39;Mutation&#39;</span> <span class="ow">in</span> <span class="n">prop</span><span class="p">:</span>
+                <span class="c1"># Handle the special case where the entity is a protein</span>
+                <span class="c1"># with a mutation or modification, with those details</span>
+                <span class="c1"># described in the entity properties</span>
+                <span class="n">protein</span> <span class="o">=</span> <span class="n">prop</span><span class="p">[</span><span class="s1">&#39;Protein&#39;</span><span class="p">]</span>
+                <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">protein</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">protein</span> <span class="o">=</span> <span class="n">protein</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">mutation</span> <span class="o">=</span> <span class="n">prop</span><span class="p">[</span><span class="s1">&#39;Mutation&#39;</span><span class="p">]</span>
+                <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mutation</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">mutation</span> <span class="o">=</span> <span class="n">mutation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">db_refs</span><span class="p">,</span> <span class="n">db_name</span> <span class="o">=</span> <span class="n">_urn_to_db_refs</span><span class="p">(</span><span class="n">protein</span><span class="o">.</span><span class="n">urn</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">db_refs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">protein</span><span class="o">.</span><span class="n">name</span>
+
+                <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">agent_name</span> <span class="o">=</span> <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">agent_name</span> <span class="o">=</span> <span class="n">db_name</span>
+
+                <span class="c1"># Check mutation.type. Only some types correspond to situations</span>
+                <span class="c1"># that can be represented in INDRA; return None if we cannot</span>
+                <span class="c1"># map to an INDRA statement (which will block processing of</span>
+                <span class="c1"># the statement in process_relation).</span>
+                <span class="k">if</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;AASite&#39;</span><span class="p">:</span>
+                    <span class="c1"># Do not handle this</span>
+                    <span class="c1"># Example:</span>
+                    <span class="c1"># MedscanEntity(name=&#39;D1&#39;, urn=&#39;urn:agi-aa:D1&#39;,</span>
+                    <span class="c1"># type=&#39;AASite&#39;, properties=None)</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;Mutation&#39;</span><span class="p">:</span>
+                    <span class="c1"># Convert mutation properties to an INDRA MutCondition</span>
+                    <span class="n">r_old</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">r_new</span> <span class="o">=</span> <span class="n">_parse_mut_string</span><span class="p">(</span><span class="n">mutation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">r_old</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Could not parse mutation string: &#39;</span> <span class="o">+</span>
+                                       <span class="n">mutation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="c1"># Don&#39;t create an agent</span>
+                        <span class="k">return</span> <span class="kc">None</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">cond</span> <span class="o">=</span> <span class="n">MutCondition</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">r_old</span><span class="p">,</span> <span class="n">r_new</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">normalize_medscan_name</span><span class="p">(</span><span class="n">agent_name</span><span class="p">),</span>
+                                         <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">,</span> <span class="n">mutations</span><span class="o">=</span><span class="p">[</span><span class="n">cond</span><span class="p">])</span>
+                        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Could not parse mutation &#39;</span> <span class="o">+</span>
+                                           <span class="s1">&#39;string: &#39;</span> <span class="o">+</span> <span class="n">mutation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;MethSite&#39;</span><span class="p">:</span>
+                    <span class="c1"># Convert methylation site information to an INDRA</span>
+                    <span class="c1"># ModCondition</span>
+                    <span class="n">res</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">_parse_mod_string</span><span class="p">(</span><span class="n">mutation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">None</span>
+                    <span class="n">cond</span> <span class="o">=</span> <span class="n">ModCondition</span><span class="p">(</span><span class="s1">&#39;methylation&#39;</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">normalize_medscan_name</span><span class="p">(</span><span class="n">agent_name</span><span class="p">),</span>
+                                 <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">,</span> <span class="n">mods</span><span class="o">=</span><span class="p">[</span><span class="n">cond</span><span class="p">])</span>
+
+                    <span class="c1"># Example:</span>
+                    <span class="c1"># MedscanEntity(name=&#39;R457&#39;,</span>
+                    <span class="c1"># urn=&#39;urn:agi-s-llid:R457-2185&#39;, type=&#39;MethSite&#39;,</span>
+                    <span class="c1"># properties=None)</span>
+                <span class="k">elif</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;PhosphoSite&#39;</span><span class="p">:</span>
+                    <span class="c1"># Convert phosphorylation site information to an INDRA</span>
+                    <span class="c1"># ModCondition</span>
+                    <span class="n">res</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">_parse_mod_string</span><span class="p">(</span><span class="n">mutation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">None</span>
+                    <span class="n">cond</span> <span class="o">=</span> <span class="n">ModCondition</span><span class="p">(</span><span class="s1">&#39;phosphorylation&#39;</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">normalize_medscan_name</span><span class="p">(</span><span class="n">agent_name</span><span class="p">),</span>
+                                 <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">,</span> <span class="n">mods</span><span class="o">=</span><span class="p">[</span><span class="n">cond</span><span class="p">])</span>
+
+                    <span class="c1"># Example:</span>
+                    <span class="c1"># MedscanEntity(name=&#39;S455&#39;,</span>
+                    <span class="c1"># urn=&#39;urn:agi-s-llid:S455-47&#39;, type=&#39;PhosphoSite&#39;,</span>
+                    <span class="c1"># properties=None)</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;Lysine&#39;</span><span class="p">:</span>
+                    <span class="c1"># Ambiguous whether this is a methylation or</span>
+                    <span class="c1"># demethylation; skip</span>
+
+                    <span class="c1"># Example:</span>
+                    <span class="c1"># MedscanEntity(name=&#39;K150&#39;,</span>
+                    <span class="c1"># urn=&#39;urn:agi-s-llid:K150-5624&#39;, type=&#39;Lysine&#39;,</span>
+                    <span class="c1"># properties=None)</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Processor currently cannot process &#39;</span> <span class="o">+</span>
+                                   <span class="s1">&#39;mutations of type &#39;</span> <span class="o">+</span> <span class="n">mutation</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Handle the more common case where we just ground the entity</span>
+                <span class="c1"># without mutation or modification information</span>
+                <span class="n">db_refs</span><span class="p">,</span> <span class="n">db_name</span> <span class="o">=</span> <span class="n">_urn_to_db_refs</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">urn</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">db_refs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">name</span>
+
+                <span class="k">if</span> <span class="n">db_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">agent_name</span> <span class="o">=</span> <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;TEXT&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">agent_name</span> <span class="o">=</span> <span class="n">db_name</span>
+
+                <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span><span class="n">normalize_medscan_name</span><span class="p">(</span><span class="n">agent_name</span><span class="p">),</span></div></div>
+                             <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MedscanRelation"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.MedscanRelation">[docs]</a><span class="k">class</span> <span class="nc">MedscanRelation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A structure representing the information contained in a Medscan</span>
+<span class="sd">    SVO xml element as well as associated entities and properties.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    uri : str</span>
+<span class="sd">        The URI of the current document (such as a PMID)</span>
+<span class="sd">    sec : str</span>
+<span class="sd">        The section of the document the relation occurs in</span>
+<span class="sd">    entities : dict</span>
+<span class="sd">        A dictionary mapping entity IDs from the same sentence to MedscanEntity</span>
+<span class="sd">        objects.</span>
+<span class="sd">    tagged_sentence : str</span>
+<span class="sd">        The sentence from which the relation was extracted, with some tagged</span>
+<span class="sd">        phrases and annotations.</span>
+<span class="sd">    subj : str</span>
+<span class="sd">        The entity ID of the subject</span>
+<span class="sd">    verb : str</span>
+<span class="sd">        The verb in the relationship between the subject and the object</span>
+<span class="sd">    obj : str</span>
+<span class="sd">        The entity ID of the object</span>
+<span class="sd">    svo_type : str</span>
+<span class="sd">        The type of SVO relationship (for example, CONTROL indicates</span>
+<span class="sd">        that the verb is normalized)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">sec</span><span class="p">,</span> <span class="n">entities</span><span class="p">,</span> <span class="n">tagged_sentence</span><span class="p">,</span> <span class="n">subj</span><span class="p">,</span> <span class="n">verb</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span>
+                 <span class="n">svo_type</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sec</span> <span class="o">=</span> <span class="n">sec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entities</span> <span class="o">=</span> <span class="n">entities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tagged_sentence</span> <span class="o">=</span> <span class="n">tagged_sentence</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subj</span> <span class="o">=</span> <span class="n">subj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verb</span> <span class="o">=</span> <span class="n">verb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span>
+</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">svo_type</span> <span class="o">=</span> <span class="n">svo_type</span>
+
+
+<div class="viewcode-block" id="normalize_medscan_name"><a class="viewcode-back" href="../../../../modules/sources/medscan/index.html#indra.sources.medscan.processor.normalize_medscan_name">[docs]</a><span class="k">def</span> <span class="nf">normalize_medscan_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removes the &quot;complex&quot; and &quot;complex complex&quot; suffixes from a medscan</span>
+<span class="sd">    agent name so that it better corresponds with the grounding map.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        The Medscan agent name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    norm_name: str</span>
+<span class="sd">        The Medscan agent name with the &quot;complex&quot; and &quot;complex complex&quot;</span>
+<span class="sd">        suffixes removed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39; complex&#39;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">suffix</span><span class="p">)]</span></div>
+    <span class="k">return</span> <span class="n">name</span>
+
+
+
+<span class="k">def</span> <span class="nf">_parse_mod_string</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a string referring to a protein modification of the form</span>
+<span class="sd">    (residue)(position), such as T47.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        A string representation of a protein residue and position being</span>
+<span class="sd">        modified</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    residue : str</span>
+<span class="sd">        The residue being modified (example: T)</span>
+<span class="sd">    position : str</span>
+<span class="sd">        The position at which the modification is happening (example: 47)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;([A-Za-z])+([0-9]+)&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_mut_string</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A string representation of a protein mutation of the form</span>
+<span class="sd">    (old residue)(position)(new residue). Example: T34U.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        The string representation of the protein mutation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    old_residue : str</span>
+<span class="sd">        The old residue, or None of the mutation string cannot be parsed</span>
+<span class="sd">    position : str</span>
+<span class="sd">        The position at which the mutation occurs, or None if the mutation</span>
+<span class="sd">        string cannot be parsed</span>
+<span class="sd">    new_residue : str</span>
+<span class="sd">        The new residue, or None if the mutation string cannot be parsed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;([A-Za-z]+)([0-9]+)([A-Za-z]+)&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Mutation string does not fit this pattern, other patterns not</span>
+        <span class="c1"># currently supported</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_urn_to_db_refs</span><span class="p">(</span><span class="n">urn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a Medscan URN to an INDRA db_refs dictionary with grounding</span>
+<span class="sd">    information.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    url : str</span>
+<span class="sd">        A Medscan URN</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    db_refs : dict</span>
+<span class="sd">        A dictionary with grounding information, mapping databases to database</span>
+<span class="sd">        identifiers. If the Medscan URN is not recognized, returns an empty</span>
+<span class="sd">        dictionary.</span>
+<span class="sd">    db_name : str</span>
+<span class="sd">        The Famplex name, if available; otherwise the HGNC name if available;</span>
+<span class="sd">        otherwise None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert a urn to a db_refs dictionary</span>
+    <span class="k">if</span> <span class="n">urn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="kc">None</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;urn:([^:]+):([^:]+)&#39;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">urn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">urn_type</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">urn_id</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">db_refs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># TODO: support more types of URNs</span>
+    <span class="k">if</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-cas&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is CAS, convert to CHEBI</span>
+        <span class="n">chebi_id</span> <span class="o">=</span> <span class="n">get_chebi_id_from_cas</span><span class="p">(</span><span class="n">urn_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">chebi_id</span><span class="p">:</span>
+            <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;CHEBI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;CHEBI:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">chebi_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-llid&#39;</span><span class="p">:</span>
+        <span class="c1"># This is an Entrez ID, convert to HGNC</span>
+        <span class="n">hgnc_id</span> <span class="o">=</span> <span class="n">get_hgnc_from_entrez</span><span class="p">(</span><span class="n">urn_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hgnc_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;HGNC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hgnc_id</span>
+
+            <span class="c1"># Convert the HGNC ID to a Uniprot ID</span>
+            <span class="n">uniprot_id</span> <span class="o">=</span> <span class="n">get_uniprot_id</span><span class="p">(</span><span class="n">hgnc_id</span><span class="p">)</span>
+            <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;UP&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uniprot_id</span>
+
+            <span class="c1"># Try to lookup HGNC name; if it&#39;s available, set it to the</span>
+            <span class="c1"># agent name</span>
+            <span class="n">db_name</span> <span class="o">=</span> <span class="n">get_hgnc_name</span><span class="p">(</span><span class="n">hgnc_id</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-ncimorgan&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is MESH</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;MESH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urn_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-ncimcelltype&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is MESH</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;MESH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urn_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-meshdis&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is MESH</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;MESHDIS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urn_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-gocomplex&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is GO</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;GO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;GO:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">urn_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-go&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is GO</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;GO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;GO:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">urn_id</span>
+    <span class="k">elif</span> <span class="n">urn_type</span> <span class="o">==</span> <span class="s1">&#39;agi-ncimtissue&#39;</span><span class="p">:</span>
+        <span class="c1"># Identifier is MESH</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;MESH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urn_id</span>
+
+    <span class="c1"># If we have a GO or MESH grounding, see if there is a corresponding</span>
+    <span class="c1"># Famplex grounding</span>
+    <span class="n">db_sometimes_maps_to_famplex</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GO&#39;</span><span class="p">,</span> <span class="s1">&#39;MESH&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">db</span> <span class="ow">in</span> <span class="n">db_sometimes_maps_to_famplex</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">db</span> <span class="ow">in</span> <span class="n">db_refs</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">db_refs</span><span class="p">[</span><span class="n">db</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">famplex_map</span><span class="p">:</span>
+                <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;FPLX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">famplex_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="c1"># If the urn corresponds to an eccode, groudn to famplex if that eccode</span>
+    <span class="c1"># is in the Famplex equivalences table</span>
+    <span class="k">if</span> <span class="n">urn</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;urn:agi-enz&#39;</span><span class="p">):</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">urn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="n">eccode</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ECCODE&#39;</span><span class="p">,</span> <span class="n">eccode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">famplex_map</span><span class="p">:</span>
+            <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;FPLX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">famplex_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="c1"># If the Medscan URN itself maps to a Famplex id, add a Famplex grounding</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;MEDSCAN&#39;</span><span class="p">,</span> <span class="n">urn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">famplex_map</span><span class="p">:</span>
+        <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;FPLX&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">famplex_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="c1"># If there is a Famplex grounding, use Famplex for entity name</span>
+    <span class="k">if</span> <span class="s1">&#39;FPLX&#39;</span> <span class="ow">in</span> <span class="n">db_refs</span><span class="p">:</span>
+        <span class="n">db_name</span> <span class="o">=</span> <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;FPLX&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">db_refs</span><span class="p">,</span> <span class="n">db_name</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_id</span><span class="p">(</span><span class="n">id_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts the numeric ID from the representation of the subject or</span>
+<span class="sd">    object ID that appears as an attribute of the svo element in the Medscan</span>
+<span class="sd">    XML document.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id_string : str</span>
+<span class="sd">        The ID representation that appears in the svo element in the XML</span>
+<span class="sd">        document (example: ID{123})</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    id : str</span>
+<span class="sd">        The numeric ID, extracted from the svo element&#39;s attribute</span>
+<span class="sd">        (example: 123)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;ID</span><span class="se">\\</span><span class="s1">{([0-9]+)</span><span class="se">\\</span><span class="s1">}&#39;</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">id_string</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">matches</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matches</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_untag_sentence</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removes all tags in the sentence, returning the original sentence</span>
+<span class="sd">    without Medscan annotations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        The tagged sentence</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    untagged_sentence : str</span>
+<span class="sd">        Sentence with tags and annotations stripped out</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;ID{[0-9,]+=([^}]+)}&#39;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">1&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;CONTEXT{[^}]+}&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;GLOSSARY{[^}]+}&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_sentence_tags</span><span class="p">(</span><span class="n">tagged_sentence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a tagged sentence, extracts a dictionary mapping tags to the words</span>
+<span class="sd">    or phrases that they tag.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tagged_sentence : str</span>
+<span class="sd">        The sentence with Medscan annotations and tags</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tags : dict</span>
+<span class="sd">        A dictionary mapping tags to the words or phrases that they tag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;ID{([0-9,]+)=([^}]+)}&#39;</span><span class="p">)</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Iteratively look for all matches of this pattern</span>
+    <span class="n">endpos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">tagged_sentence</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">endpos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">endpos</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+        <span class="n">tags</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tags</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

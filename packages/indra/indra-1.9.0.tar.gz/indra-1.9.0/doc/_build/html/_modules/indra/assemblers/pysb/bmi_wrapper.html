@@ -1,0 +1,660 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.assemblers.pysb.bmi_wrapper &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.assemblers.pysb.bmi_wrapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.assemblers.pysb.bmi_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module allows creating a Basic Modeling Interface (BMI) model from</span>
+<span class="sd">and automatically assembled PySB model. The BMI model can be instantiated</span>
+<span class="sd">within a simulation workflow system where it is simulated together</span>
+<span class="sd">with other models.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="k">import</span> <span class="n">etree</span>
+<span class="kn">from</span> <span class="nn">pysb.bng</span> <span class="k">import</span> <span class="n">generate_equations</span>
+<span class="kn">from</span> <span class="nn">pysb.simulator</span> <span class="k">import</span> <span class="n">ScipyOdeSimulator</span>
+
+
+<div class="viewcode-block" id="BMIModel"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel">[docs]</a><span class="k">class</span> <span class="nc">BMIModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class represents a BMI model wrapping a model assembled by INDRA.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : pysb.Model</span>
+<span class="sd">        A PySB model assembled by INDRA to be wrapped in BMI.</span>
+<span class="sd">    inputs : Optional[list[str]]</span>
+<span class="sd">        A list of variable names that are considered to be inputs to the model</span>
+<span class="sd">        meaning that they are read from other models. Note that designating</span>
+<span class="sd">        a variable as input means that it must be provided by another component</span>
+<span class="sd">        during the simulation.</span>
+<span class="sd">    stop_time : int</span>
+<span class="sd">        The stopping time for this model, controlling the time units up to</span>
+<span class="sd">        which the model is simulated.</span>
+<span class="sd">    outside_name_map : dict</span>
+<span class="sd">        A dictionary mapping outside variables names to inside variable names</span>
+<span class="sd">        (i.e. ones that are in the wrapped model)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">outside_name_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="n">generate_equations</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span> <span class="k">if</span> <span class="n">inputs</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_time</span> <span class="o">=</span> <span class="n">stop_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span> <span class="o">=</span> <span class="n">outside_name_map</span> <span class="k">if</span> <span class="n">outside_name_map</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;seconds&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">default_attributes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">species</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">species</span><span class="p">):</span>
+            <span class="n">monomer</span> <span class="o">=</span> <span class="n">species</span><span class="o">.</span><span class="n">monomer_patterns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">monomer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span><span class="p">[</span><span class="n">monomer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_vars</span><span class="p">()</span>
+        <span class="c1"># These attributes are related to the simulation state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">100.0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;start&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_course</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)]</span>
+        <span class="c1"># EMELI needs a DONE attribute</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DONE</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_get_input_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span>
+        <span class="c1"># The code below attempts to discover input variables, it is currently</span>
+        <span class="c1"># inactive but could be made optional later</span>
+        <span class="c1"># species_is_obj = {s: False for s in self.species_name_map.keys()}</span>
+        <span class="c1"># for ann in self.model.annotations:</span>
+        <span class="c1">#     if ann.predicate == &#39;rule_has_object&#39;:</span>
+        <span class="c1">#         species_is_obj[ann.object] = True</span>
+        <span class="c1"># # Return all the variables that aren&#39;t objects in a rule</span>
+        <span class="c1"># input_vars = [s for s, tf in species_is_obj.items() if not tf]</span>
+        <span class="c1"># return input_vars</span>
+
+    <span class="c1"># Simulation functions</span>
+<div class="viewcode-block" id="BMIModel.initialize"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the model for simulation, possibly given a config file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cfg_file : Optional[str]</span>
+<span class="sd">            The name of the configuration file to load, optional.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim</span> <span class="o">=</span> <span class="n">ScipyOdeSimulator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">initials</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;initialized&#39;</span>
+
+<div class="viewcode-block" id="BMIModel.update"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Simulate the model for a given time interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : Optional[float]</span>
+<span class="sd">            The time step to simulate, if None, the default built-in time step</span>
+<span class="sd">            is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># EMELI passes dt = -1 so we need to handle that here</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span> <span class="k">if</span> <span class="p">(</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dt</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="n">tspan</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">dt</span><span class="p">]</span>
+        <span class="c1"># Run simulaton with initials set to current state</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tspan</span><span class="o">=</span><span class="n">tspan</span><span class="p">,</span> <span class="n">initials</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="c1"># Set the state based on the result here</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span>  <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">species</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">+=</span> <span class="n">dt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_time</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DONE</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="nb">print</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_course</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="BMIModel.finalize"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finish the simulation and clean up resources as needed.&quot;&quot;&quot;</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;finalized&#39;</span>
+
+    <span class="c1"># Setter functions for state variables</span>
+<div class="viewcode-block" id="BMIModel.set_value"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.set_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the value of a given variable to a given value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable in the model whose value should be set.</span>
+
+<span class="sd">        value : float</span>
+<span class="sd">            The value the variable should be set to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="p">:</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%.5f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="mf">1e9</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="o">==</span> <span class="s1">&#39;Precipitation&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">*</span><span class="n">value</span>
+        <span class="n">species_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">species_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="BMIModel.set_values"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.set_values">[docs]</a>    <span class="k">def</span> <span class="nf">set_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the value of a given variable to a given value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable in the model whose value should be set.</span>
+
+<span class="sd">        value : float</span>
+<span class="sd">            The value the variable should be set to</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># Getter functions for state</span>
+<div class="viewcode-block" id="BMIModel.get_value"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the value of a given variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable whose value should be returned</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            The value of the given variable in the current state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="p">:</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+        <span class="n">species_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">species_idx</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BMIModel.get_values"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the value of a given variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable whose value should be returned</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            The value of the given variable in the current state</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BMIModel.get_status"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the current status of the model.&quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span>
+
+    <span class="c1"># Getter functions for basic properties</span>
+<div class="viewcode-block" id="BMIModel.get_attribute"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the value of a given attribute.</span>
+
+<span class="sd">        Atrributes include: model_name, version, author_name, grid_type,</span>
+<span class="sd">        time_step_type, step_method, time_units</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        att_name : str</span>
+<span class="sd">            The name of the attribute whose value should be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        value : str</span>
+<span class="sd">            The value of the attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">att_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BMIModel.get_input_var_names"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_input_var_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of variables names that can be set as input.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        var_names : list[str]</span>
+<span class="sd">            A list of variable names that can be set from the outside</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">in_vars</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_vars</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">in_vars</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_in_out</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">in_vars</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_in_out</span><span class="p">(</span><span class="n">var</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">in_vars</span>
+
+<div class="viewcode-block" id="BMIModel.get_output_var_names"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_output_var_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_output_var_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of variables names that can be read as output.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        var_names : list[str]</span>
+<span class="sd">            A list of variable names that can be read from the outside</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Return all the variables that aren&#39;t input variables</span>
+        <span class="n">all_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">species_name_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">output_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">all_vars</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_vars</span><span class="p">))</span>
+        <span class="c1"># Re-map to outside var names if needed</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_vars</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_in_out</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">output_vars</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_in_out</span><span class="p">(</span><span class="n">var</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">output_vars</span>
+
+<div class="viewcode-block" id="BMIModel.get_var_name"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_var_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the internal variable name given an outside variable name.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the outside variable to map</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        internal_var_name : str</span>
+<span class="sd">            The internal name of the corresponding variable</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_out_in</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BMIModel.get_var_units"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_units">[docs]</a>    <span class="k">def</span> <span class="nf">get_var_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the units of a given variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable whose units should be returned</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        unit : str</span>
+<span class="sd">            The units of the variable</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="s1">&#39;1&#39;</span>
+
+<div class="viewcode-block" id="BMIModel.get_var_type"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_var_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the type of a given variable.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable whose type should be returned</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        unit : str</span>
+<span class="sd">            The type of the variable as a string</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="s1">&#39;float64&#39;</span>
+
+<div class="viewcode-block" id="BMIModel.get_var_rank"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_rank">[docs]</a>    <span class="k">def</span> <span class="nf">get_var_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the matrix rank of the given variable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        var_name : str</span>
+<span class="sd">            The name of the variable whose rank should be returned</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rank : int</span>
+<span class="sd">            The dimensionality of the variable, 0 for scalar, 1 for vector,</span>
+<span class="sd">            etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">int16</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BMIModel.get_start_time"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_start_time">[docs]</a>    <span class="k">def</span> <span class="nf">get_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the initial time point of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        start_time : float</span>
+<span class="sd">            The initial time point of the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="BMIModel.get_current_time"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_current_time">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the current time point that the model is at during simulation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time : float</span>
+<span class="sd">            The current time point</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span>
+
+<div class="viewcode-block" id="BMIModel.get_time_step"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_step">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the time step associated with model simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            The time step for model simulation</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+
+<div class="viewcode-block" id="BMIModel.get_time_units"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_units">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the time units of the model simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        units : str</span>
+<span class="sd">            The time unit of simulation as a string</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+
+<div class="viewcode-block" id="BMIModel.make_repository_component"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.make_repository_component">[docs]</a>    <span class="k">def</span> <span class="nf">make_repository_component</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an XML string representing this BMI in a workflow.</span>
+
+<span class="sd">        This description is required by EMELI to discover and load models.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xml : str</span>
+<span class="sd">            String serialized XML representation of the component in the</span>
+<span class="sd">            model repository.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">component</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;component&#39;</span><span class="p">)</span>
+
+        <span class="n">comp_name</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;comp_name&#39;</span><span class="p">)</span>
+        <span class="n">comp_name</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp_name</span><span class="p">)</span>
+
+        <span class="n">mod_path</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;module_path&#39;</span><span class="p">)</span>
+        <span class="n">mod_path</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mod_path</span><span class="p">)</span>
+
+        <span class="n">mod_name</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;module_name&#39;</span><span class="p">)</span>
+        <span class="n">mod_name</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mod_name</span><span class="p">)</span>
+
+        <span class="n">class_name</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;class_name&#39;</span><span class="p">)</span>
+        <span class="n">class_name</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;model_class&#39;</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">class_name</span><span class="p">)</span>
+
+        <span class="n">model_name</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;model_name&#39;</span><span class="p">)</span>
+        <span class="n">model_name</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+
+        <span class="n">lang</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">)</span>
+        <span class="n">lang</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+
+        <span class="n">ver</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">)</span>
+        <span class="n">ver</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">)</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ver</span><span class="p">)</span>
+
+        <span class="n">au</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span>
+        <span class="n">au</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;author_name&#39;</span><span class="p">)</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">au</span><span class="p">)</span>
+
+        <span class="n">hu</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;help_url&#39;</span><span class="p">)</span>
+        <span class="n">hu</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;http://github.com/sorgerlab/indra&#39;</span>
+        <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hu</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;cfg_template&#39;</span><span class="p">,</span> <span class="s1">&#39;time_step_type&#39;</span><span class="p">,</span> <span class="s1">&#39;time_units&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;grid_type&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="s1">&#39;comp_type&#39;</span><span class="p">,</span> <span class="s1">&#39;uses_types&#39;</span><span class="p">):</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+            <span class="n">elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tag</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="n">etree</span><span class="o">.</span><span class="n">tounicode</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BMIModel.export_into_python"><a class="viewcode-back" href="../../../../modules/assemblers/bmi_wrapper.html#indra.assemblers.pysb.bmi_wrapper.BMIModel.export_into_python">[docs]</a>    <span class="k">def</span> <span class="nf">export_into_python</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write the model into a pickle and create a module that loads it.</span>
+
+<span class="sd">        The model basically exports itself as a pickle file and a Python</span>
+<span class="sd">        file is then written which loads the pickle file. This allows importing</span>
+<span class="sd">        the model in the simulation workflow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pkl_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.pkl&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pkl_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">py_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        import pickle</span>
+<span class="s2">        with open(&#39;</span><span class="si">%s</span><span class="s2">&#39;, &#39;rb&#39;) as fh:</span>
+<span class="s2">            model_class = pickle.load(fh)</span>
+<span class="s2">        &quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">pkl_path</span><span class="p">)</span>
+        <span class="n">py_str</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">py_str</span><span class="p">)</span>
+        <span class="n">py_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">py_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span></div>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">py_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_map_out_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outside_var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the internal name of a variable mapped from outside.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">outside_var_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_map_in_out</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inside_var_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the external name of a variable mapped from inside.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">out_name</span><span class="p">,</span> <span class="n">in_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside_name_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">inside_var_name</span> <span class="o">==</span> <span class="n">in_name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">out_name</span></div>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="n">default_attributes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="s1">&#39;indra_model&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;author_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Benjamin M. Gyori&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;grid_type&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;time_step_type&#39;</span><span class="p">:</span> <span class="s1">&#39;fixed&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;step_method&#39;</span><span class="p">:</span> <span class="s1">&#39;explicit&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;time_units&#39;</span><span class="p">:</span> <span class="s1">&#39;seconds&#39;</span>
+        <span class="p">}</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

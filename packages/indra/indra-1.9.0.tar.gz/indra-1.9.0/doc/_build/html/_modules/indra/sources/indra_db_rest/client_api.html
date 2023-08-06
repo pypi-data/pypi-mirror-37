@@ -1,0 +1,660 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.indra_db_rest.client_api &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.indra_db_rest.client_api</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.indra_db_rest.client_api</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_statements&#39;</span><span class="p">,</span> <span class="s1">&#39;get_statements_for_paper&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;get_statements_by_hash&#39;</span><span class="p">,</span> <span class="s1">&#39;IndraDBRestError&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">sleep</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">indra.util</span> <span class="k">import</span> <span class="n">clockit</span>
+
+<span class="kn">from</span> <span class="nn">indra</span> <span class="k">import</span> <span class="n">get_config</span>
+<span class="kn">from</span> <span class="nn">indra.statements</span> <span class="k">import</span> <span class="n">stmts_from_json</span><span class="p">,</span> <span class="n">get_statement_by_name</span><span class="p">,</span> \
+    <span class="n">get_all_descendants</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;db_rest_client&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="IndraDBRestError"><a class="viewcode-back" href="../../../../modules/sources/indra_db_rest/index.html#indra.sources.indra_db_rest.client_api.IndraDBRestError">[docs]</a><span class="k">class</span> <span class="nc">IndraDBRestError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resp</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">reason</span>
+        <span class="n">reason_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reason_lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reason_lines</span><span class="p">):</span>
+                <span class="n">reason_lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="n">line</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="n">fmtd_reason</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reason_lines</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resp</span> <span class="o">=</span> <span class="n">resp</span>
+        <span class="ne">Exception</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Got bad return code </span><span class="si">%d</span><span class="s1">:</span><span class="si">%s%s</span><span class="s1">&#39;</span>
+                                  <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">fmtd_reason</span><span class="p">)))</span></div>
+        <span class="k">return</span>
+
+
+<span class="k">class</span> <span class="nc">IndraDBRestResponse</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The packaging for query responses.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statement_jsons</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ev_totals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements_sample</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidence_counts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">statement_jsons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ev_totals</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">IndraDBRestError</span><span class="p">(</span><span class="s2">&quot;If statement_jsons is given, ev_totals &quot;</span>
+                                       <span class="s2">&quot;must also be given.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge_json</span><span class="p">(</span><span class="n">statement_jsons</span><span class="p">,</span> <span class="n">ev_totals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__page_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__page</span> <span class="o">=</span> <span class="n">page</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__th</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">get_ev_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the total evidence count for a statement.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evidence_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">get_hash</span><span class="p">(</span><span class="n">shallow</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">extend_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extend this object with new statements.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only extend with another </span><span class="si">%s</span><span class="s2"> instance.&quot;</span>
+                             <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other_response</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other_response</span><span class="o">.</span><span class="n">statements_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statements_sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statements_sample</span> <span class="o">=</span> <span class="n">other_response</span><span class="o">.</span><span class="n">statements_sample</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statements_sample</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other_response</span><span class="o">.</span><span class="n">statements_sample</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_json</span><span class="p">(</span><span class="n">other_response</span><span class="o">.</span><span class="n">statement_jsons</span><span class="p">,</span>
+                        <span class="n">other_response</span><span class="o">.</span><span class="n">evidence_counts</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the response before loading more statements.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__page</span> <span class="o">=</span> <span class="n">page</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__th</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">merge_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt_json</span><span class="p">,</span> <span class="n">ev_counts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Merge these statement jsons with new jsons.&quot;&quot;&quot;</span>
+        <span class="c1"># Where there is overlap, there _should_ be agreement.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidence_counts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ev_counts</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">sj</span> <span class="ow">in</span> <span class="n">stmt_json</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sj</span>  <span class="c1"># This should be most of them</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># This should only happen rarely.</span>
+                <span class="k">for</span> <span class="n">evj</span> <span class="ow">in</span> <span class="n">sj</span><span class="p">[</span><span class="s1">&#39;evidence&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;evidence&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evj</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">started</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statements_sample</span> <span class="o">=</span> <span class="n">stmts_from_json</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">compile_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate statements from the jsons.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="n">stmts_from_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">statement_jsons</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">wait_until_done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wait for the background load to complete.&quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IndraDBRestError</span><span class="p">(</span><span class="s2">&quot;There is no thread waiting to complete.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Timed out after </span><span class="si">%0.3f</span><span class="s2"> seconds waiting for &quot;</span>
+                           <span class="s2">&quot;statement load to complete.&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Waited </span><span class="si">%0.3f</span><span class="s2"> seconds for statements to finish loading.&quot;</span>
+                        <span class="o">%</span> <span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_query_and_extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__page</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">_submit_query_request</span><span class="p">(</span><span class="s1">&#39;statements&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">agent_strs</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">resp_dict</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">object_pairs_hook</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">)</span>
+        <span class="n">stmts_json</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;statements&#39;</span><span class="p">]</span>
+        <span class="n">total_ev</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;total_evidence&#39;</span><span class="p">]</span>
+        <span class="n">ev_totals</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;evidence_totals&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__page_step</span> <span class="o">=</span> <span class="n">resp_dict</span><span class="p">[</span><span class="s1">&#39;statement_limit&#39;</span><span class="p">]</span>
+
+        <span class="c1"># update the result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_json</span><span class="p">(</span><span class="n">stmts_json</span><span class="p">,</span> <span class="n">ev_totals</span><span class="p">)</span>
+
+        <span class="c1"># NOTE: this is technically not a direct conclusion, and could be wrong,</span>
+        <span class="c1"># resulting in a single unnecessary extra query, but that should almost</span>
+        <span class="c1"># never happen, and if it does, it isn&#39;t the end of the world.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmts_json</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__page_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__page</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__page_step</span>
+
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_get_statements_persistently</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Use paging to get all statements.&quot;&quot;&quot;</span>
+        <span class="c1"># Get the rest of the content.</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_query_and_extract</span><span class="p">(</span><span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="c1"># Create the actual statements.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compile_statements</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">make_stmts_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">persist</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                         <span class="n">block_secs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Slightly lower level function to get statements from the REST API.&quot;&quot;&quot;</span>
+        <span class="c1"># Handle the content if we were limited.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Some results could not be returned directly.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__page</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">persist</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;You chose to persist without blocking. Pagination &quot;</span>
+                        <span class="s2">&quot;is being performed in a thread.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__th</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_statements_persistently</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">block_secs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">block_secs</span><span class="p">:</span>  <span class="c1"># is not 0</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Waiting for </span><span class="si">%d</span><span class="s2"> seconds...&quot;</span> <span class="o">%</span> <span class="n">block_secs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__th</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block_secs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_query_and_extract</span><span class="p">(</span><span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;You did not choose persist=True, therefore this is &quot;</span>
+                           <span class="s2">&quot;all you get.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compile_statements</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span>
+
+
+<div class="viewcode-block" id="get_statements"><a class="viewcode-back" href="../../../../modules/sources/indra_db_rest/index.html#indra.sources.indra_db_rest.client_api.get_statements">[docs]</a><span class="nd">@clockit</span>
+<span class="k">def</span> <span class="nf">get_statements</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">agents</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stmt_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">use_exact_type</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">persist</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simple_response</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ev_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                   <span class="n">best_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get statements from INDRA&#39;s database using the web api.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject/object : str</span>
+<span class="sd">        Optionally specify the subject and/or object of the statements in</span>
+<span class="sd">        you wish to get from the database. By default, the namespace is assumed</span>
+<span class="sd">        to be HGNC gene names, however you may specify another namespace by</span>
+<span class="sd">        including `@&lt;namespace&gt;` at the end of the name string. For example, if</span>
+<span class="sd">        you want to specify an agent by chebi, you could use `CHEBI:6801@CHEBI`,</span>
+<span class="sd">        or if you wanted to use the HGNC id, you could use `6871@HGNC`.</span>
+<span class="sd">    agents : list[str]</span>
+<span class="sd">        A list of agents, specified in the same manner as subject and object,</span>
+<span class="sd">        but without specifying their grammatical position.</span>
+<span class="sd">    stmt_type : str</span>
+<span class="sd">        Specify the types of interactions you are interested in, as indicated</span>
+<span class="sd">        by the sub-classes of INDRA&#39;s Statements. This argument is *not* case</span>
+<span class="sd">        sensitive. If the statement class given has sub-classes</span>
+<span class="sd">        (e.g. RegulateAmount has IncreaseAmount and DecreaseAmount), then both</span>
+<span class="sd">        the class itself, and its subclasses, will be queried, by default. If</span>
+<span class="sd">        you do not want this behavior, set use_exact_type=True.</span>
+<span class="sd">    use_exact_type : bool</span>
+<span class="sd">        If stmt_type is given, and you only want to search for that specific</span>
+<span class="sd">        statement type, set this to True. Default is False.</span>
+<span class="sd">    offset : int</span>
+<span class="sd">        Set the initial offset of this load. Given a query, start returning</span>
+<span class="sd">        statements from the n&#39;th in the list. This may be somewhat arbitrary,</span>
+<span class="sd">        but if best_first is True, this will move down the list of statements in</span>
+<span class="sd">        order of quantity of supporting evidence. Default is 0.</span>
+<span class="sd">    persist : bool</span>
+<span class="sd">        Default is True. When False, if a query comes back limited (not all</span>
+<span class="sd">        results returned), just give up and pass along what was returned.</span>
+<span class="sd">        Otherwise, make further queries to get the rest of the data (which may</span>
+<span class="sd">        take some time).</span>
+<span class="sd">    timeout : positive int or None</span>
+<span class="sd">        If an int, block until the work is done and statements are retrieved, or</span>
+<span class="sd">        until the timeout has expired, in which case the results so far will be</span>
+<span class="sd">        returned in the response object, and further results will be added in</span>
+<span class="sd">        a separate thread as they become available. If simple_response is True,</span>
+<span class="sd">        all statements available will be returned. Otherwise (if None), block</span>
+<span class="sd">        indefinitely until all statements are retrieved. Default is None.</span>
+<span class="sd">    simple_response : bool</span>
+<span class="sd">        If True, a simple list of statements is returned (thus block should also</span>
+<span class="sd">        be True). If block is False, only the original sample will be returned</span>
+<span class="sd">        (as though persist was False), until the statements are done loading, in</span>
+<span class="sd">        which case the rest should appear in the list. This behavior is not</span>
+<span class="sd">        encouraged. Default is True (for the sake of backwards compatibility).</span>
+<span class="sd">    ev_limit : int or None</span>
+<span class="sd">        Limit the amount of evidence returned per Statement. Default is 10.</span>
+<span class="sd">    best_first : bool</span>
+<span class="sd">        If True, the preassembled statements will be sorted by the amount of</span>
+<span class="sd">        evidence they have, and those with the most evidence will be</span>
+<span class="sd">        prioritized. When using `max_stmts`, this means you will get the &quot;best&quot;</span>
+<span class="sd">        statements. If False, statements will be queried in arbitrary order.</span>
+<span class="sd">    tries : int &gt; 0</span>
+<span class="sd">        Set the number of times to try the query. The database often caches</span>
+<span class="sd">        results, so if a query times out the first time, trying again after a</span>
+<span class="sd">        timeout will often succeed fast enough to avoid a timeout. This can also</span>
+<span class="sd">        help gracefully handle an unreliable connection, if you&#39;re willing to</span>
+<span class="sd">        wait. Default is 2.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stmts : list[:py:class:`indra.statements.Statement`]</span>
+<span class="sd">        A list of INDRA Statement instances. Note that if a supporting or</span>
+<span class="sd">        supported Statement was not included in your query, it will simply be</span>
+<span class="sd">        instantiated as an `Unresolved` statement, with `uuid` of the statement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make sure we got at least SOME agents (the remote API will error if we</span>
+    <span class="c1"># we proceed with no arguments.</span>
+    <span class="k">if</span> <span class="n">subject</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">object</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">agents</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one agent must be specified, or else &quot;</span>
+                         <span class="s2">&quot;the scope will be too large.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Formulate inputs for the agents..</span>
+    <span class="n">agent_strs</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">agents</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="s1">&#39;agent</span><span class="si">%d</span><span class="s1">=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">ag</span><span class="p">)</span>
+                                            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ag</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">agents</span><span class="p">)]</span>
+    <span class="n">key_val_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span> <span class="n">subject</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="nb">object</span><span class="p">)]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="n">param_key</span><span class="p">:</span> <span class="n">param_val</span> <span class="k">for</span> <span class="n">param_key</span><span class="p">,</span> <span class="n">param_val</span> <span class="ow">in</span> <span class="n">key_val_list</span>
+              <span class="k">if</span> <span class="n">param_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;best_first&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_first</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ev_limit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_limit</span>
+    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;tries&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tries</span>
+
+    <span class="c1"># Handle the type(s).</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">IndraDBRestResponse</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stmt_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_exact_type</span><span class="p">:</span>
+        <span class="n">stmt_class</span> <span class="o">=</span> <span class="n">get_statement_by_name</span><span class="p">(</span><span class="n">stmt_type</span><span class="p">)</span>
+        <span class="n">descendant_classes</span> <span class="o">=</span> <span class="n">get_all_descendants</span><span class="p">(</span><span class="n">stmt_class</span><span class="p">)</span>
+        <span class="n">stmt_types</span> <span class="o">=</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">descendant_classes</span><span class="p">]</span> \
+            <span class="o">+</span> <span class="p">[</span><span class="n">stmt_type</span><span class="p">]</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">stmt_type</span> <span class="ow">in</span> <span class="n">stmt_types</span><span class="p">:</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">page</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stmt_type</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">make_stmts_query</span><span class="p">(</span><span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">persist</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+            <span class="n">new_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">statements</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> statements.&quot;</span>
+                        <span class="o">%</span> <span class="p">(</span><span class="n">new_count</span> <span class="o">-</span> <span class="n">count</span><span class="p">,</span> <span class="n">stmt_type</span><span class="p">))</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">new_count</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">stmt_type</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stmt_type</span>
+        <span class="n">resp</span><span class="o">.</span><span class="n">make_stmts_query</span><span class="p">(</span><span class="n">agent_strs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">persist</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simple_response</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">statements</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">resp</span></div>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<div class="viewcode-block" id="get_statements_by_hash"><a class="viewcode-back" href="../../../../modules/sources/indra_db_rest/index.html#indra.sources.indra_db_rest.client_api.get_statements_by_hash">[docs]</a><span class="nd">@clockit</span>
+<span class="k">def</span> <span class="nf">get_statements_by_hash</span><span class="p">(</span><span class="n">hash_list</span><span class="p">,</span> <span class="n">ev_limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">best_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get fully formed statements from a list of hashes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hash_list : list[int or str]</span>
+<span class="sd">        A list of statement hashes.</span>
+<span class="sd">    ev_limit : int or None</span>
+<span class="sd">        Limit the amount of evidence returned per Statement. Default is 100.</span>
+<span class="sd">    best_first : bool</span>
+<span class="sd">        If True, the preassembled statements will be sorted by the amount of</span>
+<span class="sd">        evidence they have, and those with the most evidence will be</span>
+<span class="sd">        prioritized. When using `max_stmts`, this means you will get the &quot;best&quot;</span>
+<span class="sd">        statements. If False, statements will be queried in arbitrary order.</span>
+<span class="sd">    tries : int &gt; 0</span>
+<span class="sd">        Set the number of times to try the query. The database often caches</span>
+<span class="sd">        results, so if a query times out the first time, trying again after a</span>
+<span class="sd">        timeout will often succeed fast enough to avoid a timeout. This can also</span>
+<span class="sd">        help gracefully handle an unreliable connection, if you&#39;re willing to</span>
+<span class="sd">        wait. Default is 2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hash_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The `hash_list` input is a list, not </span><span class="si">%s</span><span class="s2">.&quot;</span>
+                         <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">hash_list</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hash_list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hash_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">hash_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hash_list</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hash_list</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Hashes must be ints or strings that can be converted &quot;</span>
+                         <span class="s2">&quot;into ints.&quot;</span><span class="p">)</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">_submit_request</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="s1">&#39;statements/from_hashes&#39;</span><span class="p">,</span>
+                           <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hashes&#39;</span><span class="p">:</span> <span class="n">hash_list</span><span class="p">},</span> <span class="n">ev_limit</span><span class="o">=</span><span class="n">ev_limit</span><span class="p">,</span>
+                           <span class="n">best_first</span><span class="o">=</span><span class="n">best_first</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="n">tries</span><span class="p">,</span> <span class="n">div</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">stmts_from_json</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;statements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="get_statements_for_paper"><a class="viewcode-back" href="../../../../modules/sources/indra_db_rest/index.html#indra.sources.indra_db_rest.client_api.get_statements_for_paper">[docs]</a><span class="nd">@clockit</span>
+<span class="k">def</span> <span class="nf">get_statements_for_paper</span><span class="p">(</span><span class="n">id_val</span><span class="p">,</span> <span class="n">id_type</span><span class="o">=</span><span class="s1">&#39;pmid&#39;</span><span class="p">,</span> <span class="n">ev_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                             <span class="n">best_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the set of raw Statements extracted from a paper given by the id.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id_val : str or int</span>
+<span class="sd">        The value of the id of the paper of interest.</span>
+<span class="sd">    id_type : str</span>
+<span class="sd">        This may be one of &#39;pmid&#39;, &#39;pmcid&#39;, &#39;doi&#39;, &#39;pii&#39;, &#39;manuscript id&#39;, or</span>
+<span class="sd">        &#39;trid&#39;, which is the primary key id of the text references in the</span>
+<span class="sd">        database. The default is &#39;pmid&#39;.</span>
+<span class="sd">    ev_limit : int or None</span>
+<span class="sd">        Limit the amount of evidence returned per Statement. Default is 10.</span>
+<span class="sd">    best_first : bool</span>
+<span class="sd">        If True, the preassembled statements will be sorted by the amount of</span>
+<span class="sd">        evidence they have, and those with the most evidence will be</span>
+<span class="sd">        prioritized. When using `max_stmts`, this means you will get the &quot;best&quot;</span>
+<span class="sd">        statements. If False, statements will be queried in arbitrary order.</span>
+<span class="sd">    tries : int &gt; 0</span>
+<span class="sd">        Set the number of times to try the query. The database often caches</span>
+<span class="sd">        results, so if a query times out the first time, trying again after a</span>
+<span class="sd">        timeout will often succeed fast enough to avoid a timeout. This can also</span>
+<span class="sd">        help gracefully handle an unreliable connection, if you&#39;re willing to</span>
+<span class="sd">        wait. Default is 2.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stmts : list[:py:class:`indra.statements.Statement`]</span>
+<span class="sd">        A list of INDRA Statement instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">_submit_query_request</span><span class="p">(</span><span class="s1">&#39;papers&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">id_val</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">id_type</span><span class="p">,</span>
+                                 <span class="n">ev_limit</span><span class="o">=</span><span class="n">ev_limit</span><span class="p">,</span> <span class="n">best_first</span><span class="o">=</span><span class="n">best_first</span><span class="p">,</span>
+                                 <span class="n">tries</span><span class="o">=</span><span class="n">tries</span><span class="p">)</span>
+    <span class="n">stmts_json</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;statements&#39;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">stmts_from_json</span><span class="p">(</span><span class="n">stmts_json</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">_submit_query_request</span><span class="p">(</span><span class="n">end_point</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Low level function to format the query string.&quot;&quot;&quot;</span>
+    <span class="n">ev_limit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ev_limit&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">best_first</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;best_first&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">tries</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tries&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># This isn&#39;t handled by requests because of the multiple identical agent</span>
+    <span class="c1"># keys, e.g. {&#39;agent&#39;: &#39;MEK&#39;, &#39;agent&#39;: &#39;ERK&#39;} which is not supported in</span>
+    <span class="c1"># python, but is allowed and necessary in these query strings.</span>
+    <span class="n">query_str</span> <span class="o">=</span> <span class="s1">&#39;?&#39;</span> <span class="o">+</span> <span class="s1">&#39;&amp;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+                               <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_submit_request</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">query_str</span><span class="p">,</span> <span class="n">ev_limit</span><span class="o">=</span><span class="n">ev_limit</span><span class="p">,</span>
+                           <span class="n">best_first</span><span class="o">=</span><span class="n">best_first</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="n">tries</span><span class="p">)</span>
+
+
+<span class="nd">@clockit</span>
+<span class="k">def</span> <span class="nf">_submit_request</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">query_str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ev_limit</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                    <span class="n">best_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">div</span><span class="o">=</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Even lower level function to make the request.&quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="s1">&#39;INDRA_DB_REST_URL&#39;</span><span class="p">,</span> <span class="n">failure_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">api_key</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="s1">&#39;INDRA_DB_REST_API_KEY&#39;</span><span class="p">,</span> <span class="n">failure_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">url_path</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">end_point</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">query_str</span><span class="p">:</span>
+        <span class="n">query_str</span> <span class="o">+=</span> <span class="s1">&#39;&amp;api-key=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">api_key</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query_str</span> <span class="o">=</span> <span class="s1">&#39;?api-key=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">api_key</span>
+    <span class="n">url_path</span> <span class="o">+=</span> <span class="n">div</span> <span class="o">+</span> <span class="n">query_str</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+        <span class="c1"># This is an assumption which applies to our use cases for now, but may</span>
+        <span class="c1"># not generalize.</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;url and query string: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">url_path</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;headers: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;data: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="n">method_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">meth</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">while</span> <span class="n">tries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tries</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">method_func</span><span class="p">(</span><span class="n">url_path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json_data</span><span class="p">,</span>
+                           <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ev_limit&#39;</span><span class="p">:</span> <span class="n">ev_limit</span><span class="p">,</span> <span class="s1">&#39;best_first&#39;</span><span class="p">:</span> <span class="n">best_first</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+        <span class="k">elif</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">504</span> <span class="ow">and</span> <span class="n">tries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Endpoint timed out. Trying again...&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IndraDBRestError</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

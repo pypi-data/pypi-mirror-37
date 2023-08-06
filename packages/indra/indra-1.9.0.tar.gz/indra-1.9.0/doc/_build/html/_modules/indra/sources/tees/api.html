@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.tees.api &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.tees.api</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.tees.api</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides a simplified API for invoking the Turku Event Extraction</span>
+<span class="sd">System (TEES) on text and extracting INDRA statement from TEES output.</span>
+
+<span class="sd">See publication:</span>
+<span class="sd">Jari Björne, Sofie Van Landeghem, Sampo Pyysalo, Tomoko Ohta, Filip Ginter,</span>
+<span class="sd">Yves Van de Peer, Sofia Ananiadou and Tapio Salakoski, PubMed-Scale Event</span>
+<span class="sd">Extraction for Post-Translational Modifications, Epigenetics and Protein</span>
+<span class="sd">Structural Relations. Proceedings of BioNLP 2012, pages 82-90, 2012.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">indra.sources.tees.processor</span> <span class="k">import</span> <span class="n">TEESProcessor</span>
+<span class="kn">from</span> <span class="nn">indra</span> <span class="k">import</span> <span class="n">get_config</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">codecs</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">indra.sources.tees.parse_tees</span> <span class="k">import</span> <span class="n">tees_parse_networkx_to_dot</span>
+<span class="kn">import</span> <span class="nn">networkx.algorithms.dag</span> <span class="k">as</span> <span class="nn">dag</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;run_on_text&#39;</span><span class="p">,</span> <span class="s1">&#39;process_text&#39;</span><span class="p">,</span> <span class="s1">&#39;extract_output&#39;</span><span class="p">]</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;tees&#39;</span><span class="p">)</span>
+
+<span class="c1"># If TEES isn&#39;t specified, we will check to see if any of these directories</span>
+<span class="c1"># contain all of the files in tees_installation_files; if so, we&#39;ll assume</span>
+<span class="c1"># that it is a TEES installation.</span>
+<span class="n">tees_candidate_paths</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;../TEES&#39;</span><span class="p">,</span> <span class="s1">&#39;~/TEES&#39;</span><span class="p">,</span> <span class="s1">&#39;~/Downloads/TEES&#39;</span><span class="p">]</span>
+<span class="n">tees_installation_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;batch.py&#39;</span><span class="p">,</span> <span class="s1">&#39;classify.py&#39;</span><span class="p">,</span> <span class="s1">&#39;train.py&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;visualize.py&#39;</span><span class="p">]</span>
+<span class="n">tees_installation_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Classifiers&#39;</span><span class="p">,</span> <span class="s1">&#39;Detectors&#39;</span><span class="p">,</span> <span class="s1">&#39;Evaluators&#39;</span><span class="p">,</span> <span class="s1">&#39;Core&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="process_text"><a class="viewcode-back" href="../../../../modules/sources/tees/index.html#indra.sources.tees.api.process_text">[docs]</a><span class="k">def</span> <span class="nf">process_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pmid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">python2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes the specified plain text with TEES and converts output to</span>
+<span class="sd">    supported INDRA statements. Check for the TEES installation is the</span>
+<span class="sd">    TEES_PATH environment variable, and configuration file; if not found,</span>
+<span class="sd">    checks candidate paths in tees_candidate_paths. Raises an exception if</span>
+<span class="sd">    TEES cannot be found in any of these places.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        Plain text to process with TEES</span>
+<span class="sd">    pmid : str</span>
+<span class="sd">        The PMID from which the paper comes from, to be stored in the Evidence</span>
+<span class="sd">        object of statements. Set to None if this is unspecified.</span>
+<span class="sd">    python2_path : str</span>
+<span class="sd">        TEES is only compatible with python 2. This processor invokes this</span>
+<span class="sd">        external python 2 interpreter so that the processor can be run in</span>
+<span class="sd">        either python 2 or python 3. If None, searches for an executible named</span>
+<span class="sd">        python2 in the PATH environment variable.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tp : TEESProcessor</span>
+<span class="sd">        A TEESProcessor object which contains a list of INDRA statements</span>
+<span class="sd">        extracted from TEES extractions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="c1"># Try to locate python2 in one of the directories of the PATH environment</span>
+    <span class="c1"># variable if it is not provided</span>
+    <span class="k">if</span> <span class="n">python2_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;PATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">):</span>
+            <span class="n">proposed_python2_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;python2.7&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">proposed_python2_path</span><span class="p">):</span>
+                <span class="n">python2_path</span> <span class="o">=</span> <span class="n">proposed_python2_path</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found python 2 interpreter at&#39;</span><span class="p">,</span> <span class="n">python2_path</span><span class="p">)</span>
+                <span class="k">break</span>
+    <span class="k">if</span> <span class="n">python2_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Could not find python2 in the directories &#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;listed in the PATH environment variable. &#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;Need python2 to run TEES.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run TEES</span>
+    <span class="n">a1_text</span><span class="p">,</span> <span class="n">a2_text</span><span class="p">,</span> <span class="n">sentence_segmentations</span> <span class="o">=</span> <span class="n">run_on_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span>
+                                                                <span class="n">python2_path</span><span class="p">)</span>
+
+    <span class="c1"># Run the TEES processor</span>
+    <span class="n">tp</span> <span class="o">=</span> <span class="n">TEESProcessor</span><span class="p">(</span><span class="n">a1_text</span><span class="p">,</span> <span class="n">a2_text</span><span class="p">,</span> <span class="n">sentence_segmentations</span><span class="p">,</span> <span class="n">pmid</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">tp</span>
+
+<div class="viewcode-block" id="run_on_text"><a class="viewcode-back" href="../../../../modules/sources/tees/index.html#indra.sources.tees.api.run_on_text">[docs]</a><span class="k">def</span> <span class="nf">run_on_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">python2_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs TEES on the given text in a temporary directory and returns a</span>
+<span class="sd">    temporary directory with TEES output.</span>
+<span class="sd">    </span>
+<span class="sd">    The caller should delete this directory when done with it. This function</span>
+<span class="sd">    runs TEES and produces TEES output files but does not process TEES output</span>
+<span class="sd">    into INDRA statements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        Text from which to extract relationships</span>
+<span class="sd">    python2_path : str</span>
+<span class="sd">        The path to the python 2 interpreter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Temporary directory with TEES output. The caller should delete this</span>
+<span class="sd">        directgory when done with it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tees_path</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="s1">&#39;TEES_PATH&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tees_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If TEES directory is not specifies, see if any of the candidate paths</span>
+        <span class="c1"># exist and contain all of the files expected for a TEES installation.</span>
+        <span class="k">for</span> <span class="n">cpath</span> <span class="ow">in</span> <span class="n">tees_candidate_paths</span><span class="p">:</span>
+            <span class="n">cpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">cpath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cpath</span><span class="p">):</span>
+                <span class="c1"># Check to see if it has all of the expected files and</span>
+                <span class="c1"># directories</span>
+                <span class="n">has_expected_files</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tees_installation_files</span><span class="p">:</span>
+                    <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cpath</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="n">present</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+                    <span class="n">has_expected_files</span> <span class="o">=</span> <span class="n">has_expected_files</span> <span class="ow">and</span> <span class="n">present</span>
+
+                <span class="n">has_expected_dirs</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tees_installation_dirs</span><span class="p">:</span>
+                    <span class="n">dpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cpath</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+                    <span class="n">present</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dpath</span><span class="p">)</span>
+                    <span class="n">has_expected_dirs</span> <span class="o">=</span> <span class="n">has_expected_dirs</span> <span class="ow">and</span> <span class="n">present</span>
+
+                <span class="k">if</span> <span class="n">has_expected_files</span> <span class="ow">and</span> <span class="n">has_expected_dirs</span><span class="p">:</span>
+                    <span class="c1"># We found a directory with all of the files and</span>
+                    <span class="c1"># directories  we expected in a TEES installation - let&#39;s</span>
+                    <span class="c1"># assume it&#39;s a TEES installation</span>
+                    <span class="n">tees_path</span> <span class="o">=</span> <span class="n">cpath</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found TEES installation at &#39;</span> <span class="o">+</span> <span class="n">cpath</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+    <span class="c1"># Make sure the provided TEES directory exists</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">tees_path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Provided TEES directory does not exist.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Make sure the classify.py script exists within this directory</span>
+    <span class="n">classify_path</span> <span class="o">=</span> <span class="s1">&#39;classify.py&#39;</span>
+    <span class="c1"># if not os.path.isfile(classify_path):</span>
+    <span class="c1">#    raise Exception(&#39;classify.py does not exist in provided TEES path.&#39;)</span>
+
+    <span class="c1"># Create a temporary directory to tag the shared-task files</span>
+    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;indra_tees_processor&#39;</span><span class="p">)</span>
+
+    <span class="n">pwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Write text to a file in the temporary directory</span>
+        <span class="n">text_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s1">&#39;text.txt&#39;</span><span class="p">)</span>
+        <span class="c1"># Had some trouble with non-ascii characters. A possible TODO item in</span>
+        <span class="c1"># the future is to look into resolving this, for now just ignoring</span>
+        <span class="c1"># non-latin-1 characters</span>
+        <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">text_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span> \
+                <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+        <span class="c1"># Run TEES</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">)</span>
+        <span class="n">model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tees_path</span><span class="p">,</span> <span class="s1">&#39;tees_data/models/GE11-test/&#39;</span><span class="p">)</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="n">python2_path</span><span class="p">,</span> <span class="n">classify_path</span><span class="p">,</span> <span class="s1">&#39;-m&#39;</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span>
+                   <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="n">text_path</span><span class="p">,</span>
+                   <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">output_path</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">tees_path</span><span class="p">)</span>  <span class="c1"># Change to TEES directory</span>
+            <span class="c1"># print(&#39;cwd is:&#39;, os.getcwd())</span>
+            <span class="c1"># out = subprocess.check_output(command, stderr=subprocess.STDOUT)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                                 <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">tees_path</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="p">(</span><span class="n">so</span><span class="p">,</span> <span class="n">se</span><span class="p">)</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">so</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">se</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span>  <span class="c1"># Change back to previous directory</span>
+            <span class="c1"># print(&#39;cwd is:&#39;, os.getcwd())</span>
+            <span class="c1"># print(out.decode(&#39;utf-8&#39;))</span>
+
+        <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># If there&#39;s an error, print it out and then propagate the</span>
+            <span class="c1"># exception</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span>  <span class="c1"># Change back to previous directory</span>
+            <span class="c1"># print (e.output.decode(&#39;utf-8&#39;))</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># If there was an exception, delete the temporary directory and</span>
+        <span class="c1"># pass on the exception</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span>
+    <span class="c1"># Return the temporary directory with the TEES output</span>
+    <span class="n">output_tuple</span> <span class="o">=</span> <span class="n">extract_output</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">output_tuple</span>
+
+<div class="viewcode-block" id="extract_output"><a class="viewcode-back" href="../../../../modules/sources/tees/index.html#indra.sources.tees.api.extract_output">[docs]</a><span class="k">def</span> <span class="nf">extract_output</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract the text of the a1, a2, and sentence segmentation files from the</span>
+<span class="sd">    TEES output directory. These files are located within a compressed archive.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    output_dir : str</span>
+<span class="sd">        Directory containing the output of the TEES system</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a1_text : str</span>
+<span class="sd">        The text of the TEES a1 file (specifying the entities)</span>
+<span class="sd">    a2_text : str</span>
+<span class="sd">        The text of the TEES a2 file (specifying the event graph)</span>
+<span class="sd">    sentence_segmentations : str</span>
+<span class="sd">        The text of the XML file specifying the sentence segmentation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Locate the file of sentences segmented by the TEES system, described</span>
+    <span class="c1"># in a compressed xml document</span>
+    <span class="n">sentences_glob</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;*-preprocessed.xml.gz&#39;</span><span class="p">)</span>
+    <span class="n">sentences_filename_candidates</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">sentences_glob</span><span class="p">)</span>
+
+    <span class="c1"># Make sure there is exactly one such file</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sentences_filename_candidates</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;Looking for exactly one file matching </span><span class="si">%s</span><span class="s1"> but found </span><span class="si">%d</span><span class="s1"> matches&#39;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">m</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">sentences_glob</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sentences_filename_candidates</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># Read in the sentence segmentation XML</span>
+    <span class="n">sentence_segmentation_filename</span> <span class="o">=</span> <span class="n">sentences_filename_candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">sentences_filename_candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">sentence_segmentations</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create a temporary directory to which to extract the a1 and a2 files from</span>
+    <span class="c1"># the tarball</span>
+    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;indra_tees_processor&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Make sure the tarfile with the extracted events is in shared task</span>
+        <span class="c1"># format is in the output directory</span>
+        <span class="n">tarfile_glob</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;*-events.tar.gz&#39;</span><span class="p">)</span>
+        <span class="n">candidate_tarfiles</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">tarfile_glob</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_tarfiles</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Expected exactly one match for glob </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                            <span class="n">tarfile_glob</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1"># Decide what tar files to extract</span>
+        <span class="c1"># (We&#39;re not blindly extracting all files because of the security</span>
+        <span class="c1"># warning in the documentation for TarFile.extractall</span>
+        <span class="c1"># In particular, we want to make sure that the filename doesn&#39;t</span>
+        <span class="c1"># try to specify a relative or absolute path other than the current</span>
+        <span class="c1"># directory by making sure the filename starts with an alphanumeric</span>
+        <span class="c1"># character.</span>
+        <span class="c1"># We&#39;re also only interested in files with the .a1 or .a2 extension</span>
+        <span class="n">tar_file</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">candidate_tarfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">a1_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">a2_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">extract_these</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">tar_file</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[a-zA-Z0-9].*.a[12]&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">extract_these</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.a1&#39;</span><span class="p">):</span>
+                    <span class="n">a1_file</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">elif</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.a2&#39;</span><span class="p">):</span>
+                    <span class="n">a2_file</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">assert</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># There should be exactly two files that match these criteria</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extract_these</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">a1_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">a2_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;We thought there would be one .a1 and one .a2&#39;</span> <span class="o">+</span>
+                            <span class="s1">&#39; file in the tarball, but we got </span><span class="si">%d</span><span class="s1"> files total&#39;</span> <span class="o">%</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="n">extract_these</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1"># Extract the files that we decided to extract</span>
+        <span class="n">tar_file</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">extract_these</span><span class="p">)</span>
+
+        <span class="c1"># Read the text of the a1 (entities) file</span>
+        <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">a1_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span>
+                         <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">a1_text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="c1"># Read the text of the a2 (events) file</span>
+        <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">a2_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span>
+                         <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">a2_text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="c1"># Now that we&#39;re done, remove the temporary directory</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+        <span class="c1"># Return the extracted text</span>
+        <span class="k">return</span> <span class="n">a1_text</span><span class="p">,</span> <span class="n">a2_text</span><span class="p">,</span> <span class="n">sentence_segmentations</span>
+    <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># If there was an exception, delete the temporary directory and</span>
+        <span class="c1"># pass on the exception</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Not removing temporary directory: &#39;</span> <span class="o">+</span> <span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span></div>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,721 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MedScan (indra.sources.medscan) &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Processors for knowledge input (indra.sources)" href="../index.html"/>
+        <link rel="next" title="Geneways (indra.sources.geneways)" href="../geneways/index.html"/>
+        <link rel="prev" title="ISI (indra.sources.isi)" href="../isi/index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">INDRA modules reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../statements.html">INDRA Statements (<code class="docutils literal notranslate"><span class="pre">indra.statements</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Processors for knowledge input (<code class="docutils literal notranslate"><span class="pre">indra.sources</span></code>)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../reach/index.html">REACH (<code class="docutils literal notranslate"><span class="pre">indra.sources.reach</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../trips/index.html">TRIPS (<code class="docutils literal notranslate"><span class="pre">indra.sources.trips</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sparser/index.html">Sparser (<code class="docutils literal notranslate"><span class="pre">indra.sources.sparser</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../isi/index.html">ISI (<code class="docutils literal notranslate"><span class="pre">indra.sources.isi</span></code>)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MedScan (<code class="docutils literal notranslate"><span class="pre">indra.sources.medscan</span></code>)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-indra.sources.medscan.api">MedScan API (<code class="docutils literal notranslate"><span class="pre">indra.sources.medscan.api</span></code>)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-indra.sources.medscan.processor">MedScan Processor (<code class="docutils literal notranslate"><span class="pre">indra.sources.medscan.processor</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../geneways/index.html">Geneways (<code class="docutils literal notranslate"><span class="pre">indra.sources.geneways</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tees/index.html">TEES (<code class="docutils literal notranslate"><span class="pre">indra.sources.tees</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../eidos/index.html">Eidos (<code class="docutils literal notranslate"><span class="pre">indra.sources.eidos</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../cwms/index.html">CWMS (<code class="docutils literal notranslate"><span class="pre">indra.sources.cwms</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sofia/index.html">Sofia (<code class="docutils literal notranslate"><span class="pre">indra.sources.sofia</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hume/index.html">Hume (<code class="docutils literal notranslate"><span class="pre">indra.sources.hume</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../bel/index.html">BEL (<code class="docutils literal notranslate"><span class="pre">indra.sources.bel</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../biopax/index.html">Biopax (<code class="docutils literal notranslate"><span class="pre">indra.sources.biopax</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../signor/index.html">SIGNOR (<code class="docutils literal notranslate"><span class="pre">indra.sources.signor</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../biogrid/index.html">BioGrid (<code class="docutils literal notranslate"><span class="pre">indra.sources.biogrid</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tas/index.html">Target Affinity Spectrum (<code class="docutils literal notranslate"><span class="pre">indra.sources.tas</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../lincs_drug/index.html">LINCS Drug Targets (<code class="docutils literal notranslate"><span class="pre">indra.sources.lincs_drug</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ndex_cx/index.html">NDEx CX API (<code class="docutils literal notranslate"><span class="pre">indra.sources.api</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../indra_db_rest/index.html">INDRA Database REST Client (<code class="docutils literal notranslate"><span class="pre">indra.sources.indra_db_rest</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../databases/index.html">Database clients (<code class="docutils literal notranslate"><span class="pre">indra.databases</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../literature/index.html">Literature clients (<code class="docutils literal notranslate"><span class="pre">indra.literature</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../preassembler/index.html">Preassembly (<code class="docutils literal notranslate"><span class="pre">indra.preassembler</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../belief/index.html">Belief Engine (<code class="docutils literal notranslate"><span class="pre">indra.belief</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mechlinker/index.html">Mechanism Linker (<code class="docutils literal notranslate"><span class="pre">indra.mechlinker</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../assemblers/index.html">Assemblers of model output (<code class="docutils literal notranslate"><span class="pre">indra.assemblers</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/index.html">Explanation (<code class="docutils literal notranslate"><span class="pre">indra.explanation</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tools/index.html">Tools (<code class="docutils literal notranslate"><span class="pre">indra.tools</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">INDRA modules reference</a> &raquo;</li>
+        
+          <li><a href="../index.html">Processors for knowledge input (<code class="docutils literal notranslate"><span class="pre">indra.sources</span></code>)</a> &raquo;</li>
+        
+      <li>MedScan (<code class="docutils literal notranslate"><span class="pre">indra.sources.medscan</span></code>)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../../_sources/modules/sources/medscan/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-indra.sources.medscan">
+<span id="medscan-indra-sources-medscan"></span><h1>MedScan (<a class="reference internal" href="#module-indra.sources.medscan" title="indra.sources.medscan"><code class="xref py py-mod docutils literal notranslate"><span class="pre">indra.sources.medscan</span></code></a>)<a class="headerlink" href="#module-indra.sources.medscan" title="Permalink to this headline">¶</a></h1>
+<p>MedScan is Elsevier’s proprietary text-mining system for reading the
+biological literature. This INDRA module enables processing output
+files (in CSXML format) from the MedScan system into INDRA Statements.</p>
+<div class="section" id="module-indra.sources.medscan.api">
+<span id="medscan-api-indra-sources-medscan-api"></span><h2>MedScan API (<a class="reference internal" href="#module-indra.sources.medscan.api" title="indra.sources.medscan.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">indra.sources.medscan.api</span></code></a>)<a class="headerlink" href="#module-indra.sources.medscan.api" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="indra.sources.medscan.api.process_directory">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">process_directory</code><span class="sig-paren">(</span><em>directory_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/api.html#process_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.api.process_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a directory filled with CSXML files, first normalizing the
+character encodings to utf-8, and then processing into a list of INDRA
+statements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>directory_name</strong> (<em>str</em>) – The name of a directory filled with csxml files to process</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mp</strong> – A MedscanProcessor populated with INDRA statements extracted from the
+csxml files</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#indra.sources.medscan.processor.MedscanProcessor" title="indra.sources.medscan.processor.MedscanProcessor">indra.sources.medscan.processor.MedscanProcessor</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="indra.sources.medscan.api.process_directory_statements_sorted_by_pmid">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">process_directory_statements_sorted_by_pmid</code><span class="sig-paren">(</span><em>directory_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/api.html#process_directory_statements_sorted_by_pmid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.api.process_directory_statements_sorted_by_pmid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a directory filled with CSXML files, first normalizing the
+character encoding to utf-8, and then processing into INDRA statements
+sorted by pmid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>directory_name</strong> (<em>str</em>) – The name of a directory filled with csxml files to process</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>pmid_dict</strong> – A dictionary mapping pmids to a list of statements corresponding to
+that pmid</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="indra.sources.medscan.api.process_file">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">process_file</code><span class="sig-paren">(</span><em>filename</em>, <em>num_documents=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/api.html#process_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.api.process_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a CSXML file for its relevant information.</p>
+<p>Consider running the fix_csxml_character_encoding.py script in
+indra/sources/medscan to fix any encoding issues in the input file before
+processing.</p>
+<dl class="attribute">
+<dt id="indra.sources.medscan.api.filename">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">filename</code><a class="headerlink" href="#indra.sources.medscan.api.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The csxml file, containing Medscan XML, to process</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.api.num_documents">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">num_documents</code><a class="headerlink" href="#indra.sources.medscan.api.num_documents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The number of documents to process, or None to process all of the
+documents within the csxml file.</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>mp</strong> – A MedscanProcessor object containing extracted statements</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#indra.sources.medscan.processor.MedscanProcessor" title="indra.sources.medscan.processor.MedscanProcessor">MedscanProcessor</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="indra.sources.medscan.api.process_file_sorted_by_pmid">
+<code class="descclassname">indra.sources.medscan.api.</code><code class="descname">process_file_sorted_by_pmid</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/api.html#process_file_sorted_by_pmid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.api.process_file_sorted_by_pmid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a file and returns a dictionary mapping pmids to a list of
+statements corresponding to that pmid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_name</strong> (<em>str</em>) – A csxml file to process</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>s_dict</strong> – Dictionary mapping pmids to a list of statements corresponding to
+that pmid</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-indra.sources.medscan.processor">
+<span id="medscan-processor-indra-sources-medscan-processor"></span><h2>MedScan Processor (<a class="reference internal" href="#module-indra.sources.medscan.processor" title="indra.sources.medscan.processor"><code class="xref py py-mod docutils literal notranslate"><span class="pre">indra.sources.medscan.processor</span></code></a>)<a class="headerlink" href="#module-indra.sources.medscan.processor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="indra.sources.medscan.processor.MedscanEntity">
+<em class="property">class </em><code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">MedscanEntity</code><span class="sig-paren">(</span><em>name</em>, <em>urn</em>, <em>type</em>, <em>properties</em><span class="sig-paren">)</span><a class="headerlink" href="#indra.sources.medscan.processor.MedscanEntity" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanEntity.name">
+<code class="descname">name</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanEntity.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanEntity.properties">
+<code class="descname">properties</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanEntity.properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanEntity.type">
+<code class="descname">type</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanEntity.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanEntity.urn">
+<code class="descname">urn</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanEntity.urn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="indra.sources.medscan.processor.MedscanProcessor">
+<em class="property">class </em><code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">MedscanProcessor</code><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#MedscanProcessor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes Medscan data into INDRA statements.</p>
+<p>The special StateEffect event conveys information about the binding
+site of a protein modification. Sometimes this is paired with additional
+event information in a seperate SVO. When we encounter a StateEffect, we
+don’t process into an INDRA statement right away, but instead store
+the site information and use it if we encounter a ProtModification
+event within the same sentence.</p>
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.statements">
+<code class="descname">statements</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.statements" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list&lt;str&gt;</em> – A list of extracted INDRA statements</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.sentence_statements">
+<code class="descname">sentence_statements</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.sentence_statements" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list&lt;str&gt;</em> – A list of statements for the sentence we are currently processing.
+Deduplicated and added to the main statement list when we finish
+processing a sentence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.num_entities">
+<code class="descname">num_entities</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.num_entities" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The total number of subject or object entities the processor attempted
+to resolve</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.num_entities_not_found">
+<code class="descname">num_entities_not_found</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.num_entities_not_found" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The number of subject or object IDs which could not be resolved by
+looking in the list of entities or tagged phrases.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.last_site_info_in_sentence">
+<code class="descname">last_site_info_in_sentence</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.last_site_info_in_sentence" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>SiteInfo</em> – Stored protein site info from the last StateEffect event within the
+sentence, allowing us to combine information from StateEffect and
+ProtModification events within a single sentence in a single INDRA
+statement. This is reset at the end of each sentence</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.agent_from_entity">
+<code class="descname">agent_from_entity</code><span class="sig-paren">(</span><em>relation</em>, <em>entity_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#MedscanProcessor.agent_from_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.agent_from_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a (potentially grounded) INDRA Agent object from a given a
+Medscan entity describing the subject or object.</p>
+<p>Uses helper functions to convert a Medscan URN to an INDRA db_refs
+grounding dictionary.</p>
+<p>If the entity has properties indicating that it is a protein with
+a mutation or modification, then constructs the needed ModCondition
+or MutCondition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>relation</strong> (<a class="reference internal" href="#indra.sources.medscan.processor.MedscanRelation" title="indra.sources.medscan.processor.MedscanRelation"><em>MedscanRelation</em></a>) – The current relation being processed</li>
+<li><strong>entity_id</strong> (<em>str</em>) – The ID of the entity to process</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>agent</strong> – A potentially grounded INDRA agent representing this entity</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="../../statements.html#indra.statements.Agent" title="indra.statements.Agent">indra.statements.Agent</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.process_csxml_from_file_handle">
+<code class="descname">process_csxml_from_file_handle</code><span class="sig-paren">(</span><em>f</em>, <em>num_documents</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#MedscanProcessor.process_csxml_from_file_handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.process_csxml_from_file_handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a filehandle to MedScan csxml input into INDRA
+statements.</p>
+<p>The CSXML format consists of a top-level <cite>&lt;batch&gt;</cite> root element
+containing a series of <cite>&lt;doc&gt;</cite> (document) elements, in turn containing
+<cite>&lt;sec&gt;</cite> (section) elements, and in turn containing <cite>&lt;sent&gt;</cite> (sentence)
+elements.</p>
+<p>Within the <cite>&lt;sent&gt;</cite> element, a series of additional elements appear in
+the following order:</p>
+<ul class="simple">
+<li><cite>&lt;toks&gt;</cite>, which contains a tokenized form of the sentence in its text
+attribute</li>
+<li><cite>&lt;textmods&gt;</cite>, which describes any preprocessing/normalization done to
+the underlying text</li>
+<li><cite>&lt;match&gt;</cite> elements, each of which contains one of more <cite>&lt;entity&gt;</cite>
+elements, describing entities in the text with their identifiers.
+The local IDs of each entities are given in the <cite>msid</cite> attribute of
+this element; these IDs are then referenced in any subsequent SVO
+elements.</li>
+<li><cite>&lt;svo&gt;</cite> elements, representing subject-verb-object triples. SVO
+elements with a <cite>type</cite> attribute of <cite>CONTROL</cite> represent normalized
+regulation relationships; they often represent the normalized
+extraction of the immediately preceding (but unnormalized SVO
+element). However, in some cases there can be a “CONTROL” SVO
+element without its parent immediately preceding it.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>f</strong> (<em>file object</em>) – A filehandle to a source of MedScan csxml data</li>
+<li><strong>num_documents</strong> (<em>int</em>) – The number of documents to process, or None to process all
+documents in the input stream</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.sources.medscan.processor.MedscanProcessor.process_relation">
+<code class="descname">process_relation</code><span class="sig-paren">(</span><em>relation</em>, <em>last_relation</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#MedscanProcessor.process_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProcessor.process_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a relation into an INDRA statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>relation</strong> (<a class="reference internal" href="#indra.sources.medscan.processor.MedscanRelation" title="indra.sources.medscan.processor.MedscanRelation"><em>MedscanRelation</em></a>) – The relation to process (a CONTROL svo with normalized verb)</li>
+<li><strong>last_relation</strong> (<a class="reference internal" href="#indra.sources.medscan.processor.MedscanRelation" title="indra.sources.medscan.processor.MedscanRelation"><em>MedscanRelation</em></a>) – The relation immediately proceding the relation to process within
+the same sentence, or None if there are no preceding relations
+within the same sentence. This proceeding relation, if available,
+will refer to the same interaction but with an unnormalized
+(potentially more specific) verb, and is used when processing
+protein modification events.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="indra.sources.medscan.processor.MedscanProperty">
+<em class="property">class </em><code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">MedscanProperty</code><span class="sig-paren">(</span><em>type</em>, <em>name</em>, <em>urn</em><span class="sig-paren">)</span><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProperty" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProperty.name">
+<code class="descname">name</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProperty.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProperty.type">
+<code class="descname">type</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProperty.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanProperty.urn">
+<code class="descname">urn</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanProperty.urn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="indra.sources.medscan.processor.MedscanRelation">
+<em class="property">class </em><code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">MedscanRelation</code><span class="sig-paren">(</span><em>uri</em>, <em>sec</em>, <em>entities</em>, <em>tagged_sentence</em>, <em>subj</em>, <em>verb</em>, <em>obj</em>, <em>svo_type</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#MedscanRelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>A structure representing the information contained in a Medscan
+SVO xml element as well as associated entities and properties.</p>
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.uri">
+<code class="descname">uri</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.uri" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The URI of the current document (such as a PMID)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.sec">
+<code class="descname">sec</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.sec" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The section of the document the relation occurs in</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.entities">
+<code class="descname">entities</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.entities" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> – A dictionary mapping entity IDs from the same sentence to MedscanEntity
+objects.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.tagged_sentence">
+<code class="descname">tagged_sentence</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.tagged_sentence" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The sentence from which the relation was extracted, with some tagged
+phrases and annotations.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.subj">
+<code class="descname">subj</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.subj" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The entity ID of the subject</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.verb">
+<code class="descname">verb</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.verb" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The verb in the relationship between the subject and the object</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.obj">
+<code class="descname">obj</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.obj" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The entity ID of the object</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="indra.sources.medscan.processor.MedscanRelation.svo_type">
+<code class="descname">svo_type</code><a class="headerlink" href="#indra.sources.medscan.processor.MedscanRelation.svo_type" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – The type of SVO relationship (for example, CONTROL indicates
+that the verb is normalized)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="indra.sources.medscan.processor.ProteinSiteInfo">
+<em class="property">class </em><code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">ProteinSiteInfo</code><span class="sig-paren">(</span><em>site_text</em>, <em>object_text</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#ProteinSiteInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.ProteinSiteInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represent a site on a protein, extracted from a StateEffect event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>site_text</strong> (<em>str</em>) – The site as a string (ex. S22)</li>
+<li><strong>object_text</strong> (<em>str</em>) – The protein being modified, as the string that appeared in the original
+sentence</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="indra.sources.medscan.processor.ProteinSiteInfo.get_sites">
+<code class="descname">get_sites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#ProteinSiteInfo.get_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.ProteinSiteInfo.get_sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the site-text string and return a list of sites.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>sites</strong> – A list of position-residue pairs corresponding to the site-text</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[<a class="reference internal" href="../reach/index.html#indra.sources.reach.processor.Site" title="indra.sources.reach.processor.Site">Site</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="indra.sources.medscan.processor.is_statement_in_list">
+<code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">is_statement_in_list</code><span class="sig-paren">(</span><em>statement</em>, <em>statement_list</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#is_statement_in_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.is_statement_in_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True of given statement is equivalent to on in a list</p>
+<p>Determines whether the statement is equivalent to any statement in the
+given list of statements, with equivalency determined by Statement’s
+equals method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>statement</strong> (<a class="reference internal" href="../../statements.html#indra.statements.Statement" title="indra.statements.Statement"><em>indra.statements.Statement</em></a>) – The statement to compare with</li>
+<li><strong>statement_list</strong> (<em>list</em><em>[</em><a class="reference internal" href="../../statements.html#indra.statements.Statement" title="indra.statements.Statement"><em>indra.statements.Statement</em></a><em>]</em>) – The statement list whose entries we compare with statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>in_list</strong> – True if statement is equivalent to any statements in the list</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="indra.sources.medscan.processor.normalize_medscan_name">
+<code class="descclassname">indra.sources.medscan.processor.</code><code class="descname">normalize_medscan_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/indra/sources/medscan/processor.html#normalize_medscan_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.sources.medscan.processor.normalize_medscan_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the “complex” and “complex complex” suffixes from a medscan
+agent name so that it better corresponds with the grounding map.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – The Medscan agent name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>norm_name</strong> – The Medscan agent name with the “complex” and “complex complex”
+suffixes removed.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../geneways/index.html" class="btn btn-neutral float-right" title="Geneways (indra.sources.geneways)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../isi/index.html" class="btn btn-neutral" title="ISI (indra.sources.isi)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

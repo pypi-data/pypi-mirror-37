@@ -1,0 +1,627 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>BMI wrapper for PySB-assembled models (indra.assemblers.pysb.bmi_wrapper) &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Assemblers of model output (indra.assemblers)" href="index.html"/>
+        <link rel="next" title="Explanation (indra.explanation)" href="../explanation/index.html"/>
+        <link rel="prev" title="Tabular output (indra.assemblers.tsv.assembler)" href="tsv_assembler.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">INDRA modules reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../statements.html">INDRA Statements (<code class="docutils literal notranslate"><span class="pre">indra.statements</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sources/index.html">Processors for knowledge input (<code class="docutils literal notranslate"><span class="pre">indra.sources</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../databases/index.html">Database clients (<code class="docutils literal notranslate"><span class="pre">indra.databases</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../literature/index.html">Literature clients (<code class="docutils literal notranslate"><span class="pre">indra.literature</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preassembler/index.html">Preassembly (<code class="docutils literal notranslate"><span class="pre">indra.preassembler</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../belief/index.html">Belief Engine (<code class="docutils literal notranslate"><span class="pre">indra.belief</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mechlinker/index.html">Mechanism Linker (<code class="docutils literal notranslate"><span class="pre">indra.mechlinker</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Assemblers of model output (<code class="docutils literal notranslate"><span class="pre">indra.assemblers</span></code>)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pysb_assembler.html">Executable PySB models (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.pysb.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cx_assembler.html">Cytoscape networks (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.cx.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="english_assembler.html">Natural language (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.english.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="graph_assembler.html">Node-edge graphs (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.graph.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sif_assembler.html">SIF / Boolean networks (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.sif.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index_card_assembler.html">MITRE “index cards” (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.index_card.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sbgn_assembler.html">SBGN output (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.sbgn.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cyjs_assembler.html">Cytoscape JS networks (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.cyjs.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cag_assembler.html">Causal analysis graphs (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.cag.assembler</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tsv_assembler.html">Tabular output (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.tsv.assembler</span></code>)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">BMI wrapper for PySB-assembled models (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.pysb.bmi_wrapper</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/index.html">Explanation (<code class="docutils literal notranslate"><span class="pre">indra.explanation</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tools/index.html">Tools (<code class="docutils literal notranslate"><span class="pre">indra.tools</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">INDRA modules reference</a> &raquo;</li>
+        
+          <li><a href="index.html">Assemblers of model output (<code class="docutils literal notranslate"><span class="pre">indra.assemblers</span></code>)</a> &raquo;</li>
+        
+      <li>BMI wrapper for PySB-assembled models (<code class="docutils literal notranslate"><span class="pre">indra.assemblers.pysb.bmi_wrapper</span></code>)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/modules/assemblers/bmi_wrapper.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-indra.assemblers.pysb.bmi_wrapper">
+<span id="bmi-wrapper-for-pysb-assembled-models-indra-assemblers-pysb-bmi-wrapper"></span><h1>BMI wrapper for PySB-assembled models (<a class="reference internal" href="#module-indra.assemblers.pysb.bmi_wrapper" title="indra.assemblers.pysb.bmi_wrapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">indra.assemblers.pysb.bmi_wrapper</span></code></a>)<a class="headerlink" href="#module-indra.assemblers.pysb.bmi_wrapper" title="Permalink to this headline">¶</a></h1>
+<p>This module allows creating a Basic Modeling Interface (BMI) model from
+and automatically assembled PySB model. The BMI model can be instantiated
+within a simulation workflow system where it is simulated together
+with other models.</p>
+<dl class="class">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel">
+<em class="property">class </em><code class="descclassname">indra.assemblers.pysb.bmi_wrapper.</code><code class="descname">BMIModel</code><span class="sig-paren">(</span><em>model</em>, <em>inputs=None</em>, <em>stop_time=1000</em>, <em>outside_name_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents a BMI model wrapping a model assembled by INDRA.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>pysb.Model</em>) – A PySB model assembled by INDRA to be wrapped in BMI.</li>
+<li><strong>inputs</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – A list of variable names that are considered to be inputs to the model
+meaning that they are read from other models. Note that designating
+a variable as input means that it must be provided by another component
+during the simulation.</li>
+<li><strong>stop_time</strong> (<em>int</em>) – The stopping time for this model, controlling the time units up to
+which the model is simulated.</li>
+<li><strong>outside_name_map</strong> (<em>dict</em>) – A dictionary mapping outside variables names to inside variable names
+(i.e. ones that are in the wrapped model)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.export_into_python">
+<code class="descname">export_into_python</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.export_into_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.export_into_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the model into a pickle and create a module that loads it.</p>
+<p>The model basically exports itself as a pickle file and a Python
+file is then written which loads the pickle file. This allows importing
+the model in the simulation workflow.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.finalize">
+<code class="descname">finalize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.finalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.finalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finish the simulation and clean up resources as needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_attribute">
+<code class="descname">get_attribute</code><span class="sig-paren">(</span><em>att_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of a given attribute.</p>
+<p>Atrributes include: model_name, version, author_name, grid_type,
+time_step_type, step_method, time_units</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>att_name</strong> (<em>str</em>) – The name of the attribute whose value should be returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>value</strong> – The value of the attribute</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_current_time">
+<code class="descname">get_current_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_current_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_current_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current time point that the model is at during simulation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>time</strong> – The current time point</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_input_var_names">
+<code class="descname">get_input_var_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_input_var_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_input_var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of variables names that can be set as input.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>var_names</strong> – A list of variable names that can be set from the outside</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_output_var_names">
+<code class="descname">get_output_var_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_output_var_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_output_var_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of variables names that can be read as output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>var_names</strong> – A list of variable names that can be read from the outside</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_start_time">
+<code class="descname">get_start_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_start_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_start_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the initial time point of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>start_time</strong> – The initial time point of the model.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_status">
+<code class="descname">get_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current status of the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_step">
+<code class="descname">get_time_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_time_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the time step associated with model simulation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>dt</strong> – The time step for model simulation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_units">
+<code class="descname">get_time_units</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_time_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_time_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the time units of the model simulation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>units</strong> – The time unit of simulation as a string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_value">
+<code class="descname">get_value</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of a given variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the variable whose value should be returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>value</strong> – The value of the given variable in the current state</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_values">
+<code class="descname">get_values</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of a given variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the variable whose value should be returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>value</strong> – The value of the given variable in the current state</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_name">
+<code class="descname">get_var_name</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_var_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the internal variable name given an outside variable name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the outside variable to map</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>internal_var_name</strong> – The internal name of the corresponding variable</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_rank">
+<code class="descname">get_var_rank</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_var_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the matrix rank of the given variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the variable whose rank should be returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>rank</strong> – The dimensionality of the variable, 0 for scalar, 1 for vector,
+etc.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_type">
+<code class="descname">get_var_type</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_var_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the type of a given variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the variable whose type should be returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>unit</strong> – The type of the variable as a string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_units">
+<code class="descname">get_var_units</code><span class="sig-paren">(</span><em>var_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.get_var_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.get_var_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the units of a given variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var_name</strong> (<em>str</em>) – The name of the variable whose units should be returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>unit</strong> – The units of the variable</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>cfg_file=None</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.initialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the model for simulation, possibly given a config file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cfg_file</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The name of the configuration file to load, optional.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.make_repository_component">
+<code class="descname">make_repository_component</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.make_repository_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.make_repository_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an XML string representing this BMI in a workflow.</p>
+<p>This description is required by EMELI to discover and load models.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>xml</strong> – String serialized XML representation of the component in the
+model repository.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.set_value">
+<code class="descname">set_value</code><span class="sig-paren">(</span><em>var_name</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.set_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.set_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of a given variable to a given value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var_name</strong> (<em>str</em>) – The name of the variable in the model whose value should be set.</li>
+<li><strong>value</strong> (<em>float</em>) – The value the variable should be set to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.set_values">
+<code class="descname">set_values</code><span class="sig-paren">(</span><em>var_name</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.set_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.set_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of a given variable to a given value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var_name</strong> (<em>str</em>) – The name of the variable in the model whose value should be set.</li>
+<li><strong>value</strong> (<em>float</em>) – The value the variable should be set to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="indra.assemblers.pysb.bmi_wrapper.BMIModel.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>dt=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/indra/assemblers/pysb/bmi_wrapper.html#BMIModel.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#indra.assemblers.pysb.bmi_wrapper.BMIModel.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate the model for a given time interval.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dt</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The time step to simulate, if None, the default built-in time step
+is used.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../explanation/index.html" class="btn btn-neutral float-right" title="Explanation (indra.explanation)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tsv_assembler.html" class="btn btn-neutral" title="Tabular output (indra.assemblers.tsv.assembler)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.trips.drum_reader &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.trips.drum_reader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.trips.drum_reader</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">indra.config</span> <span class="k">import</span> <span class="n">get_config</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kqml</span> <span class="k">import</span> <span class="n">KQMLModule</span><span class="p">,</span> <span class="n">KQMLPerformative</span><span class="p">,</span> <span class="n">KQMLList</span>
+    <span class="n">have_kqml</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">KQMLModule</span> <span class="o">=</span> <span class="nb">object</span>
+    <span class="n">have_kqml</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;drum_reader&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DrumReader"><a class="viewcode-back" href="../../../../modules/sources/trips/index.html#indra.sources.trips.drum_reader.DrumReader">[docs]</a><span class="k">class</span> <span class="nc">DrumReader</span><span class="p">(</span><span class="n">KQMLModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Agent which processes text through a local TRIPS/DRUM instance.</span>
+
+<span class="sd">    This class is implemented as a communicative agent which sends and receives</span>
+<span class="sd">    KQML messages through a socket. It sends text (ideally in small blocks</span>
+<span class="sd">    like one sentence at a time) to the running DRUM instance and receives</span>
+<span class="sd">    extraction knowledge base (EKB) XML responses asynchronously through</span>
+<span class="sd">    the socket. To install DRUM and its dependencies locally, follow</span>
+<span class="sd">    instructions at: https://github.com/wdebeaum/drum</span>
+<span class="sd">    Once installed, run `drum/bin/trips-drum -nouser` to run DRUM without</span>
+<span class="sd">    a GUI. Once DRUM is running, this class can be instantiated as</span>
+<span class="sd">    `dr = DrumReader()`, at which point it attempts to</span>
+<span class="sd">    connect to DRUM via the socket. You can use `dr.read_text(text)` to</span>
+<span class="sd">    send text for reading.</span>
+<span class="sd">    In another usage more, `dr.read_pmc(pmcid)` can be used to read</span>
+<span class="sd">    a full open-access PMC paper.</span>
+<span class="sd">    Receiving responses can be started as `dr.start()` which waits for</span>
+<span class="sd">    responses from the reader and returns when all responses were received.</span>
+<span class="sd">    Once finished, the list of EKB XML extractions can be accessed via</span>
+<span class="sd">    `dr.extractions`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    run_drum : Optional[bool]</span>
+<span class="sd">        If True, the DRUM reading system is launched as a subprocess for</span>
+<span class="sd">        reading. If False, DRUM is expected to be running independently.</span>
+<span class="sd">        Default: False</span>
+<span class="sd">    drum_system : Optional[subproces.Popen]</span>
+<span class="sd">        A handle to the subprocess of a running DRUM system instance. This</span>
+<span class="sd">        can be passed in in case the instance is to be reused rather than</span>
+<span class="sd">        restarted. Default: None</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        All other keyword arguments are passed through to the DrumReader</span>
+<span class="sd">        KQML module&#39;s constructor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    extractions : list[str]</span>
+<span class="sd">        A list of EKB XML extractions corresponding to the input text list.</span>
+<span class="sd">    drum_system : subprocess.Popen</span>
+<span class="sd">        A subprocess handle that points to a running instance of the</span>
+<span class="sd">        DRUM reading system. In case the DRUM system is running independently,</span>
+<span class="sd">        this is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">have_kqml</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Install the `pykqml` package to use &#39;</span> <span class="o">+</span>
+                              <span class="s1">&#39;the DrumReader&#39;</span><span class="p">)</span>
+        <span class="n">run_drum</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;run_drum&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">drum_system</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;drum_system&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;DrumReader&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">drum_system</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drum_system</span> <span class="o">=</span> <span class="n">drum_system</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">run_drum</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drum_system</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drum_system</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_drum</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">DrumReader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg_counter</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ready</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extractions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="DrumReader.read_pmc"><a class="viewcode-back" href="../../../../modules/sources/trips/index.html#indra.sources.trips.drum_reader.DrumReader.read_pmc">[docs]</a>    <span class="k">def</span> <span class="nf">read_pmc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pmcid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read a given PMC article.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pmcid : str</span>
+<span class="sd">            The PMC ID of the article to read. Note that only</span>
+<span class="sd">            articles in the open-access subset of PMC will work.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">KQMLPerformative</span><span class="p">(</span><span class="s1">&#39;REQUEST&#39;</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;receiver&#39;</span><span class="p">,</span> <span class="s1">&#39;DRUM&#39;</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">KQMLList</span><span class="p">(</span><span class="s1">&#39;run-pmcid&#39;</span><span class="p">)</span>
+        <span class="n">content</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="s1">&#39;pmcid&#39;</span><span class="p">,</span> <span class="n">pmcid</span><span class="p">)</span>
+        <span class="n">content</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;reply-when-done&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;reply-with&#39;</span><span class="p">,</span> <span class="s1">&#39;P-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">pmcid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply_counter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DrumReader.read_text"><a class="viewcode-back" href="../../../../modules/sources/trips/index.html#indra.sources.trips.drum_reader.DrumReader.read_text">[docs]</a>    <span class="k">def</span> <span class="nf">read_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read a given text phrase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        text : str</span>
+<span class="sd">            The text to read. Typically a sentence or a paragraph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reading: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">msg_id</span> <span class="o">=</span> <span class="s1">&#39;RT000</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">msg_counter</span>
+        <span class="n">kqml_perf</span> <span class="o">=</span> <span class="n">_get_perf</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg_counter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">kqml_perf</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DrumReader.receive_reply"><a class="viewcode-back" href="../../../../modules/sources/trips/index.html#indra.sources.trips.drum_reader.DrumReader.receive_reply">[docs]</a>    <span class="k">def</span> <span class="nf">receive_reply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle replies with reading results.&quot;&quot;&quot;</span>
+        <span class="n">reply_head</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">reply_head</span> <span class="o">==</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span>
+            <span class="n">comment</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">gets</span><span class="p">(</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Got error reply: &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">comment</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extractions</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">gets</span><span class="p">(</span><span class="s1">&#39;extractions&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extractions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extractions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply_counter</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reply_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_drum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="n">drum_path</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="s1">&#39;DRUMPATH&#39;</span><span class="p">)</span>
+        <span class="n">cmd_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drum_path</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;trips-drum&#39;</span><span class="p">)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-nouser&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">host</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-host&#39;</span><span class="p">,</span> <span class="n">host</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">port</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-port&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)]</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd_path</span><span class="p">]</span> <span class="o">+</span> <span class="n">options</span>
+        <span class="c1"># The os.setsid() is passed in the argument preexec_fn so</span>
+        <span class="c1"># it&#39;s run after the fork() and before  exec() to run the shell.</span>
+        <span class="c1"># Uncomment the stdout line to supress printing to stdout</span>
+        <span class="n">drum_proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span>
+                                     <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                                     <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">)</span>
+        <span class="c1"># TODO: Here we could monitor the stdout and wait for the &quot;Ready&quot; line</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">drum_proc</span>
+
+    <span class="k">def</span> <span class="nf">_kill_drum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpgid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drum_system</span><span class="o">.</span><span class="n">pid</span><span class="p">),</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_get_perf</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a request message for a given text.&quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">KQMLPerformative</span><span class="p">(</span><span class="s1">&#39;REQUEST&#39;</span><span class="p">)</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;receiver&#39;</span><span class="p">,</span> <span class="s1">&#39;DRUM&#39;</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">KQMLList</span><span class="p">(</span><span class="s1">&#39;run-text&#39;</span><span class="p">)</span>
+    <span class="n">content</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;reply-with&#39;</span><span class="p">,</span> <span class="n">msg_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">msg</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

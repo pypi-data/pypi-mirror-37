@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.databases.mesh_client &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.databases.mesh_client</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.databases.mesh_client</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">indra.util</span> <span class="k">import</span> <span class="n">read_unicode_csv</span>
+
+<span class="n">mesh_url</span> <span class="o">=</span> <span class="s1">&#39;http://id.nlm.nih.gov/mesh/&#39;</span>
+<span class="n">mesh_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">(</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;resources&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;mesh_id_label_mappings.tsv&#39;</span><span class="p">)</span>
+
+<span class="c1"># Python3</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+<span class="c1"># Python2</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">functools32</span> <span class="k">import</span> <span class="n">lru_cache</span>
+
+<span class="n">mesh_mappings</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">mesh_id</span><span class="p">,</span> <span class="n">mesh_label</span> <span class="ow">in</span> <span class="n">read_unicode_csv</span><span class="p">(</span><span class="n">mesh_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">):</span>
+    <span class="n">mesh_mappings</span><span class="p">[</span><span class="n">mesh_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh_label</span>
+
+
+<div class="viewcode-block" id="get_mesh_name_from_web"><a class="viewcode-back" href="../../../modules/databases/index.html#indra.databases.mesh_client.get_mesh_name_from_web">[docs]</a><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_mesh_name_from_web</span><span class="p">(</span><span class="n">mesh_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the MESH label for the given MESH ID using the NLM REST API.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh_id : str</span>
+<span class="sd">        MESH Identifier, e.g. &#39;D003094&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Label for the MESH ID, or None if the query failed or no label was</span>
+<span class="sd">        found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">mesh_url</span> <span class="o">+</span> <span class="n">mesh_id</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">mesh_json</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">mesh_json</span><span class="p">[</span><span class="s1">&#39;@graph&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;@value&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+    <span class="k">return</span> <span class="n">label</span>
+
+
+<div class="viewcode-block" id="get_mesh_name"><a class="viewcode-back" href="../../../modules/databases/index.html#indra.databases.mesh_client.get_mesh_name">[docs]</a><span class="k">def</span> <span class="nf">get_mesh_name</span><span class="p">(</span><span class="n">mesh_id</span><span class="p">,</span> <span class="n">offline</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the MESH label for the given MESH ID.</span>
+
+<span class="sd">    Uses the mappings table in `indra/resources`; if the MESH ID is not listed</span>
+<span class="sd">    there, falls back on the NLM REST API.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh_id : str</span>
+<span class="sd">        MESH Identifier, e.g. &#39;D003094&#39;.</span>
+<span class="sd">    offline : bool</span>
+<span class="sd">        Whether to allow queries to the NLM REST API if the given MESH ID is not</span>
+<span class="sd">        contained in INDRA&#39;s internal MESH mappings file. Default is False</span>
+<span class="sd">        (allows REST API queries).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Label for the MESH ID, or None if the query failed or no label was</span>
+<span class="sd">        found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">indra_mesh_mapping</span> <span class="o">=</span> <span class="n">mesh_mappings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mesh_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">offline</span> <span class="ow">or</span> <span class="n">indra_mesh_mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">indra_mesh_mapping</span>
+    <span class="c1"># Look up the MESH mapping from NLM if we don&#39;t have it locally</span></div>
+    <span class="k">return</span> <span class="n">get_mesh_name_from_web</span><span class="p">(</span><span class="n">mesh_id</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

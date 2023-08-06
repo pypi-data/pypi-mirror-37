@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.eidos.api &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.eidos.api</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.eidos.api</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">.processor</span> <span class="k">import</span> <span class="n">EidosProcessor</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;eidos&#39;</span><span class="p">)</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># For text reading</span>
+    <span class="kn">from</span> <span class="nn">.reader</span> <span class="k">import</span> <span class="n">EidosReader</span>
+    <span class="n">eidos_reader</span> <span class="o">=</span> <span class="n">EidosReader</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Could not instantiate Eidos reader, text reading &#39;</span>
+                   <span class="s1">&#39;will not be available.&#39;</span><span class="p">)</span>
+    <span class="n">eidos_reader</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="process_text"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_text">[docs]</a><span class="k">def</span> <span class="nf">process_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">out_format</span><span class="o">=</span><span class="s1">&#39;json_ld&#39;</span><span class="p">,</span> <span class="n">save_json</span><span class="o">=</span><span class="s1">&#39;eidos_output.json&#39;</span><span class="p">,</span>
+                 <span class="n">webservice</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an EidosProcessor by processing the given text.</span>
+
+<span class="sd">    This constructs a reader object via Java and extracts mentions</span>
+<span class="sd">    from the text. It then serializes the mentions into JSON and</span>
+<span class="sd">    processes the result with process_json.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The text to be processed.</span>
+<span class="sd">    out_format : Optional[str]</span>
+<span class="sd">        The type of Eidos output to read into and process. Currently only</span>
+<span class="sd">        &#39;json-ld&#39; is supported which is also the default value used.</span>
+<span class="sd">    save_json : Optional[str]</span>
+<span class="sd">        The name of a file in which to dump the JSON output of Eidos.</span>
+<span class="sd">    webservice : Optional[str]</span>
+<span class="sd">        An Eidos reader web service URL to send the request to.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ep : EidosProcessor</span>
+<span class="sd">        An EidosProcessor containing the extracted INDRA Statements in its</span>
+<span class="sd">        statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">webservice</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">eidos_reader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Eidos reader is not available.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">json_dict</span> <span class="o">=</span> <span class="n">eidos_reader</span><span class="o">.</span><span class="n">process_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">out_format</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/process_text&#39;</span> <span class="o">%</span> <span class="n">webservice</span><span class="p">,</span>
+                            <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">})</span>
+        <span class="n">json_dict</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">save_json</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">save_json</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_dict</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json_file"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json_file">[docs]</a><span class="k">def</span> <span class="nf">process_json_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an EidosProcessor by processing the given Eidos JSON-LD file.</span>
+
+<span class="sd">    This function is useful if the output from Eidos is saved as a file and</span>
+<span class="sd">    needs to be processed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_name : str</span>
+<span class="sd">        The name of the JSON-LD file to be processed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ep : EidosProcessor</span>
+<span class="sd">        A EidosProcessor containing the extracted INDRA Statements</span>
+<span class="sd">        in its statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">json_str</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">process_json_str</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Could not read file </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="n">file_name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json_str"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json_str">[docs]</a><span class="k">def</span> <span class="nf">process_json_str</span><span class="p">(</span><span class="n">json_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an EidosProcessor by processing the Eidos JSON-LD string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    json_str : str</span>
+<span class="sd">        The JSON-LD string to be processed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ep : EidosProcessor</span>
+<span class="sd">        A EidosProcessor containing the extracted INDRA Statements</span>
+<span class="sd">        in its statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json">[docs]</a><span class="k">def</span> <span class="nf">process_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an EidosProcessor by processing a Eidos JSON-LD dict.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    json_dict : dict</span>
+<span class="sd">        The JSON-LD dict to be processed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ep : EidosProcessor</span>
+<span class="sd">        A EidosProcessor containing the extracted INDRA Statements</span>
+<span class="sd">        in its statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ep</span> <span class="o">=</span> <span class="n">EidosProcessor</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+    <span class="n">ep</span><span class="o">.</span><span class="n">get_causal_relations</span><span class="p">()</span>
+    <span class="n">ep</span><span class="o">.</span><span class="n">get_correlations</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">ep</span>
+
+
+<div class="viewcode-block" id="initialize_reader"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.initialize_reader">[docs]</a><span class="k">def</span> <span class="nf">initialize_reader</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Instantiate an Eidos reader for fast subsequent reading.&quot;&quot;&quot;</span></div>
+    <span class="n">eidos_reader</span><span class="o">.</span><span class="n">process_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json_ld_file"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json_ld_file">[docs]</a><span class="k">def</span> <span class="nf">process_json_ld_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DEPRECATED: see process_json_file&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;This method is deprecated and will be removed in the next&#39;</span>
+                   <span class="s1">&#39; version, please use the equivalent process_json_file&#39;</span>
+                   <span class="s1">&#39; instead.&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_json_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json_ld_str"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json_ld_str">[docs]</a><span class="k">def</span> <span class="nf">process_json_ld_str</span><span class="p">(</span><span class="n">json_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DEPRECATED: see process_json_str&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;This method is deprecated and will be removed in the next&#39;</span>
+                   <span class="s1">&#39; version, please use the equivalent process_json_str&#39;</span>
+                   <span class="s1">&#39; instead.&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_json_str</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_json_ld"><a class="viewcode-back" href="../../../../modules/sources/eidos/index.html#indra.sources.eidos.api.process_json_ld">[docs]</a><span class="k">def</span> <span class="nf">process_json_ld</span><span class="p">(</span><span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DEPRECATED: see process_json&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;This method is deprecated and will be removed in the next&#39;</span>
+                   <span class="s1">&#39; version, please use the equivalent process_json instead.&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.sparser.api &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.sparser.api</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.sparser.api</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides an API used to run and get Statements from the Sparser</span>
+<span class="sd">reading system.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span>
+<span class="kn">from</span> <span class="nn">indra</span> <span class="k">import</span> <span class="n">get_config</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;process_text&#39;</span><span class="p">,</span> <span class="s1">&#39;process_nxml_str&#39;</span><span class="p">,</span> <span class="s1">&#39;process_nxml_file&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;process_sparser_output&#39;</span><span class="p">,</span> <span class="s1">&#39;process_json_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;process_xml&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;run_sparser&#39;</span><span class="p">,</span> <span class="s1">&#39;get_version&#39;</span><span class="p">,</span> <span class="s1">&#39;make_nxml_from_text&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">ET</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+
+<span class="kn">from</span> <span class="nn">indra.util</span> <span class="k">import</span> <span class="n">UnicodeXMLTreeBuilder</span> <span class="k">as</span> <span class="n">UTB</span>
+
+<span class="kn">from</span> <span class="nn">.processor</span> <span class="k">import</span> <span class="n">SparserXMLProcessor</span><span class="p">,</span> <span class="n">SparserJSONProcessor</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;sparser&#39;</span><span class="p">)</span>
+
+<span class="n">sparser_path_var</span> <span class="o">=</span> <span class="s1">&#39;SPARSERPATH&#39;</span>
+<span class="n">sparser_path</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">sparser_path_var</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_text"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_text">[docs]</a><span class="k">def</span> <span class="nf">process_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">output_fmt</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">outbuf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cleanup</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return processor with Statements extracted by reading text with Sparser.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The text to be processed</span>
+<span class="sd">    output_fmt: Optional[str]</span>
+<span class="sd">        The output format to obtain from Sparser, with the two options being</span>
+<span class="sd">        &#39;json&#39; and &#39;xml&#39;. Default: &#39;json&#39;</span>
+<span class="sd">    outbuf : Optional[file]</span>
+<span class="sd">        A file like object that the Sparser output is written to.</span>
+<span class="sd">    cleanup : Optional[bool]</span>
+<span class="sd">        If True, the temporary file created, which is used as an input</span>
+<span class="sd">        file for Sparser, as well as the output file created by Sparser</span>
+<span class="sd">        are removed. Default: True</span>
+<span class="sd">    key : Optional[str]</span>
+<span class="sd">        A key which is embedded into the name of the temporary file</span>
+<span class="sd">        passed to Sparser for reading. Default is empty string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SparserXMLProcessor or SparserJSONProcessor depending on what output</span>
+<span class="sd">    format was chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nxml_str</span> <span class="o">=</span> <span class="n">make_nxml_from_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">process_nxml_str</span><span class="p">(</span><span class="n">nxml_str</span><span class="p">,</span> <span class="n">output_fmt</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">,</span> <span class="n">cleanup</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="process_nxml_str"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_nxml_str">[docs]</a><span class="k">def</span> <span class="nf">process_nxml_str</span><span class="p">(</span><span class="n">nxml_str</span><span class="p">,</span> <span class="n">output_fmt</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">outbuf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cleanup</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return processor with Statements extracted by reading an NXML string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nxml_str : str</span>
+<span class="sd">        The string value of the NXML-formatted paper to be read.</span>
+<span class="sd">    output_fmt: Optional[str]</span>
+<span class="sd">        The output format to obtain from Sparser, with the two options being</span>
+<span class="sd">        &#39;json&#39; and &#39;xml&#39;. Default: &#39;json&#39;</span>
+<span class="sd">    outbuf : Optional[file]</span>
+<span class="sd">        A file like object that the Sparser output is written to.</span>
+<span class="sd">    cleanup : Optional[bool]</span>
+<span class="sd">        If True, the temporary file created in this function,</span>
+<span class="sd">        which is used as an input file for Sparser, as well as the</span>
+<span class="sd">        output file created by Sparser are removed. Default: True</span>
+<span class="sd">    key : Optional[str]</span>
+<span class="sd">        A key which is embedded into the name of the temporary file</span>
+<span class="sd">        passed to Sparser for reading. Default is empty string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SparserXMLProcessor or SparserJSONProcessor depending on what output</span>
+<span class="sd">    format was chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmp_fname</span> <span class="o">=</span> <span class="s1">&#39;PMC</span><span class="si">%s</span><span class="s1">_</span><span class="si">%d</span><span class="s1">.nxml&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">mp</span><span class="o">.</span><span class="n">current_process</span><span class="p">()</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_fname</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">nxml_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">process_nxml_file</span><span class="p">(</span><span class="n">tmp_fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">,</span> <span class="n">cleanup</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cleanup</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_fname</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_fname</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<div class="viewcode-block" id="process_nxml_file"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_nxml_file">[docs]</a><span class="k">def</span> <span class="nf">process_nxml_file</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">outbuf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cleanup</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return processor with Statements extracted by reading an NXML file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The path to the NXML file to be read.</span>
+<span class="sd">    output_fmt: Optional[str]</span>
+<span class="sd">        The output format to obtain from Sparser, with the two options being</span>
+<span class="sd">        &#39;json&#39; and &#39;xml&#39;. Default: &#39;json&#39;</span>
+<span class="sd">    outbuf : Optional[file]</span>
+<span class="sd">        A file like object that the Sparser output is written to.</span>
+<span class="sd">    cleanup : Optional[bool]</span>
+<span class="sd">        If True, the output file created by Sparser is removed.</span>
+<span class="sd">        Default: True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sp : SparserXMLProcessor or SparserJSONProcessor depending on what output</span>
+<span class="sd">    format was chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">out_fname</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out_fname</span> <span class="o">=</span> <span class="n">run_sparser</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="p">,</span> <span class="n">outbuf</span><span class="p">)</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">process_sparser_output</span><span class="p">(</span><span class="n">out_fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Sparser failed to run on </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">out_fname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_fname</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cleanup</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">out_fname</span><span class="p">)</span>
+</div>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<div class="viewcode-block" id="process_sparser_output"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_sparser_output">[docs]</a><span class="k">def</span> <span class="nf">process_sparser_output</span><span class="p">(</span><span class="n">output_fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a processor with Statements extracted from Sparser XML or JSON</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    output_fname : str</span>
+<span class="sd">        The path to the Sparser output file to be processed. The file can</span>
+<span class="sd">        either be JSON or XML output from Sparser, with the output_fmt</span>
+<span class="sd">        parameter defining what format is assumed to be processed.</span>
+<span class="sd">    output_fmt : Optional[str]</span>
+<span class="sd">        The format of the Sparser output to be processed, can either be</span>
+<span class="sd">        &#39;json&#39; or &#39;xml&#39;. Default: &#39;json&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sp : SparserXMLProcessor or SparserJSONProcessor depending on what output</span>
+<span class="sd">    format was chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">output_fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="s1">&#39;xml&#39;</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unrecognized output format &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span> <span class="o">%</span> <span class="n">output_fmt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">sp</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_fname</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output_fmt</span> <span class="o">==</span> <span class="s1">&#39;json&#39;</span><span class="p">:</span>
+            <span class="n">json_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">process_json_dict</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xml_str</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">process_xml</span><span class="p">(</span><span class="n">xml_str</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<div class="viewcode-block" id="process_json_dict"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_json_dict">[docs]</a><span class="k">def</span> <span class="nf">process_json_dict</span><span class="p">(</span><span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return processor with Statements extracted from a Sparser JSON.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    json_dict : dict</span>
+<span class="sd">        The JSON object obtained by reading content with Sparser, using the</span>
+<span class="sd">        &#39;json&#39; output mode.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sp : SparserJSONProcessor</span>
+<span class="sd">        A SparserJSONProcessor which has extracted Statements as its</span>
+<span class="sd">        statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">SparserJSONProcessor</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+    <span class="n">sp</span><span class="o">.</span><span class="n">get_statements</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<div class="viewcode-block" id="process_xml"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.process_xml">[docs]</a><span class="k">def</span> <span class="nf">process_xml</span><span class="p">(</span><span class="n">xml_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return processor with Statements extracted from a Sparser XML.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xml_str : str</span>
+<span class="sd">        The XML string obtained by reading content with Sparser, using the</span>
+<span class="sd">        &#39;xml&#39; output mode.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sp : SparserXMLProcessor</span>
+<span class="sd">        A SparserXMLProcessor which has extracted Statements as its</span>
+<span class="sd">        statements attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">XML</span><span class="p">(</span><span class="n">xml_str</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">UTB</span><span class="p">())</span>
+    <span class="k">except</span> <span class="n">ET</span><span class="o">.</span><span class="n">ParseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not parse XML string&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">_process_elementtree</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<div class="viewcode-block" id="run_sparser"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.run_sparser">[docs]</a><span class="k">def</span> <span class="nf">run_sparser</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">output_fmt</span><span class="p">,</span> <span class="n">outbuf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the path to reading output after running Sparser reading.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The path to an input file to be processed. Due to the Spaser</span>
+<span class="sd">        executable&#39;s assumptions, the file name needs to start with PMC</span>
+<span class="sd">        and should be an NXML formatted file.</span>
+<span class="sd">    output_fmt : Optional[str]</span>
+<span class="sd">        The format in which Sparser should produce its output, can either be</span>
+<span class="sd">        &#39;json&#39; or &#39;xml&#39;.</span>
+<span class="sd">    outbuf : Optional[file]</span>
+<span class="sd">        A file like object that the Sparser output is written to.</span>
+<span class="sd">    timeout : int</span>
+<span class="sd">        The number of seconds to wait until giving up on this one reading. The</span>
+<span class="sd">        default is 600 seconds (i.e. 10 minutes). Sparcer is a fast reader and</span>
+<span class="sd">        the typical type to read a single full text is a matter of seconds.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output_path : str</span>
+<span class="sd">        The path to the output file created by Sparser.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sparser_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">sparser_path</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Sparser executable not set in </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">sparser_path_var</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">output_fmt</span> <span class="o">==</span> <span class="s1">&#39;xml&#39;</span><span class="p">:</span>
+        <span class="n">format_flag</span> <span class="o">=</span> <span class="s1">&#39;-x&#39;</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;.xml&#39;</span>
+    <span class="k">elif</span> <span class="n">output_fmt</span> <span class="o">==</span> <span class="s1">&#39;json&#39;</span><span class="p">:</span>
+        <span class="n">format_flag</span> <span class="o">=</span> <span class="s1">&#39;-j&#39;</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;.json&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Unknown output format: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">output_fmt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">sparser_exec_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sparser_path</span><span class="p">,</span> <span class="s1">&#39;save-semantics.sh&#39;</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;-semantics&#39;</span> <span class="o">+</span> <span class="n">suffix</span>
+    <span class="k">for</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="p">[</span><span class="n">sparser_exec_path</span><span class="p">,</span> <span class="n">fname</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid path.&quot;</span> <span class="o">%</span> <span class="n">fpath</span><span class="p">)</span>
+
+    <span class="n">out_bts</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="n">sparser_exec_path</span><span class="p">,</span> <span class="n">format_flag</span><span class="p">,</span> <span class="n">fname</span><span class="p">],</span>
+                                      <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">outbuf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">outbuf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out_bts</span><span class="p">)</span>
+        <span class="n">outbuf</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span> <span class="s1">&#39;No output file created by sparser.&#39;</span></div>
+    <span class="k">return</span> <span class="n">output_path</span>
+
+
+<div class="viewcode-block" id="get_version"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.get_version">[docs]</a><span class="k">def</span> <span class="nf">get_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return the version of the Sparser executable on the path.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    version : str</span>
+<span class="sd">        The version of Sparser that is found on the Sparser path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">sparser_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Sparser path is not defined.&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sparser_path</span><span class="p">,</span> <span class="s1">&#39;version.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">version</span>
+
+
+<div class="viewcode-block" id="make_nxml_from_text"><a class="viewcode-back" href="../../../../modules/sources/sparser/index.html#indra.sources.sparser.api.make_nxml_from_text">[docs]</a><span class="k">def</span> <span class="nf">make_nxml_from_text</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return raw text wrapped in NXML structure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The raw text content to be wrapped in an NXML structure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nxml_str : str</span>
+<span class="sd">        The NXML string wrapping the raw text input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_escape_xml</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;&#39;</span> <span class="o">+</span> \
+        <span class="s1">&#39;&lt;OAI-PMH&gt;&lt;article&gt;&lt;body&gt;&lt;sec id=&quot;s1&quot;&gt;&lt;p&gt;&#39;</span>
+    <span class="n">footer</span> <span class="o">=</span> <span class="s1">&#39;&lt;/p&gt;&lt;/sec&gt;&lt;/body&gt;&lt;/article&gt;&lt;/OAI-PMH&gt;&#39;</span>
+    <span class="n">nxml_str</span> <span class="o">=</span> <span class="n">header</span> <span class="o">+</span> <span class="n">text</span> <span class="o">+</span> <span class="n">footer</span></div>
+    <span class="k">return</span> <span class="n">nxml_str</span>
+
+
+<span class="k">def</span> <span class="nf">_process_elementtree</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">SparserXMLProcessor</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">sp</span><span class="o">.</span><span class="n">get_modifications</span><span class="p">()</span>
+    <span class="n">sp</span><span class="o">.</span><span class="n">get_activations</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">sp</span>
+
+
+<span class="k">def</span> <span class="nf">_escape_xml</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="n">esc_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;&quot;&#39;</span><span class="p">:</span> <span class="s1">&#39;&amp;quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">:</span> <span class="s1">&#39;&amp;amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">:</span> <span class="s1">&#39;&amp;apos;&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;&lt;&#39;</span><span class="p">:</span> <span class="s1">&#39;&amp;lt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">:</span> <span class="s1">&#39;&amp;gt;&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">orig</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">esc_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>indra.sources.hume.processor &mdash; INDRA 1.9.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="INDRA 1.9.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> INDRA
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License and funding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started with INDRA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">INDRA modules reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../rest_api.html">REST API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">INDRA</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>indra.sources.hume.processor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for indra.sources.hume.processor</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">rdflib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">objectpath</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">basename</span>
+<span class="kn">from</span> <span class="nn">indra.statements</span> <span class="k">import</span> <span class="n">Concept</span><span class="p">,</span> <span class="n">Influence</span><span class="p">,</span> <span class="n">Evidence</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;hume&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="HumeJsonLdProcessor"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.HumeJsonLdProcessor">[docs]</a><span class="k">class</span> <span class="nc">HumeJsonLdProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This processor extracts INDRA Statements from Hume JSON-LD output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    json_dict : dict</span>
+<span class="sd">        A JSON dictionary containing the Hume extractions in JSON-LD format.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : objectpath.Tree</span>
+<span class="sd">        The objectpath Tree object representing the extractions.</span>
+<span class="sd">    statements : list[indra.statements.Statement]</span>
+<span class="sd">        A list of INDRA Statements that were extracted by the processor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">objectpath</span><span class="o">.</span><span class="n">Tree</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">document_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">concept_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eid_stmt_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="HumeJsonLdProcessor.get_documents"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.HumeJsonLdProcessor.get_documents">[docs]</a>    <span class="k">def</span> <span class="nf">get_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Populate the sentences attribute with a dict keyed by document id.&quot;&quot;&quot;</span>
+        <span class="n">documents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;$.documents&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">:</span>
+            <span class="n">sentences</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]:</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sentences&#39;</span><span class="p">,</span> <span class="p">[])}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">document_dict</span><span class="p">[</span><span class="n">doc</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sentences&#39;</span><span class="p">:</span> <span class="n">sentences</span><span class="p">,</span>
+                                              <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]}</span></div>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">get_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Get all extractions</span>
+        <span class="n">extractions</span> <span class="o">=</span> \
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;$.extractions[(@.@type is &#39;Extraction&#39;)]&quot;</span><span class="p">))</span>
+
+        <span class="c1"># Get relations from extractions</span>
+        <span class="n">relations</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extractions</span> <span class="k">if</span> <span class="s1">&#39;DirectedRelation&#39;</span> <span class="ow">in</span>
+                     <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="p">[])]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">relations</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relation_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">rel</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]:</span> <span class="n">rel</span> <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">}</span>
+
+        <span class="c1"># List out relation types and their default (implied) polarities.</span>
+        <span class="n">relation_polarities</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;causation&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;precondition&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;catalyst&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                               <span class="s1">&#39;mitigation&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;prevention&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+
+        <span class="c1"># Restrict to known relation types</span>
+        <span class="n">relations</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">relations</span> <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">rt</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">rt</span> <span class="ow">in</span>
+                                                  <span class="n">relation_polarities</span><span class="o">.</span><span class="n">keys</span><span class="p">()])]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> relations of types </span><span class="si">%s</span><span class="s1"> found&#39;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">relations</span><span class="p">),</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">relation_polarities</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+        <span class="c1"># Build a dictionary of concepts and sentences by ID for convenient</span>
+        <span class="c1"># lookup</span>
+        <span class="n">concepts</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">extractions</span> <span class="k">if</span>
+                    <span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="s1">&#39;Entity&#39;</span><span class="p">}]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">concept_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">concept</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]:</span> <span class="n">concept</span> <span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">concepts</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_documents</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">:</span>
+            <span class="n">relation_type</span> <span class="o">=</span> <span class="n">relation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+            <span class="n">subj_concept</span><span class="p">,</span> <span class="n">subj_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_concept</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">)</span>
+            <span class="n">obj_concept</span><span class="p">,</span> <span class="n">obj_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_concept</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="s1">&#39;destination&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Apply the naive polarity from the type of statement. For the</span>
+            <span class="c1"># purpose of the multiplication here, if obj_delta[&#39;polarity&#39;] is</span>
+            <span class="c1"># None to begin with, we assume it is positive</span>
+            <span class="n">obj_delta</span><span class="p">[</span><span class="s1">&#39;polarity&#39;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">relation_polarities</span><span class="p">[</span><span class="n">relation_type</span><span class="p">]</span> <span class="o">*</span> \
+                <span class="p">(</span><span class="n">obj_delta</span><span class="p">[</span><span class="s1">&#39;polarity&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">obj_delta</span><span class="p">[</span><span class="s1">&#39;polarity&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                 <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">subj_concept</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">obj_concept</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">evidence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_evidence</span><span class="p">(</span><span class="n">relation</span><span class="p">,</span> <span class="n">subj_concept</span><span class="p">,</span> <span class="n">obj_concept</span><span class="p">,</span>
+                                          <span class="n">get_states</span><span class="p">(</span><span class="n">relation</span><span class="p">))</span>
+
+            <span class="n">st</span> <span class="o">=</span> <span class="n">Influence</span><span class="p">(</span><span class="n">subj_concept</span><span class="p">,</span> <span class="n">obj_concept</span><span class="p">,</span> <span class="n">subj_delta</span><span class="p">,</span> <span class="n">obj_delta</span><span class="p">,</span>
+                           <span class="n">evidence</span><span class="o">=</span><span class="n">evidence</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eid_stmt_dict</span><span class="p">[</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;@id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">st</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">)</span>
+
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_make_concept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return Concept from a Hume entity.&quot;&quot;&quot;</span>
+        <span class="c1"># Use the canonical name as the name of the Concept by default</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;canonicalName&#39;</span><span class="p">])</span>
+        <span class="c1"># But if there is a trigger head text, we prefer that since</span>
+        <span class="c1"># it almost always results in a cleaner name</span>
+        <span class="c1"># This is removed for now since the head word seems to be too</span>
+        <span class="c1"># minimal for some concepts, e.g. it gives us only &quot;security&quot;</span>
+        <span class="c1"># for &quot;food security&quot;.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        trigger = entity.get(&#39;trigger&#39;)</span>
+<span class="sd">        if trigger is not None:</span>
+<span class="sd">            head_text = trigger.get(&#39;head text&#39;)</span>
+<span class="sd">            if head_text is not None:</span>
+<span class="sd">                name = head_text</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Save raw text and Hume scored groundings as db_refs</span>
+        <span class="n">db_refs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;TEXT&#39;</span><span class="p">:</span> <span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]}</span>
+        <span class="n">hume_grounding</span> <span class="o">=</span> <span class="n">_get_hume_grounding</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+        <span class="c1"># We could get an empty list here in which case we don&#39;t add the</span>
+        <span class="c1"># grounding</span>
+        <span class="k">if</span> <span class="n">hume_grounding</span><span class="p">:</span>
+            <span class="n">db_refs</span><span class="p">[</span><span class="s1">&#39;HUME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hume_grounding</span>
+        <span class="n">concept</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">db_refs</span><span class="o">=</span><span class="n">db_refs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">concept</span>
+
+    <span class="k">def</span> <span class="nf">_get_concept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg_type</span><span class="p">):</span>
+        <span class="n">eid</span> <span class="o">=</span> <span class="n">_choose_id</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">arg_type</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concept_dict</span><span class="p">[</span><span class="n">eid</span><span class="p">]</span>
+        <span class="n">concept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_concept</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+        <span class="n">ev_delta</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;adjectives&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s1">&#39;states&#39;</span><span class="p">:</span> <span class="n">get_states</span><span class="p">(</span><span class="n">ev</span><span class="p">),</span>
+                    <span class="s1">&#39;polarity&#39;</span><span class="p">:</span> <span class="n">get_polarity</span><span class="p">(</span><span class="n">ev</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">concept</span><span class="p">,</span> <span class="n">ev_delta</span>
+
+    <span class="k">def</span> <span class="nf">_get_evidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">subj_concept</span><span class="p">,</span> <span class="n">obj_concept</span><span class="p">,</span> <span class="n">adjectives</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the Evidence object for the INDRA Statement.&quot;&quot;&quot;</span>
+        <span class="n">provenance</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;provenance&#39;</span><span class="p">)</span>
+
+        <span class="c1"># First try looking up the full sentence through provenance</span>
+        <span class="n">doc_id</span> <span class="o">=</span> <span class="n">provenance</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;document&#39;</span><span class="p">][</span><span class="s1">&#39;@id&#39;</span><span class="p">]</span>
+        <span class="n">sent_id</span> <span class="o">=</span> <span class="n">provenance</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;sentence&#39;</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">document_dict</span><span class="p">[</span><span class="n">doc_id</span><span class="p">][</span><span class="s1">&#39;sentences&#39;</span><span class="p">][</span><span class="n">sent_id</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">provenance</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;documentCharPositions&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">]]</span>
+
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;found_by&#39;</span><span class="p">:</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rule&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;provenance&#39;</span><span class="p">:</span> <span class="n">provenance</span><span class="p">,</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="n">basename</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)),</span>
+            <span class="s1">&#39;adjectives&#39;</span><span class="p">:</span> <span class="n">adjectives</span><span class="p">,</span>
+            <span class="s1">&#39;bounds&#39;</span><span class="p">:</span> <span class="n">bounds</span>
+            <span class="p">}</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">document_dict</span><span class="p">[</span><span class="n">doc_id</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">Evidence</span><span class="p">(</span><span class="n">source_api</span><span class="o">=</span><span class="s1">&#39;hume&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="n">annotations</span><span class="p">,</span>
+                      <span class="n">pmid</span><span class="o">=</span><span class="n">location</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">ev</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_sanitize</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return sanitized Hume text field for human readability.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: any cleanup needed here?</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">text</span>
+
+
+<span class="k">def</span> <span class="nf">_choose_id</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">arg_type</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">obj_tag</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">arg_type</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">obj_tag</span><span class="p">:</span>
+        <span class="n">obj_id</span> <span class="o">=</span> <span class="n">obj_tag</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">][</span><span class="s1">&#39;@id&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">obj_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">obj_id</span>
+
+
+<span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="n">ret_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;states&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">state_property</span> <span class="ow">in</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;states&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">state_property</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;polarity&#39;</span><span class="p">:</span>
+                <span class="n">ret_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state_property</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">ret_list</span>
+
+
+<span class="k">def</span> <span class="nf">_get_hume_grounding</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return Hume grounding.&quot;&quot;&quot;</span>
+    <span class="n">groundings</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;grounding&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">groundings</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">get_ont_concept</span><span class="p">(</span><span class="n">concept</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Strip slah, replace spaces and remove example leafs.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">concept</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">concept</span> <span class="o">=</span> <span class="n">concept</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">concept</span> <span class="o">=</span> <span class="n">concept</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="c1"># We eliminate any entries that aren&#39;t ontology categories</span>
+        <span class="c1"># these are typically &quot;examples&quot; corresponding to the category</span>
+        <span class="k">while</span> <span class="n">concept</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hume_onto_entries</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">concept</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">concept</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">concept</span>
+
+    <span class="c1"># Basic collection of grounding entries</span>
+    <span class="n">raw_grounding_entries</span> <span class="o">=</span> <span class="p">[(</span><span class="n">get_ont_concept</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s1">&#39;ontologyConcept&#39;</span><span class="p">]),</span>
+                              <span class="n">g</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groundings</span><span class="p">]</span>
+
+    <span class="c1"># Occasionally we get duplicate grounding entries, we want to</span>
+    <span class="c1"># eliminate those here</span>
+    <span class="n">grounding_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">raw_grounding_entries</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cat</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grounding_dict</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">score</span> <span class="o">&gt;</span> <span class="n">grounding_dict</span><span class="p">[</span><span class="n">cat</span><span class="p">]):</span>
+            <span class="n">grounding_dict</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+    <span class="c1"># Then we sort the list in reverse order according to score</span>
+    <span class="c1"># Sometimes the exact same score appears multiple times, in this</span>
+    <span class="c1"># case we prioritize by the &quot;depth&quot; of the grounding which is</span>
+    <span class="c1"># obtained by looking at the number of /-s in the entry</span>
+    <span class="n">grounding_entries</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">grounding_dict</span><span class="o">.</span><span class="n">items</span><span class="p">())),</span>
+                               <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)),</span>
+                               <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">grounding_entries</span>
+
+
+<span class="k">def</span> <span class="nf">get_polarity</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="n">pol_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Positive&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Negative&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="s1">&#39;states&#39;</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">state_property</span> <span class="ow">in</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;states&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">state_property</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;polarity&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pol_map</span><span class="p">[</span><span class="n">state_property</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_get_ontology_entries</span><span class="p">():</span>
+    <span class="n">path_here</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">onto_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_here</span><span class="p">,</span> <span class="s1">&#39;hume_ontology.rdf&#39;</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">rdflib</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">onto_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;nt&#39;</span><span class="p">)</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">toPython</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="n">entries</span>
+
+
+<span class="n">hume_onto_entries</span> <span class="o">=</span> <span class="n">_get_ontology_entries</span><span class="p">()</span>
+
+
+<span class="c1"># OLD PROCESSOR</span>
+
+<span class="n">prefixes</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    PREFIX causal: &lt;http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#&gt;</span>
+<span class="s2">    PREFIX ev: &lt;http://www.bbn.com/worldmodelers/ontology/wm/Event#&gt;</span>
+<span class="s2">    PREFIX prov: &lt;http://www.bbn.com/worldmodelers/ontology/wm/DataProvenance#&gt;</span>
+<span class="s2">    PREFIX cco: &lt;http://www.ontologyrepository.com/CommonCoreOntologies/&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="HumeProcessor"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.HumeProcessor">[docs]</a><span class="k">class</span> <span class="nc">HumeProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process a Hume extraction graph into INDRA Statements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph : rdflib.Graph</span>
+<span class="sd">        An rdflib graph representing extractions, typically loaded from</span>
+<span class="sd">        a JSON-LD file.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    statements: list[indra.statements.Statement]</span>
+<span class="sd">        INDRA statements extracted from Hume reader output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="HumeProcessor.get_statements"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.HumeProcessor.get_statements">[docs]</a>    <span class="k">def</span> <span class="nf">get_statements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract causal assertions in the graph into INDRA statements.&quot;&quot;&quot;</span>
+        <span class="c1"># SPARQL query to get causal relations and their arguments</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">prefixes</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT ?rel</span>
+<span class="s2">                ?causetext</span>
+<span class="s2">                ?effecttext</span>
+<span class="s2">                ?evtext</span>
+<span class="s2">                ?cause_polarity</span>
+<span class="s2">                ?effect_polarity</span>
+<span class="s2">                ?cause_type</span>
+<span class="s2">                ?effect_type</span>
+<span class="s2">            WHERE {</span>
+<span class="s2">                ?rel a causal:CausalAssertion .</span>
+<span class="s2">                ?rel causal:has_cause ?cause .</span>
+<span class="s2">                ?rel causal:has_effect ?effect .</span>
+<span class="s2">                ?rel prov:has_text_value ?evtext .</span>
+<span class="s2">                ?cause prov:has_text_value ?causetext .</span>
+<span class="s2">                ?effect prov:has_text_value ?effecttext .</span>
+<span class="s2">                OPTIONAL</span>
+<span class="s2">                    {?cause ev:has_polarity ?cause_polarity .</span>
+<span class="s2">                    ?effect ev:has_polarity ?effect_polarity .</span>
+<span class="s2">                    ?cause a ?cause_type .</span>
+<span class="s2">                    ?effect a ?effect_type .}</span>
+<span class="s2">                }</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="c1"># Run the query</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="c1"># Accumulate the cause, effect, and evidence textss for each causal</span>
+        <span class="c1"># assertion. When there are several cause texts, the CauseEffect</span>
+        <span class="c1"># class will only keep the shortest when we generate the statement</span>
+        <span class="c1"># (since these events include both the full event and the cause/effect</span>
+        <span class="c1"># snippet).</span>
+        <span class="n">rdict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="n">CauseEffect</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rel</span><span class="p">,</span> <span class="n">cause_text</span><span class="p">,</span> <span class="n">effect_text</span><span class="p">,</span> <span class="n">evtext</span><span class="p">,</span> <span class="n">cause_polarity</span><span class="p">,</span> \
+                <span class="n">effect_polarity</span><span class="p">,</span> <span class="n">cause_type</span><span class="p">,</span> <span class="n">effect_type</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">relid</span> <span class="o">=</span> <span class="n">shorter_name</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
+
+            <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">cause_texts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cause_text</span><span class="p">)</span>
+            <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">effect_texts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">effect_text</span><span class="p">)</span>
+            <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">evidence_texts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">evtext</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">cause_polarity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">cause_polarity</span> <span class="o">=</span> <span class="n">shorter_name</span><span class="p">(</span><span class="n">cause_polarity</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">effect_polarity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">effect_polarity</span> <span class="o">=</span> <span class="n">shorter_name</span><span class="p">(</span><span class="n">effect_polarity</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cause_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">cause_type</span> <span class="o">=</span> <span class="n">shorter_name</span><span class="p">(</span><span class="n">cause_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">effect_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rdict</span><span class="p">[</span><span class="n">relid</span><span class="p">]</span><span class="o">.</span><span class="n">effect_type</span> <span class="o">=</span> <span class="n">shorter_name</span><span class="p">(</span><span class="n">effect_type</span><span class="p">)</span>
+        <span class="n">not_positive</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">relid</span><span class="p">,</span> <span class="n">ces</span> <span class="ow">in</span> <span class="n">rdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">statement</span> <span class="o">=</span> <span class="n">ces</span><span class="o">.</span><span class="n">to_statement</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">statement</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Returns None when polarity not positive</span>
+                <span class="n">not_positive</span> <span class="o">=</span> <span class="n">not_positive</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">not_positive</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span></div></div>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> statements skipped because of polarity&#39;</span> <span class="o">%</span> <span class="n">not_positive</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CauseEffect"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.CauseEffect">[docs]</a><span class="k">class</span> <span class="nc">CauseEffect</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A data structure to incrementally store cause/effect information as it</span>
+<span class="sd">    is extracted from the Hume JSON file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cause_texts: list&lt;str&gt;</span>
+<span class="sd">        A list of causes, in text</span>
+<span class="sd">    effect_texts: list&lt;str&gt;</span>
+<span class="sd">        A list of effects, in text</span>
+<span class="sd">    evidence_texts: list&lt;str&gt;</span>
+<span class="sd">        A list of evidence texts</span>
+<span class="sd">    cause_polarity: str</span>
+<span class="sd">        Polarity of the cause (no statement generated if not Positive)</span>
+<span class="sd">    effect_polarity: str</span>
+<span class="sd">        Polarity of the effect (no statement generated if not Positive)</span>
+<span class="sd">    cause_type: str</span>
+<span class="sd">        The type of cause</span>
+<span class="sd">    effect_type: str</span>
+<span class="sd">        The type of effect</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with all fields blank; fields are populated as they</span>
+<span class="sd">        are read from the JSON.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cause_texts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effect_texts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evidence_texts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cause_polarity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effect_polarity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cause_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effect_type</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert to string representation, suitable for debugging.&quot;&quot;&quot;</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">shortest_string_in_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cause_texts</span><span class="p">)</span>
+        <span class="n">et</span> <span class="o">=</span> <span class="n">shortest_string_in_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effect_texts</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evidence_texts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> -&gt; </span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">et</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span>
+                                          <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cause_polarity</span><span class="p">),</span>
+                                          <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effect_polarity</span><span class="p">))</span>
+
+<div class="viewcode-block" id="CauseEffect.to_statement"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.CauseEffect.to_statement">[docs]</a>    <span class="k">def</span> <span class="nf">to_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts to an INDRA statement, or returns None if either the cause</span>
+<span class="sd">        polarity or effect polarity is not Positive.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cause_polarity</span> <span class="o">!=</span> <span class="s1">&#39;Positive&#39;</span> <span class="ow">or</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">effect_polarity</span> <span class="o">!=</span> <span class="s1">&#39;Positive&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># The cause and effect events list both the full text and the text</span>
+        <span class="c1"># identified as the cause/effect. Get the relevant text by getting</span>
+        <span class="c1"># the shortest string.</span>
+        <span class="n">cause_text</span> <span class="o">=</span> <span class="n">shortest_string_in_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cause_texts</span><span class="p">)</span>
+        <span class="n">effect_text</span> <span class="o">=</span> <span class="n">shortest_string_in_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effect_texts</span><span class="p">)</span>
+
+        <span class="c1"># Add an evidence object with the full text. There should be exactly</span>
+        <span class="c1"># only full text string, but if there is more than one, list them all.</span>
+        <span class="c1"># Note how we&#39;re careful to convert from rdflib&#39;s string representation</span>
+        <span class="c1"># to a python string with str().</span>
+        <span class="n">evidence_texts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evidence_texts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">evidence_texts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">evidence_text</span> <span class="o">=</span> <span class="n">evidence_texts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">evidence_text</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">evidence_texts</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">Evidence</span><span class="p">(</span><span class="n">source_api</span><span class="o">=</span><span class="s1">&#39;hume&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">evidence_text</span><span class="p">))</span>
+
+        <span class="c1"># Convert from rdf literal to python string</span>
+        <span class="n">cause_text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cause_text</span><span class="p">)</span>
+        <span class="n">effect_text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">effect_text</span><span class="p">)</span>
+
+        <span class="c1"># Make cause concept</span>
+        <span class="n">cause_db_refs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;TEXT&#39;</span><span class="p">:</span> <span class="n">cause_text</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cause_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cause_db_refs</span><span class="p">[</span><span class="s1">&#39;HUME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cause_type</span>
+        <span class="n">cause_concept</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span><span class="n">cause_text</span><span class="p">,</span> <span class="n">db_refs</span><span class="o">=</span><span class="n">cause_db_refs</span><span class="p">)</span>
+
+        <span class="c1"># Make effect concept</span>
+        <span class="n">effect_db_refs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;TEXT&#39;</span><span class="p">:</span> <span class="n">effect_text</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effect_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">effect_db_refs</span><span class="p">[</span><span class="s1">&#39;HUME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effect_type</span>
+        <span class="n">effect_concept</span> <span class="o">=</span> <span class="n">Concept</span><span class="p">(</span><span class="n">effect_text</span><span class="p">,</span> <span class="n">db_refs</span><span class="o">=</span><span class="n">effect_db_refs</span><span class="p">)</span>
+</div></div>
+        <span class="k">return</span> <span class="n">Influence</span><span class="p">(</span><span class="n">cause_concept</span><span class="p">,</span> <span class="n">effect_concept</span><span class="p">,</span> <span class="n">evidence</span><span class="o">=</span><span class="n">ev</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="shortest_string_in_list"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.shortest_string_in_list">[docs]</a><span class="k">def</span> <span class="nf">shortest_string_in_list</span><span class="p">(</span><span class="n">string_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a list of strings, returns the shortest.&quot;&quot;&quot;</span>
+    <span class="n">shortest_length</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">shortest_string</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">string_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shortest_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">shortest_length</span><span class="p">:</span>
+            <span class="n">shortest_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">shortest_string</span> <span class="o">=</span> <span class="n">s</span></div>
+    <span class="k">return</span> <span class="n">shortest_string</span>
+
+
+<div class="viewcode-block" id="shorter_name"><a class="viewcode-back" href="../../../../modules/sources/hume/index.html#indra.sources.hume.processor.shorter_name">[docs]</a><span class="k">def</span> <span class="nf">shorter_name</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds a shorter name for an id by only taking the last part of the URI,</span>
+<span class="sd">    after the last / and the last #. Also replaces - and . with _.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    key: str</span>
+<span class="sd">        Some URI</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    key_short: str</span>
+<span class="sd">        A shortened, but more ambiguous, identifier</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key_short</span> <span class="o">=</span> <span class="n">key</span>
+    <span class="k">for</span> <span class="n">sep</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">]:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">key_short</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key_short</span> <span class="o">=</span> <span class="n">key_short</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key_short</span> <span class="o">=</span> <span class="n">key_short</span></div>
+    <span class="k">return</span> <span class="n">key_short</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, B. M. Gyori, J. A. Bachman.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'1.9.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
