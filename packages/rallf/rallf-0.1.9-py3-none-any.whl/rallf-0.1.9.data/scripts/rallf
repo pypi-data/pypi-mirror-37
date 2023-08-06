@@ -1,0 +1,47 @@
+#!python
+import json
+import sys
+import argparse
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+# from rallf.tools import Runner, Execution
+# from rallf.tools.RobotFactory import RobotFactory
+
+from rallf.cli import RallfArgs
+
+p = argparse.ArgumentParser(description="Rallf developer tool")
+p.add_argument("command", default="run", nargs=1, action="store", help="rallf command (default: run)")
+p.add_argument("task_dir", action="store", nargs="?", default=".", help="task directory (default: current)")
+p.add_argument("-m", "--main", dest="main", action="store", help="the main task class")
+p.add_argument("-r", "--robot", dest="robot", action="store", default=None, help="robot to invoke (default: empty)")
+p.add_argument("-t", "--mock-dir", dest="mocks", action="store", default=None, help="mocks directory")
+
+args = RallfArgs()
+p.parse_args(namespace=args)
+print(args.getProcessed())
+
+exit(0)
+
+
+def error(err, code=-1):
+    usage = "%s run <task-dir>" % sys.argv[0]
+    sys.stderr("Error: %s\n%s\n" % (err, usage))
+    exit(code)
+
+
+if 2 <= len(sys.argv) <= 3 and sys.argv[1] == "run":
+    taskDir = "." if len(sys.argv) == 2 else sys.argv[2]
+else:
+    taskDir = None
+    error("Error: Invalid arguments")
+
+factory = RobotFactory()
+r = Runner()
+
+bot = factory.createEmpty()
+task = json.loads(open("%s/manifest.json" % taskDir, "r"))['main']
+
+x = Execution(task, bot, {})
+
+r.execute(x)
