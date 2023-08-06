@@ -1,0 +1,263 @@
+Metadata-Version: 1.1
+Name: xml2rfc
+Version: 2.12.0
+Summary: Xml2rfc generates RFCs and IETF drafts from document source in XML according to the dtd in RFC2629.
+Home-page: https://tools.ietf.org/tools/xml2rfc/trac/
+Author: Henrik Levkowetz
+Author-email: henrik@levkowetz.com
+License: Simplified BSD Licence
+Download-URL: https://pypi.python.org/pypi/xml2rfc
+Description-Content-Type: UNKNOWN
+Description: Introduction
+        ============
+        
+        The IETF_ uses a specific format for the standards and other documents it
+        publishes as RFCs_, and for the draft documents which are produced when
+        developing documents for publications.  There exists a number of different
+        tools to facilitate the formatting of drafts and RFCs according to the
+        existing rules, and this tool, **xml2rfc**, is one of them.  It takes as input
+        an xml file which contains the text and meta-information about author names
+        etc., and transforms it into suitably formatted output.  The input xml file
+        should follow the DTD given in RFC2629_ (or it's `inofficial successor`_).
+        
+        The current incarnation of **xml2rfc** provides output in the following
+        formats: Paginated and unpaginated ascii text, html, nroff, and expanded xml.
+        Only the paginated text format is currently (January 2013) accepable as draft
+        submissions to the IETF.
+        
+        .. _IETF: https://www.ietf.org/
+        .. _RFCs: https://www.rfc-editor.org/
+        .. _RFC2629: https://tools.ietf.org/html/rfc2629
+        .. _inofficial successor: https://tools.ietf.org/html/draft-mrose-writing-rfcs
+        
+        Installation
+        ============
+        
+        System Install
+        --------------
+        
+        To install a system-wide version of xml2rfc, download and unpack the `xml2rfc 
+        distribution package`_, then cd into the resulting package directory and run::
+        
+            $ python setup.py install
+        
+        Alternatively, if you have the 'pip_' command ('Pip Installs Packages') installed,
+        you can run pip to download and install the package::
+        
+            $ pip install xml2rfc
+        
+        .. _lxml:				http://lxml.de/
+        .. _pip:				https://pypi.python.org/pypi/pip
+        .. _xml2rfc distribution package:	https://pypi.python.org/pypi/pip
+        .. _requests:				http://docs.python-requests.org/
+        
+        
+        User Install
+        ------------
+        
+        If you want to perform a local installation for a specific user,
+        you have a couple of options.  You may use python's default location
+        of user site-packages by specifying the flag ``--user``.  These locations are:
+        
+            * UNIX: $HOME/.local/lib/python<ver>/site-packages
+            * OSX: $HOME/Library/Python/<ver>/lib/python/site-packages
+            * Windows: %APPDATA%/Python/Python<ver>/site-packages
+        
+        You can additionally combine the flag ``--install-scripts`` with ``--user`` to
+        specify a directory on your PATH to install the xml2rfc executable to.  For
+        example, the following command::
+        
+            $ python setup.py install --user --install-scripts=$HOME/bin
+        
+        will install the xml2rfc library and data to your local site-packages
+        directory, and an executable python script ``xml2rfc`` to $HOME/bin.
+        
+        Custom Install
+        --------------
+        
+        The option ``--prefix`` allows you to specify the base path for all
+        installation files.  The setup.py script will exit with an error if your
+        PYTHONPATH is not correctly configured to contain the library path
+        the script tries to install to.
+        
+        The command is used as follows::
+        
+            $ python setup.py install --prefix=<path>
+        
+        For further fine-tuning of the installation behavior, you can get a list
+        of all available options by running::
+        
+            $ python setup.py install --help
+        
+        Usage
+        =====
+        
+        xml2rfc accepts a single XML document as input and outputs to one or more conversion formats.
+        
+        **Basic Usage**: ``xml2rfc SOURCE [options] FORMATS...``
+        
+        **Options**
+            The following parameters affect how xml2rfc behaves, however none are required.
+            
+            ===============  ======================= ==================================================
+            Short            Long                    Description
+            ===============  ======================= ==================================================
+            ``-C``           ``--clear-cache``       purge the cache and exit
+            ``-h``           ``--help``              show the help message and exit
+            ``-n``           ``--no-dtd``            disable DTD validation step
+            ``-N``           ``--no-network``        don't use the network to resolve references
+            ``-q``           ``--quiet``             dont print anything
+            ``-v``           ``--verbose``           print extra information
+            ``-V``           ``--version``           display the version number and exit
+        
+            ``-b BASENAME``  ``--basename=BASENAME`` specify the base name for output files
+            ``-c CACHE``     ``--cache=CACHE``       specify an alternate cache directory to write to
+            ``-D DATE``      ``--date=DATE``         run as if todays date is DATE (format: yyyy-mm-dd)
+            ``-d DTD``       ``--dtd=DTD``           specify an alternate dtd file
+            ``-o FILENAME``  ``--out=FILENAME``      specify an output filename
+            ===============  ======================= ==================================================
+        
+        **Formats**
+            At least one but as many as all of the following output formats must
+            be specified. The destination file will be created according to the
+            argument given to --filename.  If no argument was given, it will
+            create the file(s) "output.format".  If no format is specified, xml2rfc
+            will default to paginated text (``--text``).
+        
+            ===========     ============================================================
+            Command         Description
+            ===========     ============================================================
+            ``--raw``       outputs to a text file, unpaginated
+            ``--text``      outputs to a text file with proper page breaks
+            ``--nroff``     outputs to an nroff file
+            ``--html``      outputs to an html file
+            ``--exp``       outputs to an XML file with all references expanded
+            ===========     ============================================================
+        
+        
+        **Examples**
+            | ``xml2rfc draft.xml``
+            | ``xml2rfc draft.xml --dtd=alt.dtd --basename=draft-1.0 --text --nroff --html``
+        
+        Dependencies
+        ============
+        xml2rfc depends on the following packages:
+        
+        * lxml_ *(> 2.2.7)*
+        * requests_ *(> 2.5.0)*
+        
+        
+        Changelog
+        =========
+        
+        
+        Version 2.12.0 (28 Oct 2018)
+        ------------------------------------------------
+        
+        
+          This release introduces the vocabulary v3 html formatter.  In order to
+          invoke this formatter, use the regular --html switch for html output, and
+          add the --v3 switch to specify the v3 html formatter.
+        
+          In v3 html formatter mode, xml2rfc accepts any valid xml2rfc input file, but
+          since the actual formatter only understands the XML elements and attributes
+          which have not been deprecated by RFC7991, it first applies the xml2rfc v2v3
+          converter in order to transform any deprecated markup to the elements and
+          attributes it understands, and then applies the preptool in order to
+          normalize the input before it starts rendering.
+        
+          This is the first release of the v3 html formatter.  It is quite feature
+          complete, but has been tested only on a limited number of documents, so
+          expect that there could be some rough edges.
+        
+          In building the html v3 formatter, a number of rough edges were also
+          discovered in the schema, RFC 7991; html format output, RFC 7992; and
+          preptool specification, RFC 7998.  The modifications applied in the code
+          are described in draft-levkowetz-xml2rfc-v3-implementation-notes-05.
+        
+        
+        
+        
+        
+        
+        
+        Version 2.11.1 (11 Oct 2018)
+        ------------------------------------------------
+        
+        
+          * Changed linebreaking for URLs in boilerplate and references to the old 
+            behaviour (don't break), added stream abbreviations according to RFC5741, 
+            and changed EMail: to Email: in RFC mode.
+        
+          * Added the align attribute for element <table> to the schema.
+        
+          * Changed the v2v3 converter handling of the table align attribute, and 
+            fixed an issue with lost whitespace after <spanx>.
+        
+          * Added STD to the seriesInfo sort order list.
+        
+          * Added an error message for <date> month content that is neither a month 
+            name or a number.
+        
+        
+        
+        
+        
+        
+        
+        Version 2.11.0 (07 Oct 2018)
+        ------------------------------------------------
+        
+        
+          This release is a result of the issue discussions on xml2rfc-dev, and
+          attempt to follow the discussion and projected resolution of issues #36-#40.
+          This results in a number of incompatibilities with previous releases, with
+          respect to the v3 tools, as expected.  The v2 tools are unaffected.
+          Details:
+        
+          * Changed the default table alignment to 'center', in order to match v2.
+        
+          * Changed the <dl> 'hanging' attribute name to 'newline', based on the 
+            discussion of issue #38, in the schema, v2v3 converter and text formatter.
+        
+          * Added an attribute 'indent' to <dl> in the schema, according to the 
+            discussion of issue #39.  Added v2v3 and text support for the same.
+        
+          * Added markers='true' in the v2v3 converter for sourcecode with markers,
+            and tweaked render_sourcecode() to honour the 'markers' setting.
+        
+          * Removed the disallowed align attribute on sourcecode.
+        
+          * Removed <br> from the schema, according to the resolution of issue #37.
+        
+          * Tweaked the handling of the document title to only reflow if needed, 
+            with some refactoring.
+        
+          * Corrected the handling of the align attribute on <artwork> and <figure>.
+        
+          * Changed <prepTime> to hold an RFC 3339 timestamp with seconds 
+            resolution.
+        
+          * Fixed a couple of issues with v2v3 conversion warnings, and added 
+            source line information for all elements created during conversion.
+        
+          * Fixed a buglet in sourcode rendering.
+        
+          * Added a warning about lxml versions that lack validation error xpath 
+            information, and tweaked the warn() method.
+        
+        
+        
+        
+        
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Topic :: Text Processing
+Classifier: Topic :: Text Processing :: Markup :: XML
+Classifier: License :: OSI Approved :: BSD License
