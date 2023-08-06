@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Library interface &mdash; CALCEPH  - Octave/Matlab language 3.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Multiple file access functions" href="calceph.multiple.html" />
+    <link rel="prev" title="Installation" href="calceph.install.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> CALCEPH  - Octave/Matlab language
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="calceph.intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Library interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-example-program">A simple example program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#menu-headers-and-libraries">Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#types">Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constants">Constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.multiple.html">Multiple file access functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.error.html">Error functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.misc.html">Miscellaneous functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.naifid.html">NAIF identification numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.final.html">Release notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.reportbugs.html">Reporting bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calceph.copying.html">CALCEPH Library Copying conditions</a></li>
+</ul>
+
+            
+          
+    <a href="genindex.html">Index</a>
+  
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CALCEPH  - Octave/Matlab language</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Library interface</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="library-interface">
+<h1>Library interface<a class="headerlink" href="#library-interface" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="a-simple-example-program">
+<h2>A simple example program<a class="headerlink" href="#a-simple-example-program" title="Permalink to this headline">¶</a></h2>
+<p>The following example program shows the typical usage of the Octave/Matlab interface.</p>
+<p>Other examples using the Octave/Matlab interface can be found in the directory <em>examples</em> of the library sources.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">peph</span> <span class="o">=</span> <span class="n">CalcephBin</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example1.dat&#39;</span><span class="p">);</span>
+<span class="n">AU</span> <span class="o">=</span> <span class="n">peph</span><span class="o">.</span><span class="n">getconstant</span><span class="p">(</span><span class="s1">&#39;AU&#39;</span><span class="p">)</span>
+<span class="n">jd0</span> <span class="o">=</span> <span class="mi">2451542</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">PV</span> <span class="o">=</span> <span class="n">peph</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">(</span><span class="n">jd0</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">NaifId</span><span class="o">.</span><span class="n">MOON</span><span class="p">,</span> <span class="n">NaifId</span><span class="o">.</span><span class="n">EARTH</span><span class="p">,</span>
+                       <span class="n">Constants</span><span class="o">.</span><span class="n">UNIT_KM</span><span class="o">+</span><span class="n">Constants</span><span class="o">.</span><span class="n">UNIT_SEC</span><span class="o">+</span><span class="n">Constants</span><span class="o">.</span><span class="n">USE_NAIFID</span><span class="p">);</span>
+<span class="n">disp</span><span class="p">(</span><span class="n">PV</span><span class="p">)</span>
+<span class="n">peph</span><span class="o">.</span><span class="n">close</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="menu-headers-and-libraries">
+<span id="calcephpy"></span><h2>Package<a class="headerlink" href="#menu-headers-and-libraries" title="Permalink to this headline">¶</a></h2>
+<p>It is designed to work with Matlab or Octave software.</p>
+<p>With Octave, you should load this package :</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">pkg</span> <span class="n">load</span> <span class="n">calcephoct</span>
+</pre></div>
+</div>
+<p>If you want Octave to automatically load this package, simply add to the file <em>octaverc</em> the command <strong>pkg load calcephoct</strong> .</p>
+<p>With Matlab, you should add the path to the Matlab files of the dynamic library CALCEPH :</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">addpath</span><span class="p">(</span><span class="s">&#39;&lt;prefix&gt;/libexec/calceph/mex/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default, this prefix is <em>/usr/local</em>, so you have to enter before using calceph library.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">addpath</span><span class="p">(</span><span class="s">&#39;/usr/local/libexec/calceph/mex/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you want Matlab to automatically add this path at startup, simply add to this path to the environment variable <em>MATLABPATH</em>.</p>
+<p>Relative to C or Fortran interface, the prefixes  <em>calceph_</em>, <em>CALCEPH_</em>, <em>NAIFID_</em> are deleted for the naming convention of the functions, constants and NAIF identification numbers.</p>
+</div>
+<div class="section" id="types">
+<span id="naifid"></span><h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="CalcephBin">
+<em class="property">class </em><code class="descname">CalcephBin</code><a class="headerlink" href="#CalcephBin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This type contains all information to access an ephemeris file.</p>
+<dl class="class">
+<dt id="NaifId">
+<em class="property">class </em><code class="descname">NaifId</code><a class="headerlink" href="#NaifId" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This type contains the NAIF identification numbers.</p>
+<dl class="class">
+<dt id="Constants">
+<em class="property">class </em><code class="descname">Constants</code><a class="headerlink" href="#Constants" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This type contains all constants defined in the library, except the NAIF identification numbers.</p>
+</div>
+<div class="section" id="constants">
+<span id="id5"></span><h2>Constants<a class="headerlink" href="#constants" title="Permalink to this headline">¶</a></h2>
+<p>The following constants are defined in the class <strong>Constants</strong>.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION_MAJOR</code></dt>
+<dd></dd></dl>
+
+<p>This integer constant defines the major revision of this library. It can be used to distinguish different releases of this library.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION_MINOR</code></dt>
+<dd></dd></dl>
+
+<p>This integer constant defines the minor revision of this library. It can be used to distinguish different releases of this library.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION_PATCH</code></dt>
+<dd></dd></dl>
+
+<p>This integer constant defines the patch level revision of this library. It can be used to distinguish different releases of this library.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION_STRING</code></dt>
+<dd></dd></dl>
+
+<p>This string is the version of the library, which can be compared to the result of calceph_getversion to check at run time if the header file and library used match:</p>
+<p>Note: Obtaining different strings is not necessarily an error, as in general, a program compiled with some old CALCEPH version can be dynamically linked with a newer CALCEPH library version (if allowed by the operating system).</p>
+<dl class="attribute">
+<dt>
+<code class="descname">ASTEROID</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines the offset value for the asteroids that must be used as target or center for the computation functions, such as <a class="reference internal" href="calceph.multiple.html#CalcephBin.compute" title="CalcephBin.compute"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">CalcephBin.compute()</span></code></a>.</p>
+<p>The following constants specify in which units are expressed the output of the computation functions, such as <a class="reference internal" href="calceph.multiple.html#CalcephBin.compute_unit" title="CalcephBin.compute_unit"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">CalcephBin.compute_unit()</span></code></a> :</p>
+<dl class="attribute">
+<dt>
+<code class="descname">UNIT_AU</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the unit of the positions and velocities is expressed in astronomical unit.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">UNIT_KM</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the unit of the positions and velocities is expressed in kilometer.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">UNIT_DAY</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the unit of the velocities or the quantity TT-TDB or TCG-TCB is expressed in day (one day=86400 seconds).</p>
+<dl class="attribute">
+<dt>
+<code class="descname">UNIT_SEC</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the unit of the velocities or the quantity TT-TDB or TCG-TCB is expressed in second.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">UNIT_RAD</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the unit of the angles is expressed in radian.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">OUTPUT_EULERANGLES</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the output array contains the euler angles.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">OUTPUT_NUTATIONANGLES</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the output array contains the nutation angles.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">USE_NAIFID</code></dt>
+<dd></dd></dl>
+
+<p>This integer defines that the NAIF identification numbers are used as target or center for the computation functions, such as <a class="reference internal" href="calceph.multiple.html#CalcephBin.compute_unit" title="CalcephBin.compute_unit"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">CalcephBin.compute_unit()</span></code></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="calceph.multiple.html" class="btn btn-neutral float-right" title="Multiple file access functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="calceph.install.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, CNRS, Observatoire de Paris, Observatoire de la Côte d&#39;Azur.
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'3.2.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
