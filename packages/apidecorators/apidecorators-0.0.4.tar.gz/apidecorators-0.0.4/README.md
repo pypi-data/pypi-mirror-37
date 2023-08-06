@@ -1,0 +1,91 @@
+# API Decorators
+
+```python
+# book.py
+from apidecorators.api import jwt_auth, is_owner, get, insert, is_owner, has_role, update, push, pull, \
+                validate, validate_push
+from cerberus import Validator
+
+schema = {
+    'author': {'type': 'string'},
+    'title': {'type': 'string'}
+}
+
+validator = Validator(schema)
+
+schema_comments = {
+    'author': {'type': 'string'},
+    'message': {'type': 'string'}
+}
+
+validator_comments = Validator(schema_comments)
+
+def set_routes_book(routes):
+
+    @routes.get('/api/book')
+    @jwt_auth
+    #@is_owner('book')
+    @get_many('book')
+    async def get_many_book(query):  
+        author = query["author"]
+        return {"author": author}, 0, 10
+
+    @routes.get('/api/book/{_id}')
+    @jwt_auth
+    #@is_owner('book')
+    @get('book')
+    async def get_book(document):      
+        return document
+
+    @routes.put('/api/book/{_id}/push/{push}')
+    @jwt_auth
+    #@is_owner('book')
+    @validate_push(validator=validator_comments)
+    @push('book')
+    async def handle_push(document, request, payload):      
+        return document
+
+    @routes.put('/api/book/{_id}/pull/{pull}/{sub_id}')
+    @jwt_auth
+    #@is_owner('book')
+    @pull('book')
+    async def handle_pull(document, request, payload):      
+        pass
+
+    @routes.post('/api/book')
+    @jwt_auth
+    @validate(validator=validator)
+    @insert('book')
+    async def handle_post(document, request, payload):
+        return document       
+    
+    @routes.put('/api/book/{_id}')
+    @jwt_auth
+    #@is_owner('book')
+    @validate(update=True, validator=validator)
+    @update('book')
+    async def handle_put(document, request, payload):      
+        return document    
+
+#app.py
+import asyncio
+from book import set_routes_book
+from aiohttp import web
+from apidecorators.api import cors_factory
+
+async def handle(loop):
+    app = web.Application(loop=loop, middlewares=[cors_factory])
+    routes = web.RouteTableDef()
+
+    set_routes_book(routes)
+    app.router.add_routes(routes)
+    app.router.add_static('/', './dist')
+    await loop.create_server(app.make_handler(), '0.0.0.0', 8089)
+
+def main():    
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(handle(loop))
+    print("Server started at port 8089")
+    loop.run_forever()
+    loop.close()
+```
