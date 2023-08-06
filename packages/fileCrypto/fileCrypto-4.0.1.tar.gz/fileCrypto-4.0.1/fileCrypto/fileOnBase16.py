@@ -1,0 +1,74 @@
+import time
+import platform
+import base64
+import os
+
+class fileOnBase16():
+	"""This Class Is To Encrypt And Decrypt Your File In Easy Way No Complaxy
+	Is Just Like That :
+	import fileCrypto
+	myfile = fileCrypto.fileOnBase16("exemple.jpg")
+	myfile.encode() #This Methode To Encode The File
+	myfile.decode() #This Methode To Decode the File
+	#Encryption And Decryption of File Was Never Easy Than Before
+	:)"""
+
+	def __init__(self,path,extension='.filecrypto'):
+		self.path = str(path)
+		self.extension = str(extension)
+
+	def encode(self,timerPrinting=False):
+		"""To give the Order To Encode The File"""
+		t = time.time()
+		if self.extension not in self.path:
+			file = open(self.path,"rb")
+			file_data = file.read()
+			file.close()
+			# #Start To CHecking The PlatForm
+			# if platform.system() == "Windows":
+			# 	self.path_dir = self.path.split("\\")[-1]
+			# elif platform.system() == "Linux":
+			# 	self.path_dir = self.path.split('/')[-1]
+			# #End Checking Wich Platform
+			# print('Encryption of '+self.path_dir+'...')
+			# print('It\'s may take a will')
+			######################### Base 64 ##########################
+			self.encoded = base64.b16encode(file_data)
+			############################################################
+			#print('writing in you file ...')
+			os.remove(self.path)
+			newfile = open(str(self.path) + self.extension,"wb")
+			newfile.write(self.encoded)
+			newfile.close()
+			if timerPrinting:
+				print('Done In '+str(time.time() -t))
+		else:
+			print("The File is already encoded")
+
+	def decode(self,timerPrinting=False):
+		"""To Give The Order To Decode The File"""
+		t = time.time()
+		if self.extension in self.path:
+			file = open(self.path,"rb")
+			file_data = file.read()
+			file.close()
+			# #Start To CHecking The PlatForm
+			# if platform.system() == "Windows":
+			# 	self.path = self.path.split("\\")[-1]
+			# elif platform.system() == "Linux":
+			# 	self.path = self.path.split('/')[-1]
+			# #End Checking Wich Platform
+			# print("Decrypting of "+str(self.path)+"...")
+			######################## Base64 Decoding ###################
+			self.decoded = base64.b16decode(file_data)
+			############################################################
+			self.path2 = self.path.replace(self.extension,"")
+			os.remove(self.path)
+			#print('Writing in Your File...')
+			newfile = open(self.path2,'wb')
+			newfile.write(self.decoded)
+			newfile.close()
+			if timerPrinting:
+				print('Done In '+str(time.time() -t))
+		else:
+			print("The File is Not Encoded To Decoded")
