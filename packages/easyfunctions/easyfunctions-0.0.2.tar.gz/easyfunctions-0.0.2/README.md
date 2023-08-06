@@ -1,0 +1,1 @@
+This is a library with tools to better manipulate pandas DataFrames with many columns.
