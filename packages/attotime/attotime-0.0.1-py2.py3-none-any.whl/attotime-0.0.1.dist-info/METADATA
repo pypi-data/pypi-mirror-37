@@ -1,0 +1,345 @@
+Metadata-Version: 2.1
+Name: attotime
+Version: 0.0.1
+Summary: Arbitrary precision datetime library.
+Home-page: https://bitbucket.org/nielsenb/attotime
+Author: Brandon Nielsen
+Author-email: nielsenb@jetfuse.net
+License: UNKNOWN
+Project-URL: Source, https://bitbucket.org/nielsenb/attotime
+Project-URL: Tracker, https://bitbucket.org/nielsenb/attotime/issues
+Keywords: datetime decimal
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+
+attotime
+========
+
+High precision datetime implementation for Python
+-------------------------------------------------
+
+Features
+========
+
+* Fractional nanosecond resolution using Python `decimal <https://docs.python.org/2/library/decimal.html>`_ module
+* API as close to Python's native `datetime <https://docs.python.org/2/library/datetime.html>`_ implementation as possible
+* Python 3 support
+
+attotimedelta
+=============
+
+:code:`attotimedelta` objects represent the difference between two dates or times. It wraps a native `timedelta <https://docs.python.org/2/library/datetime.html#timedelta-objects>`_ object, and stores fractional nanoseconds as a :code:`Decimal`.
+
+*class* attotime.attotimedelta([days[, seconds[, microseconds[, milliseconds[, minutes[, hours[, weeks[, nanoseconds]]]]]]]])
+-----------------------------------------------------------------------------------------------------------------------------
+
+All arguments are optional and default to 0. All arguments may be ints, longs, or floats, and may be positive or negative.
+
+Only *days*, *seconds*, *microseconds*, and *nanoseconds* are stored internally. *days*, *seconds*, and *microseconds* are stored in a native `timedelta` object, *nanoseconds* are contained in a :code:`Decimal`.
+
+Instance attributes (read-only)
+-------------------------------
+
+* :code:`days` Between -999999999 and 999999999 inclusive.
+* :code:`seconds` Between 0 and 86399 inclusive.
+* :code:`microseconds` Between 0 and 999999 inclusive.
+* :code:`nanoseconds` A :code:`Decimal` between 0 and 999 inclusive.
+
+Supported operations
+--------------------
+
+* :code:`td1 = td2 + td3` Sum of td2 and td3.
+* :code:`td1 = td2 - td3` Difference of td2 and td3.
+* :code:`td1 = i * td2` or :code:`td1 = td2 * i` Delta multiplied by an integer, long, float, or :code:`Decimal`.
+* :code:`td1 = td2 // i` Computes the floor, discarding the remainder.
+* :code:`+td1` Returns an :code:`attotimedelta` with the same value.
+* :code:`-td1` Equivalent to :code:`td1 * -1`.
+* :code:`abs(td1)` Equivalent to :code:`+td1` when :code:`td1.days >= 0`, :code:`-td1` when :code:`t1.days < 0`.
+* :code:`str(td1)` Returns a string in the form :code:`[D day[s], ][H]H:MM:SS[.UUUUUU]`, where :code:`D` is negative for :code:`td1 < 0` and :code:`UUUUUU` can be expanded for up to 16 place fixed point.
+* :code:`repr(td1)` Returns a string in the form :code:`attotime.attotimedelta(D[, S[, U]])`, where :code:`D` is negative for :code:`td1 < 0`.
+
+Instance methods
+----------------
+
+attotimedelta.total_seconds()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the total number of seconds contained in the duration as a :code:`Decimal`.
+
+attotimedelta.total_nanoseconds()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the total number of nanoseconds contained in the duration as a :code:`Decimal`.
+
+attodatetime
+============
+
+:code:`attodatetime` is a single object wrapping a native `date <https://docs.python.org/2/library/datetime.html#date-objects>`_ object and an :code:`attotime` object for the purposes of storing date and time information with fractional nanoseconds stored as a :code:`Decimal`.
+
+*class* attotime.attodatetime(year, month, day[, hour[, minute[, second[, microsecond[, nanosecond[, tzinfo]]]]]])
+------------------------------------------------------------------------------------------------------------------
+
+Year, month, and day are required. :code:`tzinfo` may be :code:`None`, or an instance of a `tzinfo subclass <https://docs.python.org/2/library/datetime.html#tzinfo-objects>`_. The nanosecond argument may be a float or :code:`Decimal`. The remaining arguments may be ints or longs.
+
+Class methods
+-------------
+
+attodatetime.today()
+^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.now([tz])
+^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.utcnow()
+^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.fromtimestamp(timestamp, [tz])
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.utcfromtimestamp(timestamp)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.fromordinal(ordinal)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attodatetime` corresponding to the proleptic Gregorian ordinal, where January 1 of year 1 has ordinal 1. **ValueError** is raised unless 1 <= ordinal <= :code:`datetime.max.toordinal()` (note native Python :code:`datetime` range checking). The hour, minute, second and microsecond of the result are all 0, and :code:`tzinfo` is :code:`None`.
+
+attodatetime.combine(date, time)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attodatetime` object whose date components are equal to the given date object’s, and whose time components and :code:`tzinfo` attributes are equal to the given time object’s. If date is a :code:`attodatetime` (or native Python :code:`datetime`), its time components and :code:`tzinfo` attributes are ignored.
+
+attodatetime.strptime(date_string, format)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+Instance attributes (read-only)
+-------------------------------
+
+* :code:`year` Between Python native :code:`datetime` :code:`MINYEAR` and :code:`MAXYEAR`, inclusive.
+* :code:`month` Between 1 and 12 inclusive.
+* :code:`day` Between 1 and the number of days in the given month of the given year.
+* :code:`hour` In :code:`range(24)`.
+* :code:`minute` In :code:`range(60)`.
+* :code:`second` In :code:`range(60)`.
+* :code:`microsecond` In :code:`range(1000000)`.
+* :code:`nanosecond` In :code:`range(1000)`, as :code:`Decimal`.
+* :code:`tzinfo` The object passed as the :code:`tzinfo` argument to the :code:`attodatetime` constructor, or :code:`None` if none was passed.
+
+Supported operations
+--------------------
+
+* :code:`dt2 = dt1 + td` dt1 moved forward the duration of the :code:`attotimedelta` if :code:`attotimedelta.days > 0`, or backward if :code:`attotimedelta.days < 0`.
+* :code:`dt2 = dt1 - td` dt1 moved backward the duration of the :code:`attotimedelta` if :code:`attotimedelta.days > 0`, or forward if :code:`attotimedelta.days < 0`.
+* :code:`td = dt1 - dt2` The duration of time between dt1 and dt2, as an :code:`attotimedelta`.
+* :code:`dt1 < dt2` dt1 is considered less than dt2 if dt1 precedes dt2 in time.
+* :code:`str(dt1)` Equivalent to :code:`dt1.isoformat(separator=' ')`.
+* :code:`repr(dt1)` Returns a string in the form :code:`attotime.attodatetime(Y, M, D, h, m, s, us, ns, [tz])`.
+
+Instance methods
+----------------
+
+attodatetime.date()
+^^^^^^^^^^^^^^^^^^^
+
+Return a :code:`date` object with same year, month and day.
+
+attodatetime.time()
+^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attotime` object with the same hour, minute, second, microsecond, and nanosecond. :code:`tzinfo` is :code:`None`.
+
+attodatetime.timetz()
+^^^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attotime` object with the same hour, minute, second, microsecond, nanosecond, and :code:`tzinfo` attributes.
+
+attodatetime.replace([year[, month[, day[, hour[, minute[, second[, microsecond[, nanosecond[, tzinfo]]]]]]]]])
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attodatetime` object with the same attributes, except for those attributes given new values by whichever keyword arguments are specified. Note that :code:`tzinfo=None` can be specified to create a naive :code:`attodatetime` from an aware :code:`attodatetime` with no conversion of date and time data.
+
+attodatetime.astimezone(tz)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attodatetime.utcoffset()
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else return :code:`self.tzinfo.utcoffset(self)` as an :code:`attotimedelta`.
+
+attodatetime.dst()
+^^^^^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else return :code:`self.tzinfo.dst(self)` as an :code:`attotimedelta`.
+
+attodatetime.tzname()
+^^^^^^^^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else returns :code:`self.tzinfo.tzname(self)`.
+
+attodatetime.timetuple()
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the result of `datetime.timetuple() <https://docs.python.org/2/library/datetime.html#datetime.datetime.timetuple>`_ for a native Python :code:`datetime` matching the :code:`attodatetime`. Nanosecond precision is lost.
+
+attodatetime.utctimetuple()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the result of `datetime.utctimetuple() <https://docs.python.org/2/library/datetime.html#datetime.datetime.utctimetuple>`_ for a native Python :code:`datetime` matching the :code:`attodatetime`. Nanosecond precision is lost.
+
+attodatetime.toordinal()
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the proleptic Gregorian ordinal of the date. The same as :code:`self.date().toordinal()`.
+
+attodatetime.weekday()
+^^^^^^^^^^^^^^^^^^^^^^
+
+Return the day of the week as an integer, where Monday is 0 and Sunday is 6. The same as :code:`self.date().weekday()`.
+
+attodatetime.isoweekday()
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return the day of the week as an integer, where Monday is 1 and Sunday is 7. The same as :code:`self.date().isoweekday()`.
+
+attodatetime.isocalendar()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return a 3-tuple, (ISO year, ISO week number, ISO weekday). The same as :code:`self.date().isocalendar()`.
+
+attodatetime.isoformat([sep])
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return a string representing the date and time in ISO 8601 format, :code:`YYYY-MM-DDTHH:MM:SS.mmmmmm` or, if microsecond is 0, :code:`YYYY-MM-DDTHH:MM:SS`
+
+If :code:`utcoffset()` does not return :code:`None`, a 6-character string is appended, giving the UTC offset in (signed) hours and minutes: :code:`YYYY-MM-DDTHH:MM:SS.mmmmmm+HH:MM` or, if microsecond is 0 :code:`YYYY-MM-DDTHH:MM:SS+HH:MM`
+
+The optional argument :code:`sep` (default 'T') is a separator, placed between the date and time portions of the result.
+
+The decimal second component may be expanded up to 16 place fixed point.
+
+attodatetime.ctime()
+^^^^^^^^^^^^^^^^^^^^
+
+Return the result of `datetime.ctime() <https://docs.python.org/2/library/datetime.html#datetime.datetime.ctime>`_ for a native Python :code:`datetime` matching the :code:`attodatetime`. Nanosecond precision is lost.
+
+attodatetime.strftime(format)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attotime
+========
+
+:code:`attotime` is an object wrapping a native `time <https://docs.python.org/2/library/datetime.html#time-objects>`_ object along with fractional nanoseconds stored as a :code:`Decimal`.
+
+*class* attotime.attotime([hour[, minute[, second[, microsecond[, nanosecond[, tzinfo]]]]]])
+--------------------------------------------------------------------------------------------
+
+All arguments are optional. :code:`tzinfo` may be :code:`None`, or an instance of a `tzinfo subclass <https://docs.python.org/2/library/datetime.html#tzinfo-objects>`_. The nanosecond argument may be float or :code:`Decimal`. The remaining arguments may be ints or longs.
+
+Instance attributes (read-only)
+-------------------------------
+
+* :code:`hour` In :code:`range(24)`.
+* :code:`minute` In :code:`range(60)`.
+* :code:`second` In :code:`range(60)`.
+* :code:`microsecond` In :code:`range(1000000)`.
+* :code:`nanosecond` In :code:`range(1000)`, as :code:`Decimal`.
+* :code:`tzinfo` The object passed as the :code:`tzinfo` argument to the :code:`attotime` constructor, or :code:`None` if none was passed.
+
+Supported operations
+--------------------
+
+* :code:`t1 < t2` t1 is considered less than t2 if t1 precedes t2 in time.
+* :code:`str(t1)` Equivalent to :code:`t1.isoformat()`.
+* :code:`repr(t1)` Returns a string in the form :code:`attotime.attotime(h, m, s, us, ns, [tz])`.
+
+Instance methods
+----------------
+
+attotime.replace([hour[, minute[, second[, microsecond[, nanosecond[, tzinfo]]]]]])
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Return an :code:`attotime` object with the same attributes, except for those attributes given new values by whichever keyword arguments are specified. Note that :code:`tzinfo=None` can be specified to create a naive :code:`attotime` from an aware :code:`attotime` with no conversion of date and time data.
+
+
+attotime.isoformat()
+^^^^^^^^^^^^^^^^^^^^
+
+Return a string representing the time in ISO 8601 format, :code:`HH:MM:SS.mmmmmm` or, if microsecond is 0, :code:`HH:MM:SS`
+
+If :code:`utcoffset()` does not return :code:`None`, a 6-character string is appended, giving the UTC offset in (signed) hours and minutes: :code:`HH:MM:SS.mmmmmm+HH:MM` or, if microsecond is 0 :code:`HH:MM:SS+HH:MM`
+
+The decimal second component may be expanded up to 16 place fixed point.
+
+attotime.strftime(formatstr)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Raises **NotImplementedError**
+
+attotime.utcoffset()
+^^^^^^^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else return :code:`self.tzinfo.utcoffset(self)` as an :code:`attotimedelta`.
+
+attotime.dst()
+^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else return :code:`self.tzinfo.dst(self)` as an :code:`attotimedelta`.
+
+attotime.tzname()
+^^^^^^^^^^^^^^^^^^^
+
+If :code:`tzinfo` is :code:`None`, returns :code:`None`, else returns :code:`self.tzinfo.tzname(self)`.
+
+Tests
+=====
+
+To run the unit tests, navigate to the source directory and run the tests for the python version being worked on (python2, python3)::
+
+   $ python2 -m unittest discover attotime/tests/
+
+or::
+
+   $ python3 -m unittest discover attotime/tests/
+
+Contributing
+============
+
+attotime is an open source project hosted on `Bitbucket <https://bitbucket.org/nielsenb/attotime>`_.
+
+Any and all bugs are welcome on our `issue tracker <https://bitbucket.org/nielsenb/attotime/issues>`_. Of particular interest are places where the attotime implementation incorrectly deviates from native Python behavior. Pull requests containing unit tests or fixed bugs are always welcome!
+
+References
+==========
+
+* `PEP 410 which describes the need for high precision time types <https://www.python.org/dev/peps/pep-0410/>`_
+* `Bug report with implementation of PEP 410 <https://bugs.python.org/issue13882>`_
+* `Bug report discussing loss of precision when parsing ISO8601 timestamps <https://bitbucket.org/nielsenb/aniso8601/issues/10/sub-microsecond-precision-in-durations-is>`_
+
+
