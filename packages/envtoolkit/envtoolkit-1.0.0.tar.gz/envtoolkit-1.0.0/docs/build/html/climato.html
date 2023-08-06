@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Climatologies &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="index.html"/>
+        <link rel="up" title="Timeseries module" href="timeseries.html"/>
+        <link rel="next" title="Lanczos filtering" href="lanczos.html"/>
+        <link rel="prev" title="Timeseries module" href="timeseries.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">Maps module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colors.html">Colors module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="timeseries.html">Timeseries module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Climatologies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#daily-time-scales">Daily time scales</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monthly-time-scales">Monthly time scales</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lanczos.html">Lanczos filtering</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="timeseries.html">Timeseries module</a> &raquo;</li>
+        
+      <li>Climatologies</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/climato.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="climatologies">
+<span id="climato-daily"></span><h1>Climatologies<a class="headerlink" href="#climatologies" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="daily-time-scales">
+<h2>Daily time scales<a class="headerlink" href="#daily-time-scales" title="Permalink to this headline">¶</a></h2>
+<p>Daily climatologies are computed by using the
+<a class="reference internal" href="generated/envtoolkit.ts.html#envtoolkit.ts.compute_daily_clim" title="envtoolkit.ts.compute_daily_clim"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.ts.compute_daily_clim()</span></code></a> function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.ts</span>
+<span class="n">clim</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_clim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">nharm</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <cite>data</cite> variable is the variable from which the climatology is
+extracted. It can be of any dimension, but the climatology is computed
+on the first dimension (which should be time). The <cite>date</cite> variable is
+the date associated with the data, with a format YYYYMMDD (YYYY=year,
+MM=month, DD=day). It must have the same length as the first dimension
+of <cite>data</cite>.</p>
+<p>The <cite>smooth</cite> arguments defines whether the seasonal cycle should be
+smoothed out. If set to <cite>True</cite>, a filtering is applied through fft
+computation. The <cite>nharm</cite> argument is the number of harmonics to retain
+in the fft calculation. For instance, a value of 2 means to use the annual and semi-annual harmonics only.</p>
+<p>Anomalies are computed by using the function <a class="reference internal" href="generated/envtoolkit.ts.html#envtoolkit.ts.compute_daily_anom" title="envtoolkit.ts.compute_daily_anom"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.ts.compute_daily_anom()</span></code></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">anom</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_anom</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">clim</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The two first arguments are the same as for the
+<a class="reference internal" href="generated/envtoolkit.ts.html#envtoolkit.ts.compute_daily_clim" title="envtoolkit.ts.compute_daily_clim"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.ts.compute_daily_clim()</span></code></a> function, while the last one is the
+climatology that was computed on the previous step.</p>
+</div>
+<div class="section" id="monthly-time-scales">
+<span id="climato-monthly"></span><h2>Monthly time scales<a class="headerlink" href="#monthly-time-scales" title="Permalink to this headline">¶</a></h2>
+<p>The computations of monthly seasonal cycles and monthly anomalies
+relative to these seasonal cycles are very similar to the computations
+for daily time scales.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.ts</span>
+<span class="n">clim</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_monthly_clim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+<span class="n">anom</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_monthly_anom</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">clim</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the <a class="reference internal" href="generated/envtoolkit.ts.html#envtoolkit.ts.compute_monthly_clim" title="envtoolkit.ts.compute_monthly_clim"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.ts.compute_monthly_clim()</span></code></a> function, <cite>data</cite> is the
+data array, the seasonal cycle of which to extract (with time as the
+first dimension). <cite>date</cite> is a date vector, with a format YYYYMM (YYYY=year,
+MM=month). Note that contrary to the daily counterpart, there
+is no smoothing possible here.</p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example for daily/montly climatologies</span>
+
+<span class="kn">import</span> <span class="nn">envtoolkit.ts</span><span class="o">,</span> <span class="nn">envtoolkit.nc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">netCDF4</span> <span class="k">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">netcdftime</span> <span class="k">import</span> <span class="n">utime</span>
+
+<span class="c1"># defining some plot options</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;lines.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">prop</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">font_manager</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+<span class="c1"># recovering sst from a netcdf fime</span>
+<span class="c1"># converting daily time into dates</span>
+<span class="n">filein</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="s2">&quot;ts_sst.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">filein</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s2">&quot;sst&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">filein</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>
+<span class="n">cdftime</span> <span class="o">=</span> <span class="n">utime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="p">[:]</span>
+<span class="n">date</span> <span class="o">=</span> <span class="n">cdftime</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+<span class="n">filein</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># ============================= processing daily time scales</span>
+<span class="c1"># converting dates into yyyymmdd formats </span>
+<span class="c1"># yyyy = years, mm = months, dd = days</span>
+<span class="n">yyyymmdd</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">make_yymmdd</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>  
+
+<span class="c1"># daily clim with two harmonics retained (default)</span>
+<span class="n">dclim</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_clim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">)</span>
+<span class="c1"># daily clim no smoothing</span>
+<span class="n">dclim_nosmth</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_clim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># daily clim threee harmonics retained</span>
+<span class="n">dclim_nh3</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_clim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">,</span> <span class="n">nharm</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># daily anom</span>
+<span class="n">danom</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_daily_anom</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">,</span> <span class="n">dclim</span><span class="p">)</span>
+
+<span class="c1"># defining daily xticks and xticklabels</span>
+<span class="n">datestr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">date</span><span class="p">])</span>
+<span class="n">days</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">day</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">date</span><span class="p">])</span>
+<span class="n">month</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">month</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">date</span><span class="p">])</span>
+<span class="n">iticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">((</span><span class="n">days</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">month</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># ============================ processing monthly time scales</span>
+<span class="c1"># calculating monthly means from daily values</span>
+<span class="n">yyyymm</span><span class="p">,</span> <span class="n">datam</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">make_monthly_means</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">)</span>
+<span class="n">yyyymm</span><span class="p">,</span> <span class="n">timem</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">make_monthly_means</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">yyyymmdd</span><span class="p">)</span>
+
+<span class="c1"># monthly clim and anoms</span>
+<span class="n">dclimm</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_monthly_clim</span><span class="p">(</span><span class="n">datam</span><span class="p">,</span> <span class="n">yyyymm</span><span class="p">)</span>
+<span class="n">danomm</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">compute_monthly_anom</span><span class="p">(</span><span class="n">datam</span><span class="p">,</span> <span class="n">yyyymm</span><span class="p">,</span> <span class="n">dclimm</span><span class="p">)</span>
+
+<span class="c1"># extracting the date from the monthly time values</span>
+<span class="c1"># defining the monthly xticks and xticklabels</span>
+<span class="n">datem</span> <span class="o">=</span> <span class="n">cdftime</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">timem</span><span class="p">)</span>
+<span class="n">datestrm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">datem</span><span class="p">])</span>
+<span class="n">monthm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">month</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">datem</span><span class="p">])</span>
+<span class="n">iticksm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">monthm</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][::</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># plotting</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.09</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Daily&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Raw&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="o">-</span><span class="n">danom</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Clim.&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax1</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;SST (C)&#39;</span><span class="p">)</span>
+
+<span class="n">ax3</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">danom</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Anom.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">time</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="n">iticks</span><span class="p">])</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">datestr</span><span class="p">[</span><span class="n">iticks</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;SST anoms. (C)&#39;</span><span class="p">)</span>
+
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Monthly&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timem</span><span class="p">,</span> <span class="n">datam</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Raw&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timem</span><span class="p">,</span> <span class="n">datam</span><span class="o">-</span><span class="n">danomm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Clim.&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax4</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timem</span><span class="p">,</span> <span class="n">danomm</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Anom.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax4</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">timem</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">timem</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">ax4</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">timem</span><span class="p">[</span><span class="n">iticksm</span><span class="p">])</span>
+<span class="n">ax4</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">datestrm</span><span class="p">[</span><span class="n">iticksm</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax4</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;figure_climato.png&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;lines.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dclim_nosmth</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;No smoothing&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dclim_nh3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Smoothed (nharm=3)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dclim</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Smoothed (nharm=2)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dclim</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Day of year&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;SST clim&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;figure_climato_2.png&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_climato.png"><img alt="_images/figure_climato.png" src="_images/figure_climato.png" style="width: 60%;" /></a>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_climato_2.png"><img alt="_images/figure_climato_2.png" src="_images/figure_climato_2.png" style="width: 60%;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="lanczos.html" class="btn btn-neutral float-right" title="Lanczos filtering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="timeseries.html" class="btn btn-neutral" title="Timeseries module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

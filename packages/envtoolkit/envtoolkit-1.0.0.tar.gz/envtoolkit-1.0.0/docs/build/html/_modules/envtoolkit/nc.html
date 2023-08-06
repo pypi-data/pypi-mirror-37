@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>envtoolkit.nc &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../map.html">Maps module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../colors.html">Colors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>envtoolkit.nc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for envtoolkit.nc</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot; Module that handles functions relative to NetCDF files &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="copy_ncstruct"><a class="viewcode-back" href="../../generated/envtoolkit.nc.html#envtoolkit.nc.copy_ncstruct">[docs]</a><span class="k">def</span> <span class="nf">copy_ncstruct</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="n">fout</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Copy the internal structure of a NetCDF file. </span>
+
+<span class="sd">    It copies the dimension names, variable names and attributes</span>
+<span class="sd">    from a file to another file. </span>
+
+<span class="sd">    :param netCDF4.Dataset fin: Source file</span>
+<span class="sd">    :param netCDF4.Dataset fout: Destination file</span>
+<span class="sd">    </span>
+<span class="sd">    .. note :: The file contents are not copied! Only the structure of the file</span>
+
+<span class="sd">    .. code-block :: python </span>
+
+<span class="sd">        from netCDF4 import Dataset</span>
+<span class="sd">        import envtoolkit.nc</span>
+
+<span class="sd">        fin = Dataset(&quot;source_file.nc&quot;, &quot;r&quot;)</span>
+<span class="sd">        fout = Dataset(&quot;dest_file.nc&quot;, &quot;w&quot;)</span>
+
+<span class="sd">        # copy the dimensions/variables/attributes of</span>
+<span class="sd">        # the source file into the dest file</span>
+<span class="sd">        envtoolkit.nc.copy_ncstruct(fin, fout)</span>
+<span class="sd">        </span>
+<span class="sd">        # Fill in the variable of the destination file</span>
+
+<span class="sd">        # closing the files</span>
+<span class="sd">        fin.close()</span>
+<span class="sd">        fout.close()</span>
+
+<span class="sd">    :param netCDF4.Dataset fin: the source file</span>
+
+<span class="sd">    :param netCDF4.Dataset fout: the destination file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Working on the dimensions</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">dimensions</span>
+    <span class="k">for</span> <span class="n">dimname</span><span class="p">,</span> <span class="n">dimval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">dim</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">dimval</span><span class="o">.</span><span class="n">isunlimited</span><span class="p">():</span>
+            <span class="c1"># If record dimension, then we also set</span>
+            <span class="c1"># the output dimension to unlimited</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">dimname</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># len(v) is the way to recover the value of the dimension</span>
+            <span class="c1"># cf. netCDF4 documentation</span>
+            <span class="n">fout</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">dimname</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dimval</span><span class="p">))</span>
+
+    <span class="c1"># Working on the variables</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">variables</span>
+    <span class="k">for</span> <span class="n">varname</span><span class="p">,</span> <span class="n">varval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">var</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="c1"># we create a variable of the same</span>
+        <span class="c1"># type and dimensions as in the input file</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">varname</span><span class="p">,</span> <span class="n">varval</span><span class="o">.</span><span class="n">datatype</span><span class="p">,</span> <span class="n">varval</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+        <span class="n">vout</span> <span class="o">=</span> <span class="n">fout</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">varname</span><span class="p">]</span>
+
+        <span class="c1"># we loop over the variable attributes</span>
+        <span class="c1"># varval.ncattrs -&gt; recover the attribute names (&quot;units&quot;, etc)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">varval</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+            <span class="n">vout</span><span class="o">.</span><span class="n">setncattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">varval</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+    <span class="c1"># We do the same thing for the global (file) attributes</span>
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">fin</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+        <span class="n">fout</span><span class="o">.</span><span class="n">setncattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="extract_date"><a class="viewcode-back" href="../../generated/envtoolkit.nc.html#envtoolkit.nc.extract_date">[docs]</a><span class="k">def</span> <span class="nf">extract_date</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="n">timevar_name</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="s1">&#39;gregorian&#39;</span><span class="p">,</span> <span class="n">timeoff</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Converts the time array of a NetCDF file into a date.</span>
+
+<span class="sd">    :param netCDF4.Dataset fin: the NetCDF file</span>
+<span class="sd">    :param str timevar_name: the name of the time variable</span>
+<span class="sd">    :param str units: the time units (used only if no time units in the</span>
+<span class="sd">     the file)</span>
+<span class="sd">    :param str calendar: the time calendar (used only if no time units in the </span>
+<span class="sd">     the file)</span>
+<span class="sd">    :param float timeoff: A time offset that is *added* to the time array</span>
+
+<span class="sd">    :return: an array of :py:class:`datetime.datetime` object</span>
+<span class="sd">    :rtype: numpy.array</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">netcdftime</span> <span class="k">import</span> <span class="n">utime</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># try to extract the time variable from the file</span>
+        <span class="n">timevar</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">timevar_name</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> variable does not exist in the input file&quot;</span> <span class="o">%</span> <span class="n">timevar_name</span><span class="p">)</span>
+
+    <span class="c1"># check the existence of the units attribute</span>
+    <span class="k">if</span> <span class="s2">&quot;units&quot;</span> <span class="ow">in</span> <span class="n">timevar</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">timevar</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if no time units, we check that the unit argument is set, and that it is in right format</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;No time units provided in the file. Provide the units as an argument&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The units argument must be a string&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># check the existence of the calendar attribute</span>
+    <span class="k">if</span> <span class="s2">&quot;calendar&quot;</span> <span class="ow">in</span> <span class="n">timevar</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+        <span class="n">calendar</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">timevar</span><span class="p">,</span> <span class="s1">&#39;calendar&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if no time calendar, we check that the unit argument is set, and that it is in right format</span>
+        <span class="k">if</span> <span class="n">calendar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No calendar provided. Gregorian calendar is used&#39;</span><span class="p">)</span>
+            <span class="n">calendar</span> <span class="o">=</span> <span class="s1">&#39;gregorian&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calendar</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The calendar argument must be a string&quot;</span><span class="p">)</span>
+
+    <span class="c1"># creates the utime object for conversion</span>
+    <span class="n">cdftime</span> <span class="o">=</span> <span class="n">utime</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">)</span>
+
+    <span class="c1"># conversion of numerics into date</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">cdftime</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">timevar</span><span class="p">[:]</span> <span class="o">+</span> <span class="n">timeoff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">date</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

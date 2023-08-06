@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Fancy colormaps &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="index.html"/>
+        <link rel="up" title="Colors module" href="colors.html"/>
+        <link rel="next" title="Normalisation of colors" href="cmapnorm.html"/>
+        <link rel="prev" title="Colors module" href="colors.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">Maps module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="colors.html">Colors module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Fancy colormaps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initialisation-of-the-fancycmap-class">Initialisation of the FancyCmap class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialisation-using-a-string">Initialisation using a string</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initialisation-using-a-list">Initialisation using a list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initialisation-using-an-array">Initialisation using an array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#user-defined-offset-list">User defined offset list</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#creation-of-the-colormap">Creation of the colormap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#definition-of-nice-ticks">Definition of nice ticks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cmapnorm.html">Normalisation of colors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="colors.html">Colors module</a> &raquo;</li>
+        
+      <li>Fancy colormaps</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/newcmap.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fancy-colormaps">
+<span id="newcmap"></span><h1>Fancy colormaps<a class="headerlink" href="#fancy-colormaps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> class is devoted to the use and creation of new
+colormaps. They can either be read from .svg files, downloaded from
+the cpt-city website (<a class="reference external" href="http://soliton.vm.bytemark.co.uk/pub/cpt-city/">http://soliton.vm.bytemark.co.uk/pub/cpt-city/</a>),
+or created by using a list of named colors or an array of colors (in percentage)</p>
+</div>
+<div class="section" id="initialisation-of-the-fancycmap-class">
+<span id="newcmap-init"></span><h2>Initialisation of the FancyCmap class<a class="headerlink" href="#initialisation-of-the-fancycmap-class" title="Permalink to this headline">¶</a></h2>
+<p>As a first step, one needs to initialize a <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> class. This
+class is initialised either by a string (the name of the .svg file
+that contains the colormap), a list or a numpy array.</p>
+<div class="section" id="initialisation-using-a-string">
+<h3>Initialisation using a string<a class="headerlink" href="#initialisation-using-a-string" title="Permalink to this headline">¶</a></h3>
+<p>The .svg files must be stored in a directory, which is accessed
+through the $SVG environment variable. If one wants to use, for
+instance, the colormap defined in the <cite>arctic.svg</cite> file,
+the <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> class is initialised as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.colors</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="s1">&#39;arctic&#39;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <cite>reverse</cite>
+boolean indicates whether the colormap should be reversed or not
+(equivalent to putting a <cite>_r</cite> on the matplotlib colormap).</p>
+</div>
+<div class="section" id="initialisation-using-a-list">
+<h3>Initialisation using a list<a class="headerlink" href="#initialisation-using-a-list" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> class can also be created by using a list of named
+colors. This is achieved as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.colors</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;lightsalmon&#39;</span><span class="p">,</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;firebrick&#39;</span><span class="p">,</span> <span class="s1">&#39;lightskyblue&#39;</span><span class="p">]</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the <cite>smooth</cite> argument is set to <cite>False</cite> (which is the default
+setting), the colormap will be discrete. If it is set to <cite>False</cite>, the
+colormap will be of gradient type.</p>
+</div>
+<div class="section" id="initialisation-using-an-array">
+<h3>Initialisation using an array<a class="headerlink" href="#initialisation-using-an-array" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> object can also be created by using a numpy.array that
+contains <cite>rgb</cite> values (either in percentage or as 8 bits integer):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.colors</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+             <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">39</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">69</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">70</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+             <span class="p">])</span><span class="o">/</span><span class="mf">100.</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="user-defined-offset-list">
+<h3>User defined offset list<a class="headerlink" href="#user-defined-offset-list" title="Permalink to this headline">¶</a></h3>
+<p>In the default mode, the offset (i.e. the location of the color edges on the colorbar) is automatically defined for a colormap initialised from a list or a RGB array. For instance, in a colorbar inialised with 5 colors (‘R’, ‘G’, ‘B’, ‘C’, ‘M’), we have the following cases, depending on the value of the <cite>smooth</cite> argument:</p>
+<p>If <cite>smooth</cite> is False:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>RRRRRRRRRRRRRRGGGGGGGGGGGGGGGBBBBBBBBBBBBBBCCCCCCCCCCCCCCMMMMMMMMMMMMMM
+|-------------|-------------|-------------|-------------|-------------|
+0            0.2           0.4           0.6           0.8            1
+</pre></div>
+</div>
+<p>If <cite>smooth</cite> is True:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>R      interp       G     interp    B     interp      C    interp   M
+|-------------------|---------------|-----------------|-------------|
+0                  0.25            0.5               0.75           1
+</pre></div>
+</div>
+<p>with the <cite>interp</cite> meaning that the colors are linearly interpolated in between.</p>
+<p>In the initialisation of the <cite>Fancycmap</cite> object, the user also has the possibility to use his own offset array (<cite>list_offset</cite> argument), which must contains as many values as colors:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">offset</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span>  <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">svg</span> <span class="o">=</span> <span class="n">FancyCmap</span><span class="p">(</span><span class="n">input_cmap</span><span class="p">,</span> <span class="n">list_offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Again, the result will depend on the <cite>smooth</cite> option.</p>
+<p>If <cite>smooth</cite> is False:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>RRRRRRRGGGGGGGBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCMMMMMMM
+|------|------|--------------------------------------|-----|-------|
+0   0.05     0.1                                    0.9   0.95     1
+</pre></div>
+</div>
+<p>If <cite>smooth</cite> is True:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>R   int   G         int          B         int           C   int   M
+|---------|----------------------|-----------------------|---------|
+0       0.075                   0.5                    0.925       1
+</pre></div>
+</div>
+<p>Therefore, the real blue color in the smoothed colormap would be located at the middle of the blue color of the unsmoothed colormap. This is true for all the colors but the frst and the last one.</p>
+<p>An example is provided in the <a class="reference internal" href="#newcmap-example"><span class="std std-ref">Examples</span></a> section.</p>
+</div>
+</div>
+<div class="section" id="creation-of-the-colormap">
+<span id="newcmap-cmap"></span><h2>Creation of the colormap<a class="headerlink" href="#creation-of-the-colormap" title="Permalink to this headline">¶</a></h2>
+<p>Now that the <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap" title="envtoolkit.colors.FancyCmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap</span></code></a> has been initialised, a colormap that
+can be used by <code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code> must be created. This is achieved by the
+<a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.FancyCmap.makecmap" title="envtoolkit.colors.FancyCmap.makecmap"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap.makecmap()</span></code></a> function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cmap</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makecmap</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This function takes to optional arguments. The <cite>N</cite>
+integer provides the number of rgb quantization levels.</p>
+</div>
+<div class="section" id="definition-of-nice-ticks">
+<span id="newcmap-ticks"></span><h2>Definition of nice ticks<a class="headerlink" href="#definition-of-nice-ticks" title="Permalink to this headline">¶</a></h2>
+<p>In the case of discrete and irregular colormaps (for instance, the
+<cite>njavgcntyq.svg</cite> one), it might be nice to have the ticks of the
+colormaps that match the color separations. This is achieved by the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.colors.FancyCmap.write_cbticks()</span></code>, which takes as arguments the <a class="reference external" href="https://matplotlib.org/api/colorbar_api.html#matplotlib.colorbar.Colorbar" title="(in Matplotlib v3.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.colorbar.Colorbar</span></code></a> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">envtoolkit.colors</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="s1">&#39;njavgcntyq&#39;</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makecmap</span><span class="p">()</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">clim</span><span class="p">(</span><span class="n">lmin</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">write_cbticks</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="examples">
+<span id="newcmap-example"></span><h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># Example of fancy colormaps use </span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.mlab</span> <span class="k">as</span> <span class="nn">mlab</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">envtoolkit.colors</span>
+<span class="kn">import</span> <span class="nn">matplotlib.cm</span>
+
+<span class="c1"># defining datasets to draw</span>
+<span class="c1"># as in the contourf pyplot example</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">Z1</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">bivariate_normal</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="n">Z2</span> <span class="o">=</span> <span class="n">mlab</span><span class="o">.</span><span class="n">bivariate_normal</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z2</span> <span class="o">-</span> <span class="n">Z1</span><span class="p">)</span>
+<span class="n">lmin</span><span class="p">,</span> <span class="n">lmax</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">2</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c1"># creating a Fancy cmap from a svg file</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="s1">&#39;njgs/njavgcntyq.svg&#39;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makecmap</span><span class="p">()</span>  <span class="c1"># generating the cmap</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clim</span><span class="p">(</span><span class="n">lmin</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">ticks</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">generate_cbticks</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+<span class="n">cb</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">vect</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;lightsalmon&#39;</span><span class="p">,</span> <span class="s1">&#39;Purple&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;firebrick&#39;</span><span class="p">,</span> <span class="s1">&#39;lightskyblue&#39;</span><span class="p">]</span>
+<span class="c1"># creating a gradient-type cmap from a list of colors</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="n">vect</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makecmap</span><span class="p">()</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clim</span><span class="p">(</span><span class="n">lmin</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">vect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
+                 <span class="p">[</span><span class="mi">39</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">69</span><span class="p">],</span>
+                 <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
+                 <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">70</span><span class="p">],</span>
+                 <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span><span class="o">/</span><span class="mf">100.</span>
+<span class="c1"># generating a discrete cmap from a numpy array of RGB percentage</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">FancyCmap</span><span class="p">(</span><span class="n">vect</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makecmap</span><span class="p">()</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clim</span><span class="p">(</span><span class="n">lmin</span><span class="p">,</span> <span class="n">lmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">ticks</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">generate_cbticks</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+<span class="n">cb</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">(</span><span class="n">ticks</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figure_fancycmap.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_fancycmap.png"><img alt="_images/figure_fancycmap.png" src="_images/figure_fancycmap.png" style="width: 60%;" /></a>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># Example on using user-defined color mapping offsets</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">envtoolkit.colors</span> <span class="k">import</span> <span class="n">FancyCmap</span>
+
+<span class="c1"># defining the five colors of the colormap and the</span>
+<span class="c1"># mapping offset values</span>
+<span class="n">input_cmap</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Blue&#39;</span><span class="p">,</span> <span class="s1">&#39;Yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;Green&#39;</span><span class="p">,</span> <span class="s1">&#39;Red&#39;</span><span class="p">,</span> <span class="s1">&#39;Black&#39;</span><span class="p">]</span>
+<span class="n">offset</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span>  <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># defining the color limits of the plots</span>
+<span class="n">cmin</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.7</span>
+<span class="n">cmax</span> <span class="o">=</span> <span class="o">-</span><span class="n">cmin</span>
+
+<span class="c1"># generating two smoothed colormaps. </span>
+<span class="c1"># one with user-defined mappings, one without</span>
+<span class="n">smooth</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">svgsm</span> <span class="o">=</span> <span class="n">FancyCmap</span><span class="p">(</span><span class="n">input_cmap</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="n">smooth</span><span class="p">)</span>
+<span class="n">svgsmbis</span> <span class="o">=</span> <span class="n">FancyCmap</span><span class="p">(</span><span class="n">input_cmap</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="n">smooth</span><span class="p">,</span> <span class="n">list_offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+
+<span class="c1"># generating two discrete colormaps. </span>
+<span class="c1"># one with user-defined mappings, one without</span>
+<span class="n">smooth</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">svg</span> <span class="o">=</span> <span class="n">FancyCmap</span><span class="p">(</span><span class="n">input_cmap</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="n">smooth</span><span class="p">)</span>
+<span class="n">svgbis</span> <span class="o">=</span> <span class="n">FancyCmap</span><span class="p">(</span><span class="n">input_cmap</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="n">smooth</span><span class="p">,</span> <span class="n">list_offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+
+<span class="c1"># generating data to plot</span>
+<span class="n">delta</span> <span class="o">=</span> <span class="mf">0.025</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.01</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">Z1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">mlab</span><span class="o">.</span><span class="n">bivariate_normal</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="n">Z2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">mlab</span><span class="o">.</span><span class="n">bivariate_normal</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z1</span> <span class="o">-</span> <span class="n">Z2</span><span class="p">)</span>
+
+<span class="c1"># plotting</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">figure</span><span class="p">()</span>
+<span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> 
+        <span class="n">bottom</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.97</span><span class="p">)</span>
+
+<span class="n">ax1</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">svg</span><span class="o">.</span><span class="n">makecmap</span><span class="p">())</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">svg</span><span class="o">.</span><span class="n">write_cbticks</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+<span class="n">title</span><span class="p">(</span><span class="s1">&#39;No smoothing, no off. list&#39;</span><span class="p">)</span>
+
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">svgbis</span><span class="o">.</span><span class="n">makecmap</span><span class="p">())</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">svgbis</span><span class="o">.</span><span class="n">write_cbticks</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+<span class="n">title</span><span class="p">(</span><span class="s1">&#39;No smoothing, with off. list&#39;</span><span class="p">)</span>
+
+<span class="n">ax3</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">svgsm</span><span class="o">.</span><span class="n">makecmap</span><span class="p">())</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">title</span><span class="p">(</span><span class="s1">&#39;With smoothing, no off. list&#39;</span><span class="p">)</span>
+
+<span class="n">ax4</span> <span class="o">=</span> <span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">svgsmbis</span><span class="o">.</span><span class="n">makecmap</span><span class="p">())</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">cmin</span><span class="p">,</span> <span class="n">cmax</span><span class="p">)</span>
+<span class="n">cb</span> <span class="o">=</span> <span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">title</span><span class="p">(</span><span class="s1">&#39;With smoothing, with off. list&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">,</span> <span class="n">ax4</span><span class="p">]:</span>
+    <span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figure_fancycmap_offsets.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_fancycmap_offsets.png"><img alt="_images/figure_fancycmap_offsets.png" src="_images/figure_fancycmap_offsets.png" style="width: 60%;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cmapnorm.html" class="btn btn-neutral float-right" title="Normalisation of colors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="colors.html" class="btn btn-neutral" title="Colors module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

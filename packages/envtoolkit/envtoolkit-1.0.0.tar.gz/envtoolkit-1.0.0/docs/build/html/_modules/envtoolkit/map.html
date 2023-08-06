@@ -1,0 +1,705 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>envtoolkit.map &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../map.html">Maps module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../colors.html">Colors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>envtoolkit.map</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for envtoolkit.map</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions/classes relative to maps</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">mpl_toolkits.basemap</span> <span class="k">import</span> <span class="n">Basemap</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="k">import</span> <span class="n">ListedColormap</span><span class="p">,</span> <span class="n">BoundaryNorm</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+
+
+<div class="viewcode-block" id="make_bmap"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.make_bmap">[docs]</a><span class="k">def</span> <span class="nf">make_bmap</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Creates a basemap object by using the limites of input lon/lat arrays. </span>
+
+<span class="sd">    | Lower left corner coordinates = min(lon), min(lat)</span>
+<span class="sd">    | Upper right corner coordinates = max(lon), max(lat)</span>
+
+<span class="sd">    :param numpy.array lon: longitude array (any dimension)</span>
+<span class="sd">    :param numpy.array lat: latitude array (any dimension)</span>
+
+<span class="sd">    :param dict \**kwargs: keyword arguments that are</span>
+<span class="sd">     passed to the Basemap class (proj, resolution, etc).</span>
+
+<span class="sd">    :return: A Basemap object</span>
+<span class="sd">    :rtype: mpl_toolkits.basemap.Basemap</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># conversion into masked arrays </span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+
+    <span class="n">bmap</span> <span class="o">=</span> <span class="n">Basemap</span><span class="p">(</span><span class="n">llcrnrlon</span><span class="o">=</span><span class="n">lon</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">llcrnrlat</span><span class="o">=</span><span class="n">lat</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                   <span class="n">urcrnrlon</span><span class="o">=</span><span class="n">lon</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">urcrnrlat</span><span class="o">=</span><span class="n">lat</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bmap</span></div>
+
+
+<div class="viewcode-block" id="lonflip"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.lonflip">[docs]</a><span class="k">def</span> <span class="nf">lonflip</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reorders a longitude and a data array about the central longitude </span>
+<span class="sd">            </span>
+<span class="sd">    Adapted from the NCL `lonFlip</span>
+<span class="sd">    &lt;https://www.ncl.ucar.edu/Document/Functions/Contributed/lonFlip.shtml&gt;`_</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    :param numpy.array lon: 1D longitude array. </span>
+<span class="sd">     The number of longitudes must be even</span>
+
+<span class="sd">    :param numpy.array data: the data array. </span>
+<span class="sd">     Can be 1D, 2D, 3D or 4D. Longitude must be the </span>
+<span class="sd">     last dimension</span>
+
+<span class="sd">    :return: A tuple with the first element containing the flipped</span>
+<span class="sd">     longitude array, and the second element containing the</span>
+<span class="sd">     flipped data array</span>
+
+<span class="sd">    :rtype: tuple</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mlon</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lon</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The longitude argument must be 1D&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mlon</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The lonflip function requires that the number </span><span class="se">\n</span><span class="s2"> </span><span class="se">\</span>
+<span class="s2">        of longitudes be even. mlon= </span><span class="si">%i</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> =======================&quot;</span> <span class="o">%</span> <span class="n">mlon</span><span class="p">)</span>
+
+    <span class="n">mlon2</span> <span class="o">=</span> <span class="n">mlon</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="n">mlon2</span><span class="p">:]</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">mlon2</span><span class="p">:]</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">mlon2</span><span class="p">:]</span>
+        <span class="n">temp</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dimension </span><span class="si">%i</span><span class="s2"> cannot exceed 4&quot;</span> <span class="o">%</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="n">tlon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">lon</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">tlon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span>
+    <span class="n">tlon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># (say) 0=&gt;355</span>
+        <span class="n">tlon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span> <span class="o">-</span> <span class="mi">360</span>
+        <span class="n">tlon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>                   <span class="c1"># (say) -180=&gt;175</span>
+        <span class="n">tlon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span>
+        <span class="n">tlon</span><span class="p">[</span><span class="n">mlon2</span><span class="p">:]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">mlon2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">360</span>
+
+    <span class="k">return</span> <span class="n">tlon</span><span class="p">,</span> <span class="n">temp</span></div>
+
+
+<div class="viewcode-block" id="inpolygon"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.inpolygon">[docs]</a><span class="k">def</span> <span class="nf">inpolygon</span><span class="p">(</span><span class="n">xin_2d</span><span class="p">,</span> <span class="n">yin_2d</span><span class="p">,</span> <span class="n">x_pol</span><span class="p">,</span> <span class="n">y_pol</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Determines whether points of a 2D-grid are within a polygon. </span>
+
+<span class="sd">    Equivalent to the inpolygon function of Matlab. </span>
+<span class="sd">    </span>
+<span class="sd">    .. note:: If the input polygon is not closed, it is automatically closed</span>
+
+<span class="sd">    :param numpy.array xin_2d: 2-D array with the x-coords of the domain</span>
+<span class="sd">    :param numpy.array yin_2d: 2-D array with the y-coords of the domain</span>
+<span class="sd">    :param numpy.array x_pol: 1-D array with the x-coords of the polygon</span>
+<span class="sd">    :param numpy.array y_pol: 1-D array with the y-coords of the polygon</span>
+<span class="sd">    </span>
+<span class="sd">    :return: A 2D array (same shape as xin_2d and yin_2d) </span>
+<span class="sd">     with 1 when the point is within the polygon, else 0.</span>
+<span class="sd">    :rtype: numpy.array</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">path</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">xin_2d</span><span class="o">.</span><span class="n">ndim</span><span class="o">!=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The xin_2d argument must be 2D. </span><span class="si">%d</span><span class="s2"> dimensions&quot;</span> <span class="o">%</span><span class="n">xin_2d</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">yin_2d</span><span class="o">.</span><span class="n">ndim</span><span class="o">!=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The yin_2d argument must be 2D. </span><span class="si">%d</span><span class="s2"> dimensions&quot;</span> <span class="o">%</span><span class="n">yin_2d</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">x_pol</span><span class="o">.</span><span class="n">ndim</span><span class="o">!=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The x_pol argument must be 1D. </span><span class="si">%d</span><span class="s2"> dimensions&quot;</span> <span class="o">%</span><span class="n">x_pol</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">y_pol</span><span class="o">.</span><span class="n">ndim</span><span class="o">!=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The y_pol argument must be 1D. </span><span class="si">%d</span><span class="s2"> dimensions&quot;</span> <span class="o">%</span><span class="n">y_pol</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="n">x_pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_pol</span><span class="p">)</span>
+    <span class="n">y_pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_pol</span><span class="p">)</span>
+
+    <span class="c1"># If the polynom is not closed, we close it</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">x_pol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">x_pol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">|</span> <span class="p">(</span><span class="n">y_pol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y_pol</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">x_pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_pol</span><span class="p">,</span> <span class="n">x_pol</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y_pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_pol</span><span class="p">,</span> <span class="n">y_pol</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">xin_2d</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># creation the input of the path.Path command:</span>
+    <span class="c1"># [(x1, y1), (x2, y2), (x3, y3)]</span>
+    <span class="n">path_input</span> <span class="o">=</span> <span class="p">[(</span><span class="n">xtemp</span><span class="p">,</span> <span class="n">ytemp</span><span class="p">)</span> <span class="k">for</span> <span class="n">xtemp</span><span class="p">,</span> <span class="n">ytemp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_pol</span><span class="p">,</span> <span class="n">y_pol</span><span class="p">)]</span>
+
+    <span class="c1"># initialisation of the path object</span>
+    <span class="n">temppath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path_input</span><span class="p">)</span>
+
+    <span class="c1"># creation of the list of all the points within the domain</span>
+    <span class="c1"># it must have a N x 2 shape</span>
+    <span class="n">list_of_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">xin_2d</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">yin_2d</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># Calculation of the mask (True if within the polygon)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">temppath</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">list_of_points</span><span class="p">)</span>
+
+    <span class="c1"># reconverting the mask into a nx by ny array</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="Lambert"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.Lambert">[docs]</a><span class="k">class</span> <span class="nc">Lambert</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for the handling of Lambert Conic Projection.</span>
+<span class="sd">    </span>
+<span class="sd">    It is initialised by providing </span>
+<span class="sd">    the bounding longitudes and latitudes of the domain to plot. It </span>
+<span class="sd">    may also take the resolution of the </span>
+<span class="sd">    :py:class:`mpl_toolkits.basemap.Basemap` class.</span>
+
+<span class="sd">    :param float lonmin: minimum longitude</span>
+<span class="sd">    :param float lonmax: maximum longitude</span>
+<span class="sd">    :param float latmin: minimum latitude</span>
+<span class="sd">    :param float latmax: maximum latitude</span>
+<span class="sd">    :param str resolution: resolution of the map (cf `Basemap`)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lonmin</span><span class="p">,</span> <span class="n">lonmax</span><span class="p">,</span> <span class="n">latmin</span><span class="p">,</span> <span class="n">latmax</span><span class="p">,</span>
+                 <span class="n">resolution</span><span class="o">=</span><span class="s1">&#39;l&#39;</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Initialisation of the Lambert class &quot;&quot;&quot;</span>
+
+        <span class="c1"># We set the map limits attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span> <span class="o">=</span> <span class="n">lonmin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span> <span class="o">=</span> <span class="n">lonmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span> <span class="o">=</span> <span class="n">latmin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span> <span class="o">=</span> <span class="n">latmax</span>
+
+        <span class="c1"># Definition of the hemisphere attribute</span>
+        <span class="c1"># it is either NH or SH</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmin</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmax</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">=</span> <span class="s1">&#39;NH&#39;</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmin</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">90</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmax</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">=</span> <span class="s1">&#39;SH&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;latmin and latmax should be the same sign. &#39;</span> <span class="o">+</span> 
+            <span class="s1">&#39;Here, latmin=</span><span class="si">%f</span><span class="s1"> and latmax</span><span class="si">%f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">latmin</span><span class="p">,</span> <span class="n">latmax</span><span class="p">))</span>
+
+        <span class="c1"># Initialisation of some map coordinates</span>
+        <span class="c1"># that will be used for setting the map projection</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">==</span> <span class="s1">&#39;NH&#39;</span><span class="p">:</span>
+            <span class="n">lat2</span> <span class="o">=</span> <span class="mf">89.999</span>
+            <span class="n">lat1</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lat2</span> <span class="o">=</span> <span class="o">-</span><span class="mf">89.999</span>
+            <span class="n">lat1</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.001</span>
+
+        <span class="c1"># definition of the center longitude lon0</span>
+        <span class="n">lon0</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">)</span>
+
+        <span class="c1"># initialisation of a dummy bmap object</span>
+        <span class="c1"># its lefternmost corner corresponds to lonmin and latmax</span>
+        <span class="c1"># it is therefore not exactly the map we want</span>
+        <span class="n">bmap</span> <span class="o">=</span> <span class="n">Basemap</span><span class="p">(</span><span class="n">llcrnrlon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="n">llcrnrlat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">,</span>
+                       <span class="n">urcrnrlon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="n">urcrnrlat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">,</span>
+                       <span class="n">lon_0</span><span class="o">=</span><span class="n">lon0</span><span class="p">,</span> <span class="n">lat_1</span><span class="o">=</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat_2</span><span class="o">=</span><span class="n">lat2</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;lcc&#39;</span><span class="p">,</span>
+                       <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">)</span>
+
+        <span class="c1"># determination of the MAP coordinates of points</span>
+        <span class="c1"># in which we are interested in. They are extracted from</span>
+        <span class="c1"># the geographical coordinates</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">==</span> <span class="s1">&#39;NH&#39;</span><span class="p">:</span>
+            <span class="n">xcoordmin</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+            <span class="n">xcoordmax</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+            <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoordmin</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="n">lon0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+            <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoordmax</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xcoordmin</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+            <span class="n">xcoordmax</span><span class="p">,</span> <span class="n">ycoord</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+            <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoordmax</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="n">lon0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+            <span class="n">xcoord</span><span class="p">,</span> <span class="n">ycoordmin</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+
+        <span class="c1"># removing old cordinates</span>
+        <span class="k">del</span> <span class="n">ycoord</span><span class="p">,</span> <span class="n">xcoord</span>
+
+        <span class="c1"># we recover the longitude/latitudes of the points that will</span>
+        <span class="c1"># define the NEW corners of the map</span>
+        <span class="n">lonmin</span><span class="p">,</span> <span class="n">latmin</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="n">xcoordmin</span><span class="p">,</span> <span class="n">ycoordmin</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lonmax</span><span class="p">,</span> <span class="n">latmax</span> <span class="o">=</span> <span class="n">bmap</span><span class="p">(</span><span class="n">xcoordmax</span><span class="p">,</span> <span class="n">ycoordmax</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># we now create the new colormap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span> <span class="o">=</span> <span class="n">Basemap</span><span class="p">(</span><span class="n">llcrnrlon</span><span class="o">=</span><span class="n">lonmin</span><span class="p">,</span> <span class="n">llcrnrlat</span><span class="o">=</span><span class="n">latmin</span><span class="p">,</span>
+                            <span class="n">urcrnrlon</span><span class="o">=</span><span class="n">lonmax</span><span class="p">,</span> <span class="n">urcrnrlat</span><span class="o">=</span><span class="n">latmax</span><span class="p">,</span>
+                            <span class="n">lon_0</span><span class="o">=</span><span class="n">lon0</span><span class="p">,</span> <span class="n">lat_1</span><span class="o">=</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat_2</span><span class="o">=</span><span class="n">lat2</span><span class="p">,</span>
+                            <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;lcc&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Lambert.make_mask"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.Lambert.make_mask">[docs]</a>    <span class="k">def</span> <span class="nf">make_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_res</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                  <span class="n">edcol</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">bgcolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Masks the Lambert Conic projection. </span>
+<span class="sd">        </span>
+<span class="sd">        It creates a dummy NxN array, </span>
+<span class="sd">        which is then overlayed to the map using </span>
+<span class="sd">        the `imshow` function. Data inside the data </span>
+<span class="sd">        are plotted in transparent, </span>
+<span class="sd">        data outside the domains are plotted in white.</span>
+<span class="sd">        Finally, the domain boundaries are drawn.</span>
+
+<span class="sd">        :param int mask_res: size of the 2-D array used to draw the mask</span>
+<span class="sd">        :param int zorder: the plot order at which the mask will be drawn</span>
+<span class="sd">        :param str edcol: color of the domain boundaries</span>
+<span class="sd">        :param str bgcolor: color of the mask</span>
+<span class="sd">        :param dict \**kwargs: keyword argument for the boundary lines</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">xmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">llcrnrx</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">urcrnrx</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">llcrnry</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">urcrnry</span>
+
+        <span class="n">mask_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">mask_res</span><span class="p">)</span>
+        <span class="n">mask_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">mask_res</span><span class="p">)</span>
+        <span class="n">mask_x</span><span class="p">,</span> <span class="n">mask_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">mask_x</span><span class="p">,</span> <span class="n">mask_y</span><span class="p">)</span>
+
+        <span class="n">lonf</span><span class="p">,</span> <span class="n">latf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">mask_x</span><span class="p">,</span> <span class="n">mask_y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">maskarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lonf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">maskarr</span><span class="p">[(</span><span class="n">lonf</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">lonf</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">latf</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="p">(</span><span class="n">latf</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">maskarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">maskarr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">maskarr</span><span class="p">)</span>
+
+        <span class="c1"># We create a Dummy colorbar, containing on the left the bg color</span>
+        <span class="c1"># and on the right blue colors (which will be unused)</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">ListedColormap</span><span class="p">([</span><span class="n">bgcolor</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">])</span>
+
+        <span class="c1"># we specify that Masked values will be transparent</span>
+        <span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># We define the normalisation of the imshow</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="c1"># we draw the imshow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">mask_x</span><span class="p">,</span> <span class="n">mask_y</span><span class="p">,</span> <span class="n">maskarr</span><span class="p">,</span> 
+                             <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+
+        <span class="n">lontt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="n">mask_res</span><span class="p">)</span>
+        <span class="n">lattt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">,</span> <span class="n">mask_res</span><span class="p">)</span>
+        <span class="n">lontt</span><span class="p">,</span> <span class="n">lattt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lontt</span><span class="p">,</span> <span class="n">lattt</span><span class="p">)</span>
+        <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="p">,</span> <span class="n">lattt</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xtt</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">ytt</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">color</span><span class="o">=</span><span class="n">edcol</span><span class="p">,</span>
+                       <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xtt</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">ytt</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">color</span><span class="o">=</span><span class="n">edcol</span><span class="p">,</span>
+                       <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xtt</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ytt</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">edcol</span><span class="p">,</span>
+                       <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xtt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ytt</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">edcol</span><span class="p">,</span>
+                       <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Lambert.add_lc_labels"><a class="viewcode-back" href="../../generated/envtoolkit.map.html#envtoolkit.map.Lambert.add_lc_labels">[docs]</a>    <span class="k">def</span> <span class="nf">add_lc_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">labelright</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">spacelat</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                      <span class="n">spacelon</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">10001</span><span class="p">,</span> <span class="n">nbspaces</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the longitude and latitude labels on masked projection.</span>
+<span class="sd">        </span>
+<span class="sd">        Adapted from `NCL &lt;http://www.ncl.ucar.edu/Applications/Scripts/mptick_10.ncl&gt;`_</span>
+
+<span class="sd">        .. note:: Does not work if `usetex=True`. </span>
+<span class="sd">                  Hence a call to this function sets it to False</span>
+
+<span class="sd">        :param bool labelleft: defines whether latitudes labels on</span>
+<span class="sd">         the left of the map should be displayed</span>
+<span class="sd">        :param bool labelright: defines whether latitudes on</span>
+<span class="sd">         the right of the map should be displayed</span>
+<span class="sd">        :param float spacelat: Latitude spacing between the labels</span>
+<span class="sd">        :param float spacelon: Longitude spacing between the labels</span>
+<span class="sd">        :param int zorder: plot order when the labels are drawn</span>
+<span class="sd">        :param int nbspaces: number of whitespaces to</span>
+<span class="sd">         add at the end (for left labels) or at</span>
+<span class="sd">         the beginning (for right labels) of the string</span>
+<span class="sd">        :param dict \**kwargs: Text keyword arguments (fontsize for instance)</span>
+<span class="sd">        :return: None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;text.usetex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ticklon</span><span class="p">(</span><span class="n">spacelon</span><span class="p">,</span> <span class="n">zorder</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ticklat</span><span class="p">(</span><span class="n">spacelat</span><span class="p">,</span> <span class="n">labelleft</span><span class="p">,</span>
+                      <span class="n">labelright</span><span class="p">,</span> <span class="n">zorder</span><span class="p">,</span> <span class="n">nbspaces</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_ticklon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spacelon</span><span class="p">,</span> <span class="n">zorder</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Function for the ticking of longitude &quot;&quot;&quot;</span>
+
+        <span class="n">rad_to_deg</span> <span class="o">=</span> <span class="mf">180.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">deg</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$^\circ$&#39;</span>
+
+        <span class="c1"># Ticking with the longitudes</span>
+        <span class="n">lonvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="o">+</span><span class="n">spacelon</span><span class="p">),</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">),</span> <span class="n">spacelon</span><span class="p">)</span>
+        <span class="n">nlon</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lonvalues</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">==</span> <span class="s1">&#39;NH&#39;</span><span class="p">:</span>
+            <span class="n">latval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span>
+            <span class="n">stbef</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+            <span class="n">staft</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">latval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span>
+            <span class="n">stbef</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">staft</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+
+        <span class="k">for</span> <span class="n">indlon</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nlon</span><span class="p">):</span>
+            <span class="n">lontt</span> <span class="o">=</span> <span class="n">lonvalues</span><span class="p">[</span><span class="n">indlon</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">==</span> <span class="s1">&#39;NH&#39;</span><span class="p">:</span>
+                <span class="n">lon1_ndc</span><span class="p">,</span> <span class="n">lat1_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+                <span class="n">lon2_ndc</span><span class="p">,</span> <span class="n">lat2_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="o">+</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lon1_ndc</span><span class="p">,</span> <span class="n">lat1_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="o">+</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+                <span class="n">lon2_ndc</span><span class="p">,</span> <span class="n">lat2_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+
+            <span class="n">slope_bot</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat1_ndc</span><span class="o">-</span><span class="n">lat2_ndc</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">lon1_ndc</span><span class="o">-</span><span class="n">lon2_ndc</span><span class="p">)</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">slope_bot</span><span class="p">)</span><span class="o">*</span><span class="n">rad_to_deg</span>
+
+            <span class="n">lon_label_bot</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lontt</span><span class="p">))</span> <span class="o">+</span> <span class="n">deg</span>
+
+            <span class="k">if</span> <span class="n">lontt</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lon_label_bot</span> <span class="o">=</span> <span class="n">stbef</span><span class="o">+</span><span class="n">lon_label_bot</span> <span class="o">+</span> <span class="s2">&quot;W&quot;</span><span class="o">+</span><span class="n">staft</span>
+                <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span><span class="p">,</span> <span class="n">lon_label_bot</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">lontt</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lon_label_bot</span> <span class="o">=</span> <span class="n">stbef</span><span class="o">+</span><span class="n">lon_label_bot</span> <span class="o">+</span> <span class="s2">&quot;E&quot;</span><span class="o">+</span><span class="n">staft</span>
+                <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span><span class="p">,</span> <span class="n">lon_label_bot</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">lontt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lon_label_bot</span> <span class="o">=</span> <span class="n">stbef</span><span class="o">+</span><span class="n">lon_label_bot</span><span class="o">+</span><span class="n">staft</span>
+                <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="n">lontt</span><span class="p">,</span> <span class="n">latval</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span><span class="p">,</span> <span class="n">lon_label_bot</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ticklat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spacelat</span><span class="p">,</span> <span class="n">labelleft</span><span class="p">,</span>
+                 <span class="n">labelright</span><span class="p">,</span> <span class="n">zorder</span><span class="p">,</span> <span class="n">nbspaces</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot; Add the latitude labels &quot;&quot;&quot;</span>
+
+        <span class="n">rad_to_deg</span> <span class="o">=</span> <span class="mf">180.</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="n">nbspaces</span><span class="o">*</span><span class="sa">r</span><span class="s1">&#39; &#39;</span>
+        <span class="n">deg</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$^\circ$&#39;</span>
+
+        <span class="c1"># Ticking with the latitudes</span>
+        <span class="n">latvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">),</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span><span class="o">+</span><span class="n">spacelat</span><span class="p">,</span> <span class="n">spacelat</span><span class="p">)</span>
+        <span class="n">nlat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">latvalues</span><span class="p">)</span>
+
+        <span class="n">lon1_ndc</span><span class="p">,</span> <span class="n">lat1_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+        <span class="n">lon2_ndc</span><span class="p">,</span> <span class="n">lat2_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+        <span class="n">slope_lft</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat2_ndc</span><span class="o">-</span><span class="n">lat1_ndc</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">lon2_ndc</span><span class="o">-</span><span class="n">lon1_ndc</span><span class="p">)</span>
+
+        <span class="n">lon1_ndc</span><span class="p">,</span> <span class="n">lat1_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmin</span><span class="p">)</span>
+        <span class="n">lon2_ndc</span><span class="p">,</span> <span class="n">lat2_ndc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latmax</span><span class="p">)</span>
+        <span class="n">slope_rgt</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat2_ndc</span><span class="o">-</span><span class="n">lat1_ndc</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">lon2_ndc</span><span class="o">-</span><span class="n">lon1_ndc</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hemisphere</span> <span class="o">==</span> <span class="s2">&quot;NH&quot;</span><span class="p">:</span>
+            <span class="n">rotate_left</span> <span class="o">=</span> <span class="o">-</span><span class="mi">90</span>
+            <span class="n">rotate_right</span> <span class="o">=</span> <span class="mi">90</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rotate_left</span> <span class="o">=</span> <span class="mi">90</span>
+            <span class="n">rotate_right</span> <span class="o">=</span> <span class="o">-</span><span class="mi">90</span>
+
+        <span class="k">for</span> <span class="n">indlat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nlat</span><span class="p">):</span>
+
+            <span class="n">lattt</span> <span class="o">=</span> <span class="n">latvalues</span><span class="p">[</span><span class="n">indlat</span><span class="p">]</span>
+            <span class="n">lat_label_rgt</span> <span class="o">=</span> <span class="n">space</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattt</span><span class="p">))</span> <span class="o">+</span> <span class="n">deg</span>
+
+            <span class="k">if</span> <span class="n">lattt</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lat_label_lft</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattt</span><span class="p">))</span> <span class="o">+</span> <span class="n">deg</span><span class="o">+</span><span class="s2">&quot;S&quot;</span><span class="o">+</span><span class="n">space</span>
+                <span class="n">lat_label_rgt</span> <span class="o">=</span> <span class="n">lat_label_rgt</span> <span class="o">+</span> <span class="s2">&quot;S&quot;</span>
+
+            <span class="k">elif</span> <span class="n">lattt</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lat_label_lft</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattt</span><span class="p">))</span> <span class="o">+</span> <span class="n">deg</span><span class="o">+</span><span class="s2">&quot;N&quot;</span><span class="o">+</span><span class="n">space</span>
+                <span class="n">lat_label_rgt</span> <span class="o">=</span> <span class="n">lat_label_rgt</span> <span class="o">+</span> <span class="s2">&quot;N&quot;</span>
+
+            <span class="k">elif</span> <span class="n">lattt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lat_label_lft</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattt</span><span class="p">))</span> <span class="o">+</span> <span class="n">deg</span> <span class="o">+</span> <span class="n">space</span>
+
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">rad_to_deg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">slope_lft</span><span class="p">)</span> <span class="o">+</span> <span class="n">rotate_left</span>
+            <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmin</span><span class="p">,</span> <span class="n">lattt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">labelleft</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span><span class="p">,</span> <span class="n">lat_label_lft</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">rad_to_deg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">slope_rgt</span><span class="p">)</span> <span class="o">+</span> <span class="n">rotate_right</span>
+            <span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonmax</span><span class="p">,</span> <span class="n">lattt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">labelright</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xtt</span><span class="p">,</span> <span class="n">ytt</span><span class="p">,</span> <span class="n">lat_label_rgt</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="n">zorder</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

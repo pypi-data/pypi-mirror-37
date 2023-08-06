@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Lambert projection &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="index.html"/>
+        <link rel="up" title="Maps module" href="map.html"/>
+        <link rel="next" title="Colors module" href="colors.html"/>
+        <link rel="prev" title="Maps module" href="map.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="map.html">Maps module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lambert projection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initialisation">Initialisation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#masking">Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#map-labels-on-masked-lcc">Map labels on masked LCC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="colors.html">Colors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="map.html">Maps module</a> &raquo;</li>
+        
+      <li>Lambert projection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/lambert.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lambert-projection">
+<span id="lambert"></span><h1>Lambert projection<a class="headerlink" href="#lambert-projection" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<span id="lamber-intro"></span><h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This module is aimed at using the Lambert Conformal Conic (LCC) projection in the same way as in Matlab or NCL. To use this projection in Basemap, you must provide the coordinates of the lower-left and upper right corners, which you don’t necessaryly know. In Matlab and NCL, this projection is initialised by providing the western and eastern longitudes, and the southern and northern latitudes. The lambert module allows to mimic this behaviour. Furthermore, it is not possible to use a masked projection in Basemap. This drawback is sorted out here.</p>
+</div>
+<div class="section" id="initialisation">
+<span id="lamber-init"></span><h2>Initialisation<a class="headerlink" href="#initialisation" title="Permalink to this headline">¶</a></h2>
+<p>As a first step, you need to initialise the <a class="reference internal" href="generated/envtoolkit.map.html#envtoolkit.map.Lambert" title="envtoolkit.map.Lambert"><code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.map.Lambert</span></code></a> class, which is done by providing the domain coordinates:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">envtoolkit.map</span> <span class="kn">import</span> <span class="n">Lambert</span>
+
+<span class="n">lon1</span><span class="o">=-</span><span class="mi">80</span><span class="p">;</span><span class="n">lon2</span><span class="o">=</span><span class="mi">30</span><span class="p">;</span><span class="n">lat1</span><span class="o">=</span><span class="mi">20</span><span class="p">;</span><span class="n">lat2</span><span class="o">=</span><span class="mi">80</span>
+<span class="n">lamb</span><span class="o">=</span><span class="n">Lambert</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span><span class="n">lon2</span><span class="p">,</span><span class="n">lat1</span><span class="p">,</span><span class="n">lat2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>During the initialisation, the <cite>lamb.lonmin</cite>, <cite>lamb.lonmax</cite>, <cite>lamb.latmin</cite>, <cite>lamb.latmax</cite> are set, which contains the western and eastern longitudes, and the southern and northern latitudes (used as arguments). The <cite>lamb.hemisphere</cite> attribute, which defines whether we are in the southern or northern hemisphere, is also created.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The domain used in a LCC projection cannot cross the equator. Therefore, the <cite>lamb.latmin</cite> and <cite>lamb.latmax</cite> attributes must have the same sign.</p>
+</div>
+<p>During this initialisation phase, a <a class="reference external" href="https://matplotlib.org/basemap/api/basemap_api.html#mpl_toolkits.basemap.Basemap" title="(in Basemap Matplotlib Toolkit v1.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mpl_toolkits.basemap.Basemap</span></code></a> object, <cite>lamb.bmap</cite>, is also created, which you now can use to draw your map backgrounds (map grid, coastlines, filled continents, map backgrounds, etc).</p>
+</div>
+<div class="section" id="masking">
+<span id="lamber-masking"></span><h2>Masking<a class="headerlink" href="#masking" title="Permalink to this headline">¶</a></h2>
+<p>A classical way to display LCC maps is to mask the map outside the domain boundaries. In this module, this is achieved by overlaying a dummy pcolor plot on top the map (transparent colors inside the domain, background colors outside). This is achieved by a call to the <a class="reference internal" href="generated/envtoolkit.map.html#envtoolkit.map.Lambert.make_mask" title="envtoolkit.map.Lambert.make_mask"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.map.Lambert.make_mask()</span></code></a> function as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lamb</span><span class="o">.</span><span class="n">make_mask</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Doesn’t work properly when saving PDF files</p>
+</div>
+</div>
+<div class="section" id="map-labels-on-masked-lcc">
+<span id="lamber-labels"></span><h2>Map labels on masked LCC<a class="headerlink" href="#map-labels-on-masked-lcc" title="Permalink to this headline">¶</a></h2>
+<p>Because of the way masking is achieved, map labels cannot be achieved by using the native <cite>Basemap</cite> functions. This is done by using the <a class="reference internal" href="generated/envtoolkit.map.html#envtoolkit.map.Lambert.add_lc_labels" title="envtoolkit.map.Lambert.add_lc_labels"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.map.Lambert.add_lc_labels()</span></code></a> function (adapted from NCL) as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lamb</span><span class="o">.</span><span class="n">add_lc_labels</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<span id="lamber-example"></span><h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># Example of using masked Lambert Projections</span>
+
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">envtoolkit.map</span> <span class="k">import</span> <span class="n">Lambert</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># defining plotting options</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;text.usetex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;font.size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;lines.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.15</span><span class="p">)</span>
+
+<span class="c1"># defining nothern projection</span>
+<span class="n">lon1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">80</span>
+<span class="n">lon2</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">lat1</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">lat2</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">lamb</span> <span class="o">=</span> <span class="n">Lambert</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">etopo</span><span class="p">()</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawcoastlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawparallels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawmeridians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="o">+</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">etopo</span><span class="p">()</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawcoastlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawparallels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawmeridians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="o">+</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">make_mask</span><span class="p">()</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">add_lc_labels</span><span class="p">(</span><span class="n">spacelon</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">spacelat</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="c1"># generating southern projection</span>
+<span class="n">lat1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">80</span>
+<span class="n">lat2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+<span class="n">lamb</span> <span class="o">=</span> <span class="n">Lambert</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">fillcontinents</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgray&#39;</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawcoastlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawparallels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawmeridians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="o">+</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">fillcontinents</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgray&#39;</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawcoastlines</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawparallels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lat2</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">bmap</span><span class="o">.</span><span class="n">drawmeridians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lon2</span><span class="o">+</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">make_mask</span><span class="p">()</span>
+<span class="n">lamb</span><span class="o">.</span><span class="n">add_lc_labels</span><span class="p">(</span><span class="n">spacelon</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">spacelat</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figure_lambert.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_lambert.png"><img alt="_images/figure_lambert.png" src="_images/figure_lambert.png" style="width: 60%;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="colors.html" class="btn btn-neutral float-right" title="Colors module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="map.html" class="btn btn-neutral" title="Maps module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

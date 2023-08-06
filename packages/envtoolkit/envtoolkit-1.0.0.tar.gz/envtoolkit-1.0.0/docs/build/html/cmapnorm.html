@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Normalisation of colors &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="index.html"/>
+        <link rel="up" title="Colors module" href="colors.html"/>
+        <link rel="next" title="Timeseries module" href="timeseries.html"/>
+        <link rel="prev" title="Fancy colormaps" href="newcmap.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">Maps module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="colors.html">Colors module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="newcmap.html">Fancy colormaps</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Normalisation of colors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creation-of-the-colormap">Creation of the colormap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creation-of-the-normalisation-instance">Creation of the normalisation instance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotting">Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="colors.html">Colors module</a> &raquo;</li>
+        
+      <li>Normalisation of colors</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cmapnorm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="normalisation-of-colors">
+<span id="cmapnorm"></span><h1>Normalisation of colors<a class="headerlink" href="#normalisation-of-colors" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes, you may want to do a figure in which patterns, identified for instance by using a clustering technique (k-means, etc), are represented by a specific color. To do this properly requires to manage both the colormap: both its number of colors but also the normalisation. The latter is the way a data is mapped to a specific color. To this purpose, two specific functions have been created.</p>
+<p>Let’s see how it works on a specific example. Imagine we have a 3 by 3 matrix, with values ranging from 0 to 8. We want to display the values which are between 0 and 1, 1 and 3, 3 and 5, 5 and 7, and 7 and 8 (therefore, 5 colors).</p>
+</div>
+<div class="section" id="creation-of-the-colormap">
+<h2>Creation of the colormap<a class="headerlink" href="#creation-of-the-colormap" title="Permalink to this headline">¶</a></h2>
+<p>As a first step, one needs to create a colormap containing 5 colors. A first possibility is to use the <code class="xref py py-class docutils literal notranslate"><span class="pre">envtoolkit.colors.Initcmap</span></code> class, and to call the <code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.colors.Initcmap.makecmap()</span></code> with <em>nbcol=5</em>. If the user wants to use a default <a class="reference external" href="http://matplotlib.org/examples/color/colormaps_reference.html">Matplotlib colormap</a>, the user must convert it into a 5 colors colormap. This is done by using the <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.subspan_default_cmap" title="envtoolkit.colors.subspan_default_cmap"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.colors.subspan_default_cmap()</span></code></a> function as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ncolors</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">cmap_jet_ncolors</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">subspan_default_cmap</span><span class="p">(</span><span class="s2">&quot;jet&quot;</span><span class="p">,</span> <span class="n">ncolors</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first argument is the name of the Matplotlib colormap, the second argument is the number of colors to use in the colormap</p>
+</div>
+<div class="section" id="creation-of-the-normalisation-instance">
+<h2>Creation of the normalisation instance<a class="headerlink" href="#creation-of-the-normalisation-instance" title="Permalink to this headline">¶</a></h2>
+<p>The next step is to create the <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.colors.Normalize.html#matplotlib.colors.Normalize" title="(in Matplotlib v3.0.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.colors.Normalize</span></code></a> instance, that will handle the mapping of the data with the colors. This is achieved with the <a class="reference internal" href="generated/envtoolkit.colors.html#envtoolkit.colors.make_boundary_norm" title="envtoolkit.colors.make_boundary_norm"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.colors.make_boundary_norm()</span></code></a> function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">boundaries</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">make_boundary_norm</span><span class="p">(</span><span class="n">ncolors</span><span class="p">,</span> <span class="n">boundaries</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first argument is the number of colors that will be displayed by the colormap, and the second argument is an array containing the values of the colormap “edges”.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The number of elements in the second arguments must me equal to ncolors+1. If it is not, the program will raise an error.</p>
+</div>
+</div>
+<div class="section" id="plotting">
+<h2>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h2>
+<p>Now that we have defined our normalisation and our colormap, we can draw the figure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">pcolormesh</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_jet_ncolors</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>In the following code, we compare the representation of the example array when:</dt>
+<dd><ul class="first last simple">
+<li>No changes in norm and cmap are applied (upper left)</li>
+<li>No changes in norm are applied (upper right)</li>
+<li>No changes in cmap are applied (lower left)</li>
+<li>Changes in both norm and cmap are applied (lower right)</li>
+</ul>
+</dd>
+</dl>
+<p>You will see that the only way to do it properly is to change both the norm and the cmap.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># Example for discrete color mapping</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib._cm</span>
+<span class="kn">import</span> <span class="nn">envtoolkit.colors</span> 
+
+<span class="c1"># function for adding text within the panels</span>
+<span class="k">def</span> <span class="nf">adding_text</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Function for adding the text &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox_props</span><span class="p">)</span>
+
+<span class="c1"># Defining some plot parameters for the imshow function</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;image.cmap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;jet&#39;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;image.interpolation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;image.origin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;lower&#39;</span>
+
+<span class="c1"># defining the box settings for text display</span>
+<span class="n">bbox_props</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="s2">&quot;lightgray&quot;</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># creation of the data array</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="c1"># defining the number of colors and the boundaries</span>
+<span class="n">ncolors</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">boundaries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">])</span>
+
+<span class="c1"># defining of a new jet colormap</span>
+<span class="n">cmap_jet_ncolors</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">subspan_default_cmap</span><span class="p">(</span><span class="s2">&quot;jet&quot;</span><span class="p">,</span> <span class="n">ncolors</span><span class="p">)</span>
+
+<span class="c1"># defining the normalisation of the imshow function</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">make_boundary_norm</span><span class="p">(</span><span class="n">ncolors</span><span class="p">,</span> <span class="n">boundaries</span><span class="p">)</span>
+
+<span class="c1"># Initialisation the figure </span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.98</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<span class="c1"># Drawing the data with no change in cmap and norm (UNCORRECT) </span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;No settings&#39;</span><span class="p">)</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">adding_text</span><span class="p">()</span>
+
+<span class="c1"># Drawing the data with no change in norm (UNCORRECT)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_jet_ncolors</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Colormap, no norm&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">adding_text</span><span class="p">()</span>
+
+<span class="c1"># Drawing the data with no change in cmap (UNCORRECT)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Norm, no cmap&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">adding_text</span><span class="p">()</span>
+
+<span class="c1"># Drawing the data with changes in both cmap and norm (CORRECT)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_jet_ncolors</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Norm, Cmap&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+<span class="n">adding_text</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;figure_col_norm.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_col_norm.png"><img alt="_images/figure_col_norm.png" src="_images/figure_col_norm.png" style="width: 80%;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="timeseries.html" class="btn btn-neutral float-right" title="Timeseries module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="newcmap.html" class="btn btn-neutral" title="Fancy colormaps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Multitaper &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="index.html"/>
+        <link rel="up" title="Spectral module" href="spectral.html"/>
+        <link rel="next" title="Module reference manual" href="refman.html"/>
+        <link rel="prev" title="Spectral module" href="spectral.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">Maps module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colors.html">Colors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="spectral.html">Spectral module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Multitaper</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotting-the-spectrum">Plotting the spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#determining-the-slope">Determining the slope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overlying-reference-slopes">Overlying reference slopes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="spectral.html">Spectral module</a> &raquo;</li>
+        
+      <li>Multitaper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/mtaper.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="multitaper">
+<span id="mtaper"></span><h1>Multitaper<a class="headerlink" href="#multitaper" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The multitaper functions presented here are adapted from the <a class="reference external" href="http://www.people.fas.harvard.edu/~phuybers/Mfiles/">ptmtPH.m</a> script by Peter Huybers (for the calculation of the power spectrum) and from the <a class="reference external" href="http://www.icemasa.org/education/masters-classes/Statistical%20methods%20applied%20to%20climatology/deshayes_CNRS_IRD_2013_csm_ps.zip/view">JD_spectra.m</a> (see also the <a class="reference external" href="http://www.icemasa.org/education/masters-classes/Statistical%20methods%20applied%20to%20climatology/deshayes_CNRS_IRD_2013_csm_lectures.zip/view">deshayes_CNRS_IRD_2013_csm5.pdf</a> file for a description of the method).</p>
+</div>
+<div class="section" id="plotting-the-spectrum">
+<h2>Plotting the spectrum<a class="headerlink" href="#plotting-the-spectrum" title="Permalink to this headline">¶</a></h2>
+<p>The plotting of the spectrum is achieved by using the <a class="reference internal" href="generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_spectra" title="envtoolkit.spectral.plot_spectra"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.spectral.plot_spectra()</span></code></a> function. It takes as argument the time series from which to plot the spectra, the time-sampling period (in seconds) and the period at which to plot the error bar. Additional arguments are the spectrum type (variance or energy spectrum) and the number of tapers. Arguments associated with the <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.0.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.plot()</span></code></a> function can be also used. The outputs are the power spectrum, the associated frequency and the error bar.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_spectra</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">deltat</span><span class="p">,</span>
+                                                  <span class="n">ferror</span><span class="p">,</span> <span class="n">spec_type</span><span class="o">=</span><span class="s1">&#39;variance&#39;</span><span class="p">,</span>
+                                                  <span class="n">nbandw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="determining-the-slope">
+<h2>Determining the slope<a class="headerlink" href="#determining-the-slope" title="Permalink to this headline">¶</a></h2>
+<p>It might be interesting to dermine the slope of a power spectrum. This is achieved by using the <a class="reference internal" href="generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_slope" title="envtoolkit.spectral.plot_slope"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.spectral.plot_slope()</span></code></a> function. It takes as an argument the spectrum and frequency outputs of the <a class="reference internal" href="generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_spectra" title="envtoolkit.spectral.plot_spectra"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.spectral.plot_spectra()</span></code></a> function. It may also takes as argument the first and/or last frequency on which to compute the slope (if not set, the slope is computed over the entire frequency range). It may also take as argument the vertical offset of the slope lines (in order to improve readability of the figure) and arguments which are associated with the <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.0.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.plot()</span></code></a> function. It returns the value of the slope.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">slope</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_slope</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">fmin</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                                    <span class="n">fmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offy</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;FireBrick&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="overlying-reference-slopes">
+<h2>Overlying reference slopes<a class="headerlink" href="#overlying-reference-slopes" title="Permalink to this headline">¶</a></h2>
+<p>In a figure, the user may want to plot one or several reference slopes, in order to highlight the value of the slope associated with the the power spectrum. Thisis achieved by using the <a class="reference internal" href="generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_slope" title="envtoolkit.spectral.plot_slope"><code class="xref py py-func docutils literal notranslate"><span class="pre">envtoolkit.spectral.plot_slope()</span></code></a> function. It takes as argument the lower and upper frequency value on which to plot the slope, the slope intercept and the value of the slope. It also handles additional arguments associated with the <a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.0.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.plot()</span></code></a> function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_ref_slope</span><span class="p">(</span><span class="n">fmin_slope</span><span class="p">,</span> <span class="n">fmax_slope</span><span class="p">,</span>
+                                <span class="n">yinter_slope</span><span class="p">,</span> <span class="n">slope</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
+                                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="c1"># Example on the use of multi-taper spectral analysis</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">envtoolkit.spectral</span>
+
+<span class="c1"># Loading SST data</span>
+<span class="n">filein</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;sst_taper.npz&#39;</span><span class="p">)</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="n">filein</span><span class="p">[</span><span class="s1">&#39;sst&#39;</span><span class="p">]</span>
+
+<span class="c1"># defining the delta t and the localisation of</span>
+<span class="c1"># the error bar</span>
+<span class="n">deltat</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="mi">60</span><span class="o">*</span><span class="mi">60</span>
+<span class="n">ferror</span> <span class="o">=</span> <span class="mf">1e-2</span>
+
+<span class="n">fmin_slope</span> <span class="o">=</span> <span class="mf">1e-2</span>
+<span class="n">fmax_slope</span> <span class="o">=</span> <span class="mf">1e-1</span>
+<span class="n">yinter_slope</span> <span class="o">=</span> <span class="mf">1e-1</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+<span class="c1"># plotting the power spectrum (variance type)</span>
+<span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> \
+        <span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_spectra</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">deltat</span><span class="p">,</span> <span class="n">ferror</span><span class="p">,</span>
+                                      <span class="n">spec_type</span><span class="o">=</span><span class="s1">&#39;variance&#39;</span><span class="p">,</span>
+                                      <span class="n">nbandw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="c1"># ploting the slope, computed from freq[0] to 1</span>
+<span class="c1"># offy = 2, we move the slope by two grid cells on the vertical</span>
+<span class="n">slope1</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_slope</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                     <span class="n">offy</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;FireBrick&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+<span class="c1"># plotting the slope, computed from 1 to freq[-1]</span>
+<span class="c1"># offy = 2, we move the slope by two grid cells on the vertical</span>
+<span class="n">slope2</span> <span class="o">=</span> <span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_slope</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span>
+                                     <span class="n">fmin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offy</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                     <span class="n">color</span><span class="o">=</span><span class="s1">&#39;DarkOrange&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+<span class="c1"># plotting reference slope (slope = -2)</span>
+<span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_ref_slope</span><span class="p">(</span><span class="n">fmin_slope</span><span class="p">,</span> <span class="n">fmax_slope</span><span class="p">,</span>
+                                <span class="n">yinter_slope</span><span class="p">,</span> <span class="n">slope</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span>
+                                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+<span class="c1"># plotting reference slope (slope = -3)</span>
+<span class="n">envtoolkit</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">plot_ref_slope</span><span class="p">(</span><span class="n">fmin_slope</span><span class="p">,</span> <span class="n">fmax_slope</span><span class="p">,</span>
+                                <span class="n">yinter_slope</span><span class="p">,</span> <span class="n">slope</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
+                                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+<span class="c1"># Defining the x and y labels</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Power spectrum density ($K^2.cpy^{-1}$)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency($cpy$)&quot;</span><span class="p">)</span>
+
+<span class="c1"># setting the ylim</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figure_mtaper.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span> <span class="n">slope1</span><span class="p">,</span> <span class="n">slope2</span>
+
+</pre></div>
+</div>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/figure_mtaper.png"><img alt="_images/figure_mtaper.png" src="_images/figure_mtaper.png" style="width: 80%;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="refman.html" class="btn btn-neutral float-right" title="Module reference manual" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="spectral.html" class="btn btn-neutral" title="Spectral module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

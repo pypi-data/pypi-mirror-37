@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>envtoolkit.spectral &mdash; envtoolkit 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="envtoolkit 1.0.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> envtoolkit
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Getting the <em>envtoolkit</em> library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../map.html">Maps module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../colors.html">Colors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../timeseries.html">Timeseries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spectral.html">Spectral module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../refman.html">Module reference manual</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">envtoolkit</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>envtoolkit.spectral</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for envtoolkit.spectral</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot; Functions/classes relative to time-series &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">spectrum</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<div class="viewcode-block" id="multitaper"><a class="viewcode-back" href="../../generated/envtoolkit.spectral.html#envtoolkit.spectral.multitaper">[docs]</a><span class="k">def</span> <span class="nf">multitaper</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">deltat</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">nbandw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">nfft</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the power spectrum using the multi-taper method </span>
+<span class="sd">    </span>
+<span class="sd">    This method uses adaptive weighting. Adapted from the</span>
+<span class="sd">    `ptmtPH.m &lt;http://www.people.fas.harvard.edu/~phuybers/Mfiles/&gt;`_</span>
+<span class="sd">    script by Peter Huybers</span>
+
+<span class="sd">    :param numpy.array xdata: input data vector.</span>
+<span class="sd">    :param float deltat: sampling interval</span>
+<span class="sd">    :param int nbandw: time bandwidth product, acceptable values range from </span>
+<span class="sd">     0:.5:length(x)/2-1. 2*nbandw-1 dpss tapers are applied </span>
+<span class="sd">     except if nbandw=0 a boxcar window is applied </span>
+<span class="sd">     and if nbandw = .5 (or 1) a single dpss taper is applied.</span>
+<span class="sd">    :param int nfft:  number of frequencies to evaluate P at, default is</span>
+<span class="sd">     length(x) for the two-sided transform.</span>
+
+<span class="sd">    :return: a tuple (P, s, ci) with:</span>
+
+<span class="sd">        - P: Power spectrum computed via the multi-taper method.</span>
+<span class="sd">        - s: Frequency vector.</span>
+<span class="sd">        - ci: 95% confidence intervals.</span>
+
+<span class="sd">    :rtype: tuple</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">xdata</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;The dataset must be one-dimensional. &quot;</span> <span class="o">+</span> 
+                <span class="s2">&quot;It currently has </span><span class="si">%d</span><span class="s2"> dimensions.&quot;</span> <span class="o">%</span><span class="n">xdata</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nfft</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nfft</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nbandw</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">)])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># use of the dpss function of the spectrum library</span>
+    <span class="n">taper</span><span class="p">,</span> <span class="n">eigval</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">dpss</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">),</span> <span class="n">NW</span><span class="o">=</span><span class="n">nbandw</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">nfft</span><span class="p">:</span>
+        <span class="n">fftcoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">taper</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span>
+                                    <span class="n">n</span><span class="o">=</span><span class="n">nfft</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;The case of len(xdata)&gt;nfft is not implemented yet.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Iteration to determine adaptive weights:</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">sig2</span> <span class="o">=</span> <span class="n">xdata</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">xdata</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span>  <span class="c1"># power</span>
+        <span class="n">spectrum</span> <span class="o">=</span> <span class="p">(</span><span class="n">fftcoef</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fftcoef</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>   <span class="c1"># initial spectrum estimate</span>
+        <span class="n">spectrum_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nfft</span><span class="p">)</span>
+        <span class="n">eigval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)))</span>
+
+        <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">spectrum</span><span class="o">-</span><span class="n">spectrum_temp</span><span class="p">)</span><span class="o">/</span><span class="n">nfft</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">.</span><span class="mi">0005</span><span class="o">*</span><span class="n">sig2</span><span class="o">/</span><span class="n">nfft</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">spectrum</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">spectrum</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">eigval</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nfft</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">sig2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">eigval</span><span class="p">))))</span>  <span class="c1"># weights</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nfft</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">*</span><span class="n">eigval</span><span class="p">)</span>
+            <span class="n">spectrum_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="o">*</span><span class="n">fftcoef</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">spectrum</span><span class="p">,</span> <span class="n">spectrum_temp</span> <span class="o">=</span> <span class="n">spectrum_temp</span><span class="p">,</span> <span class="n">spectrum</span>  <span class="c1"># swap spectrum and spectrum_tep</span>
+
+        <span class="n">error</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nfft</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">*</span><span class="n">eigval</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">error</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nfft</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">nfft</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[</span><span class="n">select</span><span class="p">]</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">deltat</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">nfft</span><span class="o">*</span><span class="n">deltat</span><span class="p">))[</span><span class="n">select</span><span class="p">]</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">error</span><span class="p">[</span><span class="n">select</span><span class="p">]</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">9</span><span class="o">*</span><span class="n">error</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.96</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="o">/</span><span class="p">(</span><span class="mi">9</span><span class="o">*</span><span class="n">error</span><span class="p">)))</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span>
+                      <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">9</span><span class="o">*</span><span class="n">error</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.96</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">9</span><span class="o">*</span><span class="n">error</span><span class="p">)))</span><span class="o">**</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">error</span></div>
+
+
+<div class="viewcode-block" id="plot_spectra"><a class="viewcode-back" href="../../generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_spectra">[docs]</a><span class="k">def</span> <span class="nf">plot_spectra</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">deltat</span><span class="p">,</span> <span class="n">ferror</span><span class="p">,</span> <span class="n">spec_type</span><span class="o">=</span><span class="s1">&#39;variance&#39;</span><span class="p">,</span>
+                 <span class="n">nbandw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the power spectrum of a time-series. </span>
+<span class="sd">    </span>
+<span class="sd">    The power-spectrum is computed by using </span>
+<span class="sd">    the :py:func:`envtoolkit.spectra.multitaper` function. </span>
+<span class="sd">    Adapted from the JD_spectra script of Julie Deshayes.</span>
+
+<span class="sd">    :param numpy.array xdata: time series whose spectrum to plot</span>
+<span class="sd">    :param float deltat: time step of the time series in seconds</span>
+<span class="sd">    :param float ferror: the frequency where to do draw the errorbar</span>
+<span class="sd">    :param str spec_type: &#39;variance&#39; for variance spectrum </span>
+<span class="sd">     (spectrum, in $unit^2 cpy^{-1}$), else </span>
+<span class="sd">     energy spectrum (freq*spectrim, in $unit^2$).</span>
+<span class="sd">    :param int nbandw: time bandwidth product (multitaper used 2*nbandw-1 tapers)</span>
+<span class="sd">    :param str ylabel: label of the yaxis</span>
+<span class="sd">    :param **kwargs: plot additional arguments</span>
+<span class="sd">    :return: A tuple (Px,F,Pxc) with:</span>
+
+<span class="sd">        - Px: the spectrum vector</span>
+<span class="sd">        - F: the frequency vector</span>
+<span class="sd">        - PxC: the errorbar vector</span>
+
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">xdata</span> <span class="o">=</span> <span class="n">xdata</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">error</span><span class="p">]</span> <span class="o">=</span> <span class="n">multitaper</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">nbandw</span><span class="o">=</span><span class="n">nbandw</span><span class="p">)</span>
+
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="o">*</span><span class="mi">365</span><span class="o">*</span><span class="mi">86400</span><span class="o">/</span><span class="n">deltat</span>    <span class="c1"># to get the result in cpy</span>
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">spectrum</span><span class="o">/</span><span class="p">(</span><span class="mi">365</span><span class="o">*</span><span class="mi">86400</span><span class="o">/</span><span class="n">deltat</span><span class="p">)</span>    <span class="c1"># to get the result in cpy^{-1}</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">error</span><span class="o">/</span><span class="p">(</span><span class="mi">365</span><span class="o">*</span><span class="mi">86400</span><span class="o">/</span><span class="n">deltat</span><span class="p">)</span>    <span class="c1"># to get the result in cpy^{-1}</span>
+    <span class="n">barmax</span> <span class="o">=</span> <span class="n">error</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mf">1e2</span>
+    <span class="n">barmin</span> <span class="o">=</span> <span class="n">error</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mf">1e2</span>
+    
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">spec_type</span> <span class="o">==</span> <span class="s1">&#39;variance&#39;</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">spectrum</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">ferror</span><span class="p">,</span> <span class="n">ferror</span><span class="p">],</span> <span class="p">[</span><span class="n">barmin</span><span class="p">,</span> <span class="n">barmax</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">freq</span><span class="o">*</span><span class="n">spectrum</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">error</span></div>
+
+
+<div class="viewcode-block" id="plot_slope"><a class="viewcode-back" href="../../generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_slope">[docs]</a><span class="k">def</span> <span class="nf">plot_slope</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">fmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">offy</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Draws the slope of the spectrum.</span>
+
+<span class="sd">    :param numpy.array spectrum: frequency spectrum (output of the :py:func:`plot_spectra` function)</span>
+<span class="sd">    :param numpy.array freq: frequency vector (output of the :py:func:`plot_spectra` function)</span>
+<span class="sd">    :param axes ax: axes on which to draw the slope</span>
+<span class="sd">    :param float fmin: the first frequency on which to compute the slope</span>
+<span class="sd">    :param float fmax: the last frequency on which to compute the slope</span>
+<span class="sd">    :param float offy: the y-offset of the slope</span>
+<span class="sd">    :param dict **kwargs: additional plotting arguments</span>
+<span class="sd">    :return: the value of the slope</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># if fmin or fmax are None, we set to the min</span>
+    <span class="c1"># and max values of freq</span>
+    <span class="k">if</span> <span class="n">fmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fmin</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fmax</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="n">islope</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">((</span><span class="n">freq</span> <span class="o">&gt;=</span> <span class="n">fmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">freq</span> <span class="o">&lt;=</span> <span class="n">fmax</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">freq</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">islope</span><span class="p">]</span>
+    <span class="n">pxout</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[</span><span class="n">islope</span><span class="p">]</span>
+
+    <span class="n">yslope</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">pxout</span><span class="p">)</span>  <span class="c1"># pylint: disable=no-member</span>
+    <span class="n">xslope</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fout</span><span class="p">)</span>   <span class="c1"># pylint: disable=no-member</span>
+
+    <span class="c1"># calculation of the polyfit</span>
+    <span class="n">pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">xslope</span><span class="p">,</span> <span class="n">yslope</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># calculation of the trend</span>
+    <span class="n">trend</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">pol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">xslope</span> <span class="o">+</span> <span class="n">pol</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">offy</span><span class="p">)</span>
+
+    <span class="c1"># plotting the trend</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fout</span><span class="p">,</span> <span class="n">trend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="plot_ref_slope"><a class="viewcode-back" href="../../generated/envtoolkit.spectral.html#envtoolkit.spectral.plot_ref_slope">[docs]</a><span class="k">def</span> <span class="nf">plot_ref_slope</span><span class="p">(</span><span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span><span class="p">,</span> <span class="n">yinterc</span><span class="p">,</span> <span class="n">slope</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Draws reference slopes on a log spectral plot. </span>
+
+<span class="sd">    :param float fmin: frequency where to start the reference the slope</span>
+<span class="sd">    :param float fmax: frequency where to end the reference the slope</span>
+<span class="sd">    :param float yinterc: y intercept of the slopes</span>
+<span class="sd">    :param float kval: the slope that we</span>
+<span class="sd">    :param dict **kwargs: additional line plotting arguments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+
+    <span class="n">yout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">yinterc</span><span class="p">)</span> <span class="o">-</span> <span class="n">slope</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fmin</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">xdata</span><span class="p">))</span>  <span class="c1"># pylint:disable=no-member</span>
+    <span class="n">yout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">yout</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">yout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">xdata</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">yout</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39; k = -&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">slope</span><span class="p">),</span>
+             <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+             <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round&quot;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="s2">&quot;0.9&quot;</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Nicolas Barrier.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
