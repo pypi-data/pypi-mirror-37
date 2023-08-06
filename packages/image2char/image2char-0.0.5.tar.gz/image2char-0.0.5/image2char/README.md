@@ -1,0 +1,45 @@
+# image2char
+
+## description
+
+this module can change image to char[], can be printed at console beautiful
+
+effect:
+
+![](https://raw.githubusercontent.com/cpak00/image2char/master/input1.jpg)
+-->
+![](https://raw.githubusercontent.com/cpak00/image2char/master/output1.png)
+
+![](https://raw.githubusercontent.com/cpak00/image2char/master/input2.png)
+-->
+![](https://raw.githubusercontent.com/cpak00/image2char/master/output2.png)
+
+`this QR Code can even be recognized when density>=0.6`
+
+## quick start
+
+```python
+from image2char import tool
+from PIL import Image
+import logging
+
+img_path1 = 'image2char/input1.jpg'
+img_path2 = 'image2char/input2.png'
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+
+    img1 = Image.open(img_path1)
+    img2 = Image.open(img_path2)
+    
+    matrix = tool.to_chars(img1, density=0.5, scale=2, reversed=True)
+    logging.info('matrix: %d, %d' % (len(matrix), len(matrix[0])))
+    for i in range(len(matrix)):
+        print(''.join(matrix[i]))
+
+    char_list = '''█　'''
+    scanner = tool.get_scanner(density=0.6, scale=1)
+    # reversed=True: in windows console, the char is white
+    scanner.scan(img2, reversed=True, char_list=char_list)
+    scanner.print_result()
+```
