@@ -1,0 +1,28 @@
+{% if search.ready %}
+    <div class="span-18 last">
+        <h2>{{ search.results.count }} {{ search.model_config.verbose_name_plural }}</h2>
+        <p class="description">{{ search.results.natural_string }}</p>
+    </div>
+    {% if search.results %}
+        <div class="span-18 last">
+            <table id="data_table">
+                <thead>
+                    <tr>
+                        {% for field in search.results.fields %}
+                            <th>{{ field }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in search.results.list %}
+                        <tr>
+                            {% for item in result %}
+                                <td>{{ item|safe }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endif %}
