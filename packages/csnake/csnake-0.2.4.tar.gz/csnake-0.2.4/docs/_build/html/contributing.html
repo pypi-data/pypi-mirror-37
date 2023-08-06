@@ -1,0 +1,271 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Contributing &#8212; csnake  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Changelog" href="changes.html" />
+    <link rel="prev" title="Developer Interface (API)" href="api.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>If you want to contribute to <em>csnake</em>, please follow these guidelines.</p>
+<div class="section" id="quick-access-to-coverage-report-and-test-results">
+<h2>Quick access to coverage report and test results<a class="headerlink" href="#quick-access-to-coverage-report-and-test-results" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://andrejr.gitlab.io/csnake/coverage/index.html">Coverage report</a></li>
+<li><a class="reference external" href="https://andrejr.gitlab.io/csnake/pytest_report.html">pytest results</a></li>
+</ul>
+</div>
+<div class="section" id="quick-overview-of-goals-and-non-goals">
+<h2>Quick overview of goals and non-goals<a class="headerlink" href="#quick-overview-of-goals-and-non-goals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="old-python-versions">
+<h3>Old Python versions<a class="headerlink" href="#old-python-versions" title="Permalink to this headline">¶</a></h3>
+<p>Csnake works with Python versions 3.6 and 3.7.
+It uses
+<a class="reference external" href="https://docs.python.org/3.6/reference/lexical_analysis.html#f-strings">formatted string literals</a>
+which first appear in version 3.6.</p>
+<p>I have <strong>no</strong> interest in porting csnake to older versions of Python
+(especially not 2.x) and won’t take in such pull requests.</p>
+</div>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>I don’t use Windows or own a Windows licence.
+Currently, there are no Windows tests and Windows installer isn’t being built.</p>
+<p>If You’d like to help with Windows support, please add a suite of
+Windows-specific tests and a full deployment pipeline.</p>
+</div>
+</div>
+<div class="section" id="pre-commit-hooks">
+<h2>pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">¶</a></h2>
+<p>Csnake uses an opinionated automatic code formatting setup that’s run
+pre-commit for every commit you’re making.
+This prevents contributors from wasting their time on formatting code, and also
+warns them about some kind of errors (via linter).
+The formatters’ settings are tailored to produce code that <em>diffs clean</em>,
+meaning that parts of code (arguments, <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">...</span> <span class="pre">include</span> <span class="pre">...</span></code>) are split
+into lines.</p>
+<dl class="docutils">
+<dt>Pre-commit hooks include:</dt>
+<dd><dl class="first last docutils">
+<dt><em>reorder_python_imports</em></dt>
+<dd>Reorders imports and breaks them up into lines (so they <em>diff clean</em>)</dd>
+<dt><em>pyupgrade</em></dt>
+<dd>Upgrades obsolete python syntax.</dd>
+<dt><em>black</em></dt>
+<dd>Formats the code in an opinionated way</dd>
+<dt><em>flake8</em></dt>
+<dd>Statically checks for all kinds of bugs</dd>
+<dt><em>check-vcs-permalinks</em></dt>
+<dd>Ensures that all VCS links are permalinks</dd>
+<dt><em>check-merge-conflict</em></dt>
+<dd>Checks for version conflict strings</dd>
+</dl>
+</dd>
+</dl>
+<p>You are expected to run the pre-commit hooks locally before you make a pull
+request.
+All of them (along with <em>pytest</em> and Sphinx <em>doctest</em>) will be re-run by the CI
+server side when you commit your code, and you’ll be asked to fix the errors
+reported before your pull request is considered for merging.</p>
+<p>Pre-commit hook installation is explained below.</p>
+</div>
+<div class="section" id="installing-the-development-environment">
+<h2>Installing the development environment<a class="headerlink" href="#installing-the-development-environment" title="Permalink to this headline">¶</a></h2>
+<p>You can install (locally, in a <cite>pipenv</cite> environment) everything you need for
+development by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">setup</span></code> in the root of the project.
+Python 3.6+ and pipenv are required.</p>
+<p>This installs packages needed for formatting, pre-commit tasks, linting and
+testing, and also sets up the pre-commit hook.</p>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>Csnake is (relatively) thoroughly tested with <a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a> based scripts in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> folder.
+Test coverage is being tracked
+<a class="reference external" href="https://andrejr.gitlab.io/csnake/pytest_report.html">here</a>.</p>
+<p>You should thoroughly test your additions in the same way before submitting
+a pull request.
+Your code mustn’t break any existing tests.</p>
+<p>Tests are run by CI when you submit your pull request.
+You should run them locally beforehand, too.</p>
+<p>Pytest tests can be run with the following commands (after you’ve installed the
+dev environment):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m pytest -vv
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">PYTHONPATH</span><span class="o">=</span>. pytest -vv
+</pre></div>
+</div>
+<p>If you’re using <cite>pipenv</cite> for development, you should activate it beforehand:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pipenv shell
+</pre></div>
+</div>
+<p id="doctest-make">There are doctests within the documentation.
+Their primary purpose is to provide examples, not for testing.
+Still, they’ll be tested by the CI for errors.
+Locally, you should do the same by running:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> docs
+make doctest
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>Every public class, function and module must be documented via its <cite>docstring</cite>.</p>
+<p>Docstrings are processed by <em>Sphinx</em> and its
+<a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html">Napoleon</a>
+plugin to create the API section of the documentation.
+<a class="reference external" href="www.sphinx-doc.org/en/master/usage/extensions/example_google.html">Google style</a>
+should be used for docstrings (see the existing docstrings, too).</p>
+<p>Examples should be provided within the docstring in doctest format.
+These shouldn’t be used as a way of testing (that’s what <cite>pytest</cite> tests are
+for), but their correctness will be checked by the CI.
+Erroneous documentation is bad.</p>
+<p>If you want to see how your docs look like or check them for errors, take
+a look into doc generation <a class="reference internal" href="#doctest-make"><span class="std std-ref">above</span></a>.</p>
+<p>Within the RST documentation, there’s a file that categorizes
+<cite>Napoleon</cite>-generated API documentation (<code class="docutils literal notranslate"><span class="pre">docs/api.rst</span></code>).
+If you’re adding functions or classes, you should indicate their categories in
+that file.</p>
+<p>Docs can be generated by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> from the <cite>docs</cite> folder:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> docs
+make html
+</pre></div>
+</div>
+<p>Online, the compiled Sphinx html documentation can be viewed on the
+<a class="reference external" href="https://andrejr.gitlab.io/csnake/">GitLab pages page for this package</a>.</p>
+<p>The documentation html is compiled by the CI from the <em>master</em> branch.</p>
+</div>
+<div class="section" id="versioning">
+<h2>Versioning<a class="headerlink" href="#versioning" title="Permalink to this headline">¶</a></h2>
+<p>Csnake uses <a class="reference external" href="https://semver.org/">Semantic Versioning</a>. Here’s a short
+summary:</p>
+<blockquote>
+<div><p>Given a version number MAJOR.MINOR.PATCH, increment the:</p>
+<ol class="arabic simple">
+<li>MAJOR version when you make incompatible API changes,</li>
+<li>MINOR version when you add functionality in a backwards-compatible
+manner, and</li>
+<li>PATCH version when you make backwards-compatible bug fixes.</li>
+</ol>
+<p>Additional labels for pre-release and build metadata are available as
+extensions to the MAJOR.MINOR.PATCH format.</p>
+</div></blockquote>
+<p>Version info is inferred from git <em>tags</em> by using
+<a class="reference external" href="https://github.com/warner/python-versioneer">Versioneer</a>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">csnake</a></h1>
+
+
+
+<p class="blurb">C code generation package</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">Developer Interface (API)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-access-to-coverage-report-and-test-results">Quick access to coverage report and test results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-overview-of-goals-and-non-goals">Quick overview of goals and non-goals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#old-python-versions">Old Python versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-commit-hooks">pre-commit hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-the-development-environment">Installing the development environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#versioning">Versioning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="api.html" title="previous chapter">Developer Interface (API)</a></li>
+      <li>Next: <a href="changes.html" title="next chapter">Changelog</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Andrej Radović.
+      
+      |
+      <a href="_sources/contributing.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

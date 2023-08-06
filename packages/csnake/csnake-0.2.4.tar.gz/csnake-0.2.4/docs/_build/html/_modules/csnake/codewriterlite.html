@@ -1,0 +1,453 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>csnake.codewriterlite &#8212; csnake  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for csnake.codewriterlite</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>  <span class="c1"># noqa</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">assure_str</span>
+
+
+<span class="k">class</span> <span class="nc">NestedCommentError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Comments inside of comments are not allowed.&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">NoCommentStartError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Comments must be started before they are ended.&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">CodeWriterLite</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Simple container for C code, with indentation and blocks.</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        You probably don&#39;t want to use :class:`CodeWriterLite` for code</span>
+<span class="sd">        generation, but its subclass, :class:`CodeWriter`.</span>
+<span class="sd">        :class:`CodeWriterLite` is meant for csnake internal use and is</span>
+<span class="sd">        normally not accessible at package level.</span>
+
+<span class="sd">    CodeWriterLite is used internally in cconstructs and also as a parent class</span>
+<span class="sd">    of CodeWriter.</span>
+
+<span class="sd">    CodeWriterLite (abbreviated CWL or cwl) is a container class for C code</span>
+<span class="sd">    generation, which implements indentation and block ({}) opening and</span>
+<span class="sd">    closing.</span>
+
+<span class="sd">    The class supports str, len, getitem, iter, and contains, making it a</span>
+<span class="sd">    virtual subclass of Collection.</span>
+
+
+<span class="sd">    Args:</span>
+<span class="sd">        lf: linefeed character used to separate lines of code when</span>
+<span class="sd">            rendering code with :func:`str` or :attr:`code`.</span>
+<span class="sd">        indent: indentation unit string or :class:`int` number of spaces,</span>
+<span class="sd">            used to indent code.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">        lf(str): linefeed character used to separate lines of code when</span>
+<span class="sd">            rendering code with :func:`str` or :attr:`code`.</span>
+
+<span class="sd">        lines(list(str)): lines of code.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;lf&quot;</span><span class="p">,</span> <span class="s2">&quot;_indent_unit&quot;</span><span class="p">,</span> <span class="s2">&quot;_indent_level&quot;</span><span class="p">,</span> <span class="s2">&quot;_in_comment&quot;</span><span class="p">,</span> <span class="s2">&quot;lines&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lf</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">lf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lf</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lf</span> <span class="o">=</span> <span class="n">assure_str</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span>  <span class="c1"># type: str</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indent</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_indent_unit</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_indent_unit</span> <span class="o">=</span> <span class="n">assure_str</span><span class="p">(</span><span class="n">indent</span><span class="p">)</span>
+
+        <span class="c1"># initialize values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># type: List[str]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_current_indent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indent_unit</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">code</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;str: The contents of the codewriter rendered to a str, using :attr:`lf`</span>
+<span class="sd">        as the linebreak.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lf</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the code joined by :attr:`lf`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator that iterates over the lines in the codewriter.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the nth line of code.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of lines in the codewriter.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return whether a :class:`str` is a substring of the codewriter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            item(str): a potential substring of the codewriter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Whether or not `item` is a substring of the :func:`str`</span>
+<span class="sd">            representation of the codewriter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">indent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Increase the indentation level by 1 unit.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            :meth:`indent` and :meth:`dedent` in action:</span>
+
+<span class="sd">        &gt;&gt;&gt; from csnake import CodeWriter</span>
+<span class="sd">        &gt;&gt;&gt; cwr = CodeWriter()</span>
+<span class="sd">        &gt;&gt;&gt; cwr.add_line(&#39;line_1;&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cwr.indent()</span>
+<span class="sd">        &gt;&gt;&gt; cwr.add_line(&#39;line_2;&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cwr.add_line(&#39;line_3;&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cwr.dedent()</span>
+<span class="sd">        &gt;&gt;&gt; cwr.add_line(&#39;line_4;&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(cwr)</span>
+<span class="sd">        line_1;</span>
+<span class="sd">            line_2;</span>
+<span class="sd">            line_3;</span>
+<span class="sd">        line_4;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">dedent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Decrease the indentation level by 1 unit.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            See :meth:`indent`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">zero_indent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set indentation level to zero.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indent_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">start_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Start a comment block.</span>
+
+<span class="sd">        All of the lines added after this are in a block comment, until the</span>
+<span class="sd">        block is finished by :meth:`end_comment`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ignore_indent: whether to ignore the indentation and just start the</span>
+<span class="sd">                comment from the beginning of the next line.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NestedCommentError: if you attempt to start a comment block when a</span>
+<span class="sd">                comment block has already been started.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            Starting and ending a comment block with :meth:`start_comment` and</span>
+<span class="sd">            :meth:`end_comment`:</span>
+
+<span class="sd">            &gt;&gt;&gt; from csnake import CodeWriter</span>
+<span class="sd">            &gt;&gt;&gt; cwr = CodeWriter()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_1;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.start_comment()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_2;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_3;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.end_comment()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_4;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; print(cwr)</span>
+<span class="sd">            line_1;</span>
+<span class="sd">            /*</span>
+<span class="sd">            * line_2;</span>
+<span class="sd">            * line_3;</span>
+<span class="sd">            */</span>
+<span class="sd">            line_4;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NestedCommentError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="s2">&quot;/*&quot;</span><span class="p">,</span> <span class="n">ignore_indent</span><span class="o">=</span><span class="n">ignore_indent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">end_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;End a comment block.</span>
+
+<span class="sd">        A comment block previously started by :meth:`start_comment` is ended.</span>
+<span class="sd">        The following code is not inside a block comment.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            NoCommentStartError: if you attempt to end a comment block when a</span>
+<span class="sd">                comment block hasn&#39;t been started.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            See :meth:`start_comment`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoCommentStartError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="s2">&quot;*/&quot;</span><span class="p">,</span> <span class="n">ignore_indent</span><span class="o">=</span><span class="n">ignore_indent</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">open_brace</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add an open brace and increase indentation for subsequent lines.</span>
+
+<span class="sd">        See :meth:`indent` for more information on how indentation is done.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            Using :meth:`open_brace` and :meth:`close_brace`.</span>
+
+<span class="sd">            &gt;&gt;&gt; from csnake import CodeWriter</span>
+<span class="sd">            &gt;&gt;&gt; cwr = CodeWriter()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_1;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.open_brace()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_2;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_3;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; cwr.close_brace()</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_line(&#39;line_4;&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; print(cwr)</span>
+<span class="sd">            line_1;</span>
+<span class="sd">            {</span>
+<span class="sd">                line_2;</span>
+<span class="sd">                line_3;</span>
+<span class="sd">            }</span>
+<span class="sd">            line_4;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">close_brace</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add a closed brace and decrease indentation for subsequent lines.</span>
+
+<span class="sd">        See :meth:`dedent` for more information on how dedentation is done.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            See :meth:`open_brace`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dedent</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Append text to the end of last line.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text: :obj:`str` to append to the last line.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: if :obj:`text` is not a :class:`str`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">text</span>
+
+    <span class="k">def</span> <span class="nf">add_line</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">comment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ignore_indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add a line of text to the container after the last line.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text: :obj:`str` to add</span>
+<span class="sd">            comment: optional comment</span>
+<span class="sd">            ignore_indent: switch to ignore indentation and insert the code</span>
+<span class="sd">                with indentation 0</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: if text or comment isn&#39;t a :class:`str`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># empty line</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">comment</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">current_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_indent</span><span class="p">:</span>
+            <span class="n">current_line</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_indent</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+            <span class="n">current_line</span> <span class="o">+=</span> <span class="s2">&quot;*&quot;</span>
+
+        <span class="c1"># add the text (if appropriate)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">assure_str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;text mustn&#39;t contain multiple lines.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+                <span class="n">current_line</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span>
+            <span class="n">current_line</span> <span class="o">+=</span> <span class="n">text</span>
+
+        <span class="k">if</span> <span class="n">comment</span><span class="p">:</span>
+            <span class="n">comment</span> <span class="o">=</span> <span class="n">assure_str</span><span class="p">(</span><span class="n">comment</span><span class="p">)</span>
+            <span class="c1"># add a space if there is text</span>
+            <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+                <span class="n">current_line</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_comment</span><span class="p">:</span>
+                <span class="n">current_line</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{comment}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_line</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;/* </span><span class="si">{comment}</span><span class="s2"> */&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_line</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_lines</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="n">ignore_indent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Append code lines from an iterable or a multi-line str.</span>
+
+<span class="sd">        If `lines` is an iterable iterating over :class:`str` objects, adds the</span>
+<span class="sd">        lines to the codewriter in order.</span>
+
+<span class="sd">        If `lines` is a multi-line string, adds its lines to the codewriter.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            lines: an :class:`Iterable` of :class:`str` or a multi-line `str`</span>
+<span class="sd">                to add to codewriter.</span>
+<span class="sd">            ignore_indent: whether to ignore the current indentation level or</span>
+<span class="sd">                not. If `ignore_indent` is true, the lines will be appended</span>
+<span class="sd">                without indentation.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: if one of the arguments is of the wrong type</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            Adding a list of lines:</span>
+
+<span class="sd">            &gt;&gt;&gt; from csnake import CodeWriter</span>
+<span class="sd">            &gt;&gt;&gt; cwr = CodeWriter()</span>
+<span class="sd">            &gt;&gt;&gt; lol = [&#39;list&#39;, &#39;of&#39;, &#39;lines&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; cwr.add_lines(lol)</span>
+<span class="sd">            &gt;&gt;&gt; print(cwr)</span>
+<span class="sd">            list</span>
+<span class="sd">            of</span>
+<span class="sd">            lines</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">ignore_indent</span><span class="o">=</span><span class="n">ignore_indent</span><span class="p">)</span>
+
+
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">CodeWriterLite</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">csnake</a></h1>
+
+
+
+<p class="blurb">C code generation package</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Developer Interface (API)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changes.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Andrej Radović.
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
