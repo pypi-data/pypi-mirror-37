@@ -1,0 +1,3 @@
+
+class LabelsList():
+    sourceName = "sourceName"
