@@ -1,0 +1,58 @@
+dist: trusty
+sudo: required
+
+
+python:
+  - "2.7"
+
+git:
+  depth: false
+
+cache:
+  directories:
+  - $HOME/.cache/pip/
+  - $HOME/Library/Caches/Homebrew/
+  - $HOME/Library/Caches/pip
+
+matrix:
+  include:
+   - os: linux
+     language: python
+   - os: osx
+     osx_image: Xcode 8.3.3
+     language: generic
+   - os: linux
+     language: python
+     env: TESTENV=flake8
+
+before_install:
+  - sleep 3 #give xvfb some time to start
+  - rm -rf ~/home/.enthought
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/python@2/libexec/bin:$PATH"; fi
+  - make deps 
+  - pip list
+
+before_script:
+  - "export DISPLAY=:0.0"
+  - "export PATH=/usr/local/bin/:./:$PATH"
+  - Xvfb :0.0 -screen 1 800x600x16 &
+  - sleep 3
+
+script:
+  - bash tasks/travis.sh
+  - export GIT_DESCRIBE=`git describe`
+
+
+addons:
+  artifacts:
+    debug: false 
+    paths:
+      - $(ls ./dist/swift_console* | tr "\n" ":")
+      - $(ls ./dist/cmd_line | tr "\n" ":")
+    working_dir: $TRAVIS_BUILD_DIR
+    bucket: console-ci-builds
+    s3_region: us-west-2
+notifications:
+  email: false
+  slack:
+    secure: c/HX84/BjWHU/8LmtES2fh7lFiXwXnRJnwjCYjLw85M/Po2PYkGRkwk+o5BTX2cei9+QkXGxLcyCYZtMbRU0nN2S6t5Va7WaZulmFtqgnjn4eTxtdctk0Gk5nDB8qUuruxo8F5qki6z86UtRQzr0Ms52GZbUhLPsJTCsXZRyvk0=
