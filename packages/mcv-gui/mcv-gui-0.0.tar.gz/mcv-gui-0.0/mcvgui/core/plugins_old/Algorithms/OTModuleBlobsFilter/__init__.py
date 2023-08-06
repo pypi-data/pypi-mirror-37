@@ -1,0 +1,1 @@
+from mcvgui.core.plugins.OTModuleBlobsFilter.OTModuleBlobsFilter import OTModuleBlobsFilter

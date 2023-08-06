@@ -1,0 +1,1 @@
+from mcvgui.core.plugins.OTModuleClusterObjectsPositions.OTModuleClusterObjectsPositions import OTModuleClusterObjectsPositions
