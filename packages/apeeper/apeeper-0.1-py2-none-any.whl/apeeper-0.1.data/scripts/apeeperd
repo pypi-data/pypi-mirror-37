@@ -1,0 +1,142 @@
+#!/bin/bash
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PIDFILE="${DIR}/apeeperd.pid"
+
+cmd=$1
+
+function usage() {
+    echo -e "\n  Apeeper v0.1\n"
+    echo -e "\tapeeperd [-dhst | -a <auth_url> | -n <instance-name> | -b <blacklisted paths> | -w <whitelisted paths>]\n\n"
+	echo -e "\tNOTE: Please can only use whitelists or blacklists (not both). If neither"
+	echo -e "\t      is chosen, we alert on any calls to the ec2metadata service."
+    echo -e "\t\t-s\tStarts the apeeperd process"
+	echo -e "\t\t-d\tStarts the apeeperd process in foreground (dev)"
+    echo -e "\t\t-t\tTerminates the apeeperd process"
+	echo -e "\t\t-b\tAdd comma separated blacklisted paths to alert on"
+	echo -e "\t\t-w\tAdd comma separated whitelisted paths to ignore"
+	echo -e "\t\t-a\tSaves your Canary Console supplied Factory Url and starts apeeperd"
+	echo -e "\t\t-n\tSaves your instance name tied to this token"
+	echo -e "\t\t-h\tHelp"
+	echo -e "\n Examples\n"
+	echo -e "\t\t Start regular apeeper |\t apeeperd -a <factory_url>"
+	echo -e "\t\t Start apeeper with whitelisting |\t apeeperd -a <factory_url> -w '/latest/user-data,/latest/meta-data'"
+	exit -1
+}
+
+add_whitelist(){
+	local whitelist=$1
+	if [ -f ~/.apeeper.conf ]; then
+        # Add to config file if exists
+		python -c "from apeeper.register import write_to_apeeper_config; write_to_apeeper_config(key='whitelist', value='${whitelist}')"
+		echo "[*] Added ${whitelist} to config file."
+    else
+		echo "[x] Please specify a factory url with `-a` first"
+		exit 1
+	fi
+}
+
+add_blacklist(){
+	local blacklist=$1
+	if [ -f ~/.apeeper.conf ]; then
+        # Add to config file if exists
+		python -c "from apeeper.register import write_to_apeeper_config; write_to_apeeper_config(key='blacklist', value='${blacklist}')"
+		echo "[*] Added ${blacklist} to config file."
+    else
+		echo "[x] Please specify a factory url with `-a` first"
+		exit 1
+	fi
+}
+
+add_name(){
+	local name=$1
+	if [ -f ~/.apeeper.conf ]; then
+        # Add to config file if exists
+		python -c "from apeeper.register import write_to_apeeper_config; write_to_apeeper_config(key='instancename', value='${name}')"
+		echo "[*] Added ${name} to config file."
+    else
+		echo "[x] Please specify a factory url with `-a` first"
+		exit 1
+	fi
+}
+
+add_auth_url(){
+	if [ -f ~/.apeeper.conf ]; then
+        echo "[x] A config file already exists at ${HOME}/.apeeper.conf, please move it first"
+        exit 1
+    fi
+	local url=$1
+	if [ -z "${url}" ]; then
+		echo "[x] Please supply a factory url from your Canary Console after the `-a`"
+		exit 1
+	fi
+	python -c "from apeeper.register import create_config; create_config('${url}')"
+    echo -e "[*] Your apeeper config file is ready (${HOME}/.apeeper.conf)\n"
+}
+
+start_dev_apeeperd(){
+	echo "[*] Starting in dev mode"
+	if [ ! -f ~/.apeeper.conf ]; then
+        echo "[x] No config file found, please create one with \"apeeperd -a <url>\""
+        exit 1
+    fi
+	cd "${DIR}"
+	gunicorn -c apeeper_gunicorn_conf.py apeeper:app -p ${PIDFILE}
+	exit 0
+}
+
+start_apeeperd(){
+	echo "[*] Starting Apeeper Meta-data Service"
+	if [ ! -f ~/.apeeper.conf ]; then
+        echo "[x] No config file found, please create one with \"apeeperd -a <url>\""
+        exit 1
+    fi
+	cd "${DIR}"
+	gunicorn -c apeeper_gunicorn_conf.py apeeper:app -p ${PIDFILE} -D
+	echo "[*] Please check logging (errors and info) at /tmp/apeeper.log"
+	exit 0
+}
+
+stop_apeeperd(){
+	echo "[*] Stopping Apeeper Meta-data Service"
+	pid=`sudo cat "${PIDFILE}"`
+	sudo kill "$pid"
+	exit 0
+}
+
+START_AFTER_SETUP=0
+
+if [[ $# -eq 0 ]];then
+	echo -e '[*] No options were supplied'
+	usage
+else
+	while getopts "a:dhstn:w:b:" opt;do
+		case $opt in
+			a)
+				add_auth_url ${OPTARG}
+				START_AFTER_SETUP=1;;
+			n)
+				add_name ${OPTARG};;
+			w)
+				add_whitelist ${OPTARG};;
+			b)
+				add_blacklist ${OPTARG};;
+			d)
+				start_dev_apeeperd;;
+			h)
+				usage;;
+			s)
+				start_apeeperd;; 
+			t)
+				stop_apeeperd;;
+			\?) # This is the unrecognised option
+				echo "Invalid Option:"
+				usage;;
+			:)
+				usage;;
+		esac
+	done;
+fi
+if [[ ${START_AFTER_SETUP} -eq 1 ]]; then
+	start_apeeperd
+fi
+exit 0
