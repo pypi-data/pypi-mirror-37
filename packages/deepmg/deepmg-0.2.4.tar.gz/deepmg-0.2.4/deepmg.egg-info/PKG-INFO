@@ -1,0 +1,418 @@
+Metadata-Version: 2.1
+Name: deepmg
+Version: 0.2.4
+Summary: A python package to visualize data using machine/deep learning algorithms
+Home-page: https://git.integromics.fr/published/deepMG_tf
+Author: Thanh-Hai Nguyen
+Author-email: hainguyen579@gmail.com
+License: UNKNOWN
+Description: # Met2Img (deepmg): Metagenomic data To Images using Deep learning
+        
+        Met2Img (deepmg) is a computational framework for metagenomic analysis using Deep learning and classic learning algorithms:
+        
+        * Visualizes the data into 2D images using Fill-up and state-of-the-art dimensionality reduction algorithms (t-SNE, Isomap,...)
+        * Provides a vast of classifiers (Convolutional Neural Networks, Linear Regression, Random Forest, SVM,... and be able to extend easily) for 1D and 2D data.
+        * Flexibility for testing models with a large range of parameters provided.
+        * Comprises cross-validation analysis with internal validation and external validation (optional)
+        * Supports various datatypes, such as abundance and read counts with different levels of OTUs such as species, genus...
+        * Evaluates models with various metrics: Accuracy (ACC), Area Under Curve (AUC), Matthews Correlation Coefficient (MCC), f1-score, confusion matrix,...
+        * The package is now available to install by pip command, supporting MacOS, Linux
+        
+        # References:
+        
+        This work was presented in
+        [Disease Classification in Metagenomics with 2D Embeddings and Deep Learning](https://arxiv.org/abs/1806.09046).
+        
+        # Getting Started
+        
+        ## Prerequisites
+        
+        * These packages should be installed before using Met2Img (updated to 21/02/2018):
+        
+        ```
+        tensorflow	1.5.0
+        sklearn	0.19.1
+        
+        keras	2.1.3
+        numpy	1.14.0
+        pandas	0.22.0
+        scipy	1.0.0
+        matplotlib	2.1.2
+        geopandas	0.3.0
+        ```
+        
+        Please install if you do not have them
+        
+        ```
+        conda install -c conda-forge tensorflow 
+        conda install scikit-learn
+        ```
+        
+        * In order to use the packages for explanation of the network trained, please download and install:
+        
+        [Grad-Cam, Saliency] (https://github.com/jacobgil/keras-grad-cam)
+        
+        [LIME] (https://github.com/marcotcr/lime/tree/master/doc/notebooks)
+        
+        ## Install or Download the package Met2Img
+        
+        In order to install the package
+        
+        ```
+        pip install deepmg
+        ```
+        
+        In order to download the package
+        ```
+        git clone git@git.integromics.fr:Deepomics/deepMG_tf.git
+        ```
+        
+        # Running Experiments
+        ## How to use Met2Img
+        
+        * **Input**: 
+          - mandatory: csv files containing data (\*_x.csv) and labels (\*_y.csv) 
+          - optional: if use external validation set: data (\*_zx.csv) and labels (\*_zy.csv)) put in [data](data/) changable with parameters *--orginal_data_folder*). 
+          
+          For examples, cirphy_x.csv and cirphy_y.csv for Cirrhosis dataset in [MetAML] (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004977) ONLY for internal validations; and ibdtrainHS_UCr_x.csv ibdtrainHS_UCr_y.csv ibdtrainHS_UCr_zx.csv ibdtrainHS_UCr_zy.csv for a dataset in [Sokol's] (https://www.ncbi.nlm.nih.gov/pubmed/26843508) datasets containing external validation set.
+        
+        * **Output**:
+        
+          - *images*: Met2Img will generate images and store them in [images/*name_dataset_parameters_to_generate_image*/] (images/) (changable with parameters **--parent_folder_img**)
+        
+          - *results*: performance/training/testing information of each fold and summary results put in    [results/*name_dataset_parameters_to_generate_image*/] (results/) (changable with parameters **--parent_folder_results**), includes 3 files: 
+              - \*file1.txt: parameters used to run, performance at each fold. The last rows show training/testing performance in ACC, AUC, execution time, and other metrics of the experiment. When the experiment finishes, a suffix "ok" (changable with parameters **--suff_fini**) appended to the name of file marking that the experiment finishes.
+              
+              - \*file2.txt: if the experiment includes *n* runs repeated independently, so the file includes average performance on *k*-folds of each run measured by accuracy and time execution at training/testing of beginning, training/testing when finished.
+        
+              - \*file3.txt: if the experiment includes *n* runs repeated independently, so the file includes average performance on *k*-folds of each run measured by AUC  at training/testing of beginning, training/testing when finished.
+          
+              - If use *--save_w*=1 (save weights of trained networks) and/or *--save_optional* in [2,3,6,7], then 2 folders will be created:
+            
+                  - results/*name_dataset_parameters_to_generate_image*/models/: includes \*weightmodel\*.json contains structure of the model \*weightmodel\*.h5 stores weights
+        
+                  - results/*name_dataset_parameters_to_generate_image*/details/\*weightacc_loss_\*.txt: contains accuracy and loss of training and testing every epochs.
+        
+        * Get help to see parameters in the package: 
+        
+        ```
+        python dev_met2img.py -h
+        
+        Options:
+          -h, --help            show this help message and exit
+          -a TIME_RUN, --time_run=TIME_RUN
+                                give the #runs (default:10)
+          --seed_value_begin=SEED_VALUE_BEGIN
+                                set the beginning seed for different runs (default:1)
+          --channel=CHANNEL     channel of images, 1: gray, 2: color (default:3)
+          -m DIM_IMG, --dim_img=DIM_IMG
+                                width or height (square) of images, -1: get real size
+                                of original images (default:-1)
+          -k N_FOLDS, --n_folds=N_FOLDS
+                                number of k folds (default:10)
+          --test_exte=TEST_EXTE
+                                if==1, using external validation sets (default:0)
+          --parent_folder_img=PARENT_FOLDER_IMG
+                                name of parent folder containing images
+                                (default:images)
+          --orginal_data_folder=ORGINAL_DATA_FOLDER
+                                parent folder containing data (default:data)
+          -i DATA_DIR_IMG, --data_dir_img=DATA_DIR_IMG
+                                name of dataset (default:wt2phy)
+          --search_already=SEARCH_ALREADY
+                                if >0: search existed experiments before running-->if
+                                existed, stopping the experiment (default:1)
+          --cudaid=CUDAID       id cuda to use (if <0: use CPU), (default:-1)
+          --preprocess_img=PREPROCESS_IMG
+                                support resnet50/vgg16/vgg19, none: no use
+                                (default:none)
+          --mode_pre_img=MODE_PRE_IMG
+                                support caffe/tf (default:caffe)
+          --parent_folder_results=PARENT_FOLDER_RESULTS
+                                parent folder containing results (default:results)
+          -x SAVE_OPTIONAL, --save_optional=SAVE_OPTIONAL
+                                mode of saving log, see func para_cmd for use
+                                (default:4)
+          --debug=DEBUG         show DEBUG if >0 (default:0)
+          -v VISUALIZE_MODEL, --visualize_model=VISUALIZE_MODEL
+                                visualize the model if > 0 (default:0)
+          --save_w=SAVE_W       save weight mode, default:0; 1:save (default:0)
+          --suff_fini=SUFF_FINI
+                                append suffix when finishing (default:ok)
+          --algo_redu=ALGO_REDU
+                                algorithm of dimension reduction (rd_pro/pca/fa),  if
+                                emtpy so do not use (default:'')
+          --rd_pr_seed=RD_PR_SEED
+                                seed for random projection (default:None)
+          --new_dim=NEW_DIM     new dimension after reduction (default:676)
+          --reduc_perle=REDUC_PERLE
+                                perlexity for tsne (default:10)
+          --reduc_ini=REDUC_INI
+                                ini for reduction (default:pca)
+          --rnd_seed=RND_SEED   shuffle order of feature: if none, use original order
+                                of data (only use for fillup) (default:none)
+          -t TYPE_EMB, --type_emb=TYPE_EMB
+                                type of the embedding (default:raw)
+          --imp_fea=IMP_FEA     use sorting important feature supported 'rf' for many
+                                overlapped figures (default:none)
+          -g LABEL_EMB, --label_emb=LABEL_EMB
+                                taxa level of labels provided in supervised embeddings
+                                'kingdom=1','phylum=2','class=3','order=4','family=5',
+                                'genus=6' (default:0)
+          --emb_data=EMB_DATA   data embbed: '': transformed data; o: original data
+                                (default:'')
+          -y TYPE_DATA, --type_data=TYPE_DATA
+                                type of binnings: species-bins with
+                                log4(ab)/eqw/presence(pr) (default:ab)
+          -p PERLEXITY_NEIGHBOR, --perlexity_neighbor=PERLEXITY_NEIGHBOR
+                                perlexity for tsne/#neighbors for others (default:5)
+          --lr_tsne=LR_TSNE     learning rate for tsne (default:100.0)
+          --label_tsne=LABEL_TSNE
+                                use label when using t-SNE,'': does not use
+                                (default:'')
+          --iter_tsne=ITER_TSNE
+                                #iteration for run tsne, should be at least 250, but
+                                do not set so high (default:300)
+          --ini_tsne=INI_TSNE   Initialization of embedding: pca/random/ or an array
+                                for tsne (default:pca)
+          --n_components_emb=N_COMPONENTS_EMB
+                                ouput dim after embedding (default:2)
+          --method_lle=METHOD_LLE
+                                method for lle embedding:
+                                standard/ltsa/hessian/modified (default:standard)
+          --eigen_solver=EIGEN_SOLVER
+                                method for others (except for tsne) (default:auto)
+          -s SHAPE_DRAWN, --shape_drawn=SHAPE_DRAWN
+                                shape of point to illustrate data:
+                                ,(pixel)/ro/o(circle) (default:,)
+          --fig_size=FIG_SIZE   size of one dimension in pixels (if <=0: use the
+                                smallest which fit data, ONLY for fillup) (default:24)
+          --point_size=POINT_SIZE
+                                point size for img (default:1)
+          --setcolor=SETCOLOR   mode color for images (gray/color) (default:color)
+          --colormap=COLORMAP   colormap for color images (diviris/gist_rainbow/rainbo
+                                w/nipy_spectral/jet/Paired/Reds/YlGnBu) (default:'')
+          --cmap_vmin=CMAP_VMIN
+                                vmin for cmap (default:0)
+          --cmap_vmax=CMAP_VMAX
+                                vmax for cmap (default:1)
+          --margin=MARGIN       margin to images (default:0)
+          --alpha_v=ALPHA_V     The alpha blending value, between 0 (transparent) and
+                                1 (opaque) (default:1)
+          --recreate_img=RECREATE_IMG
+                                if >0 rerun to create images even though they are
+                                existing (default:0)
+          --scale_mode=SCALE_MODE
+                                scaler mode for input (default:none)
+          --n_quantile=N_QUANTILE
+                                n_quantile in quantiletransformer (default:1000)
+          --min_scale=MIN_SCALE
+                                minimum value for scaling (only for minmaxscaler)
+                                (default:0) use if --auto_v=0
+          --max_scale=MAX_SCALE
+                                maximum value for scaling (only for minmaxscaler)
+                                (default:1) use if --auto_v=0
+          --min_v=MIN_V         limit min for Equal Width Binning (default:1e-7)
+          --max_v=MAX_V         limit min for Equal Width Binning (default:0.0065536)
+          --num_bin=NUM_BIN     the number of bins (default:10)
+          --auto_v=AUTO_V       if > 0, auto adjust min_v and max_v (default:0)
+          -f NUMFILTERS, --numfilters=NUMFILTERS
+                                #filters/neurons for each cnn/neural layer
+                                (default:64)
+          -n NUMLAYERCNN_PER_MAXPOOL, --numlayercnn_per_maxpool=NUMLAYERCNN_PER_MAXPOOL
+                                #cnnlayer before each max pooling (default:1)
+          --nummaxpool=NUMMAXPOOL
+                                #maxpooling_layer (default:1)
+          --dropout_cnn=DROPOUT_CNN
+                                dropout rate for CNN layer(s) (default:0)
+          -d DROPOUT_FC, --dropout_fc=DROPOUT_FC
+                                dropout rate for FC layer(s) (default:0)
+          --padding=PADDING     ='1' uses pad, others: does not use (default:1)
+          --filtersize=FILTERSIZE
+                                the filter size (default:3)
+          --poolsize=POOLSIZE   the pooling size (default:2)
+          --model=MODEL         type of model (fc_model/model_cnn1d/model_cnn/model_vg
+                                glike/model_lstm/resnet50/rf_model/svm_model)
+                                (default:fc_model)
+          -c NUM_CLASSES, --num_classes=NUM_CLASSES
+                                the output of the network (default:1)
+          -e EPOCH, --epoch=EPOCH
+                                the epoch used for training (default:500)
+          --learning_rate=LEARNING_RATE
+                                learning rate, if -1 use default value of the
+                                optimizer (default:-1)
+          --batch_size=BATCH_SIZE
+                                batch size (default:16)
+          --learning_rate_decay=LEARNING_RATE_DECAY
+                                learning rate decay (default:0)
+          --momentum=MOMENTUM   momentum (default:0)
+          -o OPTIMIZER, --optimizer=OPTIMIZER
+                                support sgd/adam/Adamax/RMSprop/Adagrad/Adadelta/Nadam
+                                (default:adam)
+          -l LOSS_FUNC, --loss_func=LOSS_FUNC
+                                support binary_crossentropy/mae/squared_hinge
+                                (default:binary_crossentropy)
+          -q E_STOP, --e_stop=E_STOP
+                                #epochs with no improvement after which training will
+                                be stopped (default:5)
+          --e_stop_consec=E_STOP_CONSEC
+                                option to choose consective (self defined: consec) or
+                                not (default:consec)
+          --svm_c=SVM_C         Penalty parameter C of the error term for SVM
+                                (default:1.0)
+          --svm_kernel=SVM_KERNEL
+                                the kernel type used in the algorithm (linear, poly,
+                                rbf, sigmoid, precomputed) (default:linear)
+          --rf_n_estimators=RF_N_ESTIMATORS
+                                The number of trees in the forest (default:500)
+          -z COEFF, --coeff=COEFF
+                                coeffiency (divided) for input (should use 255 for
+                                images) (default:1)
+          --grid_coef_time=GRID_COEF_TIME
+                                choose the best coef from #coef default for tuning
+                                coeficiency (default:5)
+          --cv_coef_time=CV_COEF_TIME
+                                k-cross validation for each coef for tuning
+                                coeficiency (default:4)
+          --coef_ini=COEF_INI   initilized coefficient for tuning coeficiency
+                                (default:255)
+          --metric_selection=METRIC_SELECTION
+                                roc_auc/accuracy/neg_log_loss/grid_search_mmc for
+                                tuning coeficiency (default:roc_auc)
+        ```
+        
+        Some examples as below:
+        ## Available Datasets
+        
+        ![Information on datasets](images/datasets.jpg)
+        
+        ## The framework, in default, run 10 times with 10-stratified-cross-validation
+        ** NOTES: 
+        1. Select run on GPU, set cudaid in (0,1,2,3) (id of GPU on machine, id=-1 means use of cpu). Note: your computation nodes must be supported with GPU and installed Tensorflow GPU.
+        2. Select dataset with parameter '-i', eg. '-i cirphy' (phylogenetic cirrhosis dataset)
+        3. Select model with parameter '--model', eg. '--model model_cnn'. Default: The model with one Fully connected layer (FC) model
+        4. Other parameters, One can refer at the function para_cmd() at met2img_utils.py
+        
+        ## Code to run experiment (for raw data)
+        Parameters: -n: number of convolutional layers, -f : number of filters, 
+        -t: type of embeddings (suporting raw-1D and images 2D such as fillup, t-sne, isomap, lda,....)
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        type_embed='raw';
+        python dev_met2img.py -i $db -t $type_embed 
+        python dev_met2img.py -i $db -t $type_embed --model model_cnn1d -n 1 -f 64 
+        ```
+        
+        ## Code to run experiment (for fill-up with gray images)
+        use SPB
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t fill -y ab --fig_size 0 -z 255 --setcolor gray --channel 1
+        python dev_met2img.py -i $db -t fill -y ab --fig_size 0 -z 255 --setcolor gray --channel 1 --model model_cnn -n 1 -f 64 
+        ```
+        use PR
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t fill -y pr --fig_size 0 -z 255 --setcolor gray --channel 1
+        ```
+        use QTF
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t fills -y eqw --scale_mode qtf --auto_v 1  --fig_size 0 -z 255 --setcolor gray --channel 1
+        ```
+        
+        ## Code to run experiment (for fill-up with color images)
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t fill -y ab --fig_size 0 -z 255 --preprocess_img vgg16 --colormap jet_r
+        ```
+        
+        ## Code to run experiment with visualizations based on manifold learning, e.g, t-sne (changed the parameter of '-t' to 'tsne')
+        We are also able to test another embeddings such isomap, lle,... 
+        We use images of 24x24 (--fig_size 24) and transparent rate (alpha_v = 0.5)
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t tsne -y ab --fig_size 24 -z 255 --setcolor gray --channel 1 --alpha_v 0.5
+        ```
+        
+        ## Scripts (\*.sh) in details provided in [utils/scripts](./utils/scripts/) with:
+        The scripts mostly are used for datasets in group A (if not specified) including predicting cirrhosis, colorectal, IBD, obesity, T2D (and WT2D dataset). The header part of each file consists of the information on memory, number of cores, walltime, email, etc. which used in job schedulers. These parameters should be modified depending on your available resources. Each file runs numerous models for one dataset.
+        
+        Scripts for 6 datasets (files: cirphy_\* (cirphy_x.csv for data and cirphy_y.csv for labels, in order to run training on this dataset set the parameter -i, eg. "-i cirphy"), colphy_\*, ibdphy_\*, obephy_\*, t2dphy_\*, wt2dphy_\*) in group A [MetAML] (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004977):
+        
+        * *1d*: scripts for running models with 1D data
+        * *manifold_iso*: training species abundance using visualizations based on Isomap.
+        * *manifold_mds*: training species abundance using visualizations based on MDS.
+        * *manifold_nmf*: training species abundance using visualizations based on NMF.
+        * *manifold_pca*: training species abundance using visualizations based on PCA.
+        * *manifold_lda1*,2,3,4,5,6: training species abundance using visualizations based on LDA (supervised) with labels using various levels of OTUs (1: Kingdom, 2: Phylum, 3: Class,4: Order,5: Family and 6: genus).
+        * *phy0_24_cmap_r*: investigate a vast of colormaps (viridis, rainbow, jet,...)
+        * phyfill0_vgg: investigate various paramters of VGG architectures.
+        * *fill0cnn*: run experiments using Fill-up with different CNN hyper-parameters.
+        * *phyfill0_rnd*: the experiments using Fill-up with random feature ordering 
+        
+        Scripts training datasets for other groups:
+        
+        * *gene_fill*: training gene families abundance (names: cirgene, colgene, ibdgene, obegene, t2dgene, wt2dgene) with Fill-up and *machine_learning_gene*: training gene families abundance with stardard learning algorithms (SVM, RF).
+        * *phyfill0_CRC*: experiments on datasets (yu, feng, zeller, vogtmann, crc) in the paper [Multi-cohort analysis of colorectal cancer metagenome identified altered bacteria across populations and universal bacterial](https://microbiomejournal.biomedcentral.com/articles/10.1186/s40168-018-0451-2)
+        * *phyfill0_phcnn*: experiments on datasets (files: ibdtrainHS_CDf, ibdtrainHS_CDr, ibdtrainHS_iCDf, ibdtrainHS_iCDr, ibdtrainHS_UCf, ibdtrainHS_UCr)in the paper [Phylogenetic convolutional neural networks in metagenomics](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2033-5)
+        * *balance_phyfill0* (for color images) and *balance_phygrayfill0* (for gray images): experiments on datasets (hiv, crohn) in the paper [Balances: a New Perspective for Microbiome Analysis](https://msystems.asm.org/content/3/4/e00053-18)
+        
+        
+        # Utilities and visualizations
+        
+        ## Visualize models by ASCII
+        Just add "-v 1" to visualize the network. In order to use this feature, please install 'keras_sequential_ascii'
+        
+        ```
+        cd ~/deepMG_tf/
+        db='wt2dphy';
+        size_img=0;
+        python dev_met2img.py -i $db -t fill -y ab --fig_size 0 -z 255 --setcolor gray --channel 1 -v 1
+        python dev_met2img.py -i $db -t fill -y ab --fig_size 0 -z 255 --setcolor gray --channel 1 --model model_cnn -n 1 -f 64 -v 1
+        ```
+        
+        ## Jupyter: Visualization of representations
+        Please move to **./utils/jupyter/** to visualize representations based on images:
+        
+        ```
+        cd ~/deepMG_tf/utils/jupyter/
+        sudo jupyter notebook --allow-root
+        ```
+        
+        * [compare_manifolds.ipynb](./utils/jupyter/compare_manifolds.ipynb) : visualizations generated from manifold learning such as t-SNE, LDA, Isomap
+        * [plot_distribution_taxa_levels_colormaps.ipynb](./utils/jupyter/plot_distribution_taxa_levels_colormaps.ipynb) : show how fill-up works and visualize important features using fill-up
+        * [visual_fillup_colormaps.ipynb](./utils/jupyter/visual_fillup_colormaps.ipynb) : illustrate various colormaps
+        * [vis_explanations_cnn_LIME_GRAD.ipynb](./utils/jupyter/vis_explanations_cnn_LIME_GRAD.ipynb) : exhibit explanations by Saliency, LIME and Grad-Cam
+        
+        # Summarize the results
+        
+        Some tools are available in this project **(./utils/read_results)** supporting to collect the data, filter the results, and delete uncompleted experiments
+        * [read_res.py](./utils/read_results/read_res.py): collect all experiments with each row presenting the average performance in ACC, AUC, MCC, f1-score, execution time...
+        * [filtered_metrics.py](./utils/read_results/filtered_metrics.py) : explore in detail the performance in ACC, AUC, MCC on all folds of one or more experiments. The output includes ACC, AUC, MCC of all folds based on a file containing a list of files.
+        * [unfi_delete.py](./utils/read_results/unfi_delete.py): delete/count uncompleted log files of unfinished experiments.
+        
+        # Authors
+        
+        * Thanh Hai Nguyen 
+        * Edi Prifti [website](https://www.researchgate.net/profile/Edi_Prifti)
+        * Nataliya Sokolovska [website](https://integromics.fr/~nsokolovska/)
+        * Jean-Daniel Zucker [website](http://www.researchgate.net/profile/Jean-daniel_Zucker)
+        
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
