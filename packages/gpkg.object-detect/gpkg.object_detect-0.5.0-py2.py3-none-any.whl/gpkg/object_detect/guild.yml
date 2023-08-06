@@ -1,0 +1,400 @@
+# Copyright 2018 TensorHub, Inc. and contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# TODO:
+#
+# - finetune op
+# - detect op
+# - auto-scale flag ala slim (auto set clones, etc.)
+# - custom image dataset support
+# - mask prediction (set predict_instance_masks to true under MaskRCNNBoxPredictor)
+
+# ===================================================================
+# Package def
+# ===================================================================
+
+- package: gpkg.object-detect
+  version: 0.5.0
+  description: Object detection library
+  url: https://github.com/guildai/packages/tree/master/object-detect
+  author: Guild AI
+  author-email: packages@guild.ai
+  license: Apache 2.0
+  requires:
+    - gpkg.slim
+    - contextlib2
+    - lxml
+    - matplotlib
+    - pillow
+    - pycocotools
+
+# ===================================================================
+# Shared flag defs
+# ===================================================================
+
+- config: train-flags
+  flags:
+    train-steps:
+      description: Number of steps to train
+      null-label: train indefinitely
+    eval-examples:
+      description: >
+        Number of examples to evaluate after training
+
+        This flag has no effect if `legacy` is `yes` (legacy train
+        does not perform evaluation).
+      null-label: all available
+    legacy:
+      description: >
+        Use legacy training for object detection
+
+        Multi GPU support is only available with legacy training.
+
+        Unlike default training, legacy training does not perform an
+        evaluation after training.
+      choices:
+        - value: yes
+          description: Use legacy training (select for multi GPU support)
+        - value: no
+          description: Use default training (doesn\'t support multiple GPUs)
+      default: no
+      arg-value: yes
+    batch-size:
+      description: Number of examples in each training batch
+    clones:
+      description: >
+        Number of model clones.
+
+        This flag has no effect unless `legacy` is `yes`.
+
+        Set this value to the number of available GPUs for multi-GPU
+        training.
+      default: 1
+
+# ===================================================================
+# Shared resources
+# ===================================================================
+
+- config: models-lib-support
+  resources:
+    models-lib:
+      sources:
+        - url: https://github.com/tensorflow/models/archive/2aec950cf5670a86eb0681e3a0348570c4a4638c.zip
+          sha256: cc97bed49476a1984325561dcb29f88a26910689050d9112d02e371209455997
+          select:
+            - models-2aec950cf5670a86eb0681e3a0348570c4a4638c/research/object_detection
+            - models-2aec950cf5670a86eb0681e3a0348570c4a4638c/research/slim
+            - models-2aec950cf5670a86eb0681e3a0348570c4a4638c/research/slim/deployment
+            - models-2aec950cf5670a86eb0681e3a0348570c4a4638c/research/slim/nets
+          post-process: >
+            cd models-2aec950cf5670a86eb0681e3a0348570c4a4638c
+            && cd research
+            && protoc object_detection/protos/*.proto --python_out .
+
+# ===================================================================
+# Pascal VOC format annotated images support
+# ===================================================================
+
+- config: voc-annotated-images-base
+  description: Images annotated using Pascal VOC format
+  extends:
+    - models-lib-support
+  params:
+    annotations-dir: DEFINE-annotations-dir
+    images-dir: DEFINE-images-dir
+    examples-desc: images annotated using Pascal VOC format
+  operations:
+    prepare:
+      description: Prepare {{examples-desc}} for training
+      main: >
+        voc_images_prepare
+          --annotations-dir {{annotations-dir}}
+          --images-dir {{images-dir}}
+      requires:
+        - models-lib
+        - voc-annotated-examples
+      flags:
+        val-split:
+          description: Percentage of images reserved for validation
+          default: 30
+        random-seed:
+          description: Seed used for train/validation split
+          default: null
+          null-label: randomly generated
+
+# ===================================================================
+# Examples support
+# ===================================================================
+
+- config: examples-support
+  params:
+    dataset-config: dataset.yml
+    labels: labels.pbtxt
+  resources:
+    examples:
+      description: Prepared dataset
+      path: data
+      sources:
+        - operation: .*:prepare
+          select: .*record.*
+    dataset-config:
+      sources:
+        - operation: .*:prepare
+          select: dataset\.yml
+    labels:
+      sources:
+        - operation: .*:prepare
+          select: labels\.pbtxt
+
+# ===================================================================
+# Model base
+# ===================================================================
+
+- config: model-base
+  extends:
+    - models-lib-support
+  params:
+    train-pipeline-config-proto: ''
+    transfer-learn-pipeline-config-proto: ''
+    eval-learn-pipeline-config-proto: ''
+    dataset-config: ''
+    model-config: ''
+    train-config: ''
+    transfer-learn-config: ''
+    extra-config: ''
+    labels: DEFINE-labels
+  operations:
+    train:
+      description: Train detector from scratch
+      main:
+        train
+          --pipeline-config-proto '{{train-pipeline-config-proto}}'
+          --dataset-config '{{dataset-config}}'
+          --model-config '{{model-config}}'
+          --train-config '{{train-config}}'
+          --extra-config '{{extra-config}}'
+      requires:
+        - models-lib
+        - dataset-config
+        - model-config
+        - train-config
+        - examples
+        - labels
+      env:
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      label-template: examples=${examples}
+      flags:
+        $include: train-flags
+    transfer-learn:
+      description: Train detector using transfer learning
+      main:
+        train
+          --pipeline-config-proto '{{transfer-learn-pipeline-config-proto}}'
+          --dataset-config '{{dataset-config}}'
+          --model-config '{{model-config}}'
+          --train-config '{{transfer-learn-config}}'
+          --extra-config '{{extra-config}}'
+      requires:
+        - models-lib
+        - dataset-config
+        - model-config
+        - transfer-learn-config
+        - examples
+        - labels
+        - transfer-learn-checkpoint
+      env:
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      label-template: examples=${examples}
+      flags:
+        $include: train-flags
+    evaluate:
+      description: Evaluate a trained detector
+      main:
+        eval
+          --checkpoint-dir checkpoint
+          --pipeline-config-proto '{{eval-pipeline-config-proto}}'
+          --dataset-config '{{dataset-config}}'
+          --model-config '{{model-config}}'
+          --train-config '{{train-config}}'
+          --extra-config '{{extra-config}}'
+      requires:
+        - models-lib
+        - dataset-config
+        - model-config
+        # train-config is provided here because object_detection
+        # combines train and eval fn creation in the same function
+        # and, even through the eval operation doesn't use train
+        # config, eval needs it here to spoof object_detection to
+        # generate the eval fn. Any valid train config will work so we
+        # use the train-config resource.
+        - train-config
+        - examples
+        - labels
+        - trained-model
+      env:
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      label-template: model=${trained-model} examples=${examples}
+      flags:
+        eval-examples:
+          description: Number of examples to evaluate
+          null-label: all available
+    export-and-freeze:
+      description: Export a detection graph with checkpoint weights
+      main:
+        export_and_freeze
+          --checkpoint model
+          --dataset-config '{{dataset-config}}'
+          --model-config '{{model-config}}'
+      requires:
+        - models-lib
+        - dataset-config
+        - model-config
+        - trained-model
+      env:
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
+      label-template: model=${trained-model}
+      flags:
+        step:
+          description:
+            Checkpoint step to use for the frozen graph
+          null-label: latest checkpoint
+    detect:
+      description: Detect images using a trained detector
+      main:
+        detect
+          --images-dir ${images}
+          --labels {{labels}}
+          --graph frozen_inference_graph.pb
+          --output-dir detected
+      requires:
+        - models-lib
+        - frozen-graph
+        - labels
+      label-template: images=${images|basename}
+      flags:
+        images:
+          description: Directory containing images to detect
+          required: yes
+  resources:
+    trained-model:
+      description: Trained model from train or transfer-learn
+      path: model
+      sources:
+        - operation: train,transfer-learn
+          select:
+            - train/model\.ckpt.*
+            - train/checkpoint
+    frozen-graph:
+      description: Frozen inference graph from export-and-freeze
+      sources:
+        - operation: export-and-freeze
+          select: graph/frozen_inference_graph\.pb
+
+# ===================================================================
+# Faster RCNN base
+# ===================================================================
+
+- config: faster-rcnn-base
+  extends:
+    - model-base
+  params:
+    train-config: rcnn-train-default.yml
+    transfer-learn-config: rcnn-transfer-learn-default.yml
+  resources:
+    train-config:
+      sources:
+        - config/train/rcnn-train-default.yml
+    transfer-learn-config:
+      sources:
+        - config/train/rcnn-transfer-learn-default.yml
+
+# ===================================================================
+# Faster RCNN - ResNet
+# ===================================================================
+
+- config: faster-rcnn-resnet-50
+  extends:
+    - faster-rcnn-base
+  params:
+    model-config: faster-rcnn-resnet-50.yml
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet50_coco_2018_01_28.tar.gz
+          sha256: 0f898f96d6c416de192c516fb6fa773ae9f5ee253eb2ab4015445fbd6eb0ab76
+          select:
+            - faster_rcnn_resnet50_coco_2018_01_28/model\.ckpt.*
+            - faster_rcnn_resnet50_coco_2018_01_28/checkpoint
+    model-config:
+      sources:
+        - config/models/faster-rcnn-resnet-50.yml
+
+- config: faster-rcnn-resnet-101
+  extends:
+    - faster-rcnn-base
+  params:
+    model-config: faster-rcnn-resnet-101.yml
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz
+          sha256: ef3b36b3bc3c4057362a62e40b89dbdbef3dbb0c91f2f7df43967920d24821e5
+          select:
+            - faster_rcnn_resnet101_coco_2018_01_28/model\.ckpt.*
+            - faster_rcnn_resnet101_coco_2018_01_28/checkpoint
+    model-config:
+      sources:
+        - config/models/faster-rcnn-resnet-101.yml
+
+# ===================================================================
+# SSD base
+# ===================================================================
+
+- config: ssd-base
+  extends:
+    - model-base
+  params:
+    train-config: ssd-train-default.yml
+    transfer-learn-config: ssd-transfer-learn-default.yml
+  resources:
+    train-config:
+      sources:
+        - config/train/ssd-train-default.yml
+    transfer-learn-config:
+      sources:
+        - config/train/ssd-transfer-learn-default.yml
+
+# ===================================================================
+# SSD - MobileNet v2
+# ===================================================================
+
+- config: ssd-mobilenet-v2
+  extends:
+    - ssd-base
+  params:
+    model-config: ssd-mobilenet-v2.yml
+  resources:
+    transfer-learn-checkpoint:
+      path: checkpoint
+      sources:
+        - url: http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
+          sha256: b9380178b2e35333f1a735e39745928488bdabeb9ed20bc6fa07af8172cb5adc
+          select:
+            - ssd_mobilenet_v2_coco_2018_03_29/model\.ckpt.*
+            - ssd_mobilenet_v2_coco_2018_03_29/checkpoint
+    model-config:
+      sources:
+        - config/models/ssd-mobilenet-v2.yml
