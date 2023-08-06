@@ -1,0 +1,68 @@
+import connexion
+from flask_redis import FlaskRedis
+from config import config
+from flask_cors import CORS
+import logging
+from flask import g, request,session
+from flask_babel import Babel
+{% if include_model %}
+from flask_sqlalchemy import SQLAlchemy
+from mwauth import auth,AuthType
+from mwpermission.permission import Permission
+from mwauth.redis_session import RedisSessionInterface
+{% endif %}
+
+
+rds = FlaskRedis(strict=False)
+{% if include_model %}
+db = SQLAlchemy()
+# auth = auth(config['default'].AUTH_TYPE)
+auth = auth()
+p = Permission()
+{% endif %}
+babel = Babel()
+def create_app_swagger(config_name):
+    conf = config[config_name]
+    app_swg = connexion.App(__name__,
+                            port = conf.PORT,
+                            debug= conf.DEBUG,
+                            specification_dir='../swagger/'
+                            )
+    yaml_host=app_swg.add_api('./{{ swagger.version.replace('.','_') }}/{{ swagger.name }}.yaml', arguments={'title': 'api {{ swagger.version }}'})
+    app = app_swg.app
+    CORS(app)
+    app.config.from_object(conf)
+    config[config_name].init_app(app)
+    # 如果服務不需要註冊到kong，需修改host的設定
+    if app.config['KONG_AUTO_REGISTER']:
+        from mwsdk import Kong
+        kong = Kong()
+        yaml_host.specification['host'] = '%s:%s'%(kong.ip,kong.port)
+    else:
+        from mwsdk import AgentConf
+        yaml_host.specification['host'] = '%s:%s' % (AgentConf().bind_ip, app.config['PORT'])
+    # 需要增加handler 这样docker 中才能看到log
+    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(formatter)
+    app.logger.addHandler(consoleHandler)
+    app.logger.level = app.config['LOG_LEVEL']
+    rds.init_app(app)
+    {% if include_model %}
+    db.init_app(app)
+    app.session_interface = RedisSessionInterface(app, rds)
+    auth.init_app(app)
+    p.init_app(app)
+    {% endif %}
+    babel.init_app(app)
+    return app_swg
+
+@babel.localeselector
+def get_locale():
+    return session.get('locale') if session.get('locale') else request.accept_languages.best_match(['zh-TW','zh-CN', 'en'])
+
+# @babel.timezoneselector
+# def get_timezone():
+#     user = getattr(g, 'user', None)
+#     if user is not None:
+#         return user.timezone
