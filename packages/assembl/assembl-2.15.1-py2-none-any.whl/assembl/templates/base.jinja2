@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block page_title %}Assembl{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale = 1,user-scalable=no,maximum-scale=1.0">
+
+    {% block meta_tags_public %}
+        {% if not private_social_sharing %}
+            <meta name="description" content="{{get_description}}">
+            <meta property="og:title" content="{{get_topic}}" />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="{{ application_url }}" />
+            <meta property="og:image" content="{{get_landing_page_image}}" />
+            <meta property="og:image:width" content="1600" />
+            <meta property="og:image:height" content="222" />
+            <meta property="og:locale" content="{{opengraph_locale}}" />
+            <meta name="robots" content="noindex" />
+            <meta name="googlebot" content="noindex" />
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:site" content="{{get_discussion_url}}">
+            <meta name="twitter:creator" content="@bluenove">
+            <meta name="twitter:title" content="{{get_topic}}">
+            <meta name="twitter:description" content="{{get_description}}">
+            <meta name="twitter:image" content="{{get_landing_page_image}}">
+        
+        {% else %}
+
+            <meta name="og:title" content="{{get_topic}}" />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="{{ application_url }}" />
+            <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/crowd2.jpg" />
+            <meta property="og:image:width" content="1600" />
+            <meta property="og:image:height" content="222" />
+            <meta property="og:locale" content="{{opengraph_locale}}" />
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:site" content="{{get_discussion_url}}">
+            <meta name="twitter:creator" content="@bluenove">
+            <meta name="twitter:title" content="{{get_topic}}">
+            <meta name="twitter:image" content="{{ application_url }}/static/css/themes/default/img/crowd2.png">
+        {% endif %} 
+    {% endblock meta_tags_public %}
+
+    {% if discussion.favicon %}
+      <link rel="icon" href="{{discussion.favicon.external_url}}" type="image/x-icon">
+    {% else %}
+      <link rel="icon" href="/static/img/icon/infinite-1.png" type="image/x-icon">
+    {% endif %}
+
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
+
+    {% block main_css %}
+    <link type="text/css" rel="stylesheet" href="/static/css/themes/{{theme_relative_path}}/assembl_web.css" />
+    <link type="text/css" rel="stylesheet" href="/static/js/bower/jquery-oembed-all/jquery.oembed.css" />
+ 
+    <link type="text/css" rel="stylesheet" href="/static/js/bower/hopscotch/dist/css/hopscotch.css" />
+    {% if NODE_ENV != 'development' %}
+    <link type="text/css" rel="stylesheet" href="{{REACT_URL}}/build/searchv1.css" />
+    {% endif %}
+    {% endblock %}
+
+    {% block extra_css %}{% endblock extra_css %}
+    {% include 'includes/feature_detection.jinja2' %}
+
+</head>
+
+{% block body %}
+<body class="preload {{theme_name}}">
+    <div id="wrapper">
+        <header id="header">{# include with marionette region #}</header>
+        <div id="infobar"></div>
+        <main id="main"> {% block content %}{% endblock %} </main>
+    </div>
+    {% block backboneTemplates %}{% endblock %}
+
+    <div id="slider"></div>
+    <div id="tooltips"></div>
+    <div id="popover-oembed" class="hidden"></div>
+
+    {% include 'includes/javascript.jinja2' %}
+    {% include 'includes/updatebrowser.jinja2' %}
+    
+    
+    {% block extra_js %}{% endblock %}
+    {% block main_js %}{% endblock %}
+
+    {% block facebook_sdk_load%}{% endblock %}
+    {% block for_testing %}{% endblock %}
+</body>
+{% endblock %}
+</html>

@@ -1,0 +1,93 @@
+<ul class="man pan">
+
+    <!-- SUBSCRIBTION  -->
+    {% if help_url %}
+    <li class="sub fl mrs">
+        <a href="{{ help_url }}" target="_blank" title="{{ gettext('Help') }}" class="help"><i class="icon-help"></i></a>
+    </li>
+    {% endif %}
+
+    {% if discussion.id %}
+    {% if user %}
+    <% if(!isUserSubscribedToDiscussion && canSubscribeToDiscussion ){ %>
+    <li class="sub fl mrs">
+        <a href="#" class="btn btn-primary btn-sm js_joinDiscussion joinDiscussion">{{ gettext('Join this discussion') }}</a>
+    </li>
+    <% } %>
+    {% else %}
+    {% if request.current_route_path().split('/')[-1] not in ('login', 'register')  %}
+    <li class="sub fl mrs">
+        <a href="{{ get_route('react_login')}}?next={{ get_route('home')}}" class="btn btn-primary btn-sm joinDiscussion js_needJoinDiscussion" >{{ gettext('Join this discussion') }}</a>
+    </li>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- USER PROFILE  -->
+    {% if user %}
+    <li class="sub fl user-avatar-container">
+    </li>
+    {% endif %}
+    <li class="sub fl mrs">
+        {% if user %}
+        <div class="dropdown" id="tour_step_notifications">
+            <a href="#" class="dropdown-toggle username" data-toggle="dropdown" aria-expanded="false"><span>{{ user.display_name() }}</span></a>
+            <ul class="dropdown-menu">
+              {% if discussion.id %}
+                {% if user_profile_edit_url %}
+                  <li><a href="{{ get_route('profile') }}"><i class="icon-user"></i>{{ gettext('Profile') }}</a></li>
+                {% endif %}
+                <% if(isUserSubscribedToDiscussion || canSubscribeToDiscussion){ %>
+                  <li><a href="{{ get_route('user_notifications') }}"><i class="icon-bell"></i>{{ gettext('Notifications') }}</a></li>
+                <% } %>
+                <% if(Ctx.canUseExpertInterface()){ %>
+                  <% if(Ctx.getCurrentInterfaceType() === Ctx.InterfaceTypes.EXPERT) { %>
+                    <% if(!Ctx.isSmallScreen()){ %>
+                    <li><a class="js_addGroup"><i class="icon-add"></i> {{ gettext('Add a new panel group') }}</a></li>
+                    <% } %>
+                    <li><a class="js_switchToSimpleInterface"><i class="icon-options"></i>{{ gettext('Switch to simple mode') }}</a></li>
+                  <% } else { %>
+                    <li><a class="js_switchToExpertInterface"><i class="icon-options"></i>{{ gettext('Switch to full-functionality mode') }}</a></li>
+                  <% } %>
+                <% } %>
+                <li class="divider"></li>
+              {% endif %}
+              <li><a href="{{ get_route('logout') }}" class="sign-out"><i class="icon-logout"></i>{{ gettext('Sign out') }}</a></li>
+            </ul>
+        </div>
+        {% else %}
+          {% if request.current_route_path().split('/')[-1] not in ('login', 'register')  %}
+            <a href="{{ get_route('react_login')}}?next={{ get_route('home')}}" class="btn btn-default btn-sm sign-in-link">{{ gettext('Sign in') }}</a>
+          {% endif %}
+        {% endif %}
+    </li>
+
+    <!-- LANGUAGE  -->
+    <li class="fl">
+        <div class="dropdown fl mhs">
+            {% if locales.__len__ > 1 %}
+            <a href="#" class="dropdown-toggle user-lang fl" data-toggle="dropdown" aria-expanded="false">
+                {% if show_locale_country[locale] %}
+                    {{locale | upper}}
+                {% else %}
+                    {{locale.split('_')[0] | upper}}
+                {% endif %}
+                <span class="icon-arrowdown"></span>
+            </a>
+            <ul class="dropdown-menu">
+                {% for loc in locales %}
+                {% if (loc != locale) %}
+                <li><a tabindex="-1" href="#" class="lang js_setLocale" data-locale='{{loc}}'>
+                {% if show_locale_country[loc] %}
+                    {{loc | upper}}
+                {% else %}
+                    {{loc.split('_')[0] | upper}}
+                {% endif %}
+                </a></li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </li>
+</ul>

@@ -1,0 +1,65 @@
+{% macro input_text(label_id, title, class, data='') %}
+  <div class="control-group" style="">
+    <label for="{{label_id}}" class="control-label">{{ title }}</label>
+    <div class="controls">
+      <input type="text" id="{{label_id}}" class="input-xlarge {{class}}" 
+        {% if data != '' %} placeholder="<%= {{data}} %>" {% endif %}>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro textarea_text(label_id, title, class, data='') %}
+  <div class="control-group" style="">
+    <label for="{{label_id}}" class="control-label">{{ title }}</label>
+    <div class="controls">
+      <textarea rows=3 id="{{label_id}}" class="input-xlarge {{class}}" 
+      {% if data != ''%} placeholder="<%= {{data}} %>" {% endif %}></textarea>
+    </div>
+  </div>
+{% endmacro %}
+
+<div class="control-group">
+  <label for="targetLocation" class="control-label">
+    {{ gettext("Pick where to post to") }}:
+  </label>
+  <div class="controls">
+    <select id="fb-supportedList" class='js_fb-supportedList'>
+      <option value='null'></option>
+      <option value="me">{{ gettext("Your Wall") }}</option>
+      <option value="page">{{ gettext("Your Pages") }}</option>
+      <option value="group">{{ gettext("Your Groups") }}</option>
+    </select>
+    <!-- <span>*</span> -->
+  </div>
+</div>
+
+<div class="fb-targeted-form"></div>
+
+  <a class="fb-js_test_area mts hidden" href='#'>Click me for test</a>
+  <% if(exportedMessage) { %>
+  <!-- This is where the message preview would go -->
+  <div class="form-break mts">{{ gettext("Suggested preview") }}:</div>
+  
+  <div class='mts' style="border: 1px solid #ddd; margin: 5px; padding: 5px;">
+    {{ textarea_text("fb-export-modal-message-header", gettext("Message Header:"), 'js_fb_message_header',
+      data="suggestedHeader" ) }}
+    <div style="width: 50%; display: inline-block;">
+      <p><%= exportedMessageBody.value() %></p>
+      <hr>
+      {{ textarea_text("fb-export-modal-message-extra", gettext("Extra Message:"), 'js_fb_message_extra') }}
+      <p> <%= messageFooter %></p>
+    </div>
+
+  </div>
+  
+  <div class="mts facebook-preview" style="border: 1px solid #ddd; margin: 5px; padding: 5px">
+  
+    {{ input_text("fb-link-attachment", gettext("Link URL:"), 'js_fb-attachment-link') }}
+    {{ input_text("fb-attachmentName", gettext("Title Override:"), 'js_fb-suggested-name') }}
+    {{ input_text("fb-attachmentCaption", gettext("Caption Override:"), 'js_fb-suggested-caption') }}
+    {{ textarea_text("fb-attachmentDescription", gettext("Description Override:"), 'js_fb-suggested-description') }}
+
+    </div>
+  
+  </div>
+<% } %>

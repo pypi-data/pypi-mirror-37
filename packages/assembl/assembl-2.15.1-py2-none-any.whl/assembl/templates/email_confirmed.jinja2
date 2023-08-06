@@ -1,0 +1,37 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+<style>
+body{
+    background: #eee;
+}
+</style>
+
+<div class="loginbox request_password_change">
+    <header>
+        <h1>{{title}}</h1>
+    </header>
+
+    <div class="content">
+        {% if error %}
+        <div class="error">{{error}}</div>
+        {% endif %}
+        <p class="login-box-title">{{description}}</p>
+        <div class="tac mtl">
+            <a href="{{ button_url }}" class="btn btn-primary">{{button_label}}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {% if not error %}
+        {% include 'analytics_nonBackboned.jinja2' %}
+        {% if web_analytics.get('enabled', False) %}
+            <script type="text/javascript">
+            var analytics = Analytics_Dispatcher.getInstance();
+            analytics.trackEvent(analytics.events.CONFIRM_ACCOUNT);
+            </script>
+        {% endif %}
+    {% endif%}
+{% endblock%}

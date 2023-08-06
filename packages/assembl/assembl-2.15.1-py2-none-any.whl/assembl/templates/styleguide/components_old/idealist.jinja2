@@ -1,0 +1,209 @@
+{% macro chk() -%}
+<label class="chk chk--idealist">
+    <input type="checkbox" class="chk-checkbox" />
+    <span class="chk-label"></span>
+</label>
+{%- endmacro %}
+
+{% macro idealist_item(startLevel=1, endLevel=5) -%}
+    <div class="idealist-item is-open">
+        <div class="idealist-body">
+            {% for i in range(startLevel-1) %}
+                <span class="idealist-bar"></span>
+            {% endfor %}
+            <span class="idealist-arrow"></span>
+            <div class="idealist-counter">{{startLevel}}</div>
+            <div class="idealist-title">Simple .idealist-item level {{startLevel}}</div>
+        </div>
+
+        <div class="idealist-children">
+            {% if startLevel < endLevel %} {{idealist_item(startLevel+1, endLevel)}} {% endif %}
+        </div>
+    </div>
+{%- endmacro %}
+
+<div class="idealist">
+    
+    <div class="idealist-item">
+        <div class="idealist-body">
+            <div class="idealist-counter">42</div>
+            <div class="idealist-title">Simple .idealist-item</div>
+        </div>
+
+        <div class="idealist-children"></div>
+    </div>
+
+    <div class="idealist-item">
+        <div class="idealist-body">
+            {{ chk() }}
+            <div class="idealist-counter">42</div>
+            <div class="idealist-title">Simple .idealist-item with checkbox</div>
+        </div>
+
+        <div class="idealist-children"></div>
+    </div>
+
+
+    <div class="idealist-item">
+        <div class="idealist-body">
+            <span class="idealist-arrow"></span>
+            <div class="idealist-counter">87</div>
+            <div class="idealist-title">Simple .idealist-item closed with children</div>  
+        </div>
+
+        <div class="idealist-children">
+            
+            <div class="idealist-item">
+                <div class="idealist-body">
+                    <div class="idealist-counter">42</div>
+                    <div class="idealist-title">Simple .idealist-item</div>
+                </div>
+
+                <div class="idealist-children"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="idealist-item is-open">
+        <div class="idealist-body">
+            <span class="idealist-arrow"></span>
+            <div class="idealist-counter">87</div>
+            <div class="idealist-title">Simple .idealist-item open with children</div>  
+        </div>
+
+        <div class="idealist-children">
+            
+            <div class="idealist-item is-open">
+                <div class="idealist-body">
+                    <span class="idealist-bar"></span>
+                    <span class="idealist-arrow"></span>
+                    <div class="idealist-counter">42</div>
+                    <div class="idealist-title">Simple .idealist-item level 2</div>
+                </div>
+
+                <div class="idealist-children">
+
+                    <div class="idealist-item">
+                        <div class="idealist-body">
+                            <span class="idealist-bar"></span>
+                            <span class="idealist-bar"></span>
+                            <div class="idealist-counter">42</div>
+                            <div class="idealist-title">Simple .idealist-item level 3</div>
+                        </div>
+
+                        <div class="idealist-children"></div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="idealist-item">
+        <div class="idealist-body">
+            {{chk()}}
+            <span class="idealist-arrow"></span>
+            <div class="idealist-counter">92</div>
+            <div class="idealist-title">Simple .idealist-item closed with checkbox and children</div>  
+        </div>
+
+        <div class="idealist-children">
+            
+            <div class="idealist-item">
+                <div class="idealist-body">
+                    <div class="idealist-counter">42</div>
+                    <div class="idealist-title">Simple .idealist-item</div>
+                </div>
+
+                <div class="idealist-children"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="idealist-item">
+        <div class="idealist-body">
+            {{ chk() }}
+            <div class="idealist-subtitle">29/12/1987</div>
+            <div class="idealist-subtitle">Author Name</div>
+            <div class="idealist-title">.idealist-item with author name and date</div>
+        </div>
+
+        <div class="idealist-children"></div>
+    </div>
+
+</div>
+
+
+<div class="spacer"></div>
+
+<h3>States</h3>
+<div class="idealist">
+
+    <div class="idealist-item">
+        <div class="idealist-body">
+            <div class="idealist-counter">1</div>
+            <div class="idealist-title">.idealist-item</div>
+        </div>
+    </div>
+
+    <div class="idealist-item is-selected">
+        <div class="idealist-body">
+            <div class="idealist-counter">1</div>
+            <div class="idealist-title">.idealist-item .is-selected</div>
+        </div>
+    </div>
+
+    <div class="idealist-item is-dragover-above">
+        <div class="idealist-body">
+            <div class="idealist-counter">2</div>
+            <div class="idealist-title">.idealist-item.is-dragover-above</div>
+
+            <div class="idealist-abovedropzone"></div>
+            <div class="idealist-dropzone"></div>
+        </div>
+    </div>
+
+    <div class="idealist-item is-dragover">
+        <div class="idealist-body">
+            <div class="idealist-counter">2</div>
+            <div class="idealist-title">.idealist-item.is-dragover</div>
+        </div>
+    </div>
+
+    <div class="idealist-item is-open is-dragover">
+        <div class="idealist-body">
+            <span class="idealist-arrow"></span>
+            <div class="idealist-counter">2</div>
+            <div class="idealist-title">.idealist-item.is-open.is-dragover with children</div>
+        </div>
+
+        <div class="idealist-children">
+            
+            <div class="idealist-item">
+                <div class="idealist-body">
+                    <span class="idealist-bar"></span>
+                    <div class="idealist-counter">1</div>
+                    <div class="idealist-title">.idealist-item</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="idealist-item is-dragover-below">
+        <div class="idealist-body">
+            <div class="idealist-counter">2</div>
+            <div class="idealist-title">.idealist-item.is-dragover-below</div>
+            <div class="idealist-dropzone"></div>
+        </div>
+    </div>
+</div>
+
+<h3>Going into the deepest</h3>
+<div class="idealist">
+    {{ idealist_item(1, 20) }}
+</div>

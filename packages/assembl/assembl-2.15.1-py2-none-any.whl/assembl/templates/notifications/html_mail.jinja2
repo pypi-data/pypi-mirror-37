@@ -1,0 +1,115 @@
+{#
+This is a jinja2 template.  Doc:  http://jinja.pocoo.org/docs/dev/templates/
+
+The HTML conforms to ink's CSS.  http://zurb.com/ink/docs.php
+
+It expects variables:
+subscription
+discussion
+notification
+frontendUrls
+ink_css
+assembl_css
+#}
+
+{% set discussionUrl = frontendUrls.get_discussion_url() %}
+{% set discussionTopic = discussion.topic %}
+{% set discussionLink='<a href="'+discussionUrl+'">'+discussionTopic+'</a>' %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width"/>
+    <style type="text/css">
+      {{ ink_css }}
+    </style>
+    <style type="text/css">
+      {{ assembl_notification_css }}
+    </style>
+  </head>
+  <body>
+    <!-- notification: {{ notification.id }} -->
+  <table class="body">
+    <tr>
+      <td class="center" align="center" valign="top">
+        <center>
+
+          <table class="row header">
+            <tr>
+              <td class="center" align="center">
+                <center>
+
+                  <table class="container">
+                    <tr>
+                      <td class="wrapper last">
+
+                        <table class="twelve columns">
+                          <tr>
+                            <td class="six sub-columns">
+                              <img src="{{ frontendUrls.getDiscussionLogoUrl() }}">
+                            </td>
+                            <td class="six sub-columns last" style="text-align:right; vertical-align:middle;">
+                              <span class="template-label">{{ discussionLink }}</span>
+                            </td>
+                            <td class="expander"></td>
+                          </tr>
+                        </table>
+
+                      </td>
+                    </tr>
+                  </table>
+
+                </center>
+              </td>
+            </tr>
+          </table>
+
+          <table class="container">
+            <tr>
+              <td>
+                {%- block notification_content %}
+                {% endblock notification_content %}
+                
+                {%- block notification_subscriptions %}
+                {% set notificationConfigUrl = frontendUrls.getUserNotificationSubscriptionsConfigurationUrl() %}
+                <table class="row callout">
+                  <tr>
+                    <td class="wrapper last">
+
+                      <table class="twelve columns">
+                        <tr>
+                          <td class="panel">
+                            <p>{{ gettext("You are receiving this because you are subscribed to discussion %(discussionLink)s.  Specifically, you currently receive a notification when:",
+                                    discussionLink=discussionLink)
+                               }}
+                            <ul>
+
+                              {% for applicableSubscription in notification.get_applicable_subscriptions() %}
+                                <li>
+                                  {{ gettext(applicableSubscription.get_human_readable_description()) }}
+                                  <!-- subscription: {{ applicableSubscription.id }} -->
+                                </li>
+                              {% endfor %}
+                            </ul>
+                          </td>
+                          <td class="expander"></td>
+                        </tr>
+                      </table>
+
+                    </td>
+                  </tr>
+                </table>
+                {% endblock notification_subscriptions %}
+
+
+              <!-- container end below -->
+              </td>
+            </tr>
+          </table>
+
+        </center>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

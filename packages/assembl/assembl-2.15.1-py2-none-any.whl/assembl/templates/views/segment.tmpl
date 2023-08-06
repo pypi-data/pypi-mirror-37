@@ -1,0 +1,72 @@
+{#
+    this is an included template.
+    the <%= segment %> variable should be given.
+#}
+
+{% set segmentDate = '<%= ctx.getNiceDateTime(segment.get("creationDate")) %>' %}
+{% set segmentCreatorName = '<%= harvester.get("name") %>' %}
+{% set harverterTooltip = gettext('Harvested by %(name)s %(date)s')|format(date=segmentDate, name=segmentCreatorName) %}
+
+{% set segmentCreatorAvatarImg = '<img src="<%= harvester.getAvatarUrl(24) %>" class="image-rounded" alt="" width="24" height="24" data-toggle="tooltip" data-placement="left" title="'+harverterTooltip+'"/>' %}
+{% set segmentLinkTooltip = gettext('Click here to see the original contribution this segment is quoted from.') %}
+{% set segmentTextLink = '<a class="segment-link" data-segmentid="<%= segment.cid %>" data-tooltip="'+segmentLinkTooltip+'">'+gettext('Show in original context')+'&nbsp;</a>' %}
+
+
+<div class="bx bx-default postit" 
+  <% if (canEditExtracts || (canEditMyExtracts && harvester == ctx.getCurrentUser())) { %>
+    draggable="true"
+  <% } %>
+data-segmentid="<%= segment.cid %>">
+  <% if (canEditExtracts || (canEditMyExtracts && harvester == ctx.getCurrentUser())) { %>
+  <button class="btn btn-cancel btn-sm bx-close js_closeExtract" type="button" data-segmentid="<%= segment.cid %>">
+    <i class="icon-delete"></i>
+  </button>
+  <% } %>
+
+  <div class="postit-footer">
+    <p class="text-quotation"><%= segment.getQuote() %></p>
+
+		{% set nuggetTooltip = gettext('Show or hide this extract to participants')  %}
+		{% set nuggets = '<a href="#" class="nugget js_selectAsNugget <%= segment.get("important") ? "isSelected":"" %>" data-toggle="tooltip" title="<%= segment.get("important") ? "":"'+ nuggetTooltip +'" %>" data-placement="left"><i class="icon-diamond"></i></a>' %}
+
+    <% if(canAddExtracts) { %>
+      <div class="segment-harvester tac">
+        <div class="avatar img-rounded">
+          {{ gettext('%(img)s')|format(img=segmentCreatorAvatarImg)|safe }}
+          {#<span class="creatorName">{{ segmentCreatorName|safe }}</span>#}
+        </div>
+
+        <% if(canAddExtracts) { %>
+          <div class="nugget-indice">
+          	{{ nuggets|safe }}
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="extractOrigin">
+      <% var type = segment.get("target")["@type"];
+         if (contentCreator) { %>
+
+        {% set postCreatorName = '<%= contentCreator.get("name") %>' %}
+        {% set nicePostDate = '<%= ctx.getNiceDateTime(post.get("date")) %>' %}
+        {% set precisePostDate = '<%= ctx.getReadableDateTime(post.get("date")) %>' %}
+        {% set authorTooltip = gettext('Posted %(nice_date)s by %(name)s')|format(name=postCreatorName, nice_date=nicePostDate, precise_date=precisePostDate)|safe %}
+
+        <div class="js_authorAvatar authorAvatar" data-toggle="tooltip" title="{{ authorTooltip }}"></div>
+        <div class="js_authorName authorName"></div>
+
+      <% } else { %>
+        <% if (type == "Webpage") { %>
+          <img src="/static/img/icon/search_document.svg" width="35" height="35" class="image-rounded fl prxs" alt="{{ gettext('Document extracted from the web') }}" />
+          {{ gettext('Harvested from webpage') }}
+        <% } else { %>
+          {{ gettext('Unknown segment type: ') }}<%= type %>
+        <% } %>
+      <% } %>
+      <br>
+      {{ segmentTextLink|safe }}
+    </div>
+
+  </div>
+</div>
