@@ -1,0 +1,4 @@
+testing
+=======
+
+.. automodule:: pemi.testing
