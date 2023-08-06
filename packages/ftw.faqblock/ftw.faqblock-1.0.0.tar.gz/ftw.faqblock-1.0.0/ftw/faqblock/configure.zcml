@@ -1,0 +1,39 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:upgrade-step="http://namespaces.zope.org/ftw.upgrade"
+    i18n_domain="ftw.faqblock">
+
+    <five:registerPackage package="." initialize=".initialize" />
+
+    <include package=".contents"/>
+    <include package=".browser"/>
+
+    <include file="lawgiver.zcml" zcml:condition="installed ftw.lawgiver" />
+    <include file="permissions.zcml" />
+    <include file="resources.zcml" />
+
+    <genericsetup:registerProfile
+        name="default"
+        title="ftw.faqblock default"
+        directory="profiles/default"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        />
+
+    <genericsetup:registerProfile
+        name="uninstall"
+        title="ftw.faqblock:uninstall"
+        directory="profiles/uninstall"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        for="Products.CMFPlone.interfaces.IMigratingPloneSiteRoot"
+        />
+
+    <include package="ftw.upgrade" file="meta.zcml" />
+    <upgrade-step:directory
+        profile="ftw.faqblock:default"
+        directory="upgrades"
+        />
+
+</configure>
