@@ -1,0 +1,41 @@
+{% extends "registration/registration_base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}{% trans "Profile edit" %}{% endblock %}
+
+{% block content %}
+    <div class="col-md-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-6 mx-auto">
+                        <form method="post" action="" class="form-signin">
+                            <div class="text-center">
+                                <h1 class="please h3 mb-3 font-weight-normal text-left">{% trans "Change your data" %}</h1>
+                            </div>
+
+
+                            {% csrf_token %}
+                            {% bootstrap_field form.first_name %}
+                            {% bootstrap_field form.last_name %}
+                            {% bootstrap_field form.tax_number %}
+                            {% bootstrap_field form.bill_address %}
+                            {% bootstrap_field form.ship_address %}
+                            {% bootstrap_field form.main_phone %}
+                            {% if form.accounting_number %}
+                                {% bootstrap_field form.accounting_number %}
+                            {% else %}
+                            {% endif %}
+                            {% bootstrap_field form.name_legal %}
+                            <hr class="mb-4">
+                            <button id="submit-btn" class="mt-4 btn btn-lg btn-primary btn-block"
+                                    type="submit">{% trans 'Save' %}
+                            </button>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
