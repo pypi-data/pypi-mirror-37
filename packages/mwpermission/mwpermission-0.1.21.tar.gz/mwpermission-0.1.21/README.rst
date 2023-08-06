@@ -1,0 +1,57 @@
+`rst file editor <http://rst.ninjs.org>`_
+
+mwpermission
+===============
+
+maxwin 团队 的确权管理
+
+Permission 的使用
+----------------------
+> config.py 中设定权限系统名称，比如：maxwinweb
+
+.. code-block:: python
+
+    class DevelopmentConfig(Config):
+        SYSTEM_NAME = 'maxwinweb'
+
+    class ProductionConfig(Config):
+        SYSTEM_NAME =  os.environ.get('SYSTEM_NAME','maxguideweb')
+
+> __init__.py 中创建Permission对象
+
+.. code-block:: python
+
+    from mwpermission.permission import Permission
+
+    app = Flask(__name__)
+    # 设定permission_url 来访问权限资料，推荐在开发模式下使用
+    p = Permission()
+    p.init_app(app)
+
+> 权限检测,检查当前用户对 maxguideweb 中的employee的 浏览，删除权限，能否看到身份证等隐私权限,方法: @p.check('system_name3',['op']) ,p.check_permission(systemname3,op)
+
+.. code-block:: python
+
+    # 检查 员工的浏览权限
+    @auth.valid_login
+    @p.check('employee',["view"])
+    def employees_id_get(id,jwt = None):
+        pass
+
+    # 检查员工的删除
+    @auth.valid_login
+    @p.check('employee',["delete"])
+    def employees_id_delete(id,jwt = None):
+        pass
+
+    @auth.valid_login
+    def employee_check_auth():
+        # 检查是否有看到身份证的权限
+        p.check_permission('empolyee','see_ID')
+
+
+
+安装方法
+------------
+``pip install mwpermission``
+
