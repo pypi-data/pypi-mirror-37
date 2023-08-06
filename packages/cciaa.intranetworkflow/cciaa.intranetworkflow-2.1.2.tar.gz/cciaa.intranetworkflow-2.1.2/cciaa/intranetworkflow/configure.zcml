@@ -1,0 +1,55 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    i18n_domain="cciaa.intranetworkflow">
+
+  <include package="rt.lastmodifier" />
+  <include file="permissions.zcml" /> 
+
+  <genericsetup:registerProfile
+      name="default"
+      title="CCIAA Workflow"
+      directory="profiles/default"
+      description="Workflow e permessi della intranet camerale"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.post_install"
+      />
+
+  <genericsetup:registerProfile
+      name="plonegazette"
+      title="CCIAA Workflow: fix roles for PloneGazette"
+      directory="profiles/plonegazette"
+      description="Workflow e permessi della intranet camerale per PloneGazette"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="CCIAA Workflow: uninstall"
+      directory="profiles/uninstall"
+      description="Workflow e permessi della intranet camerale per PloneGazette"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      post_handler=".setuphandlers.uninstall"
+      />
+
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="cciaa.intranetworkflow-hiddenprofiles"
+      />
+    <utility
+        name="CUff"
+        factory=".localroles.CUffRole"
+        />
+    <utility
+        name="CSer"
+        factory=".localroles.CSerRole"
+        />
+    <utility
+        name="SegGen"
+        factory=".localroles.SegGenRole"
+        />
+
+  <include package=".browser" /> 
+  <include package=".portlets" /> 
+
+</configure>
