@@ -1,0 +1,37 @@
+// Chaton Script Language Grammar for Lark
+// Written by Minsu Jang (minsu@etri.re.kr)
+//
+// - Lark Parser Generator: https://github.com/lark-parser/lark 
+
+script: topic+
+
+topic: "topic" topic_id "{" turn+ "}"
+
+topic_id: WORD
+
+turn: ("+" you?)+ ("-" me)+
+
+you: (sentence | "(" (query | event) ("," (query | event))* ")") ("{" assignment ("," assignment)* "}")?
+
+me: sentence ("{" assignment ("," assignment)* "}")? jump_directive?
+
+jump_directive: "{" "->" topic_id "}"
+
+sentence: (WORD | VAR) ((WORD | VAR) | "." | "," | "?" | "!")*
+
+query: WORD "==" WORD
+
+assignment: WORD "<-" VAR | VAR "<-" WORD 
+
+event: WORD
+
+VAR: "$" WORD "$"
+WORD: /\w+/
+CR : /\r/
+LF : /\n/
+
+COMMENT: /#[^\n]*/
+
+%import common.WS
+%ignore WS
+%ignore COMMENT
