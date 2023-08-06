@@ -1,0 +1,58 @@
+Metadata-Version: 1.1
+Name: sms-reg
+Version: 0.3
+Summary:  Python API for sms-reg.com
+Home-page: http://linkedin.com/in/vbxx3
+Author: Valentine Bobrovsky
+Author-email: vbabrouski@outlook.com
+License: MIT
+Description: # Sms-reg API [Python]
+          Python API РґР»СЏ [СЃРµСЂРІРёСЃР° Р°РєС‚РёРІР°С†РёРё СЃРёРјРєР°СЂС‚](https://sms-reg.com).
+          
+          РўСЂРµР±СѓРµС‚СЃСЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёРµ Р±РёР±Р»РёРѕС‚РµРєРё, РїРёСЃР°С‚СЊ [СЃСЋРґР°](https://linkedin.com/in/vbxx3).
+          
+          РћСЂРёРіРёРЅР°Р»СЊРЅС‹Р№ [REST](http://sms-reg.com/docs/API.html).
+        ***
+        ### РЈСЃС‚Р°РЅРѕРІРєР°:
+        	
+            pip install sms-reg
+        ***
+        ### Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ:
+        * РђРІС‚РѕСЂРёР·Р°С†РёСЏ РєР»РёРµРЅС‚Р°
+        ```python
+        sms = Sms(client_key)  # str: client_key
+        ```
+        РњРµС‚РѕРґ             | РћРїРёСЃР°РЅРёРµ
+        ------------------|----------------------
+        balance()         | Р’РѕР·РІСЂР°С‰Р°РµС‚ Р±Р°Р»Р°РЅСЃ Р°РєРєР°СѓРЅС‚Р°
+        set_rate(rate)    | РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ СЃС‚Р°РІРєСѓ РІ СЂР°Р·РјРµСЂРµ rate (**int**)
+        get_list(extended=None)    | Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРїРёСЃРѕРє СЃРµСЂРІРёСЃРѕРІ, СЃ extended(**int**) С‚РѕР»СЊРєРѕ РґРѕСЃС‚СѓРїРЅС‹Рµ
+        get_num(service, country=None)| Р—Р°РїСЂР°С€РёРІР°РµС‚ РѕС„РµСЂ РЅР° РЅРѕРјРµСЂ, service(**str**) - СЃРµСЂРІРёСЃ, СЃ country(**str**) РЅРѕРјРµСЂ СЃС‚СЂР°РЅС‹, РІРѕР·РІСЂР°С‰Р°РµС‚ tzid
+        get_num_repeat(tzid)      | Р—Р°РїСЂР°С€РёРІР°РµС‚ РѕС„РµСЂ РЅР° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РЅРѕРјРµСЂР° РїРѕРІС‚РѕСЂРЅРѕ, tzid РєР»СЋС‡(**str**)
+        set_ready(tzid)   | РђРєС‚РёРІРёСЂСѓРµС‚ РѕС„РµСЂ
+        wait_number(tzid)       | РћР¶РёРґР°РµС‚ РїРѕРєР° РЅРµ РІС‹РґР°РЅ РЅРѕРјРµСЂ
+        wait_answer(tzid)      | РћР¶РёРґР°РµС‚ РїРѕРєР° РЅРµ РїСЂРёРґРµС‚ СЃРјСЃ, РІРѕР·РІСЂР°С‰Р°РµС‚ Р»РёР±Рѕ РµРіРѕ СЃРѕРґРµСЂР¶РёРјРѕРµ, Р»РёР±Рѕ False(**bool**)
+        get_operations(opstate=None, count=None, output=None)        | Р’РѕР·РІСЂР°С‰Р°РµС‚ РѕРїРµСЂР°С†РёРё, [РїРѕРґСЂРѕР±РЅРµРµ](http://sms-reg.com/docs/APImethods.html?getOperations)
+        set_ok(tzid)        | РџРѕРґС‚РІРµСЂР¶РґР°РµС‚, С‡С‚Рѕ РѕРїРµСЂР°С†РёСЏ РїСЂРѕС€Р»Р° СѓСЃРїРµС€РЅРѕ, Р·Р°РєСЂС‹РІР°РµС‚ РѕС„РµСЂ
+        set_used(tzid)        | РЎРѕРѕР±С‰Р°РµС‚, С‡С‚Рѕ РЅРѕРјРµСЂ Р±С‹Р» РёСЃРїРѕР»СЊР·РѕРІР°РЅ СЂР°РЅРµРµ, Р·Р°РєСЂС‹РІР°РµС‚ РѕС„РµСЂ
+        
+        ### РџСЂРёРјРµСЂ:
+        РџРѕРєСѓРїРєР° РЅРѕРјРµСЂР° С‚РµР»РµРіСЂР°Рј:
+        ```python
+        sms = Sms('2d08p37k6bkwjpj1pqgwdsbg9nuy2g1y')
+        print(sms.balance())
+        tzid = sms.get_num('telegram', country='all')
+        if sms.wait_number(tzid):
+        	***
+        	РќР° telegram.org РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РЅРѕРјРµСЂ
+        	***
+        	print(sms.wait_answer(tzid))  # Р’С‹РІРѕРґРёС‚ СЃРѕРѕР±С‰РµРЅРёРµ СЃ РїСЂРµРґРїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕ РєРѕРґРѕРј
+        	sms.set_ok(tzid)
+        else:
+        	print('Р§С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє')
+        ```
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
