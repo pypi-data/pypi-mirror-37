@@ -1,0 +1,1 @@
+from pythonvideoannotator_models_gui.models.video.video_gui import VideoGUI as Video
