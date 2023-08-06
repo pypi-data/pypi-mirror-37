@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load rstblog_extras %}
+
+{% block title %}
+Blog home
+{% endblock %}
+
+{% block meta %}
+    <meta name="generator" content="rstsblog">
+    <meta name="author" content="luciano de falco alfano">
+{% endblock %}
+
+{% block stylesheet %}
+{% endblock %}
+
+{% block link %}
+    <link rel="alternate" hreflang="x-default" href="{{ request.build_absolute_uri }}" />
+{% endblock %}
+
+{% block content %}
+    <div class="container" style="background-color:WhiteSmoke;">
+        <h3 class="hindex">Indexing {{ articles|length }}
+                           {% if home %}<i>newer</i>&nbsp;{% endif %}{{ atype }}{{ articles|length|pluralize }}
+                           about {% if not category %} 
+                                     all categories
+                                 {% else %}
+                                     <i>{{category}}</i> category
+                                 {% endif %}
+                                     </h3>
+        
+        {% for article in articles %}
+            {% if forloop.counter|bitwise_and:1 == 1 %}
+                    <div class="row" style="margin:10px 0px;background-color:White;box-shadow:1px 1px LightGrey;border-radius:4px;">  <!-- opening flex-container -->
+            {% endif %}
+            {% include "article_box.html" %}
+            {% if forloop.counter|bitwise_and:1 == 0 %}
+                </div>                        <!-- closing flex-container -->
+            {% endif %}
+            {% if forloop.last and forloop.counter|bitwise_and:1 == 1 %}
+                </div>                        <!-- closing flex-container in case last article is odd -->
+            {% endif %}
+        {% empty %}
+            <div><p> Sorry. No articles by now.</p></div>
+        {% endfor %}
+    </div>
+{% endblock %}
