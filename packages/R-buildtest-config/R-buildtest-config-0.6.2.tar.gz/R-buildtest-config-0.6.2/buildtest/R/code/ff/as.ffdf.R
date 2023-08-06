@@ -1,0 +1,5 @@
+library(ff)
+d <- data.frame(x=1:26, y=letters, z=Sys.time()+1:26)
+ffd <- as.ffdf(d)
+stopifnot(identical(d, as.data.frame(ffd)))
+rm(ffd); gc()

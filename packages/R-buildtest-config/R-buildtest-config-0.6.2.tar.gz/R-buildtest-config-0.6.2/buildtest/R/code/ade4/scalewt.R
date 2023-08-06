@@ -1,0 +1,8 @@
+library(ade4)
+data(meau)
+w <- rowSums(meau$spe)
+varwt(meau$env, w)
+varfacwt(meau$env, wt = w)
+varfacwt(meau$env, wt = w, fac = meau$design$season)
+covfacwt(meau$env, wt = w, fac = meau$design$season)
+scalewt(meau$env, wt = w)
