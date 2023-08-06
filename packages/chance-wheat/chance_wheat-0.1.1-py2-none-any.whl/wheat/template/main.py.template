@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : wheat/template/main.py.template
+# Author            : Jimin Huang <huangjimin@whu.edu.cn>
+# Date              : 06.02.2018
+# Last Modified Date: 06.02.2018
+# Last Modified By  : Jimin Huang <huangjimin@whu.edu.cn>
+# -*- coding: utf-8 -*-
+# File: {FILE_NAME}
+# Author: {AUTHOR_NAME}
+"""{PROJECT_NAME}
+
+Usage:
+    {PROJECT_NAME} [--config=CONFIG]
+    {PROJECT_NAME} (-h | --help)
+    {PROJECT_NAME} --version
+
+Options:
+    -h --help               Show help info.
+    --version               Show version.
+    --config=CONFIG         Set database config. [default: deploy]
+"""
+import arrow
+import logging
+
+from chanconfig import MultipleConfig
+from docopt import docopt
+from exception_capturer import exception_capture
+from logging.config import dictConfig
+from orm.session import DBSessionMaker
+from plantain.connections import KafkaConnection
+
+from {PROJECT_NAME} import utils
+from {PROJECT_NAME}.constant import (
+    CONFIGS, KAFKA_EXCEPTIONS_TOPIC, INSTANCE_ERROR, PROJECT_NAME,
+    INSTANCE_PENDING, INSTANCE_FINISH
+)
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+def initialize_logger(config):
+    """initial logger config
+
+    Args:
+        config: a dict for logging config
+    """
+    dictConfig(config)
+    LOGGER.info('Initialize logger')
+
+
+def read_arguments():
+    """Read arguments from stdin and config file
+
+    Return:
+        a dict of arguments
+    """
+    argv = docopt(__doc__, version='{PROJECT_NAME} V0.0.1')
+    config = CONFIGS[argv['--config']]
+    return MultipleConfig(
+        config[0], config[1], argv, {
+            'kafka.consumer_timeout_ms': (
+                '{ENV_NAME}_CONSUMER_TIMEOUT_MS', int, None
+            ),
+            'kafka.auto_offset_reset': (
+                '{ENV_NAME}_AUTO_OFFSET_RESET', None, 'latest'
+            ),
+            'kafka.host': ('KAFKA_HOST', None, None)
+        }
+    ).dict
+
+
+@KafkaConnection.with_producer()
+def run(statistics, producer):
+    """Run main logic
+
+    Args:
+        statistics: a `Statistics`
+        producer: a `KafkaProducer`
+    """
+    pass
+
+
+def main():
+    """Entrance
+    """
+    present_time = arrow.now().naive
+    logging_config = MultipleConfig(*CONFIGS['logging'])
+    initialize_logger(logging_config.dict)
+
+    configs = read_arguments()
+    instance_id = utils.generate_instance_id(present_time, PROJECT_NAME)
+    statistics = utils.create_statistics(instance_id)
+    statistics.status = INSTANCE_PENDING
+
+    KafkaConnection.connect(configs['kafka']['host'])
+    DBSessionMaker.connect(**configs['mysql'])
+
+    KafkaConnection.producer.send(KAFKA_EXCEPTIONS_TOPIC, str(statistics))
+
+    try:
+        run(statistics)
+    except Exception:
+        exc_info = exception_capture()
+        LOGGER.error(exc_info)
+        statistics.exception_info = exc_info
+        statistics.status = INSTANCE_ERROR
+    else:
+        statistics.status = INSTANCE_FINISH
+
+    statistics.finish_time = arrow.now().format()
+    KafkaConnection.producer.send(KAFKA_EXCEPTIONS_TOPIC, str(statistics))
+
+    DBSessionMaker.close()
+    KafkaConnection.close()

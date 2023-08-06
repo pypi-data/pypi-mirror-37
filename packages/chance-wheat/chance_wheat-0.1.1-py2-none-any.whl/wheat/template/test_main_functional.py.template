@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : wheat/template/test_main_functional.py.template
+# Author            : Jimin Huang <huangjimin@whu.edu.cn>
+# Date              : 06.02.2018
+# Last Modified Date: 06.02.2018
+# Last Modified By  : Jimin Huang <huangjimin@whu.edu.cn>
+# -*- coding: utf-8 -*-
+# File: {FILE_NAME}
+# Author: {AUTHOR_NAME}
+import json
+import mock
+import os
+import sys
+
+from nose.tools import assert_equals
+from plantain.connections import KafkaConnection
+from plantain.constant import TEST_KAFKA_HOST
+
+from {PROJECT_NAME} import main
+from {PROJECT_NAME}.constant import KAFKA_EXCEPTIONS_TOPIC
+
+
+class TestMain(object):
+    """Functional test class for ``main.main``
+    """
+    def setUp(self):
+        sys.argv = ['', '--config', 'debug']
+        try:
+            os.environ['KAFKA_HOST']
+        except KeyError:
+            os.environ['KAFKA_HOST'] = TEST_KAFKA_HOST[0]
+        KafkaConnection.connect(TEST_KAFKA_HOST)
+
+    def test_main_normal(self):
+        """Check if ``main.main`` works
+        """
+        expects = [
+            {
+                u'status': u'pending', u'service': u'{SERVICE_NAME}',
+                u'finish_time': None,
+                u'start_time': None,
+                u'instance_id': u'',
+                u'exception_info': None,
+                u'theme': u'{PROJECT_NAME}'
+            },
+            {
+                u'status': u'finished', u'service': u'{SERVICE_NAME}',
+                u'finish_time': None,
+                u'start_time': None,
+                u'instance_id': u'',
+                u'exception_info': None,
+                u'theme': u'{PROJECT_NAME}'
+            },
+        ]
+
+        main.main()
+
+        with KafkaConnection.create_consumer(
+            KAFKA_EXCEPTIONS_TOPIC, 5000, 'earliest', 'test'
+        ) as consumer:
+
+            exceptions = [json.loads(msg.value) for msg in consumer]
+            for expect, exception in zip(expects, exceptions):
+                for key in [u'instance_id', u'finish_time', u'start_time']:
+                    expect[key] = exception[key]
+
+        assert_equals(expects, exceptions)
+
+    @mock.patch.object(main, 'run')
+    def test_main_exception_raised(self, mock_run):
+        """Check if `main.main` works when `main.run` raised exceptions
+
+        Args:
+            mock_run: the mock obj of `main.run`
+        """
+        mock_run.side_effect = KeyError('test')
+
+        expects = [
+            {
+                u'status': u'pending', u'service': u'{SERVICE_NAME}',
+                u'finish_time': None,
+                u'start_time': None,
+                u'instance_id': u'',
+                u'exception_info': None,
+                u'theme': u'{PROJECT_NAME}'
+            },
+            {
+                u'status': u'error', u'service': u'{SERVICE_NAME}',
+                u'finish_time': None,
+                u'start_time': None,
+                u'instance_id': u'',
+                u'exception_info': None,
+                u'theme': u'{PROJECT_NAME}'
+            },
+        ]
+
+        main.main()
+
+        with KafkaConnection.create_consumer(
+            KAFKA_EXCEPTIONS_TOPIC, 5000, 'earliest', 'test'
+        ) as consumer:
+            exceptions = [json.loads(msg.value) for msg in consumer]
+            for expect, exception in zip(expects, exceptions):
+                for key in [
+                    u'instance_id', u'finish_time', u'start_time',
+                    u'exception_info'
+                ]:
+                    expect[key] = exception[key]
+
+        assert_equals(expects, exceptions)
