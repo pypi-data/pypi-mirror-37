@@ -1,0 +1,62 @@
+{% extends layout_template|default:"workon/list/layout.html" %}
+
+{% load workon i18n %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% for label, url in breadcrumbs %}
+        <a href="{{ url }}">{{ label }}</a>
+    {% endfor %}
+{% endblock %}
+
+{% block main %}
+    <form   class="form list-form" 
+            action="{{ request.path }}" method="POST"
+        data-form='{
+            "submitOnChanges": true,
+            "submitOnLoads": true,
+            "queryHistory": true
+        }'> 
+        {% block pre-form %}{% endblock %}
+        {% csrf_token %}
+        {% if form.fields|length %}
+        <div style="display:none">
+            {% for field in form %}{% if field.is_hidden %}
+                {% field field %}
+            {% endif %}{% endfor %}
+        </div>
+        {% if actions %}
+        <table id="list-actions" class="list-table">
+            <tr class="">
+                {% for action in actions %}
+                    <td class="{{ action.meta.class }} right" {{ field.field.meta.attrs }}>
+                        <button type="submit" data-unform name="_action" class="button" value="{{ action.name }}" data-tooltip="{{ action.meta.label|safe }}" >{{ action.meta.label|safe }}</button>
+                    </td>
+                {% endfor %}
+            </tr>
+        </table>
+        {% endif %}
+        <table id="list-filters" class="list-filters list-table">
+            <tr class="">
+                {% for field in form %}
+                    {% if field.field.meta.linebreaks %}</tr><tr>{% endif %}
+                    {% if not field.is_hidden %}
+                        <td><div class="{{ field.field.meta.attrs }}">{% field field %}</div></td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        </table> 
+        {% endif %}        
+        {% include list_results_template %}
+         <div class="fixed-actions-box">
+            {% if create_url %}
+            <a class="button round large hoverable z-depth-2 right"
+                data-tooltip="{% trans 'Nouveau' %}"
+                {{ create_method|default:'href' }}="{{ create_url }}" >
+                <i class="icon">add</i>
+            </a>
+            {% endif %}
+        </div>
+        {% block post-form %}{% endblock %}
+    </form>
+{% endblock %}
