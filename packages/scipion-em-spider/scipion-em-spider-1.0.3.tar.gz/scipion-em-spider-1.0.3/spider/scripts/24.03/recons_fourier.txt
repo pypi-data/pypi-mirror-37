@@ -1,0 +1,41 @@
+ [nummps]                     = 0            ; Use all available OMP processors
+ GLO [unaligned_images]       = 'particles'  ; Unaligned images stack (usually links)
+ GLO [next_group_align]       = 'docfile'    ; Alignment parameter output file
+ GLO [aligned_images]           = 'aligned_particles' ; Aligned images stack
+
+; ----------------- END BATCH HEADER ---------------------------------
+
+ MD
+   SET MP                     ; Use all available OMP processors
+   [nummps]
+
+; Get number of images
+ FI H [maxim],[nx],[ny]             ; Find total number of images (not [numparts])
+   [unaligned_images]@;             ; Input file needed                 (input)
+   MAXIM,NX,NY                      ; Max. image number, image size
+
+; Copy to inline file to increase access speed a little
+ ; Note: If INLN_WRTLIN ARRAY OVERFLOWS,  remove: _8@ and just use [unaligned_images]@     
+ CP                                 ; Copy unaligned images to inline stack
+   [unaligned_images]@              ; Input file needed                (input)
+   _8@                              ; Unaligned images stack           (output)
+   [maxim]                          ; Number of images in stack _8@
+
+ ; Apply new alignments to original particle images
+ RT SF                          ; Rotate & shift operation
+   [unaligned_images]@******    ; Unaligned original stacked images 
+   1-[maxim]              ; Particle selection file            (input) 
+   6,0,7,8                      ; Reg. #s for angle, scale, & shift
+   [next_group_align]           ; Alignment parameter doc file       (input)
+   _8@******                    ; Current aligned images             (output)
+
+ ; Save output to disk
+ CP
+   _8@
+   [aligned_images]@
+   [maxim]
+
+  DE
+   _8
+
+EN
