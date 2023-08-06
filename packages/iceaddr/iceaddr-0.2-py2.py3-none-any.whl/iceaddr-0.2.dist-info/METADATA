@@ -1,0 +1,208 @@
+Metadata-Version: 2.0
+Name: iceaddr
+Version: 0.2
+Summary: Look up information about Icelandic street addresses and postcodes
+Home-page: https://github.com/sveinbjornt/iceaddr
+Author: Sveinbjorn Thordarson
+Author-email: sveinbjorn@sveinbjorn.org
+License: BSD
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: Icelandic
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Utilities
+Classifier: Topic :: Text Processing :: Linguistic
+
+# iceaddr
+
+### Look up Icelandic street addresses and postcodes
+
+Python module to look up and get information about Icelandic street addresses and postcodes. The underlying data is taken from [Staðfangaskrá](https://opingogn.is/dataset/stadfangaskra), the official Icelandic Address Registry maintained by [Registers Iceland](https://www.skra.is) ([CC-BY](http://opendefinition.org/licenses/cc-by/)), and from the postcode table provided by [Postur.is](https://www.postur.is/einstaklingar/posthus/postnumer/gagnaskrar/).
+
+## Installation
+
+```
+$ pip install iceaddr
+```
+
+## Examples
+
+### Look up address with postcode:
+
+```python
+>>> from iceaddr import iceaddr_lookup
+>>> a = iceaddr_lookup('Austurstræti', number=14, postcode=101)
+>>> pprint.pprint(a)
+[{'bokst': '',
+  'byggd': 1,
+  'heiti_nf': 'Austurstræti',
+  'heiti_tgf': 'Austurstræti',
+  'hnitnum': 10083839,
+  'husnr': 14,
+  'landnr': 100852,
+  'lat_wgs84': 64.147529217656,
+  'long_wgs84': -21.9389394651385,
+  'postnr': 101,
+  'serheiti': '',
+  'stadur_nf': 'Reykjavík',
+  'stadur_tgf': 'Reykjavík',
+  'svaedi': 'Höfuðborgarsvæðið',
+  'svfnr': 0,
+  'tegund': 'Þéttbýli',
+  'vidsk': '',
+  'x_isn93': 356999.259090909,
+  'y_isn93': 408290.561363636}]
+```
+
+### Look up address with place name
+
+```python
+>>> from iceaddr import iceaddr_lookup
+>>> a = iceaddr_lookup('Öldugötu', number=4, placename='Reykjavík')
+>>> pprint.pprint(a)
+[{'bokst': '',
+  'byggd': 1,
+  'heiti_nf': 'Öldugata',
+  'heiti_tgf': 'Öldugötu',
+  'hnitnum': 10017023,
+  'husnr': 4,
+  'landnr': 100570,
+  'lat_wgs84': 64.1484874806941,
+  'long_wgs84': -21.9452072913341,
+  'postnr': 101,
+  'serheiti': '',
+  'stadur_nf': 'Reykjavík',
+  'stadur_tgf': 'Reykjavík',
+  'svaedi': 'Höfuðborgarsvæðið',
+  'svfnr': 0,
+  'tegund': 'Þéttbýli',
+  'vidsk': '',
+  'x_isn93': 356699.479545455,
+  'y_isn93': 408411.468181818}]
+```
+
+Street and place names can be provided in either nominative or dative case (e.g. both 'Öldugata' and 'Öldugötu' will work, as will both 'Selfoss' and 'Selfossi').
+
+Please note that`iceaddr_lookup()` returns a list of zero or more addresses matching the criterion.
+
+```python
+>>> from iceaddr import iceaddr_lookup
+>>> iceaddr_lookup('Dúfnahólar', number=10)
+[]
+>>> res = iceaddr_lookup('Öldugata', number=9)
+>>> [(a['postnr'], a['stadur_nf']) for a in res]
+[(101, 'Reykjavík'), (220, 'Hafnarfjörður'), (621, 'Dalvík')]
+```
+
+For natural search string queries, the module provides `iceaddr_suggest()`:
+
+```python
+>>> from iceaddr import iceaddr_suggest
+>>>
+>>> a = iceaddr_suggest('Öldugata 4, Rey')
+>>> [n['stadur_tgf'] for n in a]
+['Reykjavík', 'Reyðarfirði']
+>>> a = iceaddr_suggest('Öldugö', limit=200)
+>>> len(a)
+151
+```
+
+The default limit on results from both functions is 50.
+
+### Keys
+
+| Key           |                                                         |
+| ------------- |---------------------------------------------------------|
+| bokst         | House letter                                            |
+| byggd         |                                                         |
+| heiti_nf      | Street name (nominative case), e.g. 'Öldugata'          |
+| heiti_tgf     | Street name (dative case), e.g. 'Öldugötu'              |
+| hnitnum       |                                                         |
+| husnr         | House number                                            |
+| landnr        |                                                         |
+| lat_wgs84     | Latitude (WGS84 coordinates)                            |
+| long_wgs84    | Longitude (WGS84 coordinates)                           |
+| postnr        | Postcode (e.g. 101)                                     |
+| serheiti      | Special name                                            |
+| stadur_nf     | Place name (nominative case), e.g. 'Selfoss'            |
+| stadur_tgf    | Place name (dative case), e.g. 'Selfossi'               |
+| svaedi        | Area (e.g. 'Höfuðborgarsvæðið', 'Norðurland')           |
+| svfnr         |                                                         |
+| tegund        | Postcode (e.g. 101)                                     |
+| vidsk         | Additional information                                  |
+| x_isn93       | Coordinate X (ISN93)                                    |
+| y_isn93       | Coordinate Y (ISN93)                                    |
+| svaedi        | Area (e.g. 'Norðurland' or 'Höfuðborgarsvæðið'          |
+| stadur_nf     | Place name (nominative case), e.g. 'Selfoss'            |
+| stadur_tgf    | Place name (dative case), e.g. 'Selfossi'               |
+| tegund        | Type (either 'Þéttbýli' (urban) or 'Dreifbýli' (rural)) |
+
+### Postcodes
+
+```python
+>>> from iceaddr import postcodes_for_placename
+>>> postcodes_for_placename('Ísafjörður')
+[400, 401]
+>>> postcodes_for_placename('Kópavogi')
+[200, 201, 202, 203]
+>>> postcodes_for_placename('kópav', partial=True)
+[200, 201, 202, 203]
+>>>
+```
+
+```python
+>>> from iceaddr import postcodes
+>>> postcodes[400]
+{   'svaedi': 'Vesturland og Vestfirðir', 
+    'stadur_nf': 'Ísafjörður', 
+    'stadur_tgf': 'Ísafirði', 
+    'tegund': 'Þéttbýli' }
+```
+
+## Version History
+
+* 0.2: Added `iceaddr_suggest`, result limit, changed key names for postcode dicts
+* 0.1.2: Initial release
+
+## BSD License 
+
+Copyright (C) 2018 Sveinbjorn Thordarson
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may
+be used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+
