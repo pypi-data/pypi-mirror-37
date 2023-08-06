@@ -1,0 +1,116 @@
+Metadata-Version: 2.1
+Name: nameko-structlog
+Version: 0.1.0
+Summary: Nameko extension exposing a structlog dependency injector
+Home-page: https://github.com/tyler46/nameko-structlog
+Author: Spyros Markopoulos
+Author-email: mail.doctor46@gmail.com
+License: Apache License, Version 2.0
+Keywords: nameko logging structlog
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Internet
+Requires-Dist: nameko (>=2.5.0)
+Requires-Dist: structlog (>=18.2.0)
+Provides-Extra: colors
+Requires-Dist: colorama (>=0.4.0); extra == 'colors'
+Provides-Extra: dev
+Requires-Dist: coverage (==4.5.1); extra == 'dev'
+Requires-Dist: pip (==18.1); extra == 'dev'
+Requires-Dist: bumpversion (==0.5.3); extra == 'dev'
+Requires-Dist: flake8 (==3.5.0); extra == 'dev'
+Requires-Dist: pylint (>=1.9.3); extra == 'dev'
+Requires-Dist: twine (>=1.12.1); extra == 'dev'
+Requires-Dist: wheel (>=0.32.2); extra == 'dev'
+
+nameko-structlog
+================
+
+
+Structlog as nameko extension
+
+
+* Free software: Apache Software License 2.0
+
+
+Extension for `nameko <https://www.nameko.io>`_ that replaces python logging module with structlog.
+
+Installation
+------------
+
+To install nameko-structlog, simply use pip.
+
+.. code-block:: bash
+
+   pip install nameko-structlog
+   # to enable coloring during development
+   pip install nameko-structlog[colors]
+
+
+Usage
+-----
+
+Add Structlog log level to your nameko config file:
+
+.. code-block:: yaml
+
+   # config.yml
+   STRUCTLOG:
+      DEVELOPMENT_MODE: ${DEV:false}
+      WORKER_NAME: ${WORKER_NAME:false}
+
+   ...
+
+
+Include the ``StructlogDependency`` dependency in your service class:
+
+.. code-block:: python 
+
+   # service.py
+   from nameko.rpc import rpc 
+
+   from nameko_structlog import StructlogDependency
+
+   class MyService(object):
+      name = 'demo'
+
+      log = StructlogDependency()
+
+      @rpc 
+      def my_method(self, name):
+         self.log.info('Your name is '.format(name))
+
+
+Run your service, providing the config file:
+
+.. code-block:: shell
+
+   $ nameko run service --config config.yaml
+
+
+Credits
+-------
+
+This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+
+.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+
+
+=======
+History
+=======
+
+0.1.0 (2018-10-25)
+------------------
+
+* First release on Vermantia PyPI.
+
+
