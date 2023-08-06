@@ -1,0 +1,513 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2018 CANDY LINE INC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import argparse
+import json
+import socket
+import struct
+import os
+import sys
+import pkg_resources
+import errno
+import subprocess
+import traceback
+import glob
+import time
+import re
+
+WARN = "\033[93m"    # yellow
+NOTICE = "\033[94m"  # green
+ERROR = "\033[91m"   # red
+END = "\033[0m"
+
+cli_version = pkg_resources.require("candy-board-cli")[0].version
+this_module = sys.modules[__name__]
+
+# candy apn ls ... list all apns
+# candy apn set <name> <user> <password> (<id>) ... add a given apn
+# candy apn del <id> ... delete a given apn
+# candy network show ... show phone network state and signal strength
+#                        (RSSI in dBm)
+# candy sim show ... show SIM status and info (MSISDN, IMSI)
+# candy modem show ... show modem info (Model, Manufacturer, Revision, IMEI)
+# candy service version ... return the board service software version
+# candy service status ... same as systemctl status candy-pi-lite
+# candy service start ... same as systemctl start candy-pi-lite
+# candy service restart ... same as systemctl restart candy-pi-lite
+# candy service stop ... same as systemctl stop candy-pi-lite
+# candy service enable ... same as systemctl enable candy-pi-lite
+# candy service disable ... same as systemctl disable candy-pi-lite
+# candy connection suspend ... suspend the currently established connection
+# candy connection resume ... resume the suspended connection
+# candy connection status ... show the connection status
+# candy gnss start ... start the GNSS session
+# candy gnss stop ... stop the GNSS session
+# candy gnss status ... show the GNSS session status
+# candy gnss locate ... locate the position
+# candy version ... return this CLI version
+
+PRODUCT_DIR_NAME = "candy-pi-lite"
+PRODUCT_HOME = "/opt/candy-line/%s" % PRODUCT_DIR_NAME
+MODEM_SERIAL_PORT_FILE = os.path.join(PRODUCT_HOME, '__modem_serial_port')
+
+if "SOCK_PATH" in os.environ:
+    SOCK_PATH = os.environ["SOCK_PATH"]
+else:
+    SOCK_PATH = "/var/run/candy-board-service.sock"
+
+
+def err(msg):
+    print(ERROR + msg + END)
+
+
+def warn(msg):
+    print(WARN + msg + END)
+
+
+def notice(msg):
+    print(NOTICE + msg + END)
+
+
+def perform_remote_cmd(args, sock=None):
+    """
+    Perform the remote service command.
+    The given sock is always closed after finishing the operation.
+    """
+    code = 0
+
+    try:
+        if sock is None:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.connect(SOCK_PATH)
+        # request
+        packer = struct.Struct("I")
+        if isinstance(args, dict):
+            cmd_json = json.dumps(args)
+        else:
+            cmd_json = json.dumps(vars(args))
+        size = len(cmd_json)
+        packed_header = packer.pack(size)
+        sock.sendall(packed_header)
+        packer = struct.Struct("%is" % size)
+        packed_json = packer.pack(cmd_json)
+        sock.sendall(packed_json)
+
+        # response
+        packer = struct.Struct("I")
+        packed_result = sock.recv(packer.size)
+        result = packer.unpack(packed_result)
+
+        # result
+        if result != 0:
+            packer = struct.Struct("%is" % result)
+            packed_message = sock.recv(packer.size)
+            message_json = packer.unpack(packed_message)
+            message = json.loads(message_json[0])
+            if message["status"] != "OK":
+                code = 2
+            if message["result"]:
+                msg = message["result"]
+                if not isinstance(msg, basestring):
+                    msg = json.dumps(msg, indent=2)
+                if code == 0:
+                    notice(msg)
+                else:
+                    err(msg)
+
+    finally:
+        sock.close()
+        return code
+
+
+def perform_local_cmd(args):
+    """
+    Perform the given command on this process.
+    This method can perform the remote command as well if necessary.
+    The given sock is always closed after finishing the operation
+    """
+    cmd = vars(args)
+    try:
+        m = getattr(this_module,
+                    "%s_%s" % (cmd['category'], cmd['action']))
+        return m(cmd)
+    except socket.error, v:
+        raise v
+    except AttributeError:
+        return cmd_common(cmd)
+    except KeyError:
+        return err("Invalid Args")
+    except OSError:
+        return err("I/O Error: %s" %
+                   (''.join(traceback
+                    .format_exception(*sys.exc_info())[-2:])
+                    .strip().replace('\n', ': '))
+                   )
+    except Exception:
+        return err("Unexpected error: %s" %
+                   (''.join(traceback
+                    .format_exception(*sys.exc_info())[-2:])
+                    .strip().replace('\n', ': '))
+                   )
+
+
+def perform_service_cmd(cmd, success_msg=''):
+    child = subprocess.Popen("systemctl %s candy-pi-lite" % cmd,
+                             shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE
+                             )
+    stdout, stderr = child.communicate()
+    if child.returncode == 0 or (child.returncode == 3 and cmd == 'status'):
+        return notice(success_msg or stdout or stderr)
+    else:
+        return err("'systemctl %s candy-pi-lite' failed, %s, %s" %
+                   (cmd, stdout, stderr))
+
+
+def perform_connection_cmd(cmd, success_msg='', suppress=False):
+    child = subprocess.Popen("%s/connection_%s.sh -q" %
+                             (PRODUCT_HOME, cmd),
+                             shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE
+                             )
+    stdout, stderr = child.communicate()
+    if child.returncode < 5:
+        if not suppress:
+            notice(success_msg or stdout or stderr)
+        return child.returncode
+    else:
+        err("'connection_%s.sh' failed (stdout:[%s], stderr:[%s])" %
+            (cmd, stdout, stderr))
+        return None
+
+
+def main(args):
+    if not os.path.exists(PRODUCT_HOME):
+        err("[NOTICE] CANDY Board Service is missing")
+        return 1
+
+    if args.category == "version":
+        print("CANDY Board Service CLI version: %s" % cli_version)
+        if not os.path.exists(SOCK_PATH):
+            notice("[NOTICE] CANDY Board Service isn't running")
+        return 0
+
+    if args.category == "modem" and args.action == "reset":
+        if args.yes is not True:
+            warn("[WARN] Abort! Do NOT run this command "
+                 "unless you understand what you're doing")
+            return 1
+
+    if args.category in ("apn", "network", "sim", "modem", "gnss") or \
+       args.category == "service" and args.action == "version":
+        if not os.path.exists(SOCK_PATH):
+            err("[ERROR] CANDY Board Service isn't running")
+            return 1
+        try:
+            return perform_local_cmd(args)
+        except socket.error, v:
+            errorcode = v[0]
+            if errorcode == errno.ECONNREFUSED:
+                err("[ERROR] CANDY Board Service isn't running")
+            elif errorcode == errno.EACCES:
+                err("[ERROR] Permission denied. 'sudo' is required")
+            else:
+                err("[ERROR] I/O error, errno=%s" % errno.errorcode[errorcode])
+            return errorcode
+    elif args.category in ("connection"):
+        if not os.path.exists(SOCK_PATH):
+            err("[ERROR] CANDY Board Service isn't running")
+            return 1
+        return perform_local_cmd(args)
+    elif args.category in ("service"):
+        return perform_local_cmd(args)
+    else:
+        raise ValueError("Unsupported category")
+
+
+def service_start(cmd):
+    return perform_service_cmd("start", "Service Started")
+
+
+def service_restart(cmd):
+    return perform_service_cmd("restart", "Service Restarted")
+
+
+def service_stop(cmd):
+    return perform_service_cmd("stop", "Service Stopped")
+
+
+def service_enable(cmd):
+    return perform_service_cmd("enable", "Service Enabled")
+
+
+def service_disable(cmd):
+    return perform_service_cmd("disable", "Service Disabled")
+
+
+def service_status(cmd):
+    return perform_service_cmd("status")
+
+
+def connection_status(cmd):
+    code = perform_connection_cmd("status", None, True)
+    if code == 0:
+        notice("ONLINE")
+    elif code == 1:
+        notice("OFFLINE")
+
+
+def connection_suspend(cmd, suppress=False):
+    return perform_connection_cmd("suspend", "Connection Suspended", suppress)
+
+
+def connection_resume(cmd, suppress=False):
+    code = perform_connection_cmd("resume", None, True)
+    if not suppress:
+        if code == 1:
+            err("Timeout")
+        else:
+            notice("Connection Resumed")
+    return code
+
+
+def usb_connected():
+    try:
+        with open(MODEM_SERIAL_PORT_FILE, 'r') as f:
+            return re.match("/dev/QWS\\.[A-Z0-9]*\\.MODEM", f.read().strip())
+    except IOError:
+        return False
+
+
+def cmd_common(cmd):
+    code = 0
+    if usb_connected():
+        return perform_remote_cmd(cmd)
+    elif cmd['suspend']:
+        code = connection_suspend(cmd, True)
+        if code is None:
+            return 1
+        elif code == 0:
+            time.sleep(1.5)
+        code = perform_remote_cmd(cmd)
+    else:
+        code = perform_remote_cmd(cmd)
+    if cmd['resume']:
+        connection_resume(cmd, True)
+    return code
+
+
+def gnss_start(cmd):
+    code = cmd_common(cmd)
+    if code == 0:
+        notice('OK')
+
+
+def gnss_stop(cmd):
+    code = cmd_common(cmd)
+    if code == 0:
+        notice('OK')
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="CANDY Board Service CLI")
+    categories = parser.add_subparsers(title="categories", dest="category")
+
+    version_commands = categories.add_parser("version", help="CLI Version")
+
+    parser_apn = categories.add_parser("apn", help="Manipulate APN settings")
+    apn_commands = parser_apn.add_subparsers(
+        title="APN actions", dest="action")
+
+    parser_apn_ls = apn_commands.add_parser("ls", help="List all APNs")
+    parser_apn_ls.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to listing all APNs (UART only)")
+    parser_apn_ls.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after listing all APNs (UART only)")
+    parser_apn_set = apn_commands.add_parser("set", help="Set a new APN")
+    parser_apn_set.add_argument(
+        "-n", "--name", type=str, required=True, help="APN")
+    parser_apn_set.add_argument(
+        "-u", "--user-id", type=str, required=True, help="User ID")
+    parser_apn_set.add_argument(
+        "-p", "--password", type=str, required=True, help="User Password")
+    parser_apn_set.add_argument(
+        "-o", "--operator", type=str, required=False,
+        help="Mobile Network Operator (docomo by default)")
+    parser_apn_set.add_argument(
+        "-t", "--type", type=str, required=False, help="PDN/PDP Type")
+    parser_apn_set.add_argument(
+        "-i", "--id", type=str, required=False, help="APN ID (1 by default)")
+    parser_apn_del = apn_commands.add_parser(
+        "del", help="Delete an exsiting APN")
+    parser_apn_del.add_argument(
+        "-i", "--id", type=str, required=False, help="APN ID (1 by default)")
+
+    parser_network = categories.add_parser(
+        "network", help="Manage Phone Network")
+    network_commands = parser_network.add_subparsers(
+        title="Phone Network actions", dest="action")
+    parser_network_show = network_commands.add_parser(
+        "show", help="Show the Phone network state and Signal strength")
+    parser_network_show.add_argument(
+        "-o", "--opts", type=str, required=False, help="Show Options")
+    parser_network_show.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to showing the Phone network state and Signal strength"
+        " (UART only)")
+    parser_network_show.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after showing the Phone network state and Signal strength"
+        " (UART only)")
+    parser_network_deregister = network_commands.add_parser(
+        "deregister", help="Deregister from the current network")
+    parser_network_register = network_commands.add_parser(
+        "register", help="Register to the given operator network")
+    parser_network_register.add_argument(
+        "-p", "--operator", type=str, required=False,
+        help="5-digit Network Operator MCC/MNC")
+    parser_network_register.add_argument(
+        "-a", "--auto", required=False, action='store_true',
+        help="Select an operator automatically")
+
+    parser_sim = categories.add_parser("sim", help="Manage SIM")
+    sim_commands = parser_sim.add_subparsers(
+        title="SIM actions", dest="action")
+    parser_sim_show = sim_commands.add_parser(
+        "show", help="Show SIM state and SIM information")
+    parser_sim_show.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to showing the SIM state and SIM information (UART only)")
+    parser_sim_show.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after showing the SIM state and SIM information (UART only)")
+
+    parser_modem = categories.add_parser(
+        "modem", help="Manage LTE/3G module modem")
+    modem_commands = parser_modem.add_subparsers(
+        title="Modem actions", dest="action")
+    parser_modem_show = modem_commands.add_parser(
+        "show", help="Show the Module information")
+    parser_modem_show.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to showing the Module information (UART only)")
+    parser_modem_show.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after showing the Module information (UART only)")
+    parser_modem_reset = modem_commands.add_parser(
+        "reset", help="Reset modem")
+    parser_modem_reset.add_argument(
+        "-y", "--yes", action="store_const", const=True, required=False,
+        help="Use this flag if you REALLY understand what "
+        "the 'modem reset' command causes")
+    parser_modem_reset.add_argument(
+        "-o", "--opts", type=str, required=False, help="Reset Options")
+
+    parser_service = categories.add_parser(
+        "service", help="Manage CANDY Board Service")
+    service_commands = parser_service.add_subparsers(
+        title="CANDY Board Service actions", dest="action")
+    parser_service_version = service_commands.add_parser(
+        "version", help="Show CANDY Board Service software version")
+    parser_service_start = service_commands.add_parser(
+        "start", help="Start CANDY Board Service")
+    parser_service_restart = service_commands.add_parser(
+        "restart", help="Restart CANDY Board Service")
+    parser_service_stop = service_commands.add_parser(
+        "stop", help="Stop CANDY Board Service")
+    parser_service_enable = service_commands.add_parser(
+        "enable", help="Enable CANDY Board Service")
+    parser_service_disable = service_commands.add_parser(
+        "disable", help="Disable CANDY Board Service")
+    parser_service_status = service_commands.add_parser(
+        "status", help="Show CANDY Board Service Status")
+
+    parser_connection = categories.add_parser(
+        "connection", help="Manage ppp connection")
+    connection_commands = parser_connection.add_subparsers(
+        title="ppp connection actions", dest="action")
+    parser_connection_status = connection_commands.add_parser(
+        "status", help="Show the ppp connection status")
+    parser_connection_suspend = connection_commands.add_parser(
+        "suspend", help="Suspend the ppp connection")
+    parser_connection_resume = connection_commands.add_parser(
+        "resume", help="Resume the suspended ppp connection")
+
+    parser_gnss = categories.add_parser(
+        "gnss", help="Manage GNSS module (Use GPS)")
+    gnss_commands = parser_gnss.add_subparsers(
+        title="GNSS module actions", dest="action")
+    parser_gnss_start = gnss_commands.add_parser(
+        "start", help="Start GNSS positioning. "
+        "NMEA sentences are emitted from the dedicated NMEA port(USB only).")
+    parser_gnss_start.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to performing the GNSS command (UART only)")
+    parser_gnss_start.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after performing the GNSS command (UART only)")
+    parser_gnss_stop = gnss_commands.add_parser(
+        "stop", help="Stop GNSS positioning")
+    parser_gnss_stop.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to performing the GNSS command (UART only)")
+    parser_gnss_stop.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after performing the GNSS command (UART only)")
+    parser_gnss_status = gnss_commands.add_parser(
+        "status", help="Show GNSS positioning function status")
+    parser_gnss_status.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to performing the GNSS command (UART only)")
+    parser_gnss_status.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after performing the GNSS command (UART only)")
+    parser_gnss_locate = gnss_commands.add_parser(
+        "locate", help="Locate the current position")
+    parser_gnss_locate.add_argument(
+        "-t", "--format", type=int, required=False,
+        help="Display Format. 0: ddmm.mmmm N/S,dddmm.mmmm E/W, "
+        "1:ddmm.mmmmmm N/S,dddmm.mmmmmm E/W, "
+        "2: (-)dd.ddddd,(-)ddd.ddddd (default)")
+    parser_gnss_locate.add_argument(
+        "-s", "--suspend", action="store_const", const=True, required=False,
+        help="Suspend the UART connection if already established "
+        "prior to performing the GNSS command (UART only)")
+    parser_gnss_locate.add_argument(
+        "-r", "--resume", action="store_const", const=True, required=False,
+        help="Resume the suspended UART connection "
+        "after performing the GNSS command (UART only)")
+
+    args = parser.parse_args()
+    sys.exit(main(args))
