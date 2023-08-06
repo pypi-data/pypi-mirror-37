@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import logging
+import sys
+from argparse import ArgumentParser, RawTextHelpFormatter
+
+from midpoint_cli import __version__
+from midpoint_cli.mpclient import MidpointClient
+from midpoint_cli.prompt import MidpointClientPrompt
+
+logging.basicConfig(level=logging.INFO)
+
+parser = ArgumentParser(
+    description='An interactive Midpoint command line client.',
+    formatter_class=RawTextHelpFormatter,
+    epilog='''
+Available commands:
+  get       Get an XML definition from the server from an existing OID reference.
+  put       Create/Update a server object based on an XML structure.
+  task      Manage server tasks.
+  resource  Manage resources on the server.
+
+Midpoint-cli version ''' + __version__ + ''', created and maintained by Yannick Kirschhoffer alcibiade@alcibiade.org
+''')
+parser.add_argument('-v', '--version', help='Set the username to authenticate this session.', action='store_true')
+parser.add_argument('-u', '--username', help='Set the username to authenticate this session.', default='administrator')
+parser.add_argument('-p', '--password', help='Set the password to authenticate this session.', default='5ecr3t')
+parser.add_argument('-U', '--url', help='Midpoint base URL', default='http://localhost/')
+parser.add_argument('command', help='Optional command to be executed immediately.', nargs='?')
+parser.add_argument('arg', help='Optional command arguments.', nargs='*')
+
+namespace = parser.parse_args(sys.argv[1:])
+
+if namespace.version:
+    print('Midpoint CLI Version ' + __version__)
+    sys.exit(0)
+
+client = MidpointClient(namespace)
+prompt = MidpointClientPrompt(client)
+
+if namespace.command is not None:
+    getattr(prompt, 'do_' + namespace.command)(' '.join(namespace.arg))
+else:
+    prompt.cmdloop()
