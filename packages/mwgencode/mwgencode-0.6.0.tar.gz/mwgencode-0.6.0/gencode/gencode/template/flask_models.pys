@@ -1,0 +1,73 @@
+from sqlalchemy import Table,Column, Integer, String, ForeignKey, Boolean,\
+                DateTime,Time,Date,Float
+from sqlalchemy.orm import relationship,aliased
+from sqlalchemy import or_
+from .ext import Base as Model
+import json
+from enum import Enum
+
+{% for enum in enumerations %}
+class {{enum.name}}(Enum):
+    {% for k,v in enum.columns.items() %}
+    {{k}} ={{v}}
+    {% endfor %}
+{% endfor %}
+
+{% for _,table in metatables.items() %}
+{{ table.class_name }} = Table('{{table.table_name}}', Model.metadata,
+    Column('{{table['columns'][0].dbname}}',{{table['columns'][0].type}}, ForeignKey('{{table['columns'][0].reftable}}.{{table['columns'][0].refid}}')),
+    Column('{{table['columns'][1].dbname}}',{{table['columns'][1].type}}, ForeignKey('{{table['columns'][1].reftable}}.{{table['columns'][1].refid}}'))
+)
+{% endfor %}
+
+
+{% for _,table in tables.items() %}
+class {{ table.class_name }}({% if table.parent_name %}{{table.parent_name}}{% else %}Model{% endif %}):
+    {% if table.doc %}
+    """
+    {{table.doc}}
+    """
+    {% endif %}
+    {% if table.table_name %}
+    __tablename__ = '{{table.table_name}}'
+    {% endif %}
+    {% if table.discriminator_column %}
+    {{table.discriminator_column.name}} = Column({{table.discriminator_column.dbname}}{{table.discriminator_column.type}})
+    {% endif %}
+    {% if table.mapper_args %}
+    __mapper_args__ = {{table.mapper_args}}
+    {% endif %}
+    {% for uc in table.unique_constraints %}
+    {{ uc }}
+    {% endfor %}
+    {% for fld in table.columns %}
+    {% if fld.doc %}
+    # {{fld.doc}}
+    {% endif %}
+    {{fld.name}} = Column({{fld.dbname}}{{fld.type}}{{fld.default}}{{fld.unique}}{{fld.nullable}}{{fld.primary_key}})
+    {% endfor %}
+    {% for fld in table.fkeyids %}
+    {{fld.name}} = Column({{fld.dbname}}{{fld.type}},ForeignKey("{{fld.reftable}}.{{fld.refid}}"){{fld.default}}{{fld.unique}}{{fld.nullable}}{{fld.primary_key}})
+    {% endfor %}
+    {% for rs in table.relationsips %}
+    {{rs.name}} = relationship("{{rs.relationship_cls}}"{{rs.back_populates}}{{rs.uselist}}{{rs.foreign_keys}}{{rs.secondary}}{{rs.lazy}}{{rs.cascade}}{{rs.remote_side}}{{rs.primaryjoin}}{{rs.order_by}})
+    {% endfor %}
+
+    {% for func in table.funcs %}
+    {%if func.isstatic%}
+    @staticmethod
+    {% endif %}
+    def {{func.name}}({{func.self_param}}{{func.params}}):
+{{func.codes}}
+    {% endfor %}
+
+
+    def __repr__(self):
+        return json.dumps(self.to_json())
+
+    def to_json(self):
+        return {key: getattr(self, key) for key in self.__table__.columns.keys()
+                   if hasattr(self,key)
+               }
+
+{% endfor %}
