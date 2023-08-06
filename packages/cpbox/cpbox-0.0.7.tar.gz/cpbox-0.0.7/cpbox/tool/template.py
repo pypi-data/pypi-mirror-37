@@ -1,0 +1,39 @@
+import os
+from jinja2 import Environment
+
+from cpbox.tool import file
+from cpbox.tool import utils
+
+def render_to_str(template_file, data):
+    if not os.path.isfile(template_file):
+        raise Exception('template file not found: ' +  template_file)
+    result = ''
+    with open(template_file, 'r') as f:
+        patten = f.read()
+        result = render_str(patten, data)
+    return result
+
+def render_to_file(template_file, data, target_file):
+    if not os.path.isfile(template_file):
+        raise Exception('template file not found: ' +  template_file)
+    file.ensure_dir_for_file(target_file)
+    with open(target_file, 'w') as fw:
+        fw.write(render_to_str(template_file, data))
+
+def render(template_file, config_file=None, config_section=None, extra_kvs=None, output_file=None, output_dir=None, **kwargs):
+    data = utils.load_yaml_config(config_file, config_section, extra_kvs)
+    if not output_file and not output_dir:
+        raise Exception('should specify output_file or output_dir')
+
+    if output_file is not None:
+        output_file = output_file
+    else:
+        output_file = output_dir.rstrip('/') + '/' + os.path.basename(template_file)
+    return render_to_file(template_file, data, output_file)
+
+def render_str(patten, data):
+    env = Environment(keep_trailing_newline=True)
+    patten = patten.decode('utf-8')
+    s = env.from_string(patten)
+    ret = s.render(data)
+    return ret
