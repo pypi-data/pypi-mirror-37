@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2.6. Plotting &mdash; PyPAGO 1.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyPAGO 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="2. User manual" href="../manual.html"/>
+        <link rel="next" title="2.7. Scientific diagnostics" href="diags.html"/>
+        <link rel="prev" title="2.5. Loading model data outputs" href="loading.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyPAGO
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">2. User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="param.html">2.1. Parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sec_endpoints.html">2.2. Definition of section longitude/latitude endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshfile.html">2.3. Create gridded sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="closedom.html">2.4. Definition of domains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading.html">2.5. Loading model data outputs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.6. Plotting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#drawing-gridded-sections">2.6.1. Drawing gridded sections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#drawing-data-sections">2.6.2. Drawing data sections</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="diags.html">2.7. Scientific diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">3. API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../biblio.html">4. Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyPAGO</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../manual.html">2. User manual</a> &raquo;</li>
+        
+      <li>2.6. Plotting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/manual/plotting.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="plotting">
+<h1>2.6. Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="drawing-gridded-sections">
+<h2>2.6.1. Drawing gridded sections<a class="headerlink" href="#drawing-gridded-sections" title="Permalink to this headline">¶</a></h2>
+<p>The drawing of gridded sections is achived by using the <a class="reference internal" href="../generated/pypago.plot.plot_dom_mask.html#pypago.plot.plot_dom_mask" title="pypago.plot.plot_dom_mask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.plot.plot_dom_mask()</span></code></a> function. It is done as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.plot</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># change the section colors without going into the code</span>
+<span class="kn">from</span> <span class="nn">cycler</span> <span class="k">import</span> <span class="n">cycler</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycler</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="s1">&#39;magenta&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">])</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_grid.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datadom.pygo&#39;</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span>
+
+<span class="c1"># loading of the gridded section domain</span>
+<span class="n">sections</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datasec.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> 
+                    <span class="n">left</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_dom_mask</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Grid mask&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_dom_mask</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Grid mask + sections&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_dom_mask</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Grid mask + domain mask&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_dom_mask</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Grid mask + sections + domain mask&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/plot_dom_mask.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [2]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [3]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [4]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/plot_dom_mask.py&quot;</span>
+
+<span class="gp">In [5]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ...: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ...: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ...: </span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id1">
+<img alt="../_images/plot_dom_mask.png" src="../_images/plot_dom_mask.png" />
+<p class="caption"><span class="caption-number">Fig. 2.20 </span><span class="caption-text">Results of grid, gridded section and domain plotting</span></p>
+</div>
+</div>
+<div class="section" id="drawing-data-sections">
+<h2>2.6.2. Drawing data sections<a class="headerlink" href="#drawing-data-sections" title="Permalink to this headline">¶</a></h2>
+<p>The drawing of data on gridded sections is
+achived by using the <a class="reference internal" href="../generated/pypago.plot.pcolplot.html#pypago.plot.pcolplot" title="pypago.plot.pcolplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.plot.pcolplot()</span></code></a> (for <em>pcolor</em> plots) and
+<a class="reference internal" href="../generated/pypago.plot.contourplot.html#pypago.plot.contourplot" title="pypago.plot.contourplot"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.plot.contourplot()</span></code></a> functions. It is done as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.plot</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># change the section colors without going into the code</span>
+<span class="kn">from</span> <span class="nn">cycler</span> <span class="k">import</span> <span class="n">cycler</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;axes.prop_cycle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycler</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="s1">&#39;magenta&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">])</span>
+
+<span class="c1"># loading of the gridded section domain</span>
+<span class="n">sections</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datasec.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">idsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;section2&#39;</span><span class="p">)</span>
+<span class="n">sec</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="n">idsec</span><span class="p">]</span>
+
+<span class="c1"># conversion of velocity into cm/s</span>
+<span class="n">sec</span><span class="o">.</span><span class="n">vel</span> <span class="o">*=</span> <span class="mi">100</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="c1"># draw temperature as pcolorplot</span>
+<span class="n">cs</span><span class="p">,</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># add colorbar label</span>
+<span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;Temperature (C)&#39;</span><span class="p">)</span>
+<span class="c1"># modify colorbar limit</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="c1"># draw temperature as contourplot</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">contourplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="c1"># add label</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+<span class="c1"># add grid</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/section_temp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="c1"># draw salinity as pcolorplot</span>
+<span class="n">cs</span><span class="p">,</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;salt&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># add colorbar label</span>
+<span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;Salinity (psu)&#39;</span><span class="p">)</span>
+<span class="c1"># modify colorbar limit</span>
+<span class="n">cs</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="mi">34</span><span class="p">,</span> <span class="mi">36</span><span class="p">)</span>
+<span class="c1"># draw salinity as contourplot</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">contourplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;salt&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">34</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="c1"># add label</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+<span class="c1"># add grid</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/section_salt.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="c1"># draw velocity as pcolorplot</span>
+<span class="n">cs</span><span class="p">,</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># add colorbar label</span>
+<span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s1">&#39;velocity (cm/s)&#39;</span><span class="p">)</span>
+<span class="c1"># modify colorbar limit</span>
+<span class="c1">#cs.set_clim(-5, 5)</span>
+<span class="c1"># draw velocity as contourplot</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">contourplot</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">,</span> <span class="n">istracer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="c1"># add label</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+<span class="c1"># add grid</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/section_vel.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [7]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [8]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [9]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/plot_section_data.py&quot;</span>
+
+<span class="gp">In [10]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">The time average of the temp is plotted.</span>
+<span class="go">The time average of the temp is plotted.</span>
+<span class="go">The time average of the salt is plotted.</span>
+<span class="go">The time average of the salt is plotted.</span>
+<span class="go">The time average of the vel is plotted.</span>
+<span class="go">The time average of the vel is plotted.</span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id2">
+<img alt="../_images/section_temp.png" src="../_images/section_temp.png" />
+<p class="caption"><span class="caption-number">Fig. 2.21 </span><span class="caption-text">Plotting of mean temperature on gridded section</span></p>
+</div>
+<div class="figure align-center" id="id3">
+<img alt="../_images/section_vel.png" src="../_images/section_vel.png" />
+<p class="caption"><span class="caption-number">Fig. 2.22 </span><span class="caption-text">Plotting of mean velocity on gridded section</span></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="diags.html" class="btn btn-neutral float-right" title="2.7. Scientific diagnostics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="loading.html" class="btn btn-neutral" title="2.5. Loading model data outputs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julie Deshayes, Nicolas Barrier, Francoise Pinsard.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2.7. Scientific diagnostics &mdash; PyPAGO 1.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyPAGO 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="2. User manual" href="../manual.html"/>
+        <link rel="next" title="3. API reference" href="../api.html"/>
+        <link rel="prev" title="2.6. Plotting" href="plotting.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyPAGO
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">2. User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="param.html">2.1. Parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sec_endpoints.html">2.2. Definition of section longitude/latitude endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshfile.html">2.3. Create gridded sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="closedom.html">2.4. Definition of domains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading.html">2.5. Loading model data outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html">2.6. Plotting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.7. Scientific diagnostics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#section-transports">2.7.1. Section transports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#volume-surface-integration-over-domains">2.7.2. Volume/Surface integration over domains</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">3. API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../biblio.html">4. Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyPAGO</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../manual.html">2. User manual</a> &raquo;</li>
+        
+      <li>2.7. Scientific diagnostics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/manual/diags.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scientific-diagnostics">
+<h1>2.7. Scientific diagnostics<a class="headerlink" href="#scientific-diagnostics" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">These functions work, at this time, only for z-coordinate models (NEMO for instance). But
+they can provide some ideas on diagnostics.</p>
+</div>
+<div class="section" id="section-transports">
+<h2>2.7.1. Section transports<a class="headerlink" href="#section-transports" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../generated/pypago.secdiag.html#module-pypago.secdiag" title="pypago.secdiag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.secdiag</span></code></a> module contains several functions to compute transport across gridded sections.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The total tracer transport must be equal to overturning + barotropic + baroclinic tracer
+transports: TOT = OVT + BAR + BC</p>
+</div>
+<p>A complete example of transport calculations is shown below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+<span class="kn">import</span> <span class="nn">pypago.secdiag</span> <span class="k">as</span> <span class="nn">diag</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pypago.sample_param</span> <span class="k">import</span> <span class="n">rho0_c</span>
+
+<span class="c1"># loading section data</span>
+<span class="n">sections</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/indian_datasec.pygo&#39;</span><span class="p">)</span>
+
+<span class="c1"># extraction of the &quot;section4&quot; section</span>
+<span class="n">indsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">findsecnum</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;section4&#39;</span><span class="p">)</span>
+<span class="n">sec</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="n">indsec</span><span class="p">]</span>
+
+<span class="c1"># creation of xticklabels</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sec</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+<span class="n">xlabels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sec</span><span class="o">.</span><span class="n">time</span><span class="p">])</span>
+
+<span class="c1"># calculation of net volume transport</span>
+<span class="n">netvt</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">net_volume_trans</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="n">velname</span><span class="o">=</span><span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-6</span>
+
+<span class="c1"># calculation of net heat transport</span>
+<span class="n">netht</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">net_tracer_trans</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">velname</span><span class="o">=</span><span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-15</span> <span class="o">*</span> <span class="n">rho0_c</span>
+
+<span class="c1"># calculation of velocity without net transport</span>
+<span class="n">current_nonet</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">remove_spatial_mean</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span>
+
+<span class="c1"># calculation of total heat transport (i.e. without net mass transport)</span>
+<span class="n">totht</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">total_tracer_trans</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-15</span> <span class="o">*</span> <span class="n">rho0_c</span>
+
+<span class="c1"># calculation of temperature anomalies</span>
+<span class="n">temp_nonet</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">remove_spatial_mean</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+
+<span class="c1"># overturning volume transport</span>
+<span class="n">ovvt</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">overturning_volume_transport</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span>
+
+<span class="c1"># overturning heat transport</span>
+<span class="n">ovht</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">overturning_tracer_transport</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-15</span> <span class="o">*</span> <span class="n">rho0_c</span>
+
+<span class="c1"># barotropic volume transport</span>
+<span class="n">barvt</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">barotropic_volume_transport</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span>
+
+<span class="c1"># barotropic heat transport</span>
+<span class="n">barht</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">barotropic_tracer_transport</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-15</span> <span class="o">*</span> <span class="n">rho0_c</span>
+
+<span class="c1"># baroclinic heat transport</span>
+<span class="n">bcht</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">baroclinic_tracer_transport</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-15</span> <span class="o">*</span> <span class="n">rho0_c</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> 
+                    <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">totht</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;totht&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ovht</span> <span class="o">+</span> <span class="n">barht</span> <span class="o">+</span> <span class="n">bcht</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;totht&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ovht</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;ovht&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">barht</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;barht&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bcht</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;bcht&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/heat_transport.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [2]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [3]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [4]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/section_transport.py&quot;</span>
+
+<span class="gp">In [5]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ...: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ...: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ...: </span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id2">
+<img alt="../_images/heat_transport.png" src="../_images/heat_transport.png" />
+<p class="caption"><span class="caption-number">Fig. 2.23 </span><span class="caption-text">Example of heat transport calculations.</span></p>
+</div>
+</div>
+<div class="section" id="volume-surface-integration-over-domains">
+<span id="budgets-calc"></span><h2>2.7.2. Volume/Surface integration over domains<a class="headerlink" href="#volume-surface-integration-over-domains" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../generated/pypago.areadiag.html#module-pypago.areadiag" title="pypago.areadiag"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.areadiag</span></code></a> module contains several functions in order to perform volume and surface integrations. These functions can be used for instance to tracer budgets calculations
+over closed domains</p>
+<p>In the example below, a heat budget calculation is performed over a closed domain, as in <a class="reference internal" href="../biblio.html#barrier2015" id="id1">[BDTC15]</a>. It is based on the following equations:</p>
+<div class="math notranslate nohighlight" id="equation-eqn-hb1">
+<span class="eqno">(2.1)<a class="headerlink" href="#equation-eqn-hb1" title="Permalink to this equation">¶</a></span>\[h_c = \rho_0 C_p \left(\iiint_V T\ dx\ dy\ dz + \iint_{S_a} SST\ \eta\ dx\ dy \right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\rho_0\)</span> and <span class="math notranslate nohighlight">\(C_p\)</span> the reference density and heat capacity of
+sea-water, <span class="math notranslate nohighlight">\(T\)</span> the three-dimensional temperature, <span class="math notranslate nohighlight">\(S_a\)</span> the
+surface of the water volume <span class="math notranslate nohighlight">\(V\)</span> that is in contact with the atmosphere, <span class="math notranslate nohighlight">\(SST\)</span> and <span class="math notranslate nohighlight">\(\eta\)</span>  the sea-surface temperature and
+sea-surface height.with <span class="math notranslate nohighlight">\(\rho_0\)</span> and <span class="math notranslate nohighlight">\(C_p\)</span> the reference density and heat capacity of
+sea-water, <span class="math notranslate nohighlight">\(T\)</span> the three-dimensional temperature, <span class="math notranslate nohighlight">\(S_a\)</span> the
+surface of the water volume <span class="math notranslate nohighlight">\(V\)</span> that is in contact with the atmosphere,
+<span class="math notranslate nohighlight">\(SST\)</span> and <span class="math notranslate nohighlight">\(\eta\)</span> the sea-surface temperature and
+sea-surface height.</p>
+<div class="math notranslate nohighlight" id="equation-eqn-hb2">
+<span class="eqno">(2.2)<a class="headerlink" href="#equation-eqn-hb2" title="Permalink to this equation">¶</a></span>\[\frac{\partial h_c}{\partial t} = {\iint_{S_a} Q_{net}\ dx\ dy}+{\rho_0 C_p \iint_{S_{o}} [U T]\ dl\  dz} + \varepsilon\]</div>
+<p>with  <span class="math notranslate nohighlight">\(Q_{net}\)</span> the net (latent, sensible, shortwave and longwave)
+surface heat fluxes, <span class="math notranslate nohighlight">\(S_o\)</span> the outline surface of volume <span class="math notranslate nohighlight">\(V\)</span>  and <span class="math notranslate nohighlight">\([UT]\)</span> the ocean heat transport. The first term on the right-hand side of
+equation <a class="reference internal" href="#equation-eqn-hb2">(2.2)</a> represents the contribution of surface heat fluxes to
+changes in ocean heat content. In the following, a positive
+contribution implies that the ocean is warmed by the atmosphere
+(i.e. surface heat fluxes are, by convention, positive downwardwith  <span class="math notranslate nohighlight">\(Q_{net}\)</span> the net (latent, sensible, shortwave and longwave)
+surface heat fluxes, <span class="math notranslate nohighlight">\(S_o\)</span> the outline surface of volume <span class="math notranslate nohighlight">\(V\)</span>  and <span class="math notranslate nohighlight">\([UT]\)</span> the ocean heat transport. The first term on the right-hand side of
+equation <a class="reference internal" href="#equation-eqn-hb2">(2.2)</a> represents the contribution of surface heat fluxes to
+changes in ocean heat content. In the following, a positive
+contribution implies that the ocean is warmed by the atmosphere
+(i.e. surface heat fluxes are, by convention, positive downward)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.misc</span>
+<span class="kn">import</span> <span class="nn">pypago.secdiag</span> <span class="k">as</span> <span class="nn">secdiag</span>
+<span class="kn">import</span> <span class="nn">pypago.areadiag</span> <span class="k">as</span> <span class="nn">areadiag</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pypago.sample_param</span> <span class="k">import</span> <span class="n">rho0_c</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datadom.pygo&#39;</span><span class="p">)</span>
+<span class="n">area</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># calculation of the SSH * SSH product within the area</span>
+<span class="c1"># and adding it to the area structure</span>
+<span class="n">area</span><span class="o">.</span><span class="n">surfhc</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">temp</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">area</span><span class="o">.</span><span class="n">ssh</span>
+
+<span class="c1"># calculation of domain heat content</span>
+<span class="n">hc</span> <span class="o">=</span> <span class="n">areadiag</span><span class="o">.</span><span class="n">volume_content</span><span class="p">(</span><span class="n">area</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">)</span>
+
+<span class="c1"># calculation of surface integral of SST * SSH</span>
+<span class="n">surfhc</span> <span class="o">=</span> <span class="n">areadiag</span><span class="o">.</span><span class="n">surface_content</span><span class="p">(</span><span class="n">area</span><span class="p">,</span> <span class="s1">&#39;surfhc&#39;</span><span class="p">)</span>
+
+<span class="c1"># adding the surface heat content to the total heat content</span>
+<span class="n">hc</span> <span class="o">+=</span> <span class="n">surfhc</span>
+
+<span class="c1"># calculation of surface heat flux</span>
+<span class="n">hf</span> <span class="o">=</span> <span class="n">areadiag</span><span class="o">.</span><span class="n">surface_content</span><span class="p">(</span><span class="n">area</span><span class="p">,</span> <span class="s1">&#39;hf&#39;</span><span class="p">)</span>
+
+<span class="c1"># loading of the gridded section domain</span>
+<span class="n">sections</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datasec.pygo&#39;</span><span class="p">)</span>
+
+<span class="c1"># computation of heat convergence</span>
+<span class="n">heatconv</span> <span class="o">=</span> <span class="n">areadiag</span><span class="o">.</span><span class="n">compute_tracer_conv</span><span class="p">(</span><span class="n">area</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;vel&#39;</span><span class="p">)</span>
+
+<span class="c1"># Conversion of hc and heat conv into J and W, respectively</span>
+<span class="n">hc</span> <span class="o">*=</span> <span class="n">rho0_c</span>   <span class="c1"># J</span>
+<span class="n">heatconv</span> <span class="o">*=</span> <span class="n">rho0_c</span>    <span class="c1"># W </span>
+
+<span class="c1"># calculation of dt and conversion into seconds</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">area</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">])</span>
+
+<span class="c1"># time derivative of ocean heat content</span>
+<span class="n">dhc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">hc</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt</span>
+
+<span class="c1"># averaging of heat convergence and heat flux </span>
+<span class="c1"># to fit the location of hc</span>
+<span class="n">heatconv</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">heatconv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">heatconv</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">hf</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">hf</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">hf</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># conversion from W into PW</span>
+<span class="n">hf</span> <span class="o">*=</span> <span class="mf">1e-15</span>
+<span class="n">dhc</span> <span class="o">*=</span> <span class="mf">1e-15</span>
+<span class="n">heatconv</span> <span class="o">*=</span> <span class="mf">1e-15</span>
+
+<span class="c1"># Plotting</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">dhc</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\partial hc  / \partial t$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hf</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$H_</span><span class="si">{flux}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">heatconv</span> <span class="o">+</span> <span class="n">hf</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$H_</span><span class="si">{flux}</span><span class="s1"> + H_</span><span class="si">{conv}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;(PW)&#39;</span><span class="p">)</span>
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">heatconv</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$H_</span><span class="si">{conv}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;plum&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">hf</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$H_</span><span class="si">{conv}</span><span class="s1">$&#39;</span> <span class="o">+</span> <span class="s1">&#39; (PW)&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;plum&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;plum&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/heat_budget.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [7]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [8]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [9]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/area_diags.py&quot;</span>
+
+<span class="gp">In [10]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id3">
+<img alt="../_images/heat_budget.png" src="../_images/heat_budget.png" />
+<p class="caption"><span class="caption-number">Fig. 2.24 </span><span class="caption-text">Example of heat transport calculations.</span></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../api.html" class="btn btn-neutral float-right" title="3. API reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="plotting.html" class="btn btn-neutral" title="2.6. Plotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julie Deshayes, Nicolas Barrier, Francoise Pinsard.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

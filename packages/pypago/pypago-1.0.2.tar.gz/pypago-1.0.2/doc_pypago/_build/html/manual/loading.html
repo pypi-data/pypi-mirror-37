@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2.5. Loading model data outputs &mdash; PyPAGO 1.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyPAGO 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="2. User manual" href="../manual.html"/>
+        <link rel="next" title="2.6. Plotting" href="plotting.html"/>
+        <link rel="prev" title="2.4. Definition of domains" href="closedom.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyPAGO
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">2. User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="param.html">2.1. Parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sec_endpoints.html">2.2. Definition of section longitude/latitude endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshfile.html">2.3. Create gridded sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="closedom.html">2.4. Definition of domains</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.5. Loading model data outputs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading-section-data">2.5.1. Loading section data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#loading-sections-from-t-points">2.5.1.1. Loading sections from T points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-sections-from-uv-points">2.5.1.2. Loading sections from UV points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-time">2.5.1.3. Loading time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example">2.5.1.4. Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-domain-data">2.5.2. Loading domain data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#loading-data">2.5.2.1. Loading data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1">2.5.2.2. Loading time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">2.5.2.3. Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html">2.6. Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diags.html">2.7. Scientific diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">3. API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../biblio.html">4. Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyPAGO</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../manual.html">2. User manual</a> &raquo;</li>
+        
+      <li>2.5. Loading model data outputs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/manual/loading.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="loading-model-data-outputs">
+<span id="loaddata"></span><h1>2.5. Loading model data outputs<a class="headerlink" href="#loading-model-data-outputs" title="Permalink to this headline">¶</a></h1>
+<p>When the model section gridfile has been generated (and eventually the model domain file),
+the user can now load the model outputs.</p>
+<div class="section" id="loading-section-data">
+<h2>2.5.1. Loading section data<a class="headerlink" href="#loading-section-data" title="Permalink to this headline">¶</a></h2>
+<p>Loading data on sections is achieved by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loaddata_sec_T()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loaddata_sec_UV()</span></code> functions, depending
+of the grid (T, U or V) in which the variable is stored.</p>
+<div class="section" id="loading-sections-from-t-points">
+<h3>2.5.1.1. Loading sections from T points<a class="headerlink" href="#loading-sections-from-t-points" title="Permalink to this headline">¶</a></h3>
+<p>Loading sections from T points is achieved by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loaddata_sec_T()</span></code> function.</p>
+<p>Its arguments are i) the list of <a class="reference internal" href="../generated/pypago.sections.GridSection.html#pypago.sections.GridSection" title="pypago.sections.GridSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.sections.GridSection</span></code></a> objects ii) the NetCDF filename containing the variables to process iii) a dictionnary containing the variables to process (dictionnary values) and the name in which they will appear in the output object (dictionary keys). In the example below, the <code class="samp docutils literal notranslate"><span class="pre">votemper</span></code> and the <code class="samp docutils literal notranslate"><span class="pre">vosaline</span></code> variables are read from the input file and are stored as <code class="samp docutils literal notranslate"><span class="pre">temp</span></code> and <code class="samp docutils literal notranslate"><span class="pre">sal</span></code> attributes, respectively.</p>
+</div>
+<div class="section" id="loading-sections-from-uv-points">
+<h3>2.5.1.2. Loading sections from UV points<a class="headerlink" href="#loading-sections-from-uv-points" title="Permalink to this headline">¶</a></h3>
+<p>Loading sections from U/V points is achieved by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loaddata_sec_UV()</span></code></p>
+<p>Its arguments are i) the list of <a class="reference internal" href="../generated/pypago.sections.GridSection.html#pypago.sections.GridSection" title="pypago.sections.GridSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.sections.GridSection</span></code></a> objects ii) the names of the NetCDF files containing the variables on the U and V points iii) a dictionnary containing the two names of the variables to process (dictionnary values, <em>which is a list</em> since the variable may have two different names depending of the file) and the name in which the variable will appear in the output object (dictionary keys).
+In the example below, we process the velocity field, whose name is uo in the grid U file and vo in the grid V file. This velocity field will be stored as
+the vel attribute.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If in your model run, tracer transports (for instance heat transport) have been stored on U/V points, you may use this function to extract them. It gives better precision when computing heat budgets within closed
+domains.</p>
+</div>
+</div>
+<div class="section" id="loading-time">
+<h3>2.5.1.3. Loading time<a class="headerlink" href="#loading-time" title="Permalink to this headline">¶</a></h3>
+<p>Loading the NetCDF time is achieved by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loadtime()</span></code> function (which uses the <a class="reference internal" href="../generated/pypago.pyio.read_time.html#pypago.pyio.read_time" title="pypago.pyio.read_time"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.pyio.read_time()</span></code></a> function) as follows:</p>
+<p>The time is added as a time attribute.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The name of the time variable is specified in the <code class="file docutils literal notranslate"><span class="pre">param.py</span></code> file</p>
+</div>
+</div>
+<div class="section" id="example">
+<h3>2.5.1.4. Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.data</span>
+
+<span class="n">modelsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/indian_gridsec.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">filenameT</span> <span class="o">=</span> <span class="s1">&#39;data/dyna_grid_T.nc&#39;</span>
+<span class="n">filenameU</span> <span class="o">=</span> <span class="s1">&#39;data/dyna_grid_U.nc&#39;</span>
+<span class="n">filenameV</span> <span class="o">=</span> <span class="s1">&#39;data/dyna_grid_V.nc&#39;</span>
+
+<span class="c1"># loading data on T points</span>
+<span class="n">dirvarT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;temp&#39;</span><span class="p">:</span><span class="s1">&#39;votemper&#39;</span><span class="p">,</span> <span class="s1">&#39;salt&#39;</span><span class="p">:</span> <span class="s1">&#39;vosaline&#39;</span><span class="p">}</span>
+<span class="n">modelsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loaddata_sec_u</span><span class="p">(</span><span class="n">modelsec</span><span class="p">,</span> <span class="n">filenameT</span><span class="p">,</span> <span class="n">dirvarT</span><span class="p">)</span>
+
+<span class="c1"># loading data on U/V points</span>
+<span class="n">dirvarUV</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vel&#39;</span><span class="p">:[</span><span class="s1">&#39;vozocrtx&#39;</span><span class="p">,</span> <span class="s1">&#39;vomecrty&#39;</span><span class="p">]}</span>
+<span class="n">modelsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loaddata_sec_uv</span><span class="p">(</span><span class="n">modelsec</span><span class="p">,</span> <span class="n">filenameU</span><span class="p">,</span> <span class="n">filenameV</span><span class="p">,</span> <span class="n">dirvarUV</span><span class="p">)</span>
+
+<span class="c1"># loading time array</span>
+<span class="n">modelsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loadtime</span><span class="p">(</span><span class="n">modelsec</span><span class="p">,</span> <span class="n">filenameT</span><span class="p">)</span>
+
+<span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">modelsec</span><span class="p">,</span> <span class="s1">&#39;data/indian_datasec.pygo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+
+<span class="gp">In [2]: </span><span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/indian_datasec.pygo&#39;</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">Gridded section, NEMO model:</span>
+<span class="go">  -areavect: (31, 70)</span>
+<span class="go">  -depthvect: (31, 70)</span>
+<span class="go">  -dire: (1,)</span>
+<span class="go">  -faces: (70,)</span>
+<span class="go">  -i: (2,)</span>
+<span class="go">  -imax: 40</span>
+<span class="go">  -imin: 140</span>
+<span class="go">  -j: (2,)</span>
+<span class="go">  -jmax: 100</span>
+<span class="go">  -jmin: 10</span>
+<span class="go">  -lengthvect: (70,)</span>
+<span class="go">  -lvect: (70,)</span>
+<span class="go">  -modelname: NEMO</span>
+<span class="go">  -name: section4</span>
+<span class="go">  -nlon: 182</span>
+<span class="go">  -orient: (70,)</span>
+<span class="go">  -salt: (73, 31, 70)</span>
+<span class="go">  -temp: (73, 31, 70)</span>
+<span class="go">  -time: (73,)</span>
+<span class="go">  -veci: (70,)</span>
+<span class="go">  -vecj: (70,)</span>
+<span class="go">  -vel: (73, 31, 70)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="loading-domain-data">
+<h2>2.5.2. Loading domain data<a class="headerlink" href="#loading-domain-data" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading-data">
+<h3>2.5.2.1. Loading data<a class="headerlink" href="#loading-data" title="Permalink to this headline">¶</a></h3>
+<p>Loading data on domain areas is achieved by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loaddata_area_T()</span></code> function.
+The philosophy is the same as when loading section data from T points. However, a major difference is that here, 2D variables (for instance, surface heat fluxes) can be loaded. In the above example, the 3D (time, latitude, longitude) <code class="samp docutils literal notranslate"><span class="pre">votemper</span></code> and <code class="samp docutils literal notranslate"><span class="pre">vosaline</span></code> variables are loaded as <code class="samp docutils literal notranslate"><span class="pre">temp</span></code> and <code class="samp docutils literal notranslate"><span class="pre">salt</span></code>, respectively, while the 2D variable <code class="samp docutils literal notranslate"><span class="pre">sohefldo</span></code> is loaded as <code class="samp docutils literal notranslate"><span class="pre">hf</span></code>.</p>
+</div>
+<div class="section" id="id1">
+<h3>2.5.2.2. Loading time<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Time is loaded as for sections, i.e. by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.data.loadtime()</span></code> function.</p>
+</div>
+<div class="section" id="id2">
+<h3>2.5.2.3. Example<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pypago.data</span>
+
+<span class="n">modelareas</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_domain.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">filenameT</span> <span class="o">=</span> <span class="s1">&#39;data/dyna_grid_T.nc&#39;</span>
+
+<span class="n">dirvarT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;temp&#39;</span><span class="p">:</span><span class="s1">&#39;votemper&#39;</span><span class="p">,</span> <span class="s1">&#39;salt&#39;</span><span class="p">:</span> <span class="s1">&#39;vosaline&#39;</span><span class="p">,</span> 
+           <span class="s1">&#39;hf&#39;</span><span class="p">:</span><span class="s1">&#39;sohefldo&#39;</span><span class="p">,</span> <span class="s1">&#39;ssh&#39;</span><span class="p">:</span><span class="s1">&#39;sossheig&#39;</span><span class="p">}</span>
+
+<span class="n">modelareas</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loaddata_area_t</span><span class="p">(</span><span class="n">modelareas</span><span class="p">,</span> <span class="n">filenameT</span><span class="p">,</span> <span class="n">dirvarT</span><span class="p">)</span>
+
+<span class="n">modelareas</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loadtime</span><span class="p">(</span><span class="n">modelareas</span><span class="p">,</span> <span class="n">filenameT</span><span class="p">)</span>
+
+<span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">modelareas</span><span class="p">,</span> <span class="s1">&#39;data/natl_datadom.pygo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [4]: </span><span class="kn">import</span> <span class="nn">pypago.pyio</span>
+
+<span class="gp">In [5]: </span><span class="n">data</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/natl_datadom.pygo&#39;</span><span class="p">)</span>
+
+<span class="gp">In [6]: </span><span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">Domain area, NEMO model:</span>
+<span class="go">  -hf: (73, 461)</span>
+<span class="go">  -i: (461,)</span>
+<span class="go">  -imax: 160</span>
+<span class="go">  -imin: 90</span>
+<span class="go">  -j: (461,)</span>
+<span class="go">  -jmax: 147</span>
+<span class="go">  -jmin: 80</span>
+<span class="go">  -mask: (68, 71)</span>
+<span class="go">  -modelname: NEMO</span>
+<span class="go">  -name: natldom</span>
+<span class="go">  -nlon: 182</span>
+<span class="go">  -salt: (73, 31, 461)</span>
+<span class="go">  -secnames: [&#39;section1&#39;, &#39;section2&#39;, &#39;section3&#39;, &#39;section4&#39;]</span>
+<span class="go">  -signs: [1, 1, 1, -1]</span>
+<span class="go">  -ssh: (73, 461)</span>
+<span class="go">  -surface: (461,)</span>
+<span class="go">  -temp: (73, 31, 461)</span>
+<span class="go">  -time: (73,)</span>
+<span class="go">  -volume: (31, 461)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="plotting.html" class="btn btn-neutral float-right" title="2.6. Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="closedom.html" class="btn btn-neutral" title="2.4. Definition of domains" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julie Deshayes, Nicolas Barrier, Francoise Pinsard.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

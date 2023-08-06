@@ -1,0 +1,705 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2.3. Create gridded sections &mdash; PyPAGO 1.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyPAGO 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="2. User manual" href="../manual.html"/>
+        <link rel="next" title="2.4. Definition of domains" href="closedom.html"/>
+        <link rel="prev" title="2.2. Definition of section longitude/latitude endpoints" href="sec_endpoints.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyPAGO
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">2. User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="param.html">2.1. Parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sec_endpoints.html">2.2. Definition of section longitude/latitude endpoints</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.3. Create gridded sections</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-python-scripts">2.3.1. Using Python scripts</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#extracting-coord-objects">2.3.1.1. Extracting coord objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extracting-grid-objects">2.3.1.2. Extracting grid objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extracting-gridded-sections">2.3.1.3. Extracting gridded sections</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#using-graphical-user-interface">2.3.2. Using graphical user interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#menus">2.3.2.1. Menus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#opening-a-meshfile">2.3.2.2. Opening a meshfile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#domain-edition">2.3.2.3. Domain edition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-a-section-file">2.3.2.4. Loading a section file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#checking-and-editing-the-sections">2.3.2.5. Checking and editing the sections</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="closedom.html">2.4. Definition of domains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading.html">2.5. Loading model data outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html">2.6. Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diags.html">2.7. Scientific diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">3. API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../biblio.html">4. Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyPAGO</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../manual.html">2. User manual</a> &raquo;</li>
+        
+      <li>2.3. Create gridded sections</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/manual/meshfile.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="create-gridded-sections">
+<h1>2.3. Create gridded sections<a class="headerlink" href="#create-gridded-sections" title="Permalink to this headline">¶</a></h1>
+<p>Once the section longitude and latitude endpoints have been defined, and the <code class="samp docutils literal notranslate"><span class="pre">param.py</span></code> file has been
+properly set, the next step is to process the model grid. This is achieved in three steps:</p>
+<ol class="arabic simple">
+<li>Coordinates and scale factors are extracted over the entire domain and stored into a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.coords.Coords</span></code> object.</li>
+<li>Coordinates and scale factors are extracted over the region of interest, and
+the variables are eventually zonally flipped. The subdomain variables are stored in a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.grid.Grid</span></code> object.</li>
+<li>Finally, the section endpoints are converted into the <code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.grid.Grid</span></code> object, and
+sections out of the domain are discarded.</li>
+</ol>
+<p>These steps can be performed either by using Python scripts or by using the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.guis.gui_grid_model</span></code> Python program.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">These steps require a NetCDF file containing the variables defined in the <code class="samp docutils literal notranslate"><span class="pre">dictvname</span></code> variable (either default values or values defined in the <code class="samp docutils literal notranslate"><span class="pre">param.py</span></code> file).</p>
+</div>
+<p>Both methods are described bellow.</p>
+<div class="section" id="using-python-scripts">
+<h2>2.3.1. Using Python scripts<a class="headerlink" href="#using-python-scripts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="extracting-coord-objects">
+<h3>2.3.1.1. Extracting coord objects<a class="headerlink" href="#extracting-coord-objects" title="Permalink to this headline">¶</a></h3>
+<p>Extraction of coord objects is achieved by using the <a class="reference internal" href="../generated/pypago.coords.create_coord.html#pypago.coords.create_coord" title="pypago.coords.create_coord"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.coords.create_coord()</span></code></a> function as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Extraction of model coordinates,</span>
+<span class="sd">and saving into a Pygo file.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pypago.coords</span>
+
+<span class="n">modelname</span> <span class="o">=</span> <span class="s1">&#39;NEMO&#39;</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;data/mesh_mask.nc&#39;</span>
+
+<span class="c1"># loading coords</span>
+<span class="n">coord</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">create_coord</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+<span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="s1">&#39;data/nemo_coords.pygo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [2]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [3]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [4]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/define_coords.py&quot;</span>
+
+<span class="gp">In [5]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ...: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ...: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ...: </span>
+<span class="go">Reading longitude: variable glamt</span>
+<span class="go">Reading latitude: variable gphit</span>
+<span class="go">No bathymetry is read</span>
+<span class="go">Reading T-grid mask: variable tmask</span>
+<span class="go">Reading T-grid zonal width: variable e1t</span>
+<span class="go">Reading T-grid meridional width: variable e2t</span>
+<span class="go">Reading V-grid eastern meridional width: variable e2u</span>
+<span class="go">Reading U-grid northern meridional width: variable e1v</span>
+<span class="go">Reading T-grid height: variable e3t</span>
+<span class="go">Reading 1D deptha array: variable gdept_0</span>
+<span class="go">Reading mbathy: variable mbathy</span>
+<span class="go">Reconstruction of bathy from mbathy and depth</span>
+<span class="go">Dzt is 3D. Model grid is in partial step</span>
+<span class="go">Reading U-grid eastern height: variable e3u</span>
+<span class="go">Reading V-grid northern height: variable e3v</span>
+<span class="go">Reading U-grid mask: variable umask</span>
+<span class="go">Reading V-grid mask: variable vmask</span>
+<span class="go">Reconstruction of U-grid western height from U-grid eastern height</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="k">print</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+<span class="go">Coords object:</span>
+<span class="go">  -filename: data/mesh_mask.nc</span>
+<span class="go">  -modelname: NEMO</span>
+<span class="go">  -bathy: (149, 182)</span>
+<span class="go">  -dxn: (149, 182)</span>
+<span class="go">  -dxt: (149, 182)</span>
+<span class="go">  -dye: (149, 182)</span>
+<span class="go">  -dyt: (149, 182)</span>
+<span class="go">  -dyw: None</span>
+<span class="go">  -dze: (31, 149, 182)</span>
+<span class="go">  -dzn: (31, 149, 182)</span>
+<span class="go">  -dzt: (31, 149, 182)</span>
+<span class="go">  -dzw: (31, 149, 182)</span>
+<span class="go">  -latt: (149, 182)</span>
+<span class="go">  -lont: (149, 182)</span>
+<span class="go">  -mask: (149, 182)</span>
+</pre></div>
+</div>
+<p>Note that the user may also use the executable program <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.bin.make_coords</span></code> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make_coords</span><span class="o">.</span><span class="n">py</span> <span class="n">NEMO</span> <span class="n">data</span><span class="o">/</span><span class="n">mesh_mask</span><span class="o">.</span><span class="n">nc</span> <span class="n">coords</span><span class="o">.</span><span class="n">pygo</span>
+</pre></div>
+</div>
+<p>The arguments are the model name, the path of the meshfile and the path of the output file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="samp docutils literal notranslate"><span class="pre">param.py</span></code> file still needs to be in the working directory</p>
+</div>
+</div>
+<div class="section" id="extracting-grid-objects">
+<h3>2.3.1.2. Extracting grid objects<a class="headerlink" href="#extracting-grid-objects" title="Permalink to this headline">¶</a></h3>
+<p>The grid objects are obtained by using the <a class="reference internal" href="../generated/pypago.grid.create_grid.html#pypago.grid.create_grid" title="pypago.grid.create_grid"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.grid.create_grid()</span></code></a> function.</p>
+<p>Its arguments are the i (<code class="samp docutils literal notranslate"><span class="pre">imax</span></code> and <code class="samp docutils literal notranslate"><span class="pre">imin</span></code>) and j (<code class="samp docutils literal notranslate"><span class="pre">jmin</span></code> and <code class="samp docutils literal notranslate"><span class="pre">jmax</span></code>) indexes of the subdomain to extract. When one argument is <code class="samp docutils literal notranslate"><span class="pre">None</span></code>, then the higher (or lower) possible index is taken. Note that if <code class="samp docutils literal notranslate"><span class="pre">imax&lt;imin</span></code>, zonal periodicity is assumed.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">For regional studies, <code class="samp docutils literal notranslate"><span class="pre">imax</span></code> should always be greater than <code class="samp docutils literal notranslate"><span class="pre">imin</span></code></p>
+</div>
+<p>An example of a subdomain extraction with zonal periodicity is shown below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Extraction of a sub-domain grid. Three examples</span>
+<span class="sd">are provided: indian grid, North-Atlantic Grid</span>
+<span class="sd">or Indian ocean (with a longitude flip).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pypago.grid</span>
+
+<span class="c1"># indian example</span>
+<span class="n">jmin</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">jmax</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">imin</span> <span class="o">=</span> <span class="mi">140</span>
+<span class="n">imax</span> <span class="o">=</span> <span class="mi">40</span>
+
+<span class="n">coord</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/nemo_coords.pygo&#39;</span><span class="p">)</span>
+
+<span class="c1"># if you do not have a coord object saved in a file, use:</span>
+<span class="c1"># coord = pypago.coords.create_coord(&quot;NEMO&quot;, &#39;data/mesh_mask.nc&#39;)</span>
+
+<span class="c1"># creation grid</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">create_grid</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span>
+                               <span class="n">jmin</span><span class="o">=</span><span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span><span class="o">=</span><span class="n">jmax</span><span class="p">,</span> 
+                               <span class="n">imin</span><span class="o">=</span><span class="n">imin</span><span class="p">,</span> <span class="n">imax</span><span class="o">=</span><span class="n">imax</span><span class="p">)</span>
+
+<span class="c1"># saving of the grid</span>
+<span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="s1">&#39;data/indian_grid.pygo&#39;</span><span class="p">)</span>
+
+<span class="c1"># drawing the domain on top of the</span>
+<span class="c1"># coord mask</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">coord</span><span class="o">.</span><span class="n">plot_mask</span><span class="p">()</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">plot_dom</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;global domain&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/indian_domain&#39;</span><span class="p">)</span>
+
+<span class="c1"># drawing the domain mask</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">plot_mask</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;indian grid&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/indian_grid&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [7]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [8]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [9]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [10]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/define_grid_indian.py&quot;</span>
+
+<span class="gp">In [11]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">Extraction of lont on the domain</span>
+<span class="go">Extraction of latt on the domain</span>
+<span class="go">Extraction of bathy on the domain</span>
+<span class="go">Extraction of mask on the domain</span>
+<span class="go">Extraction of dxt on the domain</span>
+<span class="go">Extraction of dyt on the domain</span>
+<span class="go">Extraction of dxn on the domain</span>
+<span class="go">Reconstruction of the dyw variable from dye</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [12]: </span><span class="k">print</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">Model grid for the NEMO model:</span>
+<span class="go">    - mesh file: data/mesh_mask.nc</span>
+<span class="go">    - jmin: 10</span>
+<span class="go">    - jmax: 100</span>
+<span class="go">    - imin: 140</span>
+<span class="go">    - imax: 40</span>
+<span class="go">    - nlat: 91</span>
+<span class="go">    - nlon: 83</span>
+<span class="go">    - nz: 31</span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id1">
+<img alt="../_images/indian_domain.png" src="../_images/indian_domain.png" />
+<p class="caption"><span class="caption-number">Fig. 2.5 </span><span class="caption-text">Extracting the Indian Ocean from a global grid</span></p>
+</div>
+<div class="figure align-center" id="id2">
+<img alt="../_images/indian_grid.png" src="../_images/indian_grid.png" />
+<p class="caption"><span class="caption-number">Fig. 2.6 </span><span class="caption-text">Indian domain that has been extracted</span></p>
+</div>
+<p>Note that the user may also use the executable program <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.bin.make_grid</span></code> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make_grid</span><span class="o">.</span><span class="n">py</span> <span class="n">NEMO</span> <span class="n">data</span><span class="o">/</span><span class="n">mesh_mask</span><span class="o">.</span><span class="n">nc</span> <span class="n">grid</span><span class="o">.</span><span class="n">pygo</span>
+</pre></div>
+</div>
+<p>This script is an interactive script which allows to chose the values of the
+<code class="samp docutils literal notranslate"><span class="pre">imin</span></code>, <code class="samp docutils literal notranslate"><span class="pre">imax</span></code>,
+<code class="samp docutils literal notranslate"><span class="pre">jmax</span></code> and <code class="samp docutils literal notranslate"><span class="pre">jmin</span></code> variables. The arguments are the model name,
+the model mesh file and the name of the output file.</p>
+</div>
+<div class="section" id="extracting-gridded-sections">
+<h3>2.3.1.3. Extracting gridded sections<a class="headerlink" href="#extracting-gridded-sections" title="Permalink to this headline">¶</a></h3>
+<p>The extraction of gridded section is achieved by using the <a class="reference internal" href="../generated/pypago.sections.extract_grid_sections.html#pypago.sections.extract_grid_sections" title="pypago.sections.extract_grid_sections"><code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.sections.extract_grid_sections()</span></code></a> function.</p>
+<p>The function takes as arguments the <code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.grid.Grid</span></code> object and the list of section endpoints (<a class="reference internal" href="../generated/pypago.sections.Section.html#pypago.sections.Section" title="pypago.sections.Section"><code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.sections.Section</span></code></a> objects).
+It returns a list of <a class="reference internal" href="../generated/pypago.sections.GridSection.html#pypago.sections.GridSection" title="pypago.sections.GridSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">pypago.sections.GridSection</span></code></a> objects (<code class="samp docutils literal notranslate"><span class="pre">gridsec</span></code> in the example below) and the indexes of the discarded sections (<code class="samp docutils literal notranslate"><span class="pre">badsec</span></code> in the example below).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pypago.sections</span>
+<span class="kn">import</span> <span class="nn">pypago.pyio</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/indian_grid.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">sect</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/endpoints_indian.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">gridsec</span><span class="p">,</span> <span class="n">badsec</span> <span class="o">=</span> <span class="n">pypago</span><span class="o">.</span><span class="n">sections</span><span class="o">.</span><span class="n">extract_grid_sections</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">sect</span><span class="p">)</span>
+
+<span class="n">pypago</span><span class="o">.</span><span class="n">pyio</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">gridsec</span><span class="p">,</span> <span class="s1">&#39;data/indian_gridsec.pygo&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">grid</span><span class="o">.</span><span class="n">plot_mask</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gridsec</span><span class="p">:</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">plotsecfaces</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;figs/indian_gridsec.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [14]: </span><span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+<span class="gp">In [15]: </span><span class="k">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+<span class="go">/home/nbarrier/Python/pago/pago/git/doc_pypago</span>
+
+<span class="gp">In [16]: </span><span class="n">fpath</span> <span class="o">=</span> <span class="s2">&quot;examples/define_gridsec_indian.py&quot;</span>
+
+<span class="gp">In [17]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">exec</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="k">print</span><span class="p">(</span><span class="n">badsec</span><span class="p">)</span>
+<span class="go">[]</span>
+
+<span class="gp">In [19]: </span><span class="k">for</span> <span class="n">sec</span> <span class="ow">in</span> <span class="n">gridsec</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="k">print</span><span class="p">(</span><span class="n">sec</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">Gridded section, NEMO model:</span>
+<span class="go">  -areavect: (31, 70)</span>
+<span class="go">  -depthvect: (31, 70)</span>
+<span class="go">  -dire: (1,)</span>
+<span class="go">  -faces: (70,)</span>
+<span class="go">  -i: (2,)</span>
+<span class="go">  -imax: 40</span>
+<span class="go">  -imin: 140</span>
+<span class="go">  -j: (2,)</span>
+<span class="go">  -jmax: 100</span>
+<span class="go">  -jmin: 10</span>
+<span class="go">  -lengthvect: (70,)</span>
+<span class="go">  -lvect: (70,)</span>
+<span class="go">  -modelname: NEMO</span>
+<span class="go">  -name: section4</span>
+<span class="go">  -nlon: 182</span>
+<span class="go">  -orient: (70,)</span>
+<span class="go">  -veci: (70,)</span>
+<span class="go">  -vecj: (70,)</span>
+
+<span class="go">Gridded section, NEMO model:</span>
+<span class="go">  -areavect: (31, 51)</span>
+<span class="go">  -depthvect: (31, 51)</span>
+<span class="go">  -dire: (1,)</span>
+<span class="go">  -faces: (51,)</span>
+<span class="go">  -i: (2,)</span>
+<span class="go">  -imax: 40</span>
+<span class="go">  -imin: 140</span>
+<span class="go">  -j: (2,)</span>
+<span class="go">  -jmax: 100</span>
+<span class="go">  -jmin: 10</span>
+<span class="go">  -lengthvect: (51,)</span>
+<span class="go">  -lvect: (29,)</span>
+<span class="go">  -modelname: NEMO</span>
+<span class="go">  -name: section5</span>
+<span class="go">  -nlon: 182</span>
+<span class="go">  -orient: (51,)</span>
+<span class="go">  -veci: (51,)</span>
+<span class="go">  -vecj: (51,)</span>
+</pre></div>
+</div>
+<div class="figure align-center" id="id3">
+<img alt="../_images/indian_gridsec.png" src="../_images/indian_gridsec.png" />
+<p class="caption"><span class="caption-number">Fig. 2.7 </span><span class="caption-text">Indian Ocean gridded sections</span></p>
+</div>
+<p>The user is strongly invited to use the executable program <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.bin.make_gridsec</span></code>, which is run as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make_gridsec.py grid.pygo endpoints.pygo gridsec.pygo
+</pre></div>
+</div>
+<p>This interactive program allows the user to check that the sections are well defined (see <strong>Warning</strong> below), and gives the possibility to correct badly defined sections. It takes as argument the name of the name of the PAGO grid and endpoints file,  and the name of the output file.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>It is essential to verify that the orientations of the segments are
+consistent, i.e. that the dots are on the same side of the line, as in
+<a class="reference internal" href="#fig-ihmgrid7"><span class="std std-numref">Fig. 2.13</span></a>. If this is not the case, the section orientation must be corrected.</p>
+<p class="last">Furthermore, to perform budgets within a basin, it is essential to ensure that the basin is closed (i.e. that
+there is no leakage). If not, it might be necessary to add another section or to displace points from sea to land.</p>
+</div>
+</div>
+</div>
+<div class="section" id="using-graphical-user-interface">
+<span id="gridsec-gui"></span><h2>2.3.2. Using graphical user interface<a class="headerlink" href="#using-graphical-user-interface" title="Permalink to this headline">¶</a></h2>
+<p>The extraction of gridded sections may also be achieved through the use of the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.guis.gui_grid_model</span></code> Python program. This opens the GUI
+that is shown in <a class="reference internal" href="#fig-ihmgrid1"><span class="std std-numref">Fig. 2.8</span></a>.</p>
+<div class="figure" id="id4">
+<span id="fig-ihmgrid1"></span><a class="reference internal image-reference" href="../_images/grid_1.png"><img alt="../_images/grid_1.png" src="../_images/grid_1.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.8 </span><span class="caption-text">GUI of the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.pypago_guis.gui_grid_model</span></code>  program</span></p>
+</div>
+<div class="section" id="menus">
+<h3>2.3.2.1. Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.pypago_guis.gui_grid_model</span></code> is made of a
+<span class="menuselection">File</span> menu and
+of a <span class="menuselection">Section</span> menu.
+The <span class="menuselection">File</span> menu is made of a <span class="menuselection">Quit</span> item (quit
+the application), an <span class="menuselection">Open</span> item and
+<span class="menuselection">Save</span>/<span class="menuselection">Save As</span> items.
+The <span class="menuselection">Open</span> item is used to load the model meshfile, containing
+all the scale factors of the model configuration. It must be a NetCDF file.
+The <span class="menuselection">Save</span>/<span class="menuselection">Save As</span> items are used to save the
+outputs of the PyPAGO programs that convert the section endpoints into model
+indices.</p>
+<p>The <span class="menuselection">Section</span> menu only contains a
+<span class="guilabel">Load section</span> item,
+which is used to load section endpoints that have been generated by
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.pypago_guis.gui_sections_edition</span></code> program.
+Note that is menu item is deactivated until a meshfile has been loaded.</p>
+</div>
+<div class="section" id="opening-a-meshfile">
+<h3>2.3.2.2. Opening a meshfile<a class="headerlink" href="#opening-a-meshfile" title="Permalink to this headline">¶</a></h3>
+<p>As a first step, the user must define the name of the model that is
+going to be processed. This is done by setting the <span class="guilabel">Model</span>
+ComboBox. Then, the user must load the NetCDF meshfile of the model by
+using the <span class="menuselection">Open</span> menu item. When this is done, the
+mask of the model is plotted, as shown in
+<a class="reference internal" href="#fig-ihmgrid2"><span class="std std-numref">Fig. 2.9</span></a>, and the default domain is plotted as a black
+rectangle. The next step is to edit the domain, for instance by
+reducing the size of the domain according to the section positions.</p>
+<div class="figure" id="id5">
+<span id="fig-ihmgrid2"></span><a class="reference internal image-reference" href="../_images/grid_2.png"><img alt="../_images/grid_2.png" src="../_images/grid_2.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.9 </span><span class="caption-text">Example of the mask of a global model configuration (here,
+the CNRM model).</span></p>
+</div>
+</div>
+<div class="section" id="domain-edition">
+<h3>2.3.2.3. Domain edition<a class="headerlink" href="#domain-edition" title="Permalink to this headline">¶</a></h3>
+<p>The domain edition is handled by the top-left widgets. The
+<span class="guilabel">min_i</span>, <span class="guilabel">max_i</span>, <span class="guilabel">min_j</span> and <span class="guilabel">max_j</span>
+widgets control the domain left, right i-indices and bottom, top
+j-indices, respectively. Default values are set to the biggest
+possible domain.</p>
+<p>The section can be changed by “click and drag” on the corner
+points (but not on the lines) or by a change in the TextControl
+widgets. In the latter case, the changes are validated when the <kbd class="kbd docutils literal notranslate">ENTER</kbd>
+key is pressed. Such a change is shown in <a class="reference internal" href="#fig-ihmgrid3"><span class="std std-numref">Fig. 2.10</span></a>.</p>
+<p>With this specific grid, the user interested in the Indian Ocean might
+be a little disappointed, since the box domain does not cross it. In
+order to overcome this issue, the user must set, in the TextControl
+widgets, a value for <span class="guilabel">min_i</span> that is greater than the value of
+<span class="guilabel">min_j</span>. This switches the previous box into two boxes, as shown
+in <a class="reference internal" href="#fig-ihmgrid4"><span class="std std-numref">Fig. 2.11</span></a>. With this layout, the user can define
+a domain that encompasses the Indian Ocean.</p>
+<div class="figure" id="id6">
+<span id="fig-ihmgrid3"></span><a class="reference internal image-reference" href="../_images/grid_3.png"><img alt="../_images/grid_3.png" src="../_images/grid_3.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.10 </span><span class="caption-text">Example of a change in domain</span></p>
+</div>
+<div class="figure" id="id7">
+<span id="fig-ihmgrid4"></span><a class="reference internal image-reference" href="../_images/grid_4.png"><img alt="../_images/grid_4.png" src="../_images/grid_4.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.11 </span><span class="caption-text">Example of a change in domain, when the min_i value is
+greater than the min_j value.</span></p>
+</div>
+</div>
+<div class="section" id="loading-a-section-file">
+<h3>2.3.2.4. Loading a section file<a class="headerlink" href="#loading-a-section-file" title="Permalink to this headline">¶</a></h3>
+<p>When the meshfile is loaded and the subdomain selected, the user must
+now the section endpoints that have been generated using the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.pypago_guis.gui_sections_edition</span></code>.
+When this is done, the program
+computes the model indices that are associated with the section
+endpoints (these indices are model dependent) and draw the sections as
+“stairs”, as shown in <a class="reference internal" href="#fig-ihmgrid5"><span class="std std-numref">Fig. 2.12</span></a>.
+When this is done, the top-left RadioBox activates and switches to
+<span class="guilabel">Check sections</span>.</p>
+<div class="figure" id="id8">
+<span id="fig-ihmgrid5"></span><a class="reference internal image-reference" href="../_images/grid_5.png"><img alt="../_images/grid_5.png" src="../_images/grid_5.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.12 </span><span class="caption-text">Section “stairs” that are drawn when loading a section file
+into the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pypago.pypago_guis.gui_grid_model</span></code> program.</span></p>
+</div>
+</div>
+<div class="section" id="checking-and-editing-the-sections">
+<h3>2.3.2.5. Checking and editing the sections<a class="headerlink" href="#checking-and-editing-the-sections" title="Permalink to this headline">¶</a></h3>
+<p>When these “stairs” are plotted, the user must verify that they are
+well defined. The points that appear on the figure and which define
+the direction where the transport is counted positive must all be on
+the same side of the line, as in <a class="reference internal" href="#fig-ihmgrid7"><span class="std std-numref">Fig. 2.13</span></a>. If it is
+the case, the user can save the model indices that are associated with
+the sections into a file, by using the
+<span class="menuselection">Save</span>/<span class="menuselection">Save As</span> menu items.</p>
+<p>If they are not, the user must change the direction of the bad
+segments. This is done by switching the RadioBox to
+<span class="guilabel">Edit Sections</span>. This edition mode is similar to the one
+described previously, except that the section edition can only be
+achieved by modifying the point positions.  Furthermore, if the user
+plans to perform budgets within closed domains, he needs to check that
+the sections indeed define a closed domain.</p>
+<p>If the domain is too large compared to the section positions, the user
+may also be interested in reducing the size of the domain. This is
+done by switching the RadioBox to <span class="guilabel">Edit Sections</span>.
+Note that the <span class="menuselection">Save</span>/<span class="menuselection">Save As</span> menu item is only
+activated when this RadioBox is set to <span class="guilabel">Check Sections</span>, in order to
+force the user to check that the sections are well defined.</p>
+<div class="figure" id="id9">
+<span id="fig-ihmgrid7"></span><a class="reference internal image-reference" href="../_images/grid_7.png"><img alt="../_images/grid_7.png" src="../_images/grid_7.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.13 </span><span class="caption-text">Gridded section</span></p>
+</div>
+<div class="figure" id="id10">
+<span id="fig-ihmgrid6"></span><a class="reference internal image-reference" href="../_images/grid_6.png"><img alt="../_images/grid_6.png" src="../_images/grid_6.png" style="width: 330.4px; height: 299.2px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2.14 </span><span class="caption-text">Section correction</span></p>
+</div>
+<p>When the user is done, he can save the outputs of the program into
+<code class="file docutils literal notranslate"><span class="pre">.pygo</span></code> files. If the chosen saving path is <code class="samp docutils literal notranslate"><span class="pre">/output/path/file.pygo</span></code>,
+the <code class="samp docutils literal notranslate"><span class="pre">Grid</span></code> object will be saved in the <code class="samp docutils literal notranslate"><span class="pre">/output/path/file_grid.pygo</span></code> file,
+while the <code class="samp docutils literal notranslate"><span class="pre">GridSec</span></code> objects will be saved in the <code class="samp docutils literal notranslate"><span class="pre">/output/path/file_gridsec.pygo</span></code> file.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="closedom.html" class="btn btn-neutral float-right" title="2.4. Definition of domains" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="sec_endpoints.html" class="btn btn-neutral" title="2.2. Definition of section longitude/latitude endpoints" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julie Deshayes, Nicolas Barrier, Francoise Pinsard.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

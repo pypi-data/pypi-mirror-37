@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2.1. Parameter file &mdash; PyPAGO 1.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyPAGO 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="2. User manual" href="../manual.html"/>
+        <link rel="next" title="2.2. Definition of section longitude/latitude endpoints" href="sec_endpoints.html"/>
+        <link rel="prev" title="2. User manual" href="../manual.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyPAGO
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">1. Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">2. User manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.1. Parameter file</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#nemo-model">2.1.1. NEMO model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#recontruction-of-the-bathymetry">2.1.1.1. Recontruction of the bathymetry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#recontruction-of-the-vertical-scale-factors">2.1.1.2. Recontruction of the vertical scale factors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#roms-model">2.1.2. ROMS model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reconstruction-of-horizontal-scale-factors">2.1.2.1. Reconstruction of horizontal scale factors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1">2.1.2.2. Recontruction of the vertical scale factors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sec_endpoints.html">2.2. Definition of section longitude/latitude endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshfile.html">2.3. Create gridded sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="closedom.html">2.4. Definition of domains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading.html">2.5. Loading model data outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html">2.6. Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diags.html">2.7. Scientific diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">3. API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../biblio.html">4. Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyPAGO</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../manual.html">2. User manual</a> &raquo;</li>
+        
+      <li>2.1. Parameter file</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/manual/param.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="parameter-file">
+<h1>2.1. Parameter file<a class="headerlink" href="#parameter-file" title="Permalink to this headline">¶</a></h1>
+<p>The working of PyPAGO is based on a Python parameter file, which contains the variables needed by the program. <strong>The default parameter file (dedicated to the analysis of the NEMO model) is shown below.</strong></p>
+<p>Prior to run PyPAGO analysis, the user is requiered to create, in the working directory, a <cite>param.py</cite> file, which will overwrite these default parameters.</p>
+<p>The most critical variable is the <code class="samp docutils literal notranslate"><span class="pre">dictvname</span></code> directory, which contains the names of the coordinate and scale factor variables and which will dictate the behaviour of PyPAGO, as detailed below.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The variables defined in the <code class="samp docutils literal notranslate"><span class="pre">dictvname</span></code> dictionnary are required and must all be included in a unique file (<code class="samp docutils literal notranslate"><span class="pre">mesh_mask.nc</span></code> for instance).</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This program contains the main settings of |pypago|</span>
+<span class="sd">associated with the NEMO model.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.basemap</span> <span class="k">import</span> <span class="n">pyproj</span>
+
+<span class="c1">######################################################## Output redirection</span>
+
+<span class="c1"># Uncomment below to change the outputs</span>
+<span class="c1"># and erros locations.</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+
+<span class="c1">######################################################## Scale variables</span>
+
+<span class="c1"># List of model variable names stored</span>
+<span class="c1"># as a dictionary</span>
+<span class="n">dictvname</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;lon_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;glamt&quot;</span>  <span class="c1"># longitude</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;lat_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gphit&quot;</span>  <span class="c1"># latitude</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;depth_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gdept_0&quot;</span>  <span class="c1"># 1D depth array</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;mbathy_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mbathy&quot;</span>   <span class="c1"># last layer index</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;tmask_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tmask&quot;</span>   <span class="c1"># mask on t-points</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;umask_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;umask&quot;</span>  <span class="c1"># mask on u-points</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;vmask_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;vmask&quot;</span>  <span class="c1"># mask on v-points</span>
+
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dxt_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e1t&quot;</span>  <span class="c1"># zonal width of t-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dyt_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e2t&quot;</span>  <span class="c1"># meridional width of t-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dye_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e2u&quot;</span>  <span class="c1"># meridional width of u-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dxn_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e1v&quot;</span>  <span class="c1"># zonal width of v-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dzt_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e3t&quot;</span>   <span class="c1"># height of t-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dze_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e3u&quot;</span>    <span class="c1"># height of u-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;dzn_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;e3v&quot;</span>  <span class="c1"># height of v-cells</span>
+<span class="n">dictvname</span><span class="p">[</span><span class="s2">&quot;time_varname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;time_counter&quot;</span>  <span class="c1"># height of v-cells</span>
+
+<span class="c1"># used only if the e3t variable is 2D</span>
+<span class="c1"># (height of the last ocean layer)</span>
+<span class="c1"># dictvname[&quot;bathy_varname&quot;] = &quot;ht&quot;   # bathymetry</span>
+<span class="c1"># dictvname[&quot;dzt1d_varname&quot;] = &quot;e3t_0&quot;</span>
+
+<span class="c1">######################################################## Settings for diagnostics</span>
+
+<span class="n">rho0_c</span> <span class="o">=</span> <span class="mf">4.186e6</span>  <span class="c1"># for heat transport calculations</span>
+<span class="n">S0</span> <span class="o">=</span> <span class="mf">34.8</span>  <span class="c1"># reference salinity for freshwater calculations</span>
+
+<span class="n">lev1</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># first depth interval from surface down to lev1</span>
+<span class="n">lev2</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># second depth interval from lev1 down to lev2</span>
+<span class="n">lev3</span> <span class="o">=</span> <span class="mi">2000</span>  <span class="c1"># third depth interval from lev2 m down to lev3 m</span>
+
+<span class="c1"># Sigma vectors (used in density related transport indices, not implemented yet)</span>
+<span class="n">sigma0_vec_lr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">24</span><span class="p">,</span> <span class="mf">24.4</span><span class="p">,</span> <span class="mf">24.9</span><span class="p">,</span> <span class="mf">25.4</span><span class="p">,</span> <span class="mf">25.9</span><span class="p">,</span> <span class="mf">26.4</span><span class="p">,</span>
+                          <span class="mf">26.75</span><span class="p">,</span> <span class="mf">27.05</span><span class="p">,</span> <span class="mf">27.30</span><span class="p">,</span> <span class="mf">27.45</span><span class="p">,</span> <span class="mf">27.58</span><span class="p">,</span> <span class="mf">27.68</span><span class="p">,</span> <span class="mf">27.75</span><span class="p">,</span>
+                          <span class="mf">27.80</span><span class="p">,</span> <span class="mf">27.83</span><span class="p">,</span> <span class="mf">27.86</span><span class="p">,</span> <span class="mf">27.89</span><span class="p">,</span> <span class="mf">27.92</span><span class="p">,</span> <span class="mf">27.95</span><span class="p">,</span> <span class="mf">27.98</span><span class="p">,</span>
+                          <span class="mf">28.01</span><span class="p">,</span> <span class="mf">28.04</span><span class="p">,</span> <span class="mf">28.07</span><span class="p">,</span> <span class="mf">28.1</span><span class="p">,</span> <span class="mf">28.6</span><span class="p">,</span> <span class="mf">29.1</span><span class="p">])</span>
+
+<span class="n">sigma0_vec_hr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">24</span><span class="p">,</span> <span class="mf">24.2</span><span class="p">,</span> <span class="mf">24.4</span><span class="p">,</span> <span class="mf">24.65</span><span class="p">,</span> <span class="mf">24.9</span><span class="p">,</span> <span class="mf">25.15</span><span class="p">,</span> <span class="mf">25.4</span><span class="p">,</span> <span class="mf">25.65</span><span class="p">,</span>
+                          <span class="mf">25.9</span><span class="p">,</span> <span class="mf">16.15</span><span class="p">,</span> <span class="mf">26.4</span><span class="p">,</span> <span class="mf">16.57</span><span class="p">,</span> <span class="mf">26.75</span><span class="p">,</span> <span class="mf">26.90</span><span class="p">,</span> <span class="mf">27.05</span><span class="p">,</span> <span class="mf">27.17</span><span class="p">,</span>
+                          <span class="mf">27.30</span><span class="p">,</span> <span class="mf">27.37</span><span class="p">,</span> <span class="mf">27.45</span><span class="p">,</span> <span class="mf">27.52</span><span class="p">,</span> <span class="mf">27.58</span><span class="p">,</span>
+                          <span class="mf">27.63</span><span class="p">,</span> <span class="mf">27.68</span><span class="p">,</span> <span class="mf">27.72</span><span class="p">,</span> <span class="mf">27.75</span><span class="p">,</span> <span class="mf">27.78</span><span class="p">,</span> <span class="mf">27.80</span><span class="p">,</span> <span class="mf">27.815</span><span class="p">,</span>
+                          <span class="mf">27.83</span><span class="p">,</span> <span class="mf">27.845</span><span class="p">,</span> <span class="mf">27.86</span><span class="p">,</span> <span class="mf">27.875</span><span class="p">,</span> <span class="mf">27.89</span><span class="p">,</span>
+                          <span class="mf">27.905</span><span class="p">,</span> <span class="mf">27.92</span><span class="p">,</span> <span class="mf">27.935</span><span class="p">,</span> <span class="mf">27.95</span><span class="p">,</span> <span class="mf">27.965</span><span class="p">,</span>
+                          <span class="mf">27.98</span><span class="p">,</span> <span class="mf">27.99</span><span class="p">,</span> <span class="mf">28.01</span><span class="p">,</span> <span class="mf">28.025</span><span class="p">,</span>
+                          <span class="mf">28.04</span><span class="p">,</span> <span class="mf">28.055</span><span class="p">,</span> <span class="mf">28.07</span><span class="p">,</span> <span class="mf">28.085</span><span class="p">,</span> <span class="mf">28.1</span><span class="p">,</span> <span class="mf">28.35</span><span class="p">,</span>
+                          <span class="mf">28.6</span><span class="p">,</span> <span class="mf">28.8</span><span class="p">,</span> <span class="mf">29.1</span><span class="p">])</span>
+
+<span class="n">sigma2_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">34.4</span><span class="p">,</span> <span class="mf">34.6</span><span class="p">,</span> <span class="mf">34.8</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mf">35.2</span><span class="p">,</span> <span class="mf">35.4</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mf">36.4</span><span class="p">,</span>
+                       <span class="mf">36.6</span><span class="p">,</span> <span class="mf">36.7</span><span class="p">,</span> <span class="mf">36.8</span><span class="p">,</span> <span class="mf">36.9</span><span class="p">,</span> <span class="mf">36.95</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mf">37.05</span><span class="p">,</span>
+                       <span class="mf">37.1</span><span class="p">,</span> <span class="mf">37.15</span><span class="p">,</span> <span class="mf">37.2</span><span class="p">,</span> <span class="mf">37.4</span><span class="p">,</span> <span class="mf">37.6</span><span class="p">,</span> <span class="mi">38</span><span class="p">])</span>
+
+<span class="n">sigma1_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">29.68</span><span class="p">,</span> <span class="mf">34.6800</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">######################################################## Settings for figures</span>
+
+<span class="n">mp</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;lines.linewidth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>  <span class="c1"># line width</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;text.usetex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># no latex in matplotlib</span>
+
+<span class="n">left</span> <span class="o">=</span> <span class="mf">0.07</span>
+<span class="n">right</span> <span class="o">=</span> <span class="mf">0.99</span>
+<span class="n">wspace</span> <span class="o">=</span> <span class="mf">0.07</span>
+<span class="n">top</span> <span class="o">=</span> <span class="mf">0.93</span>
+<span class="n">bottom</span> <span class="o">=</span> <span class="mf">0.03</span>
+<span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">bgcolor</span> <span class="o">=</span> <span class="s1">&#39;black&#39;</span>
+<span class="n">cmapt</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;jet&#39;</span><span class="p">)</span>
+<span class="n">cmaps</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;jet&#39;</span><span class="p">)</span>
+<span class="n">cmapv</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;RdBu_r&#39;</span><span class="p">)</span>
+
+<span class="c1">######################################################## Settings for projection (change carefully)</span>
+
+<span class="n">ee</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Geod</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s1">&#39;GRS80&#39;</span><span class="p">)</span>  <span class="c1"># ellipsoid used for distance calculation</span>
+</pre></div>
+</div>
+<div class="section" id="nemo-model">
+<h2>2.1.1. NEMO model<a class="headerlink" href="#nemo-model" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils" id="id2">
+<span id="table-nemo-var"></span><caption><span class="caption-number">Table 2.1 </span><span class="caption-text">Grid variables for the NEMO model</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>time_varname</td>
+<td>time_counter</td>
+<td>Time variable</td>
+</tr>
+<tr class="row-odd"><td>lon_varname</td>
+<td>glamt</td>
+<td>Longitude</td>
+</tr>
+<tr class="row-even"><td>lat_varname</td>
+<td>gphit</td>
+<td>Latitude</td>
+</tr>
+<tr class="row-odd"><td>tmask_varname</td>
+<td>tmask</td>
+<td>3D mask on T points</td>
+</tr>
+<tr class="row-even"><td>dxt_varname</td>
+<td>e1t</td>
+<td>Zonal width of T points</td>
+</tr>
+<tr class="row-odd"><td>dyt_varname</td>
+<td>e2t</td>
+<td>Meridional width of T points</td>
+</tr>
+<tr class="row-even"><td>dye_varname</td>
+<td>e2u</td>
+<td>Meridional width of V points</td>
+</tr>
+<tr class="row-odd"><td>dxn_varname</td>
+<td>e1v</td>
+<td>Zonal width of U points</td>
+</tr>
+<tr class="row-even"><td>dzt_varname</td>
+<td>e3t</td>
+<td>Height of T points</td>
+</tr>
+<tr class="row-odd"><td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>bathy_varname</td>
+<td>ht</td>
+<td>Bathymetry (None if not defined in the file)</td>
+</tr>
+<tr class="row-odd"><td>depth_varname</td>
+<td>gdept_1d</td>
+<td>1D depth array</td>
+</tr>
+<tr class="row-even"><td>mbathy_varname</td>
+<td>mbathy</td>
+<td>2D array of k-indexes of the last ocean points</td>
+</tr>
+<tr class="row-odd"><td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>dzt1d_varname</td>
+<td>e3t_0</td>
+<td>1-D scale factor</td>
+</tr>
+<tr class="row-odd"><td>dze_varname</td>
+<td>e3u</td>
+<td>Height of U points (None if not defined in the file)</td>
+</tr>
+<tr class="row-even"><td>dzn_varname</td>
+<td>e3v</td>
+<td>Height of V points (None if not defined in the file)</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="recontruction-of-the-bathymetry">
+<h3>2.1.1.1. Recontruction of the bathymetry<a class="headerlink" href="#recontruction-of-the-bathymetry" title="Permalink to this headline">¶</a></h3>
+<p>If the <code class="samp docutils literal notranslate"><span class="pre">bathy_varname</span></code> is <code class="samp docutils literal notranslate"><span class="pre">None</span></code>, bathymetry is reconstructed from the <code class="samp docutils literal notranslate"><span class="pre">depth_varname</span></code> and the <code class="samp docutils literal notranslate"><span class="pre">mbathy_varname</span></code> variables</p>
+</div>
+<div class="section" id="recontruction-of-the-vertical-scale-factors">
+<h3>2.1.1.2. Recontruction of the vertical scale factors<a class="headerlink" href="#recontruction-of-the-vertical-scale-factors" title="Permalink to this headline">¶</a></h3>
+<p>The reconstruction of the vertical scale factors depend on the shape of the <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code> variable.</p>
+<ul class="simple">
+<li>If it is 1D, it is assumed that there are no partial steps, and <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code> is tiled along the longitude and latitude dimensions. And the <code class="samp docutils literal notranslate"><span class="pre">dzw</span></code> and <cite>dzn</cite> variables are set equal to <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code>.</li>
+<li>If it is 2D, then a 3D <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code> variable is reconstructed by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.coords.NemoCoords.create_3d_e3t()</span></code> function. This function needs the 1D scale factor variable, whose name is defined by the <code class="samp docutils literal notranslate"><span class="pre">dzt1d_varname</span></code> variable. Then, if the <code class="samp docutils literal notranslate"><span class="pre">dze_varname</span></code> and <code class="samp docutils literal notranslate"><span class="pre">dzn_varname</span></code> variables are not <code class="samp docutils literal notranslate"><span class="pre">None</span></code>, these variables are read. Else, they are reconstructed from the 3D <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code> variable by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">pypago.coords.NemoCoords.reconstruct_3d_e3uv()</span></code> function. Finally, the <code class="samp docutils literal notranslate"><span class="pre">dzw</span></code> variable is reconstructed from the <code class="samp docutils literal notranslate"><span class="pre">dze</span></code> variable.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="roms-model">
+<h2>2.1.2. ROMS model<a class="headerlink" href="#roms-model" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils" id="id3">
+<span id="table-roms-var"></span><caption><span class="caption-number">Table 2.2 </span><span class="caption-text">Grid variables for the ROMS model</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>time_varname</td>
+<td>time</td>
+<td>Time variable</td>
+</tr>
+<tr class="row-odd"><td>bathy_varname</td>
+<td>h</td>
+<td>Bathymetry</td>
+</tr>
+<tr class="row-even"><td>tmask_varname</td>
+<td>mask_rho</td>
+<td>Mask on T points</td>
+</tr>
+<tr class="row-odd"><td>lon_varname</td>
+<td>lon_rho</td>
+<td>Longitude of T points</td>
+</tr>
+<tr class="row-even"><td>lat_varname</td>
+<td>lat_rho</td>
+<td>Latitude of T points</td>
+</tr>
+<tr class="row-odd"><td>dxt_varname</td>
+<td>pm</td>
+<td>Zonal width of T points</td>
+</tr>
+<tr class="row-even"><td>dyt_varname</td>
+<td>pn</td>
+<td>Merdional width of T points</td>
+</tr>
+<tr class="row-odd"><td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>dxs_varname</td>
+<td>pm</td>
+<td>Zonal width of U points (southern face)</td>
+</tr>
+<tr class="row-odd"><td>dyw_varname</td>
+<td>pn</td>
+<td>Meridional width of V points (western face)</td>
+</tr>
+<tr class="row-even"><td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>roms_nsigma</td>
+<td>&#160;</td>
+<td>Number of sigma levels</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="reconstruction-of-horizontal-scale-factors">
+<h3>2.1.2.1. Reconstruction of horizontal scale factors<a class="headerlink" href="#reconstruction-of-horizontal-scale-factors" title="Permalink to this headline">¶</a></h3>
+<p>In ROMS model, U points are located on the western faces, while V points are located on the southern faces. Therefore, the <code class="samp docutils literal notranslate"><span class="pre">dzn</span></code> variable is reconstructed by shifting the <code class="samp docutils literal notranslate"><span class="pre">dzs</span></code> variable.</p>
+</div>
+<div class="section" id="id1">
+<h3>2.1.2.2. Recontruction of the vertical scale factors<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Since ROMS is a <span class="math notranslate nohighlight">\(\sigma\)</span> model, vertical scale factors is set equal to 1. Since the number of <span class="math notranslate nohighlight">\(\sigma\)</span> levels
+is stored in the data file, the user has to define it in the <code class="samp docutils literal notranslate"><span class="pre">param.py</span></code> file so that the <code class="samp docutils literal notranslate"><span class="pre">dzt</span></code>, <code class="samp docutils literal notranslate"><span class="pre">dzn</span></code> and <code class="samp docutils literal notranslate"><span class="pre">dzw</span></code> variables are defined with the right dimensions.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Complete for all the other models</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sec_endpoints.html" class="btn btn-neutral float-right" title="2.2. Definition of section longitude/latitude endpoints" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../manual.html" class="btn btn-neutral" title="2. User manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julie Deshayes, Nicolas Barrier, Francoise Pinsard.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
