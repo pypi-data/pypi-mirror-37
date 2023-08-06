@@ -1,0 +1,105 @@
+#!python
+
+
+if __name__ == "__main__":
+    import argparse
+    import mridata
+
+    parser = argparse.ArgumentParser(prog='mridata')
+    subparsers = parser.add_subparsers(dest='command')
+    
+    download = subparsers.add_parser('download',
+                                      description='Download ISMRMRD files from mridata.org.')
+    download.add_argument("uuid", type=str, help="UUID.")
+    
+    batch_download = subparsers.add_parser(
+        'batch_download', description='Batch download ISMRMRD files from a text file containing UUIDs generated from mridata.org.')
+    batch_download.add_argument("uuid_text_file", type=str, help="UUID text file [.txt].")
+    
+    upload_ge = subparsers.add_parser('upload_ge', description='Upload GE files.')
+    upload_ge.add_argument('--username', type=str, default='')
+    upload_ge.add_argument('--password', type=str, default='')
+    upload_ge.add_argument('--project_name', type=str, default='')
+    upload_ge.add_argument('--anatomy', type=str, default='Unknown')
+    upload_ge.add_argument('--fullysampled', type=str, default='Unknown')
+    upload_ge.add_argument('--references', type=str, default='')
+    upload_ge.add_argument('--comments', type=str, default='')
+    upload_ge.add_argument('--funding_support', type=str, default='')
+    upload_ge.add_argument("filename", type=str, help="Filename.")
+    
+    upload_siemens = subparsers.add_parser('upload_siemens', description='Upload Siemens files.')
+    upload_siemens.add_argument('--username', type=str, default='')
+    upload_siemens.add_argument('--password', type=str, default='')
+    upload_siemens.add_argument('--project_name', type=str, default='')
+    upload_siemens.add_argument('--anatomy', type=str, default='Unknown')
+    upload_siemens.add_argument('--fullysampled', type=str, default='Unknown')
+    upload_siemens.add_argument('--references', type=str, default='')
+    upload_siemens.add_argument('--comments', type=str, default='')
+    upload_siemens.add_argument('--funding_support', type=str, default='')
+    upload_siemens.add_argument("filename", help="Filename.")
+    
+    upload_philips = subparsers.add_parser('upload_philips', description='Upload Philips files.')
+    upload_philips.add_argument('--username', type=str, default='')
+    upload_philips.add_argument('--password', type=str, default='')
+    upload_philips.add_argument('--project_name', type=str, default='')
+    upload_philips.add_argument('--anatomy', type=str, default='Unknown')
+    upload_philips.add_argument('--fullysampled', type=str, default='Unknown')
+    upload_philips.add_argument('--references', type=str, default='')
+    upload_philips.add_argument('--comments', type=str, default='')
+    upload_philips.add_argument('--funding_support', type=str, default='')
+    upload_philips.add_argument("basename", help="File basename.")
+    
+    upload_ismrmrd = subparsers.add_parser('upload_ismrmrd', description='Upload Ismrmrd files.')
+    upload_ismrmrd.add_argument('--username', type=str, default='')
+    upload_ismrmrd.add_argument('--password', type=str, default='')
+    upload_ismrmrd.add_argument('--project_name', type=str, default='')
+    upload_ismrmrd.add_argument('--anatomy', type=str, default='Unknown')
+    upload_ismrmrd.add_argument('--fullysampled', type=str, default='Unknown')
+    upload_ismrmrd.add_argument('--references', type=str, default='')
+    upload_ismrmrd.add_argument('--comments', type=str, default='')
+    upload_ismrmrd.add_argument('--funding_support', type=str, default='')
+    upload_ismrmrd.add_argument("filename", help="Filename.")
+    
+    args = parser.parse_args()
+
+    if args.command == 'download':
+        mridata.download(args.uuid)
+    elif args.command == 'batch_download':
+        mridata.batch_download(args.uuid_text_file)
+    elif args.command == 'upload_ge':
+        mridata.upload_ge(
+            args.username, args.password,
+            args.filename, args.project_name,
+            anatomy=args.anatomy, fullysampled=args.fullysampled,
+            references=args.references, comments=args.comments,
+            funding_support=args.funding_support
+        )
+        
+    elif args.command == 'upload_siemens':
+        mridata.upload_siemens(
+            args.username, args.password,
+            args.filename, args.project_name,
+            anatomy=args.anatomy, fullysampled=args.fullysampled,
+            references=args.references, comments=args.comments,
+            funding_support=args.funding_support
+        )
+
+    elif args.command == 'upload_philips':
+        mridata.upload_philips(
+            args.username, args.password,
+            args.filename, args.project_name,
+            anatomy=args.anatomy, fullysampled=args.fullysampled,
+            references=args.references, comments=args.comments,
+            funding_support=args.funding_support
+        )
+
+    elif args.command == 'upload_ismrmrd':
+        mridata.upload_ismrmrd(
+            args.username, args.password,
+            args.filename, args.project_name,
+            anatomy=args.anatomy, fullysampled=args.fullysampled,
+            references=args.references, comments=args.comments,
+            funding_support=args.funding_support
+        )
+    else:
+        parser.print_help()
