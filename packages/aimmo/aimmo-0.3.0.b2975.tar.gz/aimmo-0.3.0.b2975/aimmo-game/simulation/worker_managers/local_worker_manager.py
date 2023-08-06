@@ -1,0 +1,58 @@
+import atexit
+import itertools
+import logging
+import os
+import subprocess
+import docker
+import json
+
+from .worker_manager import WorkerManager
+
+LOGGER = logging.getLogger(__name__)
+
+
+class LocalWorkerManager(WorkerManager):
+    """Relies on them already being created already."""
+
+    host = os.environ.get('LOCALHOST_IP', '127.0.0.1')
+    worker_directory = os.path.join(
+        os.path.dirname(__file__),
+        '../../../aimmo-game-worker/',
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.workers = {}
+        self.game_id = os.environ['GAME_ID']
+        self.port_counter = itertools.count(1989 + int(self.game_id) * 10000)
+        self.client = docker.from_env()
+        super(LocalWorkerManager, self).__init__(*args, **kwargs)
+
+    def create_worker(self, player_id):
+        assert(player_id not in self.workers)
+        port = self.port_counter.next()
+
+        env = json.loads(os.environ.get('CONTAINER_TEMPLATE', '{}'))
+        data_url = 'http://{}:{}/player/{}'.format(self.host, self.port, player_id)
+        env['DATA_URL'] = data_url
+        env['PORT'] = port
+
+        container = self.client.containers.run(
+            name="aimmo-{}-worker-{}".format(self.game_id, player_id),
+            image='ocadotechnology/aimmo-game-worker:test',
+            publish_all_ports=True,
+            environment=env,
+            network_mode='host',
+            detach=True,
+            ports={"{}/tcp".format(port): port})
+        self.workers[player_id] = container
+        worker_url = 'http://%s:%d' % (
+            self.host,
+            port,
+        )
+        LOGGER.info("Worker started for %s, listening at %s", player_id, worker_url)
+        return worker_url
+
+    def remove_worker(self, player_id):
+        if player_id in self.workers:
+            self.workers[player_id].kill()
+            del self.workers[player_id]
