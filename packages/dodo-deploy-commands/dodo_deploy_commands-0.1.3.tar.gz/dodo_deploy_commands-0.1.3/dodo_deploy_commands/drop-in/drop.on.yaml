@@ -1,0 +1,35 @@
+DOCKER:
+  images:
+    ssh-agent:
+      build_dir: ${/ROOT/res_dir}/drops/dodo_deploy_commands/ssh-agent/docker
+      image: ssh-agent:base
+    deploy-tools:
+      build_dir: ${/ROOT/res_dir}/drops/dodo_deploy_commands/deploy-tools/docker
+      image: deploy-tools:base
+
+  options:
+    ansible-deploy:
+      volume_map:
+        ${/ANSIBLE/src_dir}: '/srv/ansible-deploy/src'
+      variable_map:
+        SSH_AUTH_SOCK: /.ssh-agent/socket
+      volumes_from_list:
+        - ssh-agent
+      image: ${/DOCKER/images/deploy-tools/image}
+
+    salt-deploy:
+      volume_map:
+        ${/SALT/src_dir}: '/srv/salt-deploy/src'
+      variable_map:
+        SSH_AUTH_SOCK: /.ssh-agent/socket
+      volumes_from_list:
+        - ssh-agent
+      image: ${/DOCKER/images/deploy-tools/image}
+
+SSH_AGENT:
+  key_names: [REMOVED]
+  docker_image: ${/DOCKER/images/ssh-agent/image}
+
+SSH:
+  key_name: REMOVED
+
