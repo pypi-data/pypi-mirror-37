@@ -1,0 +1,42 @@
+{% load lazycrud %}
+
+<table class="table {% if table_classes %}{{ table_classes }}{% else %}table-striped table-hover table-datatables{% endif %}"
+    {% if datatables_options %} data-datatables-options="{{ datatables_options }}"{% endif %}>
+    <thead>
+        <tr>
+        {% for name in object_fields %}
+            <th>{{ object_model|fieldlabel:name }}</th>
+        {% endfor %}
+        {% if object_actions %}
+            <th></th>
+        {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in object_list %}
+            <tr
+            {% if object_url %}
+                class="clickable_row"
+                data-url="{% url object_url pk=o.pk %}"
+            {% elif o.get_absolute_url %}
+                class="clickable_row"
+                data-url="{{ o.get_absolute_url }}"
+            {% endif %}
+            {% if object_url_target %}
+                data-target="{{ object_url_target }}"
+            {% endif %}
+            >
+            {% for name in object_fields %}
+                <td>{{ o|fieldvalue:name }}</td>
+            {% endfor %}
+            {% if object_actions %}
+                <td class="actions">
+                {% for action in object_actions %}
+                    <a class="btn btn-link" href="{% url action.url pk=o.pk %}">{% if action.icon %}<i class="fa fa-{{ action.icon }}"></i> {% endif %}{{ action.label }}</a>
+                {% endfor %}
+                </td>
+            {% endif %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

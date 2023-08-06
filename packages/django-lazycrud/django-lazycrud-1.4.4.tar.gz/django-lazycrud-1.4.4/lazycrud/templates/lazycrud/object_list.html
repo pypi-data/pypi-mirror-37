@@ -1,0 +1,34 @@
+{% extends view.base_template|default:"base.html" %}
+{% load lazycrud %}
+
+{% block js %}
+{{ block.super }}
+{% include "lazycrud/_datatables_js.html" %}
+{% endblock %}
+
+{% block css %}
+{% include "lazycrud/_datatables_css.html" %}
+{% endblock %}
+
+{% block title %}{{ view.page_title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="page-header">{{ view.page_title }}</h1>
+    </div>
+</div>
+{% if view.create_url %}
+<div class="row">
+    <div class="col-md-12">
+        <a class="btn btn-success pull-right" role="button" href="{{ view.create_url }}"><i class="fa fa-plus"></i> {{ view.create_label }}</a>
+    </div>
+</div>
+<hr>
+{% endif %}
+<div class="row">
+    <div class="col-md-12">
+        {% include "lazycrud/_table.html" with table_classes=view.table_classes object_model=view.model object_fields=view.fields object_list=object_list datatables_options=view.datatables_options object_url=view.detail_url object_url_target=view.detail_url_target object_actions=view.list_actions %}
+    </div>
+</div>
+{% endblock %}
