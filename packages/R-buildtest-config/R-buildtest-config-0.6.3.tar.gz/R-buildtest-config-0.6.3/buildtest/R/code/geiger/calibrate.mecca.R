@@ -1,0 +1,2 @@
+library(geiger)
+example(mecca)
