@@ -1,0 +1,398 @@
+==============
+timezonefinder
+==============
+
+.. image:: https://travis-ci.org/MrMinimal64/timezonefinder.svg?branch=master
+    :target: https://travis-ci.org/MrMinimal64/timezonefinder
+
+.. image:: https://img.shields.io/circleci/project/github/conda-forge/timezonefinder-feedstock/master.svg?label=noarch
+    :target: https://circleci.com/gh/conda-forge/timezonefinder-feedstock
+
+.. image:: https://img.shields.io/pypi/wheel/timezonefinder.svg
+    :target: https://pypi.python.org/pypi/timezonefinder
+
+.. image:: https://img.shields.io/conda/dn/conda-forge/timezonefinder.svg
+    :target: https://anaconda.org/conda-forge/timezonefinder
+
+.. image:: https://img.shields.io/pypi/v/timezonefinder.svg
+    :target: https://pypi.python.org/pypi/timezonefinder
+
+.. image:: https://anaconda.org/conda-forge/timezonefinder/badges/version.svg
+    :target: https://anaconda.org/conda-forge/timezonefinder
+
+
+
+This is a fast and lightweight python project for looking up the corresponding
+timezone for a given lat/lng on earth entirely offline.
+
+
+NOTE: the huge underlying timezone boundary data set (s. below) in use now blew up the size of this package. It had to be changed, because the smaller "tz_world" data set is not being maintained any more. I originally wanted to keep this as lightweight as possible, but it is even more important that the data it is up to date.
+In case size and speed matter more you than actuality, consider checking out older versions of timezonefinder or even timezoenfinderL.
+
+NOTE: The timezone polygons also do NOT follow the shorelines any more (as they did with tz_world).
+This makes the results of closest_timezone_at() and certain_timezone_at() somewhat meaningless (as with timezonefinderL).
+
+Current data set in use (since 3.0.0): precompiled `timezone-boundary-builder <https://github.com/evansiroky/timezone-boundary-builder>`__ release. version: 2018d (without oceans, Apr2018, 116MB, JSON)
+
+
+Also see:
+`GitHub <https://github.com/MrMinimal64/timezonefinder>`__,
+`PyPI <https://pypi.python.org/pypi/timezonefinder/>`__,
+`conda-forge feedstock <https://github.com/conda-forge/timezonefinder-feedstock>`__,
+`timezone_finder <https://github.com/gunyarakun/timezone_finder>`__: ruby port,
+`timezonefinderL <https://github.com/MrMinimal64/timezonefinderL>`__: faster, lighter (but outdated) version
+`timezonefinderL GUI <http://timezonefinder.michelfe.it/gui>`__: demo and online API of timezonefinderL
+
+
+Dependencies
+============
+
+(``python``),
+``numpy``,
+``six``,
+``importlib_resources``
+
+
+
+**Optional:**
+
+If the vanilla Python code is too slow for you, also install
+
+`Numba <https://github.com/numba/numba>`__ and all its Requirements (e.g. `llvmlite <http://llvmlite.pydata.org/en/latest/install/index.html>`_)
+
+This causes the time critical algorithms (in ``helpers_numba.py``) to be automatically precompiled to speed things up.
+
+
+Installation
+============
+
+
+Installation with conda: see instructions at `conda-forge feedstock <https://github.com/conda-forge/timezonefinder-feedstock>`__ (NOTE: The newest version of timezonefinder might not be available via conda yet)
+
+
+
+Installation with pip:
+in the command line:
+
+::
+
+    pip install timezonefinder
+
+
+
+
+
+Usage
+=====
+
+check ``example.py``
+
+Basics:
+-------
+
+in Python:
+
+::
+
+    from timezonefinder import TimezoneFinder
+
+    tf = TimezoneFinder()
+
+
+for testing if numba is being used:
+(if the import of the optimized algorithms worked)
+
+::
+
+    TimezoneFinder.using_numba()   # this is a static method returning True or False
+
+
+**timezone_at():**
+
+This is the default function to check which timezone a point lies within.
+If no timezone has been matched, ``None`` is being returned.
+
+**PLEASE NOTE:** This approach is optimized for speed and the common case to only query points within a timezone.
+The last possible timezone in proximity is always returned (without checking if the point is really included).
+So results might be misleading for points outside of any timezone.
+
+
+::
+
+    longitude = 13.358
+    latitude = 52.5061
+    tf.timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Berlin'
+
+
+**certain_timezone_at():**
+
+NOTE: The timezone polygons do NOT follow the shorelines any more!
+
+This function is for making sure a point is really inside a timezone. It is slower, because all polygons (with shortcuts in that area)
+are being checked until one polygon is matched. ``None`` is being returned in the case of no match.
+
+NOTE: The timezone polygons do NOT follow the shorelines any more. Just because you do not get ``None``,
+the point could still lie off land!
+
+
+
+::
+
+    tf.certain_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Berlin'
+
+
+**closest_timezone_at():**
+
+
+This simply computes and compares the distances to the timezone polygon boundaries (expensive!).
+It returns the closest timezone of all polygons within +-1 degree lng and +-1 degree lat (or None).
+
+NOTE: The timezone polygons do NOT follow the shorelines any more! This causes the computed distance from a timezone polygon to be not really meaningful/accurate.
+
+
+::
+
+    longitude = 12.773955
+    latitude = 55.578595
+    tf.closest_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Copenhagen'
+
+
+Options:
+To increase search radius even more, use the ``delta_degree``-option:
+
+::
+
+    tf.closest_timezone_at(lng=longitude, lat=latitude, delta_degree=3)
+
+
+This checks all the polygons within +-3 degree lng and +-3 degree lat.
+I recommend only slowly increasing the search radius, since computation time increases quite quickly
+(with the amount of polygons which need to be evaluated). When you want to use this feature a lot,
+consider using ``Numba`` to save computing time.
+
+
+Also keep in mind that x degrees lat are not the same distance apart than x degree lng (earth is a sphere)!
+As a consequence getting a result does NOT mean that there is no closer timezone! It might just not be within the area (given in degree!) being queried.
+
+With ``exact_computation=True`` the distance to every polygon edge is computed (way more complicated), instead of just evaluating the distances to all the vertices.
+This only makes a real difference when the boundary of a polygon is very close to the query point.
+
+
+With ``return_distances=True`` the output looks like this:
+
+( 'tz_name_of_the_closest_polygon',[ distances to every polygon in km], [tz_names of every polygon])
+
+Note that some polygons might not be tested (for example when a zone is found to be the closest already).
+To prevent this use ``force_evaluation=True``.
+
+::
+
+    longitude = 42.1052479
+    latitude = -16.622686
+    tf.closest_timezone_at(lng=longitude, lat=latitude, delta_degree=2,
+                                        exact_computation=True, return_distances=True, force_evaluation=True)
+    '''
+    returns ('uninhabited',
+    [80.66907784731714, 217.10924866254518, 293.5467252349301, 304.5274937839159, 238.18462606485667, 267.918674688949, 207.43831938964408, 209.6790144988553, 228.42135641542546],
+    ['uninhabited', 'Indian/Antananarivo', 'Indian/Antananarivo', 'Indian/Antananarivo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo'])
+    '''
+
+
+
+**get_geometry:**
+
+
+For querying a timezone for its geometric multi-polygon shape use ``get_geometry()``.
+output format: ``[ [polygon1, hole1,...), [polygon2, ...], ...]``
+and each polygon and hole is itself formated like: ``([longitudes], [latitudes])``
+or ``[(lng1,lat1), (lng2,lat2),...]`` if ``coords_as_pairs=True``.
+
+::
+
+    tf.get_geometry(tz_name='Africa/Addis_Ababa', coords_as_pairs=True)
+
+    tf.get_geometry(tz_id=400, use_id=True)
+
+
+
+
+Further application:
+--------------------
+
+**To maximize the chances of getting a result in a** ``Django`` **view it might look like:**
+
+::
+
+    def find_timezone(request, lat, lng):
+        lat = float(lat)
+        lng = float(lng)
+
+        try:
+            timezone_name = tf.timezone_at(lng=lng, lat=lat)
+            if timezone_name is None:
+                timezone_name = tf.closest_timezone_at(lng=lng, lat=lat)
+                # maybe even increase the search radius when it is still None
+
+        except ValueError:
+            # the coordinates were out of bounds
+            # {handle error}
+
+        # ... do something with timezone_name ...
+
+**To get an aware datetime object from the timezone name:**
+
+::
+
+    # first pip install pytz
+    from pytz import timezone, utc
+    from pytz.exceptions import UnknownTimeZoneError
+
+    # tzinfo has to be None (means naive)
+    naive_datetime = YOUR_NAIVE_DATETIME
+
+    try:
+        tz = timezone(timezone_name)
+        aware_datetime = naive_datetime.replace(tzinfo=tz)
+        aware_datetime_in_utc = aware_datetime.astimezone(utc)
+
+        naive_datetime_as_utc_converted_to_tz = tz.localize(naive_datetime)
+
+    except UnknownTimeZoneError:
+        # ... handle the error ...
+
+
+**Getting a location's time zone offset from UTC in minutes:**
+
+solution from `communikein <https://github.com/communikein>`__
+
+::
+
+    from pytz import timezone
+    import pytz
+    from datetime import datetime
+
+    utc = pytz.utc
+
+    def offset(target):
+        """
+        returns a location's time zone offset from UTC in minutes.
+        """
+        today = datetime.now()
+        tz_target = timezone(tf.certain_timezone_at(lat=target['lat'], lng=target['lng']))
+        # ATTENTION: tz_target could be None! handle error case
+        today_target = tz_target.localize(today)
+        today_utc = utc.localize(today)
+        return (today_utc - today_target).total_seconds() / 60
+
+    bergamo = dict({'lat':45.69, 'lng':9.67})
+    print(offset(bergamo))
+
+
+also see the `pytz Doc <http://pytz.sourceforge.net/>`__.
+
+
+**Parsing the data** (Using your own data):
+
+
+Download the latest ``timezones.geojson.zip`` data set file from `timezone-boundary-builder <https://github.com/evansiroky/timezone-boundary-builder/releases>`__, unzip and
+place the ``combined.json`` inside the timezonefinder folder. Now run the ``file_converter.py`` until the compilation of the binary files is completed.
+
+If you want to use your own data set, create a ``combined.json`` file with the same format as the timezone-boundary-builder and compile everything with ``file_converter.py``.
+
+
+**Calling timezonefinder from the command line:**
+
+With -v you get verbose output, without it only the timezone name is being printed.
+Choose between functions timezone_at() and certain_timezone_at() with flag -f (default: timezone_at()).
+Please note that this is much slower than keeping a Timezonefinder class directly in Python,
+because here all binary files are being opend again for each query.
+
+::
+
+    usage: timezonefinder.py [-h] [-v] [-f {0,1}] lng lat
+
+
+
+
+
+
+Contact
+=======
+
+Most certainly there is stuff I missed, things I could have optimized even further etc. I would be really glad to get some feedback on my code.
+
+If you notice that the tz data is outdated, encounter any bugs, have
+suggestions, criticism, etc. feel free to **open an Issue**, **add a Pull Requests** on Git or ...
+
+contact me: *[python] {*-at-*} [michelfe] {-*dot*-} [it]*
+
+
+Acknowledgements
+================
+
+Thanks to:
+
+`Adam <https://github.com/adamchainz>`__ for adding organisational features to the project and for helping me with publishing and testing routines.
+
+`snowman2 <https://github.com/snowman2>`__ for creating the conda-forge recipe.
+
+`synapticarbors <https://github.com/synapticarbors>`__ for fixing Numba import with py27.
+
+License
+=======
+
+``timezonefinder`` is distributed under the terms of the MIT license
+(see LICENSE.txt).
+
+
+Comparison to pytzwhere
+=======================
+
+This project has originally been derived from `pytzwhere <https://pypi.python.org/pypi/tzwhere>`__
+(`github <https://github.com/pegler/pytzwhere>`__), but aims at providing
+improved performance and usability.
+
+``pytzwhere`` is parsing a 76MB .csv file (floats stored as strings!) completely into memory and computing shortcuts from this data on every startup.
+This is time, memory and CPU consuming. Additionally calculating with floats is slow,
+keeping those 4M+ floats in the RAM all the time is unnecessary and the precision of floats is not even needed in this case (s. detailed comparison and speed tests below).
+
+In comparison most notably initialisation time and memory usage are significantly reduced.
+``pytzwhere`` is using up to 450MB of RAM (with ``shapely`` and ``numpy`` active),
+because it is parsing and keeping all the timezone polygons in the memory.
+This uses unnecessary time/ computation/ memory and this was the reason I created this package in the first place.
+This package uses at most 40MB (= encountered memory consumption of the python process) and has some more advantages:
+
+**Differences:**
+
+-  highly decreased memory usage
+
+-  highly reduced start up time
+
+-  usage of 32bit int (instead of 64+bit float) reduces computing time and memory consumption. The accuracy of 32bit int is still high enough. According to my calculations the worst accuracy is 1cm at the equator. This is far more precise than the discrete polygons in the data.
+
+-  the data is stored in memory friendly binary files (approx. 41MB in total, original data 120MB .json)
+
+-  data is only being read on demand (not completely read into memory if not needed)
+
+-  precomputed shortcuts are included to quickly look up which polygons have to be checked
+
+-  available proximity algorithm ``closest_timezone_at()``
+
+-  function ``get_geometry()`` enables querying timezones for their geometric shape (= multipolygon with holes)
+
+-  further speedup possible by the use of ``numba`` (code precompilation)
+
+
+
+test results:
+===============
+
+::
+
+    Startup times:
+    tzwhere: 0:00:29.365294
+    timezonefinder: 0:00:00.000888
+    33068.02 times faster
+
+    all other cross tests are not meaningful because tz_where is still using the outdated tz_world data set
+
