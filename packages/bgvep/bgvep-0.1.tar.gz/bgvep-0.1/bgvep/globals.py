@@ -1,0 +1,3 @@
+
+class BGVEPError(Exception):
+    pass
