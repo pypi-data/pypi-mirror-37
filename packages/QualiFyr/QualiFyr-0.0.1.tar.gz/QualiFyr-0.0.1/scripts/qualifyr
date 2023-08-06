@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+import os, yaml, sys
+import argparse
+from qualifyr.utility import get_logger
+from qualifyr.quast_file import QuastFile
+from qualifyr.fastqc_summary_file import FastqcFile
+from qualifyr.confindr_file import ConFindrFile
+from qualifyr.conditions_file import import_yaml_file
+
+class ParserWithErrors(argparse.ArgumentParser):
+    logger = get_logger(__file__)
+    def error(self, message):
+        self.logger.error('{0}\n\n'.format(message))
+        self.print_help()
+        sys.exit(2)
+
+    def is_valid_file(self, parser, arg):
+        if not os.path.isfile(arg):
+            parser.error("The file %s does not exist!" % arg)
+        else:
+            return arg
+
+def argparser():
+    description = """
+    A package to check quality files and assess overall pass/fail
+    """
+    parser = ParserWithErrors(description = description)
+    parser.add_argument("-q", "--quast_file",
+                        help="quast file path",
+                        type=lambda x: parser.is_valid_file(parser, x))
+    parser.add_argument("-f", "--fastqc_file",
+                        help="fastqc summary file path",
+                        type=lambda x: parser.is_valid_file(parser, x))
+    parser.add_argument("-c", "--confindr_file",
+                    help="confindr report file path",
+                    type=lambda x: parser.is_valid_file(parser, x))
+    parser.add_argument("-y", "--conditions_yaml_file", required=True,
+                        help="conditions yaml file path",
+                        type=lambda x: parser.is_valid_file(parser, x))
+
+    return parser
+
+
+if __name__ == '__main__':
+    parser = argparser()
+    args = parser.parse_args()
+
+    # load conditions
+    conditions = import_yaml_file(args.conditions_yaml_file)
+    
+    # make list of qulaity files
+    quality_files = []
+    # add quast file if present
+    if args.quast_file:
+        quast_file = QuastFile(args.quast_file)
+        quast_file.parse()
+        quality_files.append(quast_file)
+    # add fastqc file if present
+    if args.fastqc_file:
+        fastqc_file = FastqcFile(args.fastqc_file)
+        fastqc_file.parse()
+        quality_files.append(fastqc_file)
+    # add fasconfindrtqc file if present
+    if args.confindr_file:
+        confindr_file = ConFindrFile(args.confindr_file)
+        confindr_file.parse()
+        quality_files.append(confindr_file)
+    
+    if len(quality_files) == 0:
+        parser.error("You must specify at least one quality file")
+    else:
+        multi_file_failure_reasons = quast_file.check_multiple(quality_files, conditions)
+        if len(multi_file_failure_reasons) == 0:
+            print('pass')
+        else:
+            for file_type in multi_file_failure_reasons:
+                for failure_reason in multi_file_failure_reasons[file_type]:
+                    print('{0}\t{1}'.format(file_type, failure_reason))
