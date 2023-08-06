@@ -1,0 +1,315 @@
+Metadata-Version: 2.0
+Name: robotkernel
+Version: 0.7.0
+Summary: A Jupyter kernel for interactive acceptance-test-driven development with the Robot Framework
+Home-page: https://github.com/datakurre/robotkernel
+Author: Asko Soukka
+Author-email: asko.soukka@iki.fi
+License: BSD-3-Clause
+Description-Content-Type: UNKNOWN
+Keywords: Interactive,Interpreter,Shell,Testing,Web
+Platform: UNKNOWN
+Classifier: Framework :: Jupyter
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: Software Development :: Testing
+Requires-Dist: docutils
+Requires-Dist: ipykernel
+Requires-Dist: lunr
+Requires-Dist: nbformat
+Requires-Dist: pillow
+Requires-Dist: pygments
+Requires-Dist: robotframework
+
+Robotkernel
+===========
+
+`Robot Framework`_ IPython_ kernel for `Jupyter Notebook`_ and JupyterLab_.
+
+Requires Python 3.6 or later.
+
+Log | Report -links on existing notebooks are only active on trusted notebooks.
+
+.. _Robot Framework: http://robotframework.org/
+.. _IPython: https://ipython.org/
+.. _Jupyter Notebook: https://jupyter.readthedocs.io/en/latest/
+.. _JupyterLab: https://jupyterlab.readthedocs.io/en/stable/
+
+
+Try Robotkernel at Binder
+-------------------------
+
+Jupyter Notebook: https://mybinder.org/v2/gh/datakurre/robotkernel/master?urlpath=tree/example.ipynb
+
+JupyterLab: https://mybinder.org/v2/gh/datakurre/robotkernel/master?urlpath=lab/tree/example.ipynb
+
+
+Install Robotkernel
+-------------------
+
+.. code:: bash
+
+   $ pip install robotkernel
+   $ python -m robotkernel.install
+
+For JupyterLab you should also install the companion syntax highlighting:
+
+.. code:: bash
+
+   $ jupyter labextension install jupyterlab_robotmode
+
+
+Install Robotkernel from Python 3 notebook
+------------------------------------------
+
+.. code:: bash
+
+   !pip install robotkernel
+   !python -m robotkernel.install
+
+After refreshing the notebook, it is possible change the kernel to Robot Framework kernel or create a new notebook with Robot Framework kernel.
+
+For JupyterLab you should also install the companion syntax highlighting:
+
+.. code:: bash
+
+   !jupyter labextension install jupyterlab_robotmode
+
+
+Export robot files
+------------------
+
+It is possible to export test suites direclty from Jupyter Notebook or JupyterLab user interface (into traditional ``.robot`` files), but also from command line:
+
+.. code:: bash
+
+   $ jupyter nbconvert --to script example.ipynb
+
+
+Execute notebooks
+-----------------
+
+In addition, it is also possible to execute notebooks as such, resulting into a new notebook with embedded execution logs and reports:
+
+.. code:: bash
+
+   $ jupyter nbconvert --to notebook --execute example.ipynb
+
+This will stop the execution at first failing test case.
+
+When execution with errors, to also get a result notebook with execution logs saved, an extra flag ``--ExecutePreprocessor.allow_errors=True`` must be set:
+
+.. code:: bash
+
+   $ jupyter nbconvert --ExecutePreprocessor.allow_errors=True --to notebook --execute example.ipynb
+
+This `may change`__ in future versions of nbconvert.
+
+__ https://github.com/jupyter/nbconvert/issues/626
+
+Note that when executing a notebook, each cell with tests cases or tasks will be executed as its own suite. It might be more efficient to export notebook into a robot script and execute that with the traditional robot runner.
+
+
+Local installation and development
+----------------------------------
+
+See also: http://jupyter.readthedocs.io/en/latest/install.html
+
+Create and activate clean Python virtual environment::
+
+    $ venv myenv
+    $ source myenv/bin/activate
+
+Install Jupyter::
+
+    $ pip install --upgrade pip setuptools
+    $ pip install jupyter
+
+Clone this kernel::
+
+    $ git clone https://github.com/datakurre/robotkernel.git
+    $ cd robotkernel
+
+Install the kernel into virtualenv in develop mode::
+
+    $ python setup.py develop
+
+Install the kernel into jupyter::
+
+    $ python -m robotkernel.install
+
+Launch the jupyter::
+
+    $ jupyter notebook
+
+Reloading the kernel reloads the code.
+
+
+Nix-shell (https://nixos.org/nix/)
+----------------------------------
+
+This repository includes opinionated instructions for running and developing Robotkernel with Nix for Jupyter Notebook:
+
+.. code:: bash
+
+   $ nix-shell -E 'import (fetchTarball https://github.com/datakurre/robotkernel/archive/master.tar.gz + "/shell.nix")' --run "jupyter notebook"
+
+And for Jupyter Lab:
+
+.. code:: bash
+
+   $ nix-shell -E 'import (fetchTarball https://github.com/datakurre/robotkernel/archive/master.tar.gz + "/shell.nix")'
+   $ jupyter labextension install jupyterlab_robotmode --app-dir=.jupyterlab
+   $ jupyter lab --app-dir=.jupyterlab
+   $ exit
+
+Add ``--arg sikuli true`` to include SikuliLibrary_.
+
+Add ``--arg vim true`` to enable `vim bindings`_.
+
+.. _SikuliLibrary: https://github.com/rainmanwy/robotframework-SikuliLibrary
+.. _vim bindings: https://github.com/lambdalisue/jupyter-vim-binding
+
+Development environment with Nix:
+
+.. code:: bash
+
+    $ git clone https://github.com/datakurre/robotkernel.git
+    $ cd robotkernel
+    $ nix-build setup.nix -A env  # to generate ./result/bin/python for IDE
+    $ nix-shell setup.nix -A develop
+
+Changelog
+=========
+
+0.7.0 (2018-10-31)
+------------------
+
+- Add to create nbreader and nblibdoc cli to run robot with notebook reader
+  support
+  [datakurre]
+- Add Selenium completions to sometimes include raw Simmer results with
+  simplfied id completion results
+  [datakurre]
+- Add proof-of-concept selector completion for Appium and AutoIT libraries
+  [datakurre]
+- Fix screenshot processor to also discover images with absolute path or within
+  the current working directory
+  [datakurre]
+
+0.6.3 (2018-10-19)
+------------------
+
+- Remove deprecated replace-flag from kernel installer
+  [datakurre]
+
+0.6.2 (2018-10-19)
+------------------
+
+- Fix compatibility issue with robotframework < 3.1
+  [datakurre]
+
+0.6.1 (2018-10-19)
+------------------
+
+- Fix issue where kernel installation produced broken kernel.json on Windows
+  [datakurre]
+
+0.6.0 (2018-10-18)
+------------------
+
+- Revert data source path from temporary directory into current working
+  directory to allow local libraries and resources work in the usual use cases
+  [datakurre]
+- Add experimental Simmerjs based CSS-selector builder and element picker with
+  when auto-completion is called with empty "css:"-selector
+  [datakurre]
+- Add experimental Selenium selector auto-completion
+  [datakurre]
+- Add dummy variable completion with only variables from current suite without
+  context knowledge
+  [datakurre]
+- Add inline documentation links to Robot Framework User Guide for structural
+  keywords
+  [datakurre]
+
+0.5.4 (2018-10-09)
+------------------
+
+- Fix issue where single term keywords got no completions
+  [datakurre]
+
+0.5.3 (2018-10-09)
+------------------
+
+- Update README
+  [datakurre]
+
+0.5.1 (2018-10-08)
+------------------
+
+- Auto completion and keyword doc inspection enhancements
+  [datakurre]
+
+0.5.0 (2018-10-08)
+------------------
+
+- Add auto-completion, keyword doc inspection and support for
+  replacing and deleting cell history on Jupyter lab
+  [datakurre]
+
+0.4.0 (2018-09-26)
+------------------
+
+- Add support for robotframework 3.1a2
+  [datakurre]
+
+- Add support for reporting RPA suites with "Tasks" instead of "Tests"
+  [datakurre]
+
+0.3.5 (2018-09-25)
+------------------
+
+- Update README with notebook execution instructions
+  [datakurre]
+
+0.3.4 (2018-09-25)
+------------------
+
+- Update README
+  [datakurre]
+
+0.3.3 (2018-09-25)
+------------------
+
+- Note on README that Log | Report -links require trusting the notebook
+  [datakurre]
+
+- Fix to wrap test execution updates with '<pre>' for better readability
+  [datakurre]
+
+0.3.2 (2018-09-25)
+------------------
+
+- Change to always send display data updates in text/html to workaround a bug
+  that caused 'undefined' to be rendered in JupyterLab
+  [datakurre]
+
+0.3.1 (2018-09-24)
+------------------
+
+- Update README
+  [datakurre]
+
+0.3.0 (2018-09-23)
+------------------
+
+- First release.
+  [datakurre]
+
+
