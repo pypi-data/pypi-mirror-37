@@ -1,0 +1,68 @@
+%import common.CNAME
+%import common.ESCAPED_STRING
+%import common.FLOAT
+
+word : CNAME
+str : ESCAPED_STRING
+cast : "[" expression as_phrase "]"
+
+use_statement : "use" word ";"
+declare_statement : "declare" variable_phrase as_phrase ";"
+variable_phrase : "$" word
+raw_var : "@" word
+as_phrase : "as" (typespec|varspec) ["[" number "]"]
+typespec : /(\*|\&)+/ varspec
+variable_setting : variable_phrase "=" (expression|fncall) ";"
+
+// fncall : varspec "[" (expression ",")* [expression] "]"
+fncall : word "[" (expression ",")* [expression] "]"
+fn : "fn" word "[" params "]" [ as_phrase ] "{" ( phrase )* "}"
+params : ( variable_phrase as_phrase )*
+// if : "if" "[" ( expression ) "]" "{" ( phrase )* "}" ("else" if)* ["else" "{" ( phrase )* "}"]
+if : "if" "[" ( expression ) "]" "{" ( phrase )* "}" [else]
+else : "else" "{" ( phrase )* "}"
+// for : "for" "[" variable_phrase "is" expression "]" "{" (phrase)* "}"
+for : "for" "[" phrase expression ";" phrase "]" "{" (phrase)* "}"
+while : "while" "[" expression "]" "{" (phrase)* "}"
+ret : "ret" (expression)? ";"
+
+
+add : expression "+" expression
+sub : expression "-" expression
+mul : expression "*" expression
+div : expression "/" expression
+and : expression "&" expression
+bor : expression "|" expression
+xor : expression "^" expression
+mod : expression "%" expression
+rol : expression "<<" expression
+ror : expression ">>" expression
+rng : expression ".." expression
+ois : expression "is" expression
+
+les : expression "<" expression
+gre : expression ">" expression
+leq : expression "<=" expression
+geq : expression ">=" expression
+neq : expression "!=" expression
+not : "!" expression
+
+ptr : "&" expression
+deref : "*" expression
+
+float : FLOAT
+number : ["+"|"-"] /[0-9]+/
+
+varspec : word ("::" word)*
+
+ceq : expression "==" expression
+
+expression : cast | ptr | deref | number | float | str | variable_phrase | raw_var | add | sub | mul | div | and | bor | xor | mod | fncall | rng | ois | rol | ror | les | gre | leq | geq | neq | ceq | not
+phrase : (use_statement | declare_statement | fn | as_phrase | if | ret | fncall | for | variable_setting | while) [";"]
+start: phrase*
+
+%import common.WS
+%ignore WS
+
+COMMENT: ";" /[^\n]/*
+%ignore COMMENT
