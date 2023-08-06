@@ -1,0 +1,553 @@
+============================= test session starts ==============================
+platform linux -- Python 3.5.2, pytest-3.8.2, py-1.6.0, pluggy-0.7.1
+rootdir: /home/benj/Projects/python/keras-prune, inifile:
+collected 154 items
+
+test_surgeon.py ........................................................ [ 36%]
+........................................................................ [ 83%]
+..........F.F.F.........                                                 [ 98%]
+test_utils.py ..                                                         [100%]
+
+=================================== FAILURES ===================================
+_________ test_delete_channels_batchnormalization[[0]-channels_first] __________
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff01a6ce710>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+>       c_op = c_api.TF_FinishOperation(op_desc)
+E       tensorflow.python.framework.errors_impl.InvalidArgumentError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1626: InvalidArgumentError
+
+During handling of the above exception, another exception occurred:
+
+channel_index = [0], data_format = 'channels_first'
+
+    def test_delete_channels_batchnormalization(channel_index, data_format):
+        if data_format == 'channels_first':
+            axis = 1
+        else:
+            axis = -1
+    
+        layer = BatchNormalization(axis=axis)
+>       layer_test_helper_flatten_2d(layer, channel_index, data_format)
+
+test_surgeon.py:428: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_surgeon.py:549: in layer_test_helper_flatten_2d
+    x = layer(x)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/engine/base_layer.py:457: in __call__
+    output = self.call(inputs, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:206: in call
+    training=training)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3123: in in_train_phase
+    x = switch(training, x, alt)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3058: in switch
+    else_expression_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:2087: in cond
+    orig_res_f, res_f = context_f.BuildCondBranch(false_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:1920: in BuildCondBranch
+    original_result = fn()
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:167: in normalize_inference
+    epsilon=self.epsilon)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:1908: in batch_normalization
+    mean = tf.reshape(mean, (-1))
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/gen_array_ops.py:6296: in reshape
+    "Reshape", tensor=tensor, shape=shape, name=name)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/op_def_library.py:787: in _apply_op_helper
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:3272: in create_op
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1790: in __init__
+    control_input_ops)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff01a6ce710>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+        c_op = c_api.TF_FinishOperation(op_desc)
+      except errors.InvalidArgumentError as e:
+        # Convert to ValueError for backwards compatibility.
+>       raise ValueError(str(e))
+E       ValueError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1629: ValueError
+_________ test_delete_channels_batchnormalization[[-1]-channels_first] _________
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff04a996630>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+>       c_op = c_api.TF_FinishOperation(op_desc)
+E       tensorflow.python.framework.errors_impl.InvalidArgumentError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1626: InvalidArgumentError
+
+During handling of the above exception, another exception occurred:
+
+channel_index = [-1], data_format = 'channels_first'
+
+    def test_delete_channels_batchnormalization(channel_index, data_format):
+        if data_format == 'channels_first':
+            axis = 1
+        else:
+            axis = -1
+    
+        layer = BatchNormalization(axis=axis)
+>       layer_test_helper_flatten_2d(layer, channel_index, data_format)
+
+test_surgeon.py:428: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_surgeon.py:549: in layer_test_helper_flatten_2d
+    x = layer(x)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/engine/base_layer.py:457: in __call__
+    output = self.call(inputs, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:206: in call
+    training=training)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3123: in in_train_phase
+    x = switch(training, x, alt)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3058: in switch
+    else_expression_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:2087: in cond
+    orig_res_f, res_f = context_f.BuildCondBranch(false_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:1920: in BuildCondBranch
+    original_result = fn()
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:167: in normalize_inference
+    epsilon=self.epsilon)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:1908: in batch_normalization
+    mean = tf.reshape(mean, (-1))
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/gen_array_ops.py:6296: in reshape
+    "Reshape", tensor=tensor, shape=shape, name=name)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/op_def_library.py:787: in _apply_op_helper
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:3272: in create_op
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1790: in __init__
+    control_input_ops)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff04a996630>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+        c_op = c_api.TF_FinishOperation(op_desc)
+      except errors.InvalidArgumentError as e:
+        # Convert to ValueError for backwards compatibility.
+>       raise ValueError(str(e))
+E       ValueError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1629: ValueError
+________ test_delete_channels_batchnormalization[[1, 2]-channels_first] ________
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff060f444e0>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+>       c_op = c_api.TF_FinishOperation(op_desc)
+E       tensorflow.python.framework.errors_impl.InvalidArgumentError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1626: InvalidArgumentError
+
+During handling of the above exception, another exception occurred:
+
+channel_index = [1, 2], data_format = 'channels_first'
+
+    def test_delete_channels_batchnormalization(channel_index, data_format):
+        if data_format == 'channels_first':
+            axis = 1
+        else:
+            axis = -1
+    
+        layer = BatchNormalization(axis=axis)
+>       layer_test_helper_flatten_2d(layer, channel_index, data_format)
+
+test_surgeon.py:428: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_surgeon.py:549: in layer_test_helper_flatten_2d
+    x = layer(x)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/engine/base_layer.py:457: in __call__
+    output = self.call(inputs, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:206: in call
+    training=training)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3123: in in_train_phase
+    x = switch(training, x, alt)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:3058: in switch
+    else_expression_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:2087: in cond
+    orig_res_f, res_f = context_f.BuildCondBranch(false_fn)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/control_flow_ops.py:1920: in BuildCondBranch
+    original_result = fn()
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/layers/normalization.py:167: in normalize_inference
+    epsilon=self.epsilon)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/keras/backend/tensorflow_backend.py:1908: in batch_normalization
+    mean = tf.reshape(mean, (-1))
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/ops/gen_array_ops.py:6296: in reshape
+    "Reshape", tensor=tensor, shape=shape, name=name)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/op_def_library.py:787: in _apply_op_helper
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/deprecation.py:488: in new_func
+    return func(*args, **kwargs)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:3272: in create_op
+    op_def=op_def)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1790: in __init__
+    control_input_ops)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+graph = <tensorflow.python.framework.ops.Graph object at 0x7ff060f444e0>
+node_def = name: "batch_normalization_1/cond/Reshape_4"
+op: "Reshape"
+attr {
+  key: "T"
+  value {
+    type: DT_FLOAT
+  }
+}
+attr {
+  key: "Tshape"
+  value {
+    type: DT_INT32
+  }
+}
+
+inputs = [<tf.Tensor 'batch_normalization_1/cond/Reshape:0' shape=(1, 3, 1, 1) dtype=float32>, <tf.Tensor 'batch_normalization_1/cond/Reshape_4/shape:0' shape=() dtype=int32>]
+control_inputs = []
+
+    def _create_c_op(graph, node_def, inputs, control_inputs):
+      """Creates a TF_Operation.
+    
+      Args:
+        graph: a `Graph`.
+        node_def: `node_def_pb2.NodeDef` for the operation to create.
+        inputs: A list of `Tensor`s (corresponding to scalar inputs) and lists of
+          `Tensor`s (corresponding to sequence inputs, e.g. "int64 * N",
+          "list(int64)"). The length of the list should be equal to the number of
+          inputs specified by this operation's op def.
+        control_inputs: A list of `Operation`s to set as control dependencies.
+    
+      Returns:
+        A wrapped TF_Operation*.
+      """
+      # pylint: disable=protected-access
+      op_desc = c_api.TF_NewOperation(graph._c_graph,
+                                      compat.as_str(node_def.op),
+                                      compat.as_str(node_def.name))
+      # Add inputs
+      for op_input in inputs:
+        if isinstance(op_input, (list, tuple)):
+          c_api.TF_AddInputList(op_desc, [t._as_tf_output() for t in op_input])
+        else:
+          c_api.TF_AddInput(op_desc, op_input._as_tf_output())
+    
+      # Add control inputs
+      for control_input in control_inputs:
+        c_api.TF_AddControlInput(op_desc, control_input._c_op)
+      # pylint: enable=protected-access
+    
+      # Add attrs
+      for name, attr_value in node_def.attr.items():
+        serialized = attr_value.SerializeToString()
+        # TODO(skyewm): this creates and deletes a new TF_Status for every attr.
+        # It might be worth creating a convenient way to re-use the same status.
+        c_api.TF_SetAttrValueProto(op_desc, compat.as_str(name), serialized)
+    
+      try:
+        c_op = c_api.TF_FinishOperation(op_desc)
+      except errors.InvalidArgumentError as e:
+        # Convert to ValueError for backwards compatibility.
+>       raise ValueError(str(e))
+E       ValueError: Shape must be rank 1 but is rank 0 for 'batch_normalization_1/cond/Reshape_4' (op: 'Reshape') with input shapes: [1,3,1,1], [].
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/framework/ops.py:1629: ValueError
+=============================== warnings summary ===============================
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/tf_inspect.py:75: DeprecationWarning: inspect.getargspec() is deprecated, use inspect.signature() instead
+  return _inspect.getargspec(target)
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/tensorflow/python/util/tf_inspect.py:75: DeprecationWarning: inspect.getargspec() is deprecated, use inspect.signature() instead
+  return _inspect.getargspec(target)
+
+/home/benj/.local/share/virtualenvs/pipy_test/lib/python3.5/site-packages/_pytest/fixtures.py:799: RemovedInPytest4Warning: Fixture "model_1" called directly. Fixtures are not meant to be called directly, are created automatically when test functions request them as parameters. See https://docs.pytest.org/en/latest/fixture.html for more information.
+  res = fixturefunc(**kwargs)
+
+-- Docs: https://docs.pytest.org/en/latest/warnings.html
+============== 3 failed, 151 passed, 3 warnings in 57.85 seconds ===============
