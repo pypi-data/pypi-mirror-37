@@ -1,0 +1,143 @@
+Metadata-Version: 1.0
+Name: geneblocks
+Version: 0.3.0
+Summary: Library to compare DNA sequences (diff, common blocks, etc.)
+Home-page: https://github.com/Edinburgh-Genome-Foundry/geneblocks
+Author: Zulko
+Author-email: UNKNOWN
+License: MIT
+Description-Content-Type: UNKNOWN
+Description: GeneBlocks
+        =============
+        .. image:: https://travis-ci.org/Edinburgh-Genome-Foundry/DnaChisel.svg?branch=master
+           :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Geneblocks
+           :alt: Travis CI build status
+        
+        .. image:: https://coveralls.io/repos/github/Edinburgh-Genome-Foundry/Geneblocks/badge.svg
+          :target: https://coveralls.io/github/Edinburgh-Genome-Foundry/Geneblocks
+        
+        GeneBlocks is a Python library to compare DNA sequences. It can be used to:
+        
+        - Find common blocks in a group of DNA sequences, to factorize them (e.g. only analyze or synthetize each common block once)
+        - Highlight differences between sequences (insertions, deletions, mutations)
+        - Transfer Genbank features from one record to another sharing similar subsequences.
+        
+        At the Edinburgh Genome Foundry, we use GeneBlocks to optimize sequence assembly, explore sets of non-annotated sequences, or visualize the differences
+        between different versions of a sequence, and re-annotate records coming from third parties such as DNA manufacturers.
+        
+        
+        Installation
+        -------------
+        
+        The CommonBlocks feature requires NCBI BLAST+. On Ubuntu, install it with
+        
+        .. code:: shell
+            (sudo) apt-get install ncbi-blast+
+        
+        
+        You can install GeneBlocks through PIP
+        
+        .. code:: shell
+        
+            sudo pip install geneblocks
+        
+        Alternatively, you can unzip the sources in a folder and type
+        
+        .. code:: shell
+        
+            sudo python setup.py install
+        
+        
+        Usage
+        ------
+        
+        
+        Finding common blocks in a set of sequences:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            from geneblocks import CommonBlocks
+        
+            # Input sequences are in a dictionnary as follows:
+            sequences = {'seq1': 'ATTTGCGT...', 'seq2': 'ATGCCCGCACG...', ...}
+        
+            common_blocks = CommonBlocks(sequences)
+        
+            # PLOT THE BLOCKS
+            axes = common_blocks.plot_common_blocks()
+            axes[0].figure.savefig("basic_example.png", bbox_inches="tight")
+        
+            # GET ALL COMMON BLOCKS AS BIOPYTHON RECORDS
+            blocks_records = common_blocks.common_blocks_records()
+        
+            # WRITE ALL COMMON BLOCKS INTO A CSV SPREADSHEET
+            common_blocks.common_blocks_to_csv(target_file="blocks.csv")
+        
+        Result:
+        
+        
+        .. raw:: html
+           
+           <img src='https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/GeneBlocks/master/examples/common_blocks.png'
+            width='600px'/>
+        
+        Transfering features between genbank records:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        In this snippet we assume that we have two genbank records:
+        
+        - A record of an annotated part, containing an expression module.
+        - A record of a plasmid which contains the part but the part was not properly annotated
+        
+        We will use Geneblocks to automatically detect where the part is located in
+        the plasmid and automatically copy the features from the part record to the
+        plasmid record.
+        
+        .. code:: python
+        
+            from geneblocks import CommonBlocks, load_record
+            part = load_record('part.gb', name='insert')
+            plasmid = load_record('part.gb', name='plasmid')
+            blocks = CommonBlocks([part, plasmid])
+            new_records = blocks.copy_features_between_common_blocks(inplace=False)
+            annotated_plasmid = new_records['plasmid'] # Biopython record with all features
+        
+        
+        The resulting annotated plasmids has annotations from both the original plasmid and the annotated part:
+        
+        .. raw:: html
+           
+           <img src='https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/GeneBlocks/master/examples/features_transfer.png'
+            width='600px'/>
+        
+        Highlighting the differences between two sequences:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            seq_1 = load_record("sequence1.gb")
+            seq_2 = load_record("sequence2.gb")
+        
+            diff_blocks = DiffBlocks.from_sequences(seq_1, seq_2)
+            ax1, ax2 = diff_blocks.plot(figure_width=8)
+            ax1.figure.savefig("diff_blocks.png")
+        
+        Result:
+        
+        .. raw:: html
+           
+             <img src='https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/GeneBlocks/master/examples/diff_blocks.png'
+              width='700px'/>
+        
+        
+        Licence
+        --------
+        
+        Geneblocks is an open-source software originally written at the `Edinburgh Genome Foundry
+        <http://www.genomefoundry.org>`_ by `Zulko <https://github.com/Zulko>`_
+        and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Geneblocks>`_ under the MIT licence (copyright Edinburgh Genome Foundry).
+        Everyone is welcome to contribute !
+        
+Keywords: DNA blocks diff genbank synthetic-biology bioinformatics
+Platform: UNKNOWN
