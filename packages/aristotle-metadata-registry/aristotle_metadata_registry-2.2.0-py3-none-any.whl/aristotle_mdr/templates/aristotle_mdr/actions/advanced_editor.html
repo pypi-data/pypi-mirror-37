@@ -1,0 +1,105 @@
+{% extends request.is_ajax|yesno:"aristotle_mdr/base_ajax.html,aristotle_mdr/base.html" %}
+{% load compile_static i18n %}
+{% load aristotle_tags %}
+{% load static from staticfiles %}
+
+{% block title %}Editing {{ item.name }}{% endblock %}
+{% block extra_head_scripts %}
+    <link rel="stylesheet" href="{% static 'aristotle_mdr/aristotle.wizard.less'|compile %}" />
+    <link rel="stylesheet" href="{% static 'aristotle_mdr/aristotle_search.less'|compile %}" />
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="{% static 'aristotle_mdr/aristotle.moveable.less'|compile %}" />
+    {% if request.is_ajax %}
+        <script type="text/javascript">
+            CKEDITOR_BASEPATH="/static/ckeditor/ckeditor/";
+        </script>
+        <script type="text/javascript" src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+        <script type="text/javascript" src="{% static 'ckeditor/ckeditor-init.js' %}"></script>
+        <script src="{% static 'aristotle_mdr/aristotle.moveable.js' %}"></script>
+
+        <script src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
+        <script src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
+        <script src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+        <script src="{% static 'autocomplete_light/select2.js' %}"></script>
+    {% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+<form method="post" action="{% url 'aristotle:edit_item' item.id %}">{% csrf_token %}{{form.last_fetched}}
+    <div class="modal-body">
+        <ol class="breadcrumb">
+          <li><a href="{% url 'aristotle:item' item.id %}">{{ item.name }}</a></li>
+          <li class="active">Advanced editor</li>
+        </ol>
+        {% if item.is_superseded  %}
+            <div class=" alert alert-info">
+                {% trans 'This item has been superseded by one or more newer versions' %}
+                <ul>
+                    {% for suprel in item|visible_superseded_by_items:request.user %}
+                        <li>
+                          <a href="{% url 'aristotle:item' iid=suprel.newer_item.id %}">
+                            {{ suprel.newer_item.name }}
+                          </a>
+                          <ul>
+                            {% for rel in suprel.rels %}
+                              <li>
+                                <span title="{% trans 'The registration authority that applied this relationship' %}">
+                                  {{ rel.registration_authority.name }}
+                                </span>,
+                              {{ rel.date_effective }} -
+                              {{ rel.message }}
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </li>
+                    {% empty %}
+                        <li><em>{% trans 'None' context 'No newer objects' %}</em></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% if item.is_retired %}
+            <div class=" alert alert-warning">
+                {% trans 'This item has been retired and is not recommended for use by any registration authority.'%}
+            </div>
+        {% endif %}
+        {% if item.is_public %}
+            {# split the if condition as if its public and not technical, we want nothing not one of the lower alerts #}
+            <div class='alert alert-danger alert-dismissible'>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+                {% trans 'This item is currently public.'%}
+            </div>
+        {% elif item.is_locked %}
+            <div class=" alert alert-info">
+                {% trans 'This item is currently under development.'%}
+            </div>
+        {% endif %}
+
+        <div>
+        {% include "aristotle_mdr/create/concept_editor.html" with form=form %}
+        </div>
+    </div>
+    <div class="modal-footer">
+        {% if request.is_ajax %}
+            <button accesskey="c" type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        {% else %}
+            <a accesskey="c" class="btn btn-default" href="{% url 'aristotle:item' item.id %}">Cancel</a>
+        {% endif %}
+        <input accesskey="s" type="submit" class="btn btn-primary" value="Save changes" />
+    </div>
+</form>
+{% for formset in weak_formsets %}
+  {% include 'aristotle_mdr/generic/actions/alter_one_to_many_formstage.html' with formset=formset.formset %}
+{% endfor %}
+{% for formset in through_formsets %}
+  {% include 'aristotle_mdr/generic/actions/alter_one_to_many_formstage.html' with formset=formset.formset %}
+{% endfor %}
+{% if slots_FormSet %}
+  {% include 'aristotle_mdr/generic/actions/alter_one_to_many_formstage.html' with formset=slots_FormSet %}
+{% endif %}
+{% if identifier_FormSet %}
+  {% include 'aristotle_mdr/generic/actions/alter_one_to_many_formstage.html' with formset=identifier_FormSet %}
+{% endif %}
+{% endblock %}
