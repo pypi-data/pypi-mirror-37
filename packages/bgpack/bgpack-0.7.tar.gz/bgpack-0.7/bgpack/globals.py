@@ -1,0 +1,4 @@
+
+
+class BGPackError(Exception):
+    pass
