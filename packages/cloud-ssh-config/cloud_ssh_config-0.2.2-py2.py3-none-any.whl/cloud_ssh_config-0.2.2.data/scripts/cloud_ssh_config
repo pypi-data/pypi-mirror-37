@@ -1,0 +1,58 @@
+#!python
+# -*- coding: utf-8 -*-
+
+# This program is free software. It comes without any warranty, to
+# the extent permitted by applicable law. You can redistribute it
+# and/or modify it under the terms of the Do What The Fuck You Want
+# To Public License, Version 2, as published by Sam Hocevar. See
+# http://www.wtfpl.net/ for more details.
+
+import argparse
+import sys
+import cloud_ssh_config.ssh_config.ssh_config as ssh_config
+
+# Read arguments
+parser = argparse.ArgumentParser(
+                    description='Get host names and ip adresses from a cloud')
+parser.add_argument("cloud",
+                    help="Supported clouds: aws, digitalocean")
+parser.add_argument('-U', '--ssh_user',
+                    help='SSH user')
+parser.add_argument('-P', '--prefix', default='',
+                    help='Prefix for hosts')
+parser.add_argument('-K', '--ssh_key', default='~/.ssh/id_rsa',
+                    help='Prefix for hosts')
+parser.add_argument('-T', '--token',
+                    help='API token')
+
+args = parser.parse_args()
+
+if args.cloud == 'digitalocean' and args.token is None:
+    print("Not enough args: --token required to access to digitalocean's API")
+    sys.exit(1)
+
+if args.cloud is None:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
+
+hosts = None
+cloud = None
+if args.cloud == 'aws':
+    from cloud_ssh_config.cloud import aws
+    cloud = aws.cloud()
+elif args.cloud == 'digitalocean':
+    from cloud_ssh_config.cloud import do
+    cloud = do.cloud(args.token)
+hosts = cloud.get_hosts()
+
+if hosts:
+    if not args.ssh_user:
+        if args.cloud == 'aws':
+            user = 'ubuntu'
+        elif args.cloud == 'digitalocean' or args.cloud == 'scaleway':
+            user = 'root'
+    else:
+        user = args.ssh_user
+
+    ssh = ssh_config.config(user=user, prefix=args.prefix, key=args.ssh_key)
+    ssh.get_config(hosts)
