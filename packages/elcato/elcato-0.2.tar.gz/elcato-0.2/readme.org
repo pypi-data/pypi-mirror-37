@@ -1,0 +1,44 @@
+#+TITLE: ElCato Static Blogging Platform
+#+DATE: 2017-07-01 12:00:00 UTC
+#+DESCRIPTION: Static blog generator 
+#+KEYWORDS: emacs:orgmode
+#+CATEGORY: emacs
+#+SLUG: org-mode-header-reference
+
+* Initial setup
+** Creating a brand new Blog
+First of initialize your blog with the command below adjust the path parameter to suit you.
+#+BEGIN_SRC shell :results silent :tangle.env
+elcato init --path=/tmp/myblog
+#+END_SRC
+** Adding a new post
+If you are inside your project root you can omit the path parameter as it will use the one from your yaml config.
+#+BEGIN_SRC shell :results silent :tangle.env
+elcato create --path=/tmp/myblog
+#+END_SRC
+
+** Modifying the defaults
+Edit the config.yaml file and modify the defaults to suit you in particular the Author and Blog blocks.
+
+** Environment variables
+#+BEGIN_SRC shell :results silent :tangle.env 
+SOURCE_ORG_FILES=~/repos/do-blog/posts/
+DESTINATION_FILES=./output/
+#+END_SRC
+
+** Configuration
+You can configure the static values using a yaml file this will have been created when you Initialized your blog.
+Common settings are your personal details and your blog details like name and url.
+* Advanced usage
+** Change code styles
+Generate code highlighting stylesheet.
+#+BEGIN_SRC shell
+pygmentize -S monokai -f html -a .highlight -a .code  > output/default.css
+#+END_SRC
+
+** Org Tips
+Limit display size of all images in org buffers set this at the top of your page.
+#+BEGIN_EXAMPLE
+#+ATTR_ORG: :width 400
+#+END_EXAMPLE
+
