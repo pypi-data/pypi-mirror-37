@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+#encoding=utf-8
+
+import os,imp,argparse,sys
+
+def now(now=None,seconds=False):
+	import datetime as dt
+	if not now:
+		now=dt.datetime.now()
+	elif type(now) in [int,float,str]:
+		now=dt.datetime.fromtimestamp(now)
+
+	return '{0}{1}{2}-{3}{4}{5}'.format(now.year,str(now.month).zfill(2),str(now.day).zfill(2),str(now.hour).zfill(2),str(now.minute).zfill(2),'-'+str(now.second).zfill(2) if seconds else '')
+
+
+if __name__ == '__main__':
+	# parse arguments
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-sling',help="Path to the python or R file of code (ending in .py or .R)")
+	parser.add_argument('-stone',help='The name of the function in the code that takes a string filepath')
+	parser.add_argument('-pathlist',help='A text file with a path per line')
+	parser.add_argument('-path',help='A directory where files ending with -ext EXT will be considered the paths [is recursive]')
+	parser.add_argument('-ext',help='The file extension files in -path PATH must have in order to be considered',default='txt')
+	parser.add_argument('-limit',help='Limit the number of paths to process to this number')
+
+	parser.add_argument('-nosave',help='Do not save results',action='store_true',default=False)
+	parser.add_argument('-nocache',help='Do not cache partial results',action='store_true')
+	parser.add_argument('-savedir',help='Directory to store results in [defaults to results_sling_stone_timestamp]')
+	parser.add_argument('-mfw',help='Limit # of columns in results.txt to N most frequent in data',default=10000)
+
+	parser.add_argument('-sbatch',help='Run on sherlock',action='store_true')
+	parser.add_argument('-hours',help='How many hours to ask sherlock for',default=1)
+	parser.add_argument('-mem',help='How much memory should each CPU have',default='2G')
+	parser.add_argument('-parallel',help='How many MPI tasks should run in parallel?',default=4)
+	parser.add_argument('-debug',help='Do not run on MPI and do not submit with sbatch',action='store_true')
+	parser.add_argument('-quiet',help='Do not print output to screen',action='store_true')
+	args = parser.parse_args()
+
+	# If no arguments... go into interactive mode!
+	if len(sys.argv)<2:
+		from mpi_slingshot.interactive import interactive
+		args = interactive(parser)
+
+	# Load slingshot
+	if not args.sling or not args.stone:
+		if not args.sling: print "error: -sling SLING must be specified"
+		if not args.stone: print "error: -stone STONE must be specified"
+		print
+		parser.print_help()
+		sys.exit(1)
+
+	Scmd = 'slingshot -sling {sling} -stone {stone}'.format(sling=args.sling, stone=args.stone)
+
+	# Construct Goliath
+	path_ext=None
+	if args.pathlist:
+		path_source = os.path.abspath(args.pathlist)
+		Scmd += ' -pathlist %s' % path_source
+	elif args.path:
+		path_source = os.path.abspath(args.path)
+		path_ext = args.ext if args.ext else None
+		Scmd += ' -path %s%s' % (path_source, ' -ext '+path_ext if path_ext else '')
+	else:
+		print "error: neither -pathlist PATHLIST nor -path PATH specified"
+		parser.print_help()
+		sys.exit(1)
+
+
+	# Other options
+	limit = int(args.limit) if args.limit else None
+	savedir=args.savedir
+	if not savedir:
+		module='.'.join(os.path.basename(args.sling).split('.')[:-1])
+		#savedir='/'.join(['results_slingshot',module,args.stone,now()])
+		savedir='/'.join(['results_slingshot',module,args.stone])
+	if not os.path.exists(savedir): os.makedirs(savedir)
+	out_fnfn=os.path.join(savedir,'output.txt')
+	err_fnfn=os.path.join(savedir,'errors.txt')
+	cmd_fnfn=os.path.join(savedir,'cmd.txt')
+	tocache=not args.nocache
+	tosave=args.nosave is False
+
+	#other_args=[limit,savedir,tocache,tosave,args.mfw]
+	if limit: Scmd+=' -limit %s' % limit
+	if savedir: Scmd+=' -savedir %s' % savedir
+	if not tocache: Scmd+=' -nocache'
+	if not tosave: Scmd+=' -nosave'
+	if args.mfw: Scmd+=' -mfw %s' % args.mfw
+
+	# Execute!
+	command = """python -c "from mpi_slingshot import slingshot; slingshot(path_sling='{sling}', stone_name='{stone}', path_source='{path_source}', path_ext='{path_ext}', limit={limit}, results_dir='{savedir}', cache_results={cache}, save_results={tosave}, txt_maxcols={mfw})" """.format(
+		sling=args.sling,
+		stone=args.stone,
+		path_source=path_source,
+		path_ext=path_ext,
+		limit=limit,
+		savedir=savedir,
+		cache=tocache,
+		tosave=tosave,
+		mfw=args.mfw
+	)
+
+	if not args.debug:
+		mpi_opts = ' -np %s ' % args.parallel if not args.sbatch and args.parallel else ' '
+		command = 'mpirun'+mpi_opts+command
+	#if args.sbatch: command = 'sbatch --ntasks-per-node=2 --wrap="%s"' % command.replace('"','\\"')
+	if args.sbatch:
+		cmd=command.replace('"','\\"')
+		jobname=''.join([x for x in savedir if x.isalnum()][-8:])
+		sbatch = 'sbatch --output={out} --error={err} --job-name={jobname}'.format(out=out_fnfn,err=err_fnfn,jobname=jobname)
+
+		# v1
+		command = sbatch+' -n {n} -c 1 --mem-per-cpu {mem} -t {h}:00:00 --wrap="{cmd}"'.format(mem=args.mem, n=args.parallel, h=str(args.hours).zfill(2), cmd=cmd)
+		# v1b
+		#command = sbatch+' -n {n} -c 1 --mem-per-cpu=2G -t {h}:00:00 --wrap="{cmd}"'.format(n=args.parallel, h=args.hours, cmd=cmd)
+
+		# v2
+		#command = sbatch+' --nodes 2 --ntasks-per-node 2 --wrap="{cmd}"'.format(cmd=cmd)
+	else:
+		# if not SBATCH
+		if not args.nosave and not args.quiet:
+			command = command + ' | tee /dev/tty > {out}'.format(out=out_fnfn)
+		elif not args.nosave and args.quiet:
+			command = command + ' > {out}'.format(out=out_fnfn)
+		elif args.nosave and not args.quiet:
+			pass
+		elif args.nosave and args.quiet:
+			command = command + ' > {out}'.format(out='/dev/null')
+
+
+	if args.sbatch: Scmd+=' -sbatch'
+	if args.hours: Scmd+=' -hours %s' % args.hours
+	if args.mem: Scmd+=' -mem %s' % args.mem
+	if args.parallel: Scmd+=' -parallel %s' % args.parallel
+	if args.debug: Scmd+=' -debug'
+	if args.quiet: Scmd+=' -quiet'
+
+	print '>> SLINGSHOT COMMAND:',Scmd
+	print
+	print '>> EXECUTING COMMAND:',command
+	print
+	with open(cmd_fnfn,'w') as f: f.write(command+'\n')
+
+
+
+	#os.system(command)
+	import subprocess
+	subprocess.check_output(command,shell=True)
