@@ -1,0 +1,82 @@
+Metadata-Version: 2.1
+Name: hydroeval
+Version: 0.0.1.post1
+Summary: HydroEval: An Evaluator for Stream Flow Time Series
+Home-page: https://github.com/ThibHlln/hydroeval
+Author: Thibault Hallouin
+Author-email: thibault.hallouin@ucdconnect.ie
+License: GPLv3
+Description: [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+        [![PyPI Version](https://badge.fury.io/py/hydroeval.svg)](https://pypi.python.org/pypi/hydroeval)
+        
+        # HydroEval - An open-source evaluator for stream flow time series in Python
+        
+        HydroEval is an open-source evaluator for stream flow time series in Python. It is licensed under GNU GPL-3.0 (see [licence file](https://github.com/ThibHlln/hydroeval/blob/master/LICENCE.md) provided). The purpose of this evaluator is to compare observed and simulated hydrographs using one or more objective functions. HydroEval is designed to calculate all objective functions in a vectorised way (using [numpy](https://github.com/numpy/numpy), and therefore C code in the background) which makes for very efficient computation of the objective functions.
+        
+        ## How to Install
+        
+        HydroEval is available on PyPI, so you can simply use pip and the name of the package:
+        
+            python -m pip install hydroeval
+        
+        You can also use pip and a link to the GitHub repository directly:
+        
+        	python -m pip install git+https://github.com/ThibHlln/hydroeval.git
+        
+        Alternatively, you can download the source code (*i.e.* the GitHub repository) and, from the downloaded directory itself, run the command:
+        
+            python setup.py install
+        
+        ## How to Use
+        
+        A tutorial in the form of a [Jupyter notebook](https://github.com/ThibHlln/hydroeval/blob/master/examples/api_usage_example.ipynb) is available to get started with the usage of HydroEval's API. The input files required for the tutorial are all provided in the `examples/` folder.
+        
+        ## Objective Functions Available
+        
+        The objective functions currently available in HydroEval to evaluate the fit between observed and simulated stream flow time series are as follows:
+        * [Nash-Sutcliffe Efficiency](https://doi.org/10.1016/0022-1694(70)90255-6) (`nse`)
+        * [Original Kling-Gupta Efficiency](https://doi.org/10.1016/j.jhydrol.2009.08.003) (`kge`) and its three components (r, Î±, Î²)
+        * [Modified Kling-Gupta Efficiency](https://doi.org/10.1016/j.jhydrol.2012.01.011) (`kgeprime`) and its three components (r, Î³, Î²)
+        * Root Mean Square Error (`rmse`)
+        * Mean Absolute Relative Error (`mare`)
+        * Percent Bias (`pbias`)
+        
+        Moreover, KGE and NSE can be calculated in a bounded version following [Mathevet et al. (2008)](https://iahs.info/uploads/dms/13614.21--211-219-41-MATHEVET.pdf):
+        
+        * Bounded Nash-Sutcliffe Efficiency (`nse_c2m`)
+        * Bounded Original Kling-Gupta Efficiency (`kge_c2m`)
+        * Bounded Modified Kling-Gupta Efficiency (`kgeprime_c2m`)
+        
+        Finally, any of the objective functions can take an optimal argument `transform`. This argument allows to apply a transformation on both the observed and the simulated stream flow time series prior the calculation of the objective function. The possible transformations are as follows:
+        * Inverted flows (using `transform='inv'`)
+        * Square Root-transformed flows (using `transform='sqrt'`)
+        * Natural Logarithm-transformed flows (using `transform='log'`)
+        
+        ## Dependencies
+        
+        HydroEval requires the popular Python package `numpy` to be installed on the Python implementation where `hydroeval` is installed.
+        
+        ## Version History
+        
+        * 0.0.1 [26 Oct 2018]: First version of HydroEval
+        
+        ## Acknowledgment
+        
+        This tool was developed with the financial support of Ireland's Environmental Protection Agency (Grant Number 2014-W-LS-5).
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Natural Language :: English
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Scientific/Engineering
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Description-Content-Type: text/markdown
