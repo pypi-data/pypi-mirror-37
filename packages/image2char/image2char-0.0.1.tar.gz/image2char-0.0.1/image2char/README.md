@@ -1,0 +1,32 @@
+# image2char
+
+## description
+
+this module can change image to char[], can be printed at console beautiful
+
+![](http://github.com/cpak00/charimage/sample.jpg)
+-->
+![](http://github.com/cpak00/charimage/sample.png)
+
+## quick start
+
+```python
+from image2char import tool
+from PIL import Image
+import logging
+
+img_path = 'input1.jpg'
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    img = Image.open(img_path)
+    matrix = tool.to_chars(img, density=0.5, scale=2, reversed=True)
+    logging.info('matrix: %d, %d' % (len(matrix), len(matrix[0])))
+    for i in range(len(matrix)):
+        print(''.join(matrix[i]))
+
+    char_list = '''█▓▒░ '''
+    scanner = tool.get_scanner(density=0.5, scale=1)
+    scanner.scan(img, reversed=True, char_list=char_list)
+    scanner.print_result()
+```
