@@ -1,0 +1,128 @@
+{% extends 'base.jinja2' %}
+{# TODO: mutualise this among all guest pages (login, register, forgot password, etc) #}
+{% if discussion %}
+  {% block page_title %}{{ discussion.topic }}{% endblock %}
+{% endif %}
+{% block meta_tags %}
+  <meta name="description" content="">{# not shown because introduction may not be public and has HTML, so it should be filtered. TODO: filter. <meta property="description" content="{{ discussion.introduction }}" />#}
+  {% if discussion %}
+    <meta property="og:title" content="{{ discussion.topic }}" />
+  {% else %}
+    <meta property="og:title" content="Assembl" />
+  {% endif %}
+  <meta property="og:type" content="website" />
+  {#<meta property="og:site_name" content="Assembl" />#}
+  {#<meta property="og:locale" content="fr_FR" />#}
+  {# not shown because introduction may not be public and has HTML, so it should be filtered. TODO: filter. <meta property="og:description" content="{{ discussion.introduction }}" />#}
+  <meta property="og:url" content="{{ application_url }}{{ get_route('login') }}" />
+  <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/crowd2.jpg" />
+  <meta property="og:image:width" content="1600" />
+  <meta property="og:image:height" content="222" />
+  <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/logo.png" />
+  <meta property="og:image:width" content="111" />
+  <meta property="og:image:height" content="35" />
+{% endblock meta_tags %}
+
+{% block content %}
+
+<div class="loginbox sign-in">
+    <header>
+        <h1>{% if discussion %}{{ gettext("Log in to \"%(discussion_title)s\"")|format(discussion_title=discussion.topic) }}{% else %}{{ gettext("Log in to Assembl") }}{% endif %}</h1>
+    </header>
+
+    <div class="content">
+      {% if not preferences['require_email_domain'] %}
+        {% if providers %}
+          <div class="socialPart">
+              <p class="login-box-title">{{ gettext("Log in using one of these social networks") }}</p>
+              {% for provider in providers %}
+                <form id="{{provider.name}}" class="mts js_login_{{provider.type}}" method="get" action="{{provider.login}}">
+                  {% if discussion %}
+                    <input type="hidden" name="next" value="{{ get_route('bare_slug')}}" />
+                  {% endif %}
+
+                  {% for k, v in provider.extra.items() %}
+                    <input type="hidden" name="{{ k }}" value="{{ v }}" />
+                  {% endfor %}
+
+                  {% if provider.type == "openid" %}
+                    <div class="openid-icon-bg"></div><input type="text" class="openid-bg" name="openid_identifier" class="form-control" />
+                  {% endif %}
+                  <button type="submit" class="{{provider.type}}-bg mbs">{{gettext('Login with ') + provider.name}}</button>
+                </form>
+              {% endfor %}
+          </div>
+
+          <div class="signinSeparator left">
+          {#
+              <div class="mask"></div>
+          #}
+          </div>
+        {% endif %}
+      {% endif %}
+
+        <div class="signinWrapper" style="{{'display: table; margin: 0 auto;' if not providers else ''}}">
+            <p class="login-box-title mbl">{{ gettext("Already have an account?") }}</p>
+            <div class="error-message">{{error}}</div>
+            <form class="form" method="POST">
+                <input type="hidden" name="next" value="{{next}}" />
+                <input type="text" name="identifier" class="form-control mbs" placeholder="{{ gettext('Email or username') }}"  required value="{{ identifier }}"
+                {% if not identifier %}autofocus{% endif %}
+                />
+                <input type="password" name="password" class="form-control mbs" placeholder="{{ gettext('Password') }}" required
+                {% if identifier %}autofocus{% endif %}
+                />
+
+                <table class="submitButtons">
+                <tr><td>
+                    <input type="submit" name="login" value="{{ gettext('Log in') }}" class="btn btn-primary js_login" />
+                </td><td>
+                    <a href="{{ get_route('request_password_change') }}">{{ gettext('Forgot your password?') }}</a>
+                </td></tr></table>
+            </form>
+            {% if not hide_registration %}
+            <p class="login-box-title mtxl mbs">{{ gettext("No account yet?") }}</p>
+            <form class="form inline" method="GET" action="{{ get_route('register') }}">
+                <input type="hidden" name="next" value="{{next}}" />
+                <input type="submit" value="{{ gettext('Sign up') }}" class="btn btn-secondary" />
+            </form>
+            {% endif %}
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block main_js %}
+    <script src="{{ STATIC_URL }}/js/bower/jquery/dist/jquery.min.js"></script>
+    <script src="{{ STATIC_URL }}/js/bower/underscore/underscore-min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+    {# Including our analytics wrapper scripts in order to make calls using our analytics engine (if configured) #}
+    {% include 'analytics_nonBackboned.jinja2' %}
+    {% if web_analytics.get('enabled', False) %}
+        <script type="text/javascript">
+          var analytics = Analytics_Dispatcher.getInstance();
+          analytics.changeCurrentPage(analytics.pages.LOGIN);
+
+          document.getElementsByClassName('js_login')[0].addEventListener('click', function(){
+            analytics.trackEvent(analytics.events.EMAIL_LOGIN);
+          });
+
+          function instrument_social_login(element_cls, tracking_name) {
+            var social_login = document.getElementsByClassName(element_cls);
+            if (social_login.length > 0) {
+              social_login[0].addEventListener('click', function(){
+                analytics.trackEvent(tracking_name);
+              });
+            }
+          }
+          instrument_social_login('js_login_facebook', analytics.events.FACEBOOK_LOGIN);
+          instrument_social_login('js_login_twitter', analytics.events.TWITTER_LOGIN);
+          instrument_social_login('js_login_google', analytics.events.GOOGLE_LOGIN);
+          instrument_social_login('js_login_yammer', analytics.events.YAMMER_LOGIN);
+
+        </script>
+    {% endif %}
+{% endblock %}

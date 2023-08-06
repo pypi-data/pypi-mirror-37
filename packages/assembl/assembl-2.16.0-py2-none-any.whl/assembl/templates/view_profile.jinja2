@@ -1,0 +1,66 @@
+{% extends 'base.jinja2' %}
+
+{% block header %}
+    <div class="bar bar--main">
+        <div class="bar-body">
+            <div class="bar-right">
+                <a> {{ gettext('Profile') }} <i class="icon-user"></i> </a>
+            {% if locales.__len__ > 1 %}
+                    <a href="#" class="locale active">{{locale | upper}}</a>
+                {% for loc in locales %}
+                    {% if (loc != locale) %}
+                         <a href="#" class="lang" onmouseup="window.app.setLocale('{{loc}}')">{{loc | upper}}</a>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    <div>
+        {% if profile.username %}
+        <label>{{ gettext('Username') }}</label>
+        <span>{{profile.username.username}}</span>
+        {% endif %}
+
+        <label>{{ gettext('Name') }}</label>
+        <span>{{profile.name}}</span>
+
+        <!-- TODO Avatar logic -->
+        {% if profile.email_accounts %}
+        <!-- TODO: Preferred email logic. -->
+        <div class="spacer spacer--huge"></div>
+        <label>{{ gettext('Emails') }}</label>
+        <ul>
+        {% for email_account in profile.email_accounts %}
+            {% if email_account.verified %}
+                <li>{{ email_account.email }}</li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if profile.identity_accounts %}
+        <div class="spacer spacer--huge"></div>
+        <label>{{ gettext('Accounts') }}</label>
+        <ul>
+        {% for account in profile.identity_accounts %}
+        <li>
+            <label>{{ account.provider.provider_type }}:</label>
+            {% if account.username %}
+                {{account.username}}
+            {% else %}
+                {{account.userid}}
+            {% endif %}
+        </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        </form>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.jinja2' %}
+
+{% block page_title %}{{ discussion.topic }}{% endblock %}
+
+{% block meta_tags_public %}
+    {% if request.matched_route.name == "purl_posts" and post %}
+        {% if not private_social_sharing %}
+            <meta name="description" content="{{ post.get_original_body_preview() }}">
+            <meta name="author" content="{{ post.creator.display_name() }}">
+            <meta property="og:title" content="{{ post.subject.first_original().value }}" />
+            <meta property="og:type" content="article" />
+            {#<meta property="og:site_name" content="Assembl" />#}
+            {#<meta property="og:locale" content="{{get_locale}}" />#}
+            {# Message can contain HTML and quotes, so it has to be filtered and shortened #}
+            <meta property="og:description" content="{{ post.get_original_body_preview() }}" />
+            <meta property="article:published_time" content="{{ post.creation_date }}" />
+            {# TODO: have unique URL for a user <meta property="article:author" content="http://examples.opengraphprotocol.us/profile.html"> #}
+            <meta property="og:url" content="{{ post.get_url() }}" />
+            <meta property="og:image" content="{{get_landing_page_image}}" />
+            <meta property="og:image:width" content="1600" />
+            <meta property="og:image:height" content="222" />
+            <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/logo.png" />
+            <meta property="og:image:width" content="111" />
+            <meta property="og:image:height" content="35" />
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:site" content="{{get_discussion_url}}">
+            <meta name="twitter:creator" content="@bluenove">
+            <meta name="twitter:title" content="{{post.subject.first_original().value }}">
+            <meta name="twitter:description" content="{{post.get_original_body_preview()}}">
+            <meta name="twitter:image" content="{{get_landing_page_image}}">
+        {% endif %}
+    {% elif request.matched_route.name == "purl_idea" and idea %}
+        {% if not private_social_sharing %}
+            {# Idea description can contain HTML, so it has to be filtered and shortened #}
+            <meta name="description" content="{{ idea.get_definition_preview() }}">
+            {#<meta name="author" content="{{ post.creator.display_name() }}">#}
+            <meta property="og:title" content="{{ idea.short_title }}" />
+            <meta property="og:type" content="article" />
+            {#<meta property="og:site_name" content="Assembl" />#}
+            {#<meta property="og:locale" content="fr_FR" />#}
+            <meta property="og:description" content="{{ idea.get_definition_preview() }}" />
+            <meta property="article:published_time" content="{{ idea.creation_date }}" />
+            {# TODO: have unique URL for a user <meta property="article:author" content="http://examples.opengraphprotocol.us/profile.html"> #}
+            <meta property="og:url" content="{{ idea.get_url() }}" />
+            <meta property="og:image" content="{{get_landing_page_image}}" />
+            <meta property="og:image:width" content="1600" />
+            <meta property="og:image:height" content="222" />
+            <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/logo.png" />
+            <meta property="og:image:width" content="111" />
+            <meta property="og:image:height" content="35" />
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:site" content="{{get_discussion_url}}">
+            <meta name="twitter:creator" content="@bluenove">
+            <meta name="twitter:title" content="{{idea.short_title }}">
+            <meta name="twitter:description" content="{{idea.get_definition_preview()}}">
+            <meta name="twitter:image" content="{{get_landing_page_image}}">
+        {% endif %}
+    {% else %}
+        {% if not private_social_sharing %}
+            <meta name="description" content="{{ discussion.introduction|striptags }}">
+            <meta property="og:title" content="{{ discussion.topic }}" />
+            <meta property="og:type" content="website" />
+            {#<meta property="og:site_name" content="Assembl" />#}
+            {#<meta property="og:locale" content="fr_FR" />#}
+            {# not shown because introduction has HTML, so it should be filtered. TODO: filter. <meta property="og:description" content="{{ discussion.introduction }}" />#}
+            <meta property="og:url" content="{{ discussion.get_url() }}" />
+            <meta property="og:image" content="{{get_landing_page_image}}" />
+            <meta property="og:image:width" content="1600" />
+            <meta property="og:image:height" content="222" />
+            <meta property="og:image" content="{{ application_url }}/static/css/themes/default/img/logo.png" />
+            <meta property="og:image:width" content="111" />
+            <meta property="og:image:height" content="35" />
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:site" content="{{get_discussion_url}}">
+            <meta name="twitter:creator" content="@bluenove">
+            <meta name="twitter:title" content="{{discussion.topic}}">
+            <meta name="twitter:description" content="{{discussion.introduction}}">
+            <meta name="twitter:image" content="{{get_landing_page_image}}">
+        {% endif %}
+    {% endif %}
+{% endblock meta_tags_public %}
+
+{% block content %}
+<input type="hidden" name="discussion-id" id="discussion-id" value="{{ discussion.id }}" />
+<input type="hidden" name="discussion-slug" id="discussion-slug" value="{{ discussion.slug }}" />
+<input type="hidden" name="discussion-topic" id="discussion-topic" value="{{ discussion.topic }}" />
+<input type="hidden" name="socket-url" id="socket-url" value="{{ socket_url }}" />
+<input type="hidden" name="elasticsearchLangIndexes" id="elasticsearchLangIndexes" value="{{ elasticsearch_lang_indexes }}" />
+
+{% if user %}
+    <input type="hidden" name="user-id" id="user-id" value="{{ user.id }}" />
+    <input type="hidden" name="user-displayname" id="user-displayname" value="{{ user.display_name() }}" />
+{% endif %}
+
+<div id="groupContainer"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {% if user %}
+      {% set userId = user.id %}
+    {% else %}
+      {% set userId = 'system.Everyone' %}
+    {% endif %}
+
+    <script src="{{REACT_URL}}/build/searchv1.js"></script>
+    <script type="text/javascript">start_application = true;</script>
+    <script type="application/json" id="users-json">{{ discussion.get_all_agents_preload(user) |safe }}</script>
+    <script type="application/json" id="inheritance-json">{{ discussion.get_json_inheritance_for('User', 'Idea', 'IdeaLink', 'Post', 'Widget') |safe }}</script>
+    <script type="application/json" id="extracts-json">{{ discussion.get_related_extracts_preload(user_id=userId) |safe }}</script>
+    <script type="application/json" id="login-providers">{{providers_json|safe}}</script>
+    {% if user %}
+        <script type="application/json" id="current-user-json">{{ user.get_agent_preload() |safe }}</script>
+        <script type="application/json" id="read-posts-json">{{ discussion.get_read_posts_ids_preload(userId) |safe }}</script>
+    {% endif %}
+    <script type="application/json" id="permissions-json">{{ discussion.get_user_permissions_preload(userId) |safe }}</script>
+    <script type="application/json" id="preferences">{{ preferences_json |safe }}</script>
+    <script type="application/json" id="role-names">{{ role_names |safe }}</script>
+    <script type="application/json" id="translation-locale-names">{{ translation_locale_names_json |safe }}</script>
+    <script type="application/json" id="translation-service-data">{{ translation_service_data_json |safe }}</script>
+    {% include 'analytics_common.jinja2' %}
+
+
+{% endblock %}
+
+{% block backboneTemplates %}
+    <div id="templates">
+        {% for template in templates %}
+            {% set template_path = 'views/' + template + '.tmpl' %}
+            <script id="tmpl-{{template}}" type="text/x-template">
+                {% include template_path %}
+            </script>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block main_js %}
+    <script>
+        var CKEDITOR_BASEPATH = '/static/js/node_modules/ckeditor/';
+    </script>
+    <script src="{{ STATIC_URL }}/js/build/infrastructure.min.js"></script>
+    <script src="{{ STATIC_URL }}/js/build/app.js"></script>
+{% endblock %}
+
+{% block facebook_sdk_load %}
+    {%if user and 'export_post' in user.permissions_for_current_discussion[discussion.uri()] %}
+        {% include 'includes/fb.jinja2' %}
+    {% endif%}
+{% endblock%}
+
+{% block for_testing %}
+    {% if under_test %}
+        <div id="under-test" class="hidden">V1</div>
+    {%- endif %}
+{% endblock %}

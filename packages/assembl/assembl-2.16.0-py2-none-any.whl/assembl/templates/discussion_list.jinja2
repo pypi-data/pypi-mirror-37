@@ -1,0 +1,51 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+<div class="gr discussionlist">
+  {% for discussion in discussions %}
+  <div class="gu gu1of5 bx bx-default">
+    <h4 class="h4"><a href='{{ get_route('new_home', discussion_slug=discussion.slug) }}'>{{ discussion.topic }}</a></h4>
+    <span class="discussion">
+    {% if discussion.admin_url %}
+      <br/><a href='{{ discussion.admin_url }}'><em>{{ gettext("Admin") }}</em></a>
+    {% endif %}
+    {% if discussion.admin_url %}
+      <br/><a href='{{ discussion.permissions_url }}'><em>{{ gettext("Permissions") }}</em></a>
+    {% endif %}
+    </span>
+  </div>
+  {% endfor %}
+
+  {% if not discussions %}
+    <div class="gu gu1of5 bx bx-default">
+      <em>{% trans %}There are no discussions on this server yet{% endtrans %}</em>
+    </div>
+  {% endif %}
+
+  {% if not user %}
+    <div class="gu gu1of5 bx bx-default">
+      <h4 class="h4"><a href="{{get_route('react_login')}}">{{ gettext("Sign in") }}</a></h4>
+      {% trans %} to see all available discussions.{% endtrans %}
+    </div>
+  {% endif %}
+  
+
+  {% if discussions_admin_url or permissions_admin_url or user %}
+  <div class="gu gu1of5 bx bx-default">
+    {% if discussions_admin_url %}
+      <h4 class="h4"><a href='{{ discussions_admin_url }}'>{{ gettext("Create a new discussion") }}</a></h4>
+    {% endif %}
+    {% if permissions_admin_url %}
+      <h4 class="h4"><a href='{{ permissions_admin_url }}'>{{ gettext("Change global permissions") }}</a></h4>
+    {% endif %}
+    {% if preferences_admin_url %}
+      <h4 class="h4"><a href='{{ preferences_admin_url }}'>{{ gettext("Change global preferences") }}</a></h4>
+    {% endif %}
+    {% if user %}
+      <h4 class="h4"><a href="{{ get_route('logout') }}">{{ gettext("Sign out") }}</a></h4>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

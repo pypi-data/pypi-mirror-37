@@ -1,0 +1,54 @@
+{% extends 'base.jinja2' %}
+{% block page_title%}{{discussion_title}}{% endblock%}
+
+{% block main_css %}
+  {# Override the main CSS. #}
+  {% if NODE_ENV != 'development' %}
+  <link type="text/css" rel="stylesheet" href="{{REACT_URL}}/build/bundle.css" />
+  <link type="text/css" rel="stylesheet" href="{{REACT_URL}}/build/theme_{{theme_name}}_web.css" />
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+    <body>
+        {% if user %}
+          {% set userId = user.id %}
+        {% else %}
+          {% set userId = 'system.Everyone' %}
+        {% endif %}
+        <input type="hidden" name="elasticsearchLangIndexes" id="elasticsearchLangIndexes" value="{{ elasticsearch_lang_indexes }}" />
+        {% if discussion %}
+            <input type="hidden" name="assemblVersion" id="assemblVersion" value="{{ assembl_version }}" />
+            <input type="hidden" name="discussion-id" id="discussion-id" value="{{ discussion.id }}" />
+            <input type="hidden" name="discussion-slug" id="discussion-slug" value="{{ discussion.slug }}" />
+            <script type="application/json" id="permissions-json">{{ discussion.get_user_permissions_preload(userId) |safe }}</script>
+        {% endif %}
+        {% if providers_json %}
+            <script type='application/json' id='login-providers'>{{providers_json|safe}}</script>
+        {% endif %}
+        {% if user %}
+            <input type='hidden' name='user-id' id='user-id' value='{{ user.id }}' />
+            <input type='hidden' name='user-displayname' id='user-displayname' value='{{ user.display_name() }}' />
+        {% endif %}
+        {% if error %}
+            <div class='hidden' id='errorMessage'>{{ error }}</div>
+        {% endif %}
+        {% if messages %}
+            <div class='hidden' id='serverMessages'>{{ messages }}</div>
+        {% endif %}
+        <div id='root'></div>
+        {% block main_js %}
+            {% include 'analytics_common.jinja2' %}
+            <script src='{{REACT_URL}}/build/bundle.js'></script>
+            {% if NODE_ENV == 'development' %}
+                <script src="{{REACT_URL}}/build/theme_{{theme_name}}_web.js"></script>
+            {% endif %}
+        {% endblock %}
+
+        {% block for_testing %}
+            {% if under_test %}
+                <div id="under-test" class="hidden">V2</div>
+            {%- endif %}
+        {% endblock %}
+    </body>
+{% endblock%}

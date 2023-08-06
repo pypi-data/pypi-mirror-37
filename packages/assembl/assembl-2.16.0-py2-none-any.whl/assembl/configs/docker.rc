@@ -1,0 +1,85 @@
+
+_extends = base_env.rc
+# add configs/no_sentry to the mix if you're not using sentry at all
+ini_files = production.ini RANDOM:random.ini.tmpl:saml_random.ini.tmpl:random_docker.ini.tmpl RC_DATA
+_projectpath = /opt/assembl
+db_password = __delete_key__
+public_hostname = assembl.cloud
+_hosts = localhost
+_postgres_db_password = 
+_user = assembl_user
+
+*db_host = database
+smtp_host = localhost
+imap_host = localhost
+piwik_host = piwik
+*sentry_host = sentry
+redis_host = redis
+memcached_host = memcached
+elasticsearch_host = elasticsearch
+elastic_search_basic_auth = elastic:changeme
+nginx_host = web
+supervisor__autostart_uwsgi = true
+supervisor__autostart_elasticsearch = false
+uwsgi__socket = 0.0.0.0:9000
+uwsgi__processes = 3
+# this means that the exposed nginx is secure (https) even
+# if an inner nginx is not
+secure_proxy = true
+
+# Override what follows in your specific docker.rc file
+
+# Have a local file with the random values for this specific deploy
+random_file = configs/docker_random.ini
+
+# What are the public hostnames of your assembl hosts? Can be multiple, separated by spaces
+docker_assembl_hosts = assembl1.docker assembl2.docker
+
+# This is where you give the path to your base docker.rc file,
+# presumably overriding this one.
+# If it is not part of git, you would probably copy it to docker/build,
+# which is visible to the docker image as /opt/default_config
+# But docker/build itself may get deleted by fab commands.
+docker_base_rc = ~/configs/docker.rc
+
+# Replace with your company information
+saml_country = FR
+saml_state = Hauts-de-Seine
+saml_locality = Levallois-Perret
+saml_org = Bluenove
+saml_email = assembl@bluenove.com
+
+# Are we using sentry from docker? If not, give a hostname or nothing
+docker_sentry = docker
+
+# Replace with the sentry admin user email
+sentry_admin_email = assembl@bluenove.com
+
+# Fill after stage 1 if you use a dockerized sentry
+sentry_api_token = 
+
+sentry_port = 9000
+
+# Are we using piwik from docker? If not, give a hostname or nothing
+docker_piwik = 
+
+# Are we using smtp from docker? If not, give a hostname or nothing
+docker_smtp = docker
+
+# Are we using sentry from docker? If not, give a hostname or nothing
+docker_imap = docker
+
+# Are we exposing our docker host on IPv6?
+docker_ipv6 =
+
+# Are we enabling https on the docker nginx?
+docker_https =
+
+# Will the docker nginx be secured through a reverse proxy?
+docker_secure_rproxy = true
+
+# Will we use the certbot on this docker instance?
+docker_certbot =
+
+# Should we return a restrictive robots.txt?
+disallow_robots =
