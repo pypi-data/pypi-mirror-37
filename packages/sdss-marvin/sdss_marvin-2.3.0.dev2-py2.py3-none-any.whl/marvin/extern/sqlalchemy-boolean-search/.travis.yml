@@ -1,0 +1,35 @@
+# Travis config file
+# ==================
+
+language:
+  python
+
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+branches:
+  only:
+    - master
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - python: '3.7'
+
+# Install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install:
+  - pip install -r requirements.txt --quiet
+  - pip install pytest
+  - pip install coveralls
+  - pip install python-coveralls
+
+# Run automated tests
+script:
+  - py.test tests -v --cov sqlalchemy_boolean_search --cov-report html
+
+after_success:
+- coveralls
