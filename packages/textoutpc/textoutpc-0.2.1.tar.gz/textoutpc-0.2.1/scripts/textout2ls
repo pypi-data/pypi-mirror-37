@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+#******************************************************************************
+# Copyright (C) 2018 Thomas "Cakeisalie5" Touhey <thomas@touhey.fr>
+# This file is part of the textoutpc project, which is MIT-licensed.
+#******************************************************************************
+""" textout to lightscript converter for the command line. """
+
+import sys, argparse
+import textoutpc
+
+def parse_args():
+	""" Parse the arguments. """
+
+	ap = argparse.ArgumentParser(prog='textout2html',
+		description='Convert textout BBcode to HTML.')
+	ap.add_argument('-o', dest='output', default=sys.stdout,
+		type=lambda x: sys.stdout if x == '-' else open(x, 'w'),
+		help='the output source, stdout by default.')
+	ap.add_argument('input', nargs='?', default=sys.stdin,
+		type=lambda x: sys.stdin if x == '-' else open(x, 'r'),
+		help='the input source, stdin by default.')
+
+	args = ap.parse_args()
+	return args
+
+def main():
+	""" Main function of the script. """
+
+	args = parse_args()
+	print(textoutpc.tolightscript(args.input.read()), file=args.output, end='')
+
+if __name__ == '__main__':
+	try:
+		main()
+	except e:
+		print("textout2ls: error: " + str(e))
+
+# End of file.
