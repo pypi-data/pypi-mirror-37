@@ -1,0 +1,20 @@
+# Messaging SFTP Helper Library
+> Sending 1 million messages? Upload a file with your messages to our FTP server and Twilio will take care of the REST. Note: Library only tested with Python3.
+
+## Installation
+
+To install the package, invoke:
+```shell
+python3 -m pip install --index-url https://test.pypi.org/simple/ twilio-messaging-sftp
+```
+
+
+This library provides a helper to send messages using CSV to many users at once.
+You should import it to your project if you choose to.
+
+The csv file should contain a `to`, `from`, `body`, we also support mms using `media_url`.
+If you want any other fields in the csv we will return them with the results.
+If your body needs a comma in it make sure that the text has `" "` around it.
+
+Once the csv is parsed, use `MessageClient` (requires Twilio Account Sid and Authorization Token) 
+to send messages for each parsed query.
