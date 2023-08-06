@@ -1,0 +1,38 @@
+<nav class="navbar navbar-fixed-top">
+  {% if pagename == 'index' %}
+    <div id="landing-page-nav-container" class="nav-container">
+  {% else %}
+    <div class="nav-container">
+  {% endif %}
+      <a class="navbar-brand" href="{{ pathto(master_doc) }}">
+          <img src="{{ pathto('_static' ~ theme_logo, 1) }}" alt="{{ theme_logo_alt }}">
+          {% if theme_navbar_text %}
+              <div class="navbar-text">{{ theme_navbar_text }}</div>
+          {% endif %}
+      </a>
+      <div id="mobile-nav-buttons">
+        <button id="openmobilenav" style="cursor:pointer" onclick="openMobileNav()" aria-label="Mobile Navigation Menu" aria-expanded="false" aria-hidden="false" >☰</button>
+        <button id="closemobilenav" style="display:none;cursor:pointer" onclick="closeMobileNav()" aria-label="Close Mobile Navigation Menu" aria-expanded="true" aria-hidden="true" >X</button>
+      </div>
+      <ul class="navbar-nav">
+          <img id="mobile-logo" src="{{ pathto('_static' ~ theme_logo, 1) }}" alt="{{ theme_logo_alt }}">
+          {% if theme_navbar_links %}
+              {%- for link in theme_navbar_links %}<li><a href="{{ pathto(*link[1:]) }}">{{ link[0] }}</a></li>{%- endfor %}
+          {% endif %}
+      </ul>
+    </div>
+    <div id="verNum" style="display:none">v{{ theme_version }}</div>
+  </nav>
+  <nav>
+    {% if pagename == 'index' %}
+    {% else %}
+    <div id="docs-and-search-bar" class="full-green-bg">
+        <div class="nav-container">
+        <div class="site-title">Docs</div>
+        {% block navbarsearch %}
+          {% include "navbarsearchbox.html" %}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+  </nav>
