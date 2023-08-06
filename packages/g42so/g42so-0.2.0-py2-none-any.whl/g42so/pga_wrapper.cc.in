@@ -1,0 +1,30 @@
+/* This source files provides wrappers around the construction and the
+ * destruction of your primary-generator-action class, which should derive from
+ * G4VUserPrimaryGeneratorAction. You can expand the code as you like, for
+ * instance by adding parameters to the class constructor or by calling your
+ * particle factories. Just make sure you expose the required createG4PGA and
+ * deleteG4PGA functions.
+ *
+ * Once you have modified this file, save it and pass it to g42so as a source
+ * file. Make sure you add the --custom-pga-wrapper CLI option, so that g42so
+ * does not include its standard wrapper.
+ */
+
+#include "G4VUserPrimaryGeneratorAction.hh"
+
+// This is where you should #include your custom headers
+{includes}
+
+extern "C" {{
+
+  G4VUserPrimaryGeneratorAction *createG4PGA() {{
+    // Replace "{class_name}" with the name of your class
+    G4VUserPrimaryGeneratorAction *{varname} = new {class_name}({params});
+    return {varname};
+  }}
+
+  void deleteG4PGA(G4VUserPrimaryGeneratorAction *aPGA) {{
+    delete aPGA;
+  }}
+
+}}
