@@ -1,0 +1,1 @@
+samll helper for recording time usage
