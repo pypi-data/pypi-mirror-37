@@ -1,0 +1,212 @@
+# Arcelik Asista Smart Assistant AWS Lambda Python Library
+
+*Simple Python API wrapper for Arcelik Asista Smart Assistant AWS Lambda handlers.*
+
+---
+
+**pyasista** is an easy to use Python package to help developers implement their AWS lambda function with ease.
+
+## Installation
+
+To install pyasista, simply use [pip](https://pypi.org/project/pyasista/).
+
+```bash
+pip install pyasista
+```
+
+## Usage
+
+Just import *pyasista* into your project and use the wrapper classes for easily implementing your lambda functions.
+
+```python
+from pyasista import AsistaInput
+from pyasista import AsistaOutput
+from pyasista import Command
+from pyasista import CommandType
+
+
+# Sample lambda handler to make Asista say `Hello, my name is Asista.`.
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    asista_output = AsistaOutput()
+    command = Command(CommandType.PLAY_ANNOUNCE, 'Hello, my name is Asista.')
+    asista_output.push_command(command)
+    return dict(asista_output)
+```
+
+## Documentation
+
+### AsistaInput
+
+Arcelik Asista Smart Assistant Lambda function has a standard event format. *AsistaInput* class is a wrapper for the lambda function input. Just use the *event* of the lambda function while initializing the object.
+
+```python
+...
+
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    ...
+```
+
+AsistaInput has the following properties:
+
+- **customer_confirmed**: ``True`` if the customer responded *yes*; ``False`` if the customer responded *no*; ``None`` if the customer has not responded to a *Yes/No* question.
+- **environment**: Environment (DEVELOPMENT, TESTING or PRODUCTION). (See: [Environment](#Environment))
+- **ext_node_id**: Node id of the detected NLP tree.
+- **language**: Language of the Asista (default is 'TR').
+- **location**: A dictionary holding the location (latitude and longitude) of the Asista device.
+- **serial_number**: Serial number of the physical Asista device.
+- **session**: A dictionary of the session variables.
+- **slot_values**: A dictionary of detected dynamic variables. Slot values stored in lists, with the same order as it appeared in the event.
+- **sr_text**: Actual speech detected with speech recognition.
+- **timeout**: While waiting for user to respond your query, the Asista device timeouts after 10 seconds if it could not detect any speech. In that case, lambda function will be fed with timeout parameter is set to True.
+- **token**: A helper object for holding OAuth2 token and refreshing the token. (See: [AsistaToken](#AsistaToken))
+
+All properties of AsistaInput are immutable.
+
+```python
+...
+
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    print(asista_input.serial_number)  # Print the serial number of the device
+    asista_input.serial_number = 'QWERTY123'  # Raise an AttributeError
+```
+
+If your lambda strictly requires more of those parameters, you can pass them to the constructor and raise an error if the event lack any of those arguments.
+
+By default, AsistaInput requires *environment* and *language* parameters.
+
+```python
+...
+
+def lambda_handler(event, context):
+    # If serial_number and token keys are missing in the event, raise an error.
+    asista_input = AsistaInput(event, required_parameters=['serial_number', 'token'])
+    ...
+```
+
+### AsistaOutput
+
+A wrapper for Arcelik Asista Smart Assistant Lambda function standard output.
+
+```python
+from pyasista import AsistaInput
+from pyasista import AsistaOutput
+
+
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    asista_output = AsistaOutput()
+    return dict(asista_output)
+```
+
+Due to the non-serializable structure of AsistaOutput, lambda functions should return ```dict(asista_output)```. [Under revision]
+
+AsistaOutput has the following methods:
+
+- **push_command(command)**: Add a command for Asista to perform. (See: [Command](#Command))
+- **session(dict)**: A dictionary containing the session information. [default=dict()]
+- **session_continue(bool)**: ``True`` if the session should continue; else``False``. [default=False]
+
+### AsistaToken
+
+For the applications requiring OAuth2 access token, Asista lambda input contains the access token and all the required information on refreshing them. You can access the token from the *AsistaInput*.
+
+AsistaToken has the following property and methods:
+
+- **access_token**: The property holds the actual access token. It is an immutable variable, trying to set it will raise an AttributeError.
+- **is_valid()**: Checks whether the AsistaToken class structually valid. It is important to note that this method does not check whether the token itself is valid or not. It only checks whether the AsistaToken instance has access_token set and all the data present to refresh it.
+- **refresh()**: Refreshs the access token. Return ``True`` if the token is refreshed successfully, else ``False``.
+
+Example usage of the AsistaToken as follows:
+
+```python
+from pyasista import AsistaInput
+from pyasista import AsistaToken
+
+
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    asista_token = asista_input.token  # The AsistaToken object
+
+    if asista_token.is_valid():  # Checks access_token is structually valid
+        print(asista_token.access_token)  # Print the access_token
+        if asista_token.refresh():  # Refresh the access_token
+            print(asista_token.access_token)  # Print the new access_token
+        else:
+            print('Cannot refresh access token')  # Error in refresh
+    else:
+        print('Event does not have the token object')
+
+    ...
+```
+
+### Command
+
+Arcelik Asista Smart Assistant is capable of converting a text to speech using a TTS engine and play it out loud, and playing an audio stream for the customer. AsistaOutput has an array of commands for Asista to perform. *Command* is a wrapper class for this purpose.
+
+Basically initialize the class with type (See: [CommandType](#CommandType)) and the data (either the text to be spoken or the stream to be streamed) and add it to the output using *AsistaOutput.push_command(command)* method.
+
+An example usage of Command is below:
+
+```python
+from pyasista import AsistaOutput
+from pyasista import Command
+from pyasista import CommandType
+
+
+def lambda_handler(event, context):
+    # Parse event using AsistaInput
+    # Implement your business logic
+    ...
+    asista_output = AsistaOutput()
+
+    # Create a command to make Asista say 'Hello, my name is Asista.'
+    command = Command(CommandType.PLAY_ANNOUNCE, 'Hello, my name is Asista.')
+    asista_output.push_command(command)
+    return dict(asista_output)
+```
+
+### CommandType
+
+An enumeration of supported command types that Asista can perform:
+
+- **CommandType.PLAY_ANNOUNCE**: Read a text out loud using TTS engine.
+- **CommandType.PLAY_STREAM**: Stream an audio from a URL.
+- **CommandType.STOP**: Stop Asista.
+- **CommandType.NOACTION**: Make Asista take no action at all.
+
+### Environment
+
+An enumeration of supported environments that current event of the lambda function is executed.
+
+Supported environments are:
+
+- **Environment.DEVELOPMENT**: Development environment.
+- **Environment.TESTING**: Test environment.
+- **Environment.PROD**: Production environment.
+
+Accessing the environment is easy:
+
+```python
+from pyasista import AsistaInput
+from pyasista import Environment
+
+
+def lambda_handler(event, context):
+    asista_input = AsistaInput(event)
+    environment = asista_input.environment
+    if environment == Environment.DEVELOPMENT:
+        # Do tasks for development
+    elif environment == Environment.TESTING:
+        # Do tasks for test
+    elif environment == Environment.PROD:
+        # Do tasks for production
+    else:
+        # Undetermined environment
+```
+
+## EXAMPLES
+
+Looking for more examples? Check out the [examples](https://github.com/Arcelik/pyasista/tree/master/examples) folder.
