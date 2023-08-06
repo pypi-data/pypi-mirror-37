@@ -1,0 +1,538 @@
+Metadata-Version: 1.1
+Name: pytest-ansible
+Version: 2.0.2
+Summary: Plugin for py.test to simplify calling ansible modules from tests or fixtures
+Home-page: http://github.com/jlaska/pytest-ansible
+Author: James Laska
+Author-email: <jlaska@ansible.com>
+License: MIT
+Description: 
+        pytest-ansible
+        ==============
+        
+        `Build Status <https://travis-ci.org/ansible/pytest-ansible>`__
+        `Coverage
+        Status <https://coveralls.io/github/ansible/pytest-ansible?branch=master>`__
+        `Requirements
+        Status <https://requires.io/github/ansible/pytest-ansible/requirements/?branch=master>`__
+        `Version <https://pypi.python.org/pypi/pytest-ansible/>`__
+        `License <https://pypi.python.org/pypi/pytest-ansible/>`__ `Supported
+        Python Versions <https://pypi.python.org/pypi/pytest-ansible/>`__
+        
+        This repository contains a plugin for ``py.test`` which adds several
+        fixtures for running ``ansible`` modules, or inspecting
+        ``ansible_facts``. While one can simply call out to ``ansible`` using
+        the ``subprocess`` module, having to parse stdout to determine the
+        outcome of the operation is unpleasant and prone to error. With
+        ``pytest-ansible``, modules return JSON data which you can inspect and
+        act on, much like with an ansible
+        `playbook <http://docs.ansible.com/playbooks.html>`__.
+        
+        Installation
+        ------------
+        
+        Install this plugin using ``pip``
+        
+        .. code:: bash
+        
+           pip install pytest-ansible
+        
+        Usage
+        -----
+        
+        Once installed, the following ``py.test`` command-line parameters are
+        available:
+        
+        .. code:: bash
+        
+           py.test \
+               [--inventory <path_to_inventory>] \
+               [--host-pattern <host-pattern>] \
+               [--connection <plugin>] \
+               [--module-path <path_to_modules] \
+               [--user <username>] \
+               [--become] \
+               [--become-user <username>] \
+               [--become-method <method>] \
+               [--limit <limit>] \
+               [--check]
+        
+        Inventory
+        ---------
+        
+        Using ansible first starts with defining your inventory. This can be
+        done several ways, but to start, we’ll use the ``ansible_adhoc``
+        fixture.
+        
+        .. code:: python
+        
+           def test_my_inventory(ansible_adhoc):
+               hosts = ansible_adhoc()
+        
+        In the example above, the ``hosts`` variable is an instance of the
+        ``HostManager`` class and describes your ansible inventory. For this to
+        work, you’ll need to tell ``ansible`` where to find your inventory.
+        Inventory can be anything supported by ansible, which includes an `INI
+        file <http://docs.ansible.com/ansible/latest/intro_inventory.html>`__ or
+        an executable script that returns `properly formatted
+        JSON <http://docs.ansible.com/ansible/latest/intro_dynamic_inventory.html>`__.
+        For example,
+        
+        .. code:: bash
+        
+           py.test --inventory my_inventory.ini --host-pattern all
+        
+        or
+        
+        .. code:: bash
+        
+           py.test --inventory path/to/my/script.py --host-pattern webservers
+        
+        or
+        
+        .. code:: bash
+        
+           py.test --inventory one.example.com,two.example.com --host-pattern all
+        
+        In the above examples, the inventory provided at runtime will be used in
+        all tests that use the ``ansible_adhoc`` fixture. A more realistic
+        scenario may involve using different inventory files (or host patterns)
+        with different tests. To accomplish this, the fixture ``ansible_adhoc``
+        allows you to customize the inventory parameters. Read on for more
+        detail on using the ``ansible_adhoc`` fixture.
+        
+        Fixture ``ansible_adhoc``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        The ``ansible_adhoc`` fixture returns a function used to initialize a
+        ``HostManager`` object. The ``ansible_adhoc`` fixture will default to
+        parameters supplied to the ``py.test`` command-line, but also allows one
+        to provide keyword arguments used to initialize the inventory.
+        
+        The example below demonstrates basic usage with options supplied at
+        run-time to ``py.test``.
+        
+        .. code:: python
+        
+           def test_all_the_pings(ansible_adhoc):
+               ansible_adhoc().all.ping()
+        
+        The following example demonstrates available keyword arguments when
+        creating a ``HostManager`` object.
+        
+        .. code:: python
+        
+           def test_uptime(ansible_adhoc):
+               # take down the database
+               ansible_adhoc(inventory='db1.example.com,', user='ec2-user', 
+                   become=True, become_user='root').all.command('reboot')
+        
+        The ``HostManager`` object returned by the ``ansible_adhoc()`` function
+        provides numerous ways of calling ansible modules against some, or all,
+        of the inventory. The following demonstates sample usage.
+        
+        .. code:: python
+        
+           def test_host_manager(ansible_adhoc):
+               hosts = ansible_adhoc()
+        
+               # __getitem__
+               hosts['all'].ping()
+               hosts['localhost'].ping()
+        
+               # __getattr__
+               hosts.all.ping()
+               hosts.localhost.ping()
+        
+               # Supports [ansible host patterns](http://docs.ansible.com/ansible/latest/intro_patterns.html)
+               hosts['webservers:!phoenix'].ping()  # all webservers that are not in phoenix
+               hosts[0].ping()
+               hosts[0:2].ping()
+        
+               assert 'one.example.com' in hosts
+        
+               assert hasattr(hosts, 'two.example.com')
+        
+               for a_host in hosts:
+                   a_host.ping()
+        
+        Fixture ``localhost``
+        ~~~~~~~~~~~~~~~~~~~~~
+        
+        The ``localhost`` fixture is a convenience fixture that surfaces a
+        ``ModuleDispatcher`` instance for ansible host running ``pytest``. This
+        is convenient when using ansible modules that typically run on the local
+        machine, such as cloud modules (ec2, gce etc…).
+        
+        .. code:: python
+        
+           def test_do_something_cloudy(localhost, ansible_adhoc):
+               """Deploy an ec2 instance using multiple fixtures."""
+               params = dict(
+                   key_name='somekey',
+                   instance_type='t2.micro',
+                   image='ami-123456',
+                   wait=True,
+                   group='webserver',
+                   count=1,
+                   vpc_subnet_id='subnet-29e63245',
+                   assign_public_ip=True,
+               )
+        
+               # Deploy an ec2 instance from localhost using the `ansible_adhoc` fixture
+               ansible_adhoc(inventory='localhost,', connection='local').localhost.ec2(**params)
+        
+               # Deploy an ec2 instance from localhost using the `localhost` fixture
+               localhost.ec2(**params)
+        
+        Fixture ``ansible_module``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        The ``ansible_module`` fixture allows tests and fixtures to call
+        `ansible modules <http://docs.ansible.com/modules.html>`__. Unlike the
+        ``ansible_adhoc`` fixture, this fixture only uses the options supplied
+        to ``py.test`` at run time.
+        
+        A very basic example demonstrating the ansible ```ping``
+        module <http://docs.ansible.com/ping_module.html>`__:
+        
+        .. code:: python
+        
+           def test_ping(ansible_module):
+               ansible_module.ping()
+        
+        A more involved example of updating the sshd configuration, and
+        restarting the service.
+        
+        .. code:: python
+        
+           def test_sshd_config(ansible_module):
+        
+               # update sshd MaxSessions
+               contacted = ansible_module.lineinfile(
+                   dest="/etc/ssh/sshd_config",
+                   regexp="^#?MaxSessions .*",
+                   line="MaxSessions 150")
+               )
+        
+               # assert desired outcome
+               for (host, result) in contacted.items():
+                   assert 'failed' not in result, result['msg']
+                   assert 'changed' in result
+        
+               # restart sshd
+               contacted = ansible_module.service(
+                   name="sshd",
+                   state="restarted"
+               )
+        
+               # assert successful restart
+               for (host, result) in contacted.items():
+                   assert 'changed' in result and result['changed']
+                   assert result['name'] == 'sshd'
+        
+               # do other stuff ...
+        
+        Fixture ``ansible_facts``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        The ``ansible_facts`` fixture returns a JSON structure representing the
+        system facts for the associated inventory. Sample fact data is available
+        in the `ansible
+        documentation <http://docs.ansible.com/playbooks_variables.html#information-discovered-from-systems-facts>`__.
+        
+        Note, this fixture is provided for convenience and could easily be
+        called using ``ansible_module.setup()``.
+        
+        A systems facts can be useful when deciding whether to skip a test …
+        
+        .. code:: python
+        
+           def test_something_with_amazon_ec2(ansible_facts):
+               for facts in ansible_facts:
+                   if 'ec2.internal' != facts['ansible_domain']:
+                       pytest.skip("This test only applies to ec2 instances")
+        
+        Additionally, since facts are just ansible modules, you could inspect
+        the contents of the ``ec2_facts`` module for greater granularity …
+        
+        .. code:: python
+        
+        
+           def test_terminate_us_east_1_instances(ansible_adhoc):
+        
+               for facts in ansible_adhoc().all.ec2_facts():
+                   if facts['ansible_ec2_placement_region'].startswith('us-east'):
+                       '''do some testing'''
+        
+        Parameterizing with ``pytest.mark.ansible``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Perhaps the ``--ansible-inventory=<inventory>`` includes many systems,
+        but you only wish to interact with a subset. The ``pytest.mark.ansible``
+        marker can be used to modify the ``pytest-ansible`` command-line
+        parameters for a single test. Please note, the fixture ``ansible_adhoc``
+        is the prefer mechanism for interacting with ansible inventory within
+        tests.
+        
+        For example, to interact with the local system, you would adjust the
+        ``host_pattern`` and ``connection`` parameters.
+        
+        .. code:: python
+        
+           @pytest.mark.ansible(host_pattern='local,', connection='local')
+           def test_copy_local(ansible_module):
+        
+               # create a file with random data
+               contacted = ansible_module.copy(
+                   dest='/etc/motd',
+                   content='PyTest is amazing!',
+                   owner='root',
+                   group='root',
+                   mode='0644',
+               )
+        
+               # assert only a single host was contacted
+               assert len(contacted) == 1, \
+                   "Unexpected number of hosts contacted (%d != %d)" % \
+                   (1, len(contacted))
+        
+               assert 'local' in contacted
+        
+               # assert the copy module reported changes
+               assert 'changed' in contacted['local']
+               assert contacted['local']['changed']
+        
+        Note, the parameters provided by ``pytest.mark.ansible`` will apply to
+        all class methods.
+        
+        .. code:: python
+        
+           @pytest.mark.ansible(host_pattern='local,', connection='local')
+           class Test_Local(object):
+               def test_install(self, ansible_module):
+                   '''do some testing'''
+               def test_template(self, ansible_module):
+                   '''do some testing'''
+               def test_service(self, ansible_module):
+                   '''do some testing'''
+        
+        Inspecting results
+        ~~~~~~~~~~~~~~~~~~
+        
+        When using the ``ansible_adhoc``, ``localhost`` or ``ansible_module``
+        fixtures, the object returned will be an instance of class
+        ``AdHocResult``. The ``AdHocResult`` class can be inspected as follows:
+        
+        .. code:: python
+        
+        
+           def test_adhoc_result(ansible_adhoc):
+               contacted = ansible_adhoc(inventory=my_inventory).command("date")
+        
+               # As a dictionary
+               for (host, result) in contacted.items():
+                   assert result.is_successful, "Failed on host %s" % host
+               for result in contacted.values():
+                   assert result.is_successful
+               for host in contacted.keys():
+                   assert host in ['localhost', 'one.example.com']
+        
+               assert contacted.localhost.is_successful
+        
+               # As a list
+               assert len(contacted) > 0
+               assert 'localhost' in contacted
+        
+               # As an iterator
+               for result in contacted:
+                   assert result.is_successful
+        
+               # With __getattr__
+               assert contacted.localhost.is_successful
+        
+               # Or __gettem__
+               assert contacted['localhost'].is_successful
+        
+        Using the ``AdHocResult`` object provides ways to conveniently access
+        results for different hosts involved in the ansible adhoc command. Once
+        the specific host result is found, you may inspect the result of the
+        ansible adhoc command on that use by way of the ``ModuleResult``
+        interface. The ``ModuleResult`` class represents the dictionary returned
+        by the ansible module for a particular host. The contents of the
+        dictionary depend on the module called.
+        
+        The ``ModuleResult`` interface provides some convenient proprerties to
+        determine the success of the module call. Examples are included below.
+        
+        .. code:: python
+        
+        
+           def test_module_result(localhost):
+               contacted = localhost.command("find /tmp")
+        
+               assert contacted.localhost.is_successful
+               assert contacted.localhost.is_ok
+               assert contacted.localhost.is_changed
+               assert not contacted.localhost.is_failed
+        
+               contacted = localhost.shell("exit 1")
+               assert contacted.localhost.is_failed
+               assert not contacted.localhost.is_successful
+        
+        The contents of the JSON returned by an ansible module differs from
+        module to module. For guidance, consult the documentation and examples
+        for the specific `ansible
+        module <http://docs.ansible.com/modules_by_category.html>`__.
+        
+        Exception handling
+        ~~~~~~~~~~~~~~~~~~
+        
+        If ``ansible`` is unable to connect to any inventory, an exception will
+        be raised.
+        
+        .. code:: python
+        
+           @pytest.mark.ansible(inventory='unreachable.example.com,')
+           def test_shutdown(ansible_module):
+        
+               # attempt to ping a host that is down (or doesn't exist)
+               pytest.raises(pytest_ansible.AnsibleHostUnreachable):
+                   ansible_module.ping()
+        
+        Sometimes, only a single host is unreachable, and others will have
+        properly returned data. The following demonstrates how to catch the
+        exception, and inspect the results.
+        
+        .. code:: python
+        
+           @pytest.mark.ansible(inventory='good:bad')
+           def test_inventory_unreachable(ansible_module):
+               exc_info = pytest.raises(pytest_ansible.AnsibleHostUnreachable, ansible_module.ping)
+               (contacted, dark) = exc_info.value.results
+        
+               # inspect the JSON result...
+               for (host, result) in contacted.items():
+                   assert result['ping'] == 'pong'
+        
+               for (host, result) in dark.items():
+                   assert result['failed'] == True
+        
+        Release History
+        ---------------
+        
+        2.0.2 (2018-10-30)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Additional fixes in support of python-3
+        
+        .. _section-1:
+        
+        2.0.1 (2018-08-10)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Convert AdHocResult.values() to return a list, not a generator
+           (Thanks Alan Rominger)
+        -  Preliminary support for py3
+        
+        .. _section-2:
+        
+        2.0.0 (2017-07-27)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Major changes to allow ansible-style inventory indexing
+        -  Improved results processing using python objects, rather than
+           dictionaries
+        
+        1.4.0 (2016-MM-DD)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Add parameter –ansible-module-path (thanks David Barroso)
+        -  Raise DeprecationWarnings for scope=class fixtures
+        
+        .. _section-3:
+        
+        1.3.1 (2016-01-22)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Correctly handle ansible become options
+        
+        .. _section-4:
+        
+        1.3.0 (2016-01-20)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Add support for ansible-2.0
+        
+        .. _section-5:
+        
+        1.2.5 (2015-04-20)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Only validate –ansible-\* parameters when using pytest-ansible
+           fixture
+        -  Include –ansible-user when running module
+        
+        .. _section-6:
+        
+        1.2.4 (2015-03-18)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Add ansible-1.9 privilege escalation support
+        
+        .. _section-7:
+        
+        1.2.3 (2015-03-03)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Resolve setuptools import failure by migrating from a module to a
+           package
+        
+        .. _section-8:
+        
+        1.2.2 (2015-03-03)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Removed py module dependency
+        -  Add HISTORY.md
+        
+        .. _section-9:
+        
+        1.2.1 (2015-03-02)
+        ~~~~~~~~~~~~~~~~~~
+        
+        -  Use pandoc to convert existing markdown into pypi friendly rst
+        
+        .. _section-10:
+        
+        1.2 (2015-03-02)
+        ~~~~~~~~~~~~~~~~
+        
+        -  Add ``ansible_host`` and ``ansible_group`` parametrized fixture
+        -  Add cls level fixtures for users needing scope=class fixtures
+        -  Updated examples to match new fixture return value
+        -  Alter fixture return data to more closely align with ansible
+        -  Raise ``AnsibleHostUnreachable`` whenever hosts are … unreachable
+        -  Set contacted and dark hosts in ConnectionError
+        
+        .. _section-11:
+        
+        1.1 (2015-02-16)
+        ~~~~~~~~~~~~~~~~
+        
+        -  Initial release
+        
+Keywords: py.test pytest ansible
+Platform: any
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: Utilities
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
