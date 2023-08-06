@@ -1,0 +1,35 @@
+import setuptools
+
+setuptools.setup(
+    name="comet_ml",
+    packages=["comet_ml"],
+    version="1.0.31",
+    url="https://www.comet.ml",
+    author="Comet ML Inc.",
+    author_email="mail@comet.ml",
+    description="Supercharging Machine Learning",
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
+    install_requires=[
+        "websocket-client>=0.44.0",
+        "requests>=2.18.4",
+        "six",
+        "wurlitzer>=1.0.2",
+        "netifaces>=0.10.7",
+        "nvidia-ml-py3>=7.352.0",
+        "comet-git-pure>=0.19.4",
+        "everett",
+        "jsonschema>=2.6.0",
+    ],
+    test_requires=["websocket-server", "pytest", "responses", "IPython"],
+    scripts=[],
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+    ],
+)
